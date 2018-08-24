@@ -1,3 +1,6 @@
+# Ignore project files
+**/.idea
+
 # Ignore cache
 **/__pycache__
 
