@@ -1,0 +1,8 @@
+# Ignore cache
+**/__pycache__
+
+# Ignore tensorflow logs
+**/tf_log
+
+# Ignore results
+**/pik_data
