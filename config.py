@@ -17,7 +17,7 @@ class Config():
 	IMG_SIZE = (288, 288, 1)
 
 	# Training epochs
-	N_EPOCHS = 20
+	N_EPOCHS = 30
 
 	TRAIN_BATCH_SIZE = 12
 	VALID_BATCH_SIZE = 35
@@ -76,16 +76,19 @@ class Config():
 		if create_dirs:
 			if not inference:
 				# training
-				self.CP_SAVE_PATH = utils.check_dir(os.path.join('/bmrNAS/people/arjun/msk_seg_networks/oai_data', self.CP_SAVE_TAG, self.DATE_TIME_STR))
-				self.PIK_SAVE_PATH = os.path.join('./pik_data', self.CP_SAVE_TAG, self.DATE_TIME_STR + '.dat')
-				self.PIK_SAVE_PATH_DIR = utils.check_dir(os.path.dirname(self.PIK_SAVE_PATH))
-				self.TF_LOG_DIR = utils.check_dir(os.path.join('./tf_log', self.CP_SAVE_TAG, self.DATE_TIME_STR))
+				prefix = self.DATE_TIME_STR
+				self.init_training_paths(prefix)
 			else:
 				# Testing
 				self.TEST_RESULT_PATH = utils.check_dir(os.path.join('./test_results', self.CP_SAVE_TAG, self.TAG, self.DATE_TIME_STR))
 
-
-	def save_config(self):
+	def init_training_paths(self, prefix):
+		self.CP_SAVE_PATH = utils.check_dir(os.path.join('/bmrNAS/people/arjun/msk_seg_networks/oai_data', self.CP_SAVE_TAG, prefix))
+		self.PIK_SAVE_PATH = os.path.join(self.CP_SAVE_PATH, 'pik_data.dat')
+		self.PIK_SAVE_PATH_DIR = utils.check_dir(os.path.dirname(self.PIK_SAVE_PATH))
+		self.TF_LOG_DIR = utils.check_dir(os.path.join(self.CP_SAVE_PATH, 'tf_log'))
+	
+	def save_config(self, model=None):
 		"""Save config details to a txt file"""
 		members = [attr for attr in dir(self) if not callable(getattr(self, attr)) and not attr.startswith("__")]
 		filename = os.path.join(self.CP_SAVE_PATH, 'config.txt')
@@ -94,12 +97,46 @@ class Config():
 			for i in range(len(members)):
 				m_var = members[i]
 				f.write("%s: %s \n" % (m_var, str(getattr(self, m_var))))
+		
 		# Save as object to make it easy to load
 		filename = os.path.join(self.CP_SAVE_PATH, 'config.dat')
+		m_config = self.to_dict_w_opt(model)
+		self.M_CONFIG = m_config
+
 		utils.save_pik(self, filename)
+	
+	def to_dict_w_opt(self, model):
+		"""Serialize a model and add the config of the optimizer and the loss.
+		"""
+		if model is None:
+			return None
+		config = dict()
+		config_m = model.get_config()
+		config['config'] = {'class_name': model.__class__.__name__,'config': config_m,}
+		if hasattr(model, 'optimizer'):
+			config['optimizer'] = model.optimizer.get_config()
+				
+		return config
+	
+	def model_from_dict_w_opt(self, model_dict):
+		""" Return model and optimizer in previous state
+		"""
+		model_name = model_dict['config'].get('class_name')
+		optimizer_params = dict([(k,v) for k,v in model_dict.get('optimizer').items()])
+		optimizer_name = optimizer_params.pop('name')
+		optimizer = optimizers.get(optimizer_name, optimizer_params)
+		return optimizer
+		
+	def init_fine_tune(self, init_weight_path):
+		if (state != 'training'):
+			raise ValueError('Must be in training state')
 
-
-	def change_to_test():
+		self.FINE_TUNE = True
+		self.INIT_WEIGHT_PATH = init_weight_path
+		prefix = os.path.join(self.DATE_TIME_STR, 'fine_tune')
+		self.init_training_paths(prefix)	
+		
+	def change_to_test(self):
 		self.state = 'testing'
 		self.TEST_RESULT_PATH = utils.check_dir(os.path.join('./test_results', self.CP_SAVE_TAG, self.TAG, self.DATE_TIME_STR))
 

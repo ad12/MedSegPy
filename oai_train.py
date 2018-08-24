@@ -137,7 +137,6 @@ def train_deeplab(OS, dilation_rates):
     config = DeeplabV3Config()
     config.OS = OS
     config.DIL_RATES = dilation_rates
-    
     train_model(config)
     
     config.save_config()
@@ -146,9 +145,17 @@ def train_deeplab(OS, dilation_rates):
 
 
 if __name__ == '__main__':
-    os.environ["CUDA_VISIBLE_DEVICES"]="0"
+    os.environ["CUDA_VISIBLE_DEVICES"]="1"
     os.environ["TF_CPP_MIN_LOG_LEVEL"]="2"
     
-    train_deeplab(8, (12, 24, 36))
+    #train_deeplab(16, (1, 9, 18))
+    #train_deeplab(16, (2, 4, 6))
+    #train_deeplab(16, (3, 6, 9))
+
+    train_deeplab(8, (1, 9, 18))
+    train_deeplab(8, (2, 4, 6))
+    train_deeplab(8, (3, 6, 9))
+    #train_deeplab(8, (2, 6, 12))
+
 
 
