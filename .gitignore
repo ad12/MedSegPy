@@ -1,5 +1,6 @@
 # Ignore project files
 **/.idea
+**/.DS_Store
 
 # Ignore cache
 **/__pycache__
@@ -9,3 +10,6 @@
 
 # Ignore results
 **/pik_data
+
+# Ignore test_data
+**/test_data

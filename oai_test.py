@@ -1,6 +1,6 @@
 # Author: Zhongnan Fang, zhongnanf@gmail.com, 2017 July
 # Modified: Akshay Chaudhari, akshaysc@stanford.edu 2017 August
-#           Arjun Desai, arjun.desai@duke.edu, 2018 June
+#           Arjun Desai, arjundd@stanford.edu, 2018 June
 
 from __future__ import print_function, division
 
@@ -92,6 +92,64 @@ def test_model(config, save_file=1):
     print('Time required = %0.1f seconds.'%(end-start))
     print('--'*20)
 
+
+def get_valid_subdirs(base_path):
+    if base_path is None:
+        return []
+
+    # Find all subdirectories
+    # subdirectory is valid if it contains a 'config.txt' file
+    files = os.listdir(base_path)
+    subdirs = []
+    for file in files:
+        if (os.path.isdir(file) and os.path.isfile(os.path.join(base_path, file, 'config.txt'))):
+            subdir = os.path.join(base_path, file)
+            subdirs.append(subdir)
+
+            # recursively search directories for any folders that have similar setup
+            rec_subdirs = get_valid_subdirs(subdir)
+            subdirs.append(rec_subdirs)
+
+    return subdirs
+
+
+def get_weights(base_folder):
+    """
+    Gets the best weights file inside the base_folder
+    :param base_folder: dirpath where weights are stored
+    :return: h5 file
+
+    Assumes that only the best weights are stored, so searching for the epoch should be enough
+    """
+    files = os.listdir(base_folder)
+    max_epoch = -1
+    best_file = ''
+    for file in files:
+        # Ensure the file is an h5 file
+        if not(os.path.isfile(file) and file.endswith('.h5')):
+            continue
+
+        # Get file with max epochs
+        train_info = file.split('.')[1]
+        epoch = int(train_info.split('-')[0])
+
+        if (epoch > max_epoch):
+            max_epoch = epoch
+            best_file = file
+
+    return os.path.join(base_folder, best_file)
+
+
+def batch_test(base_folder):
+    # get list of directories to get info from
+    subdirs = get_valid_subdirs(base_folder)
+
+    for subdir in subdirs:
+        # Initialize config
+
+
+        # Get best weight path
+        config.TEST_WEIGHT_PATH = get_weights(subdir)
 
 
 local_testing_test_path = '../sample_data/test_data'

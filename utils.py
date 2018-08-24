@@ -2,6 +2,8 @@ import os
 import numpy as np
 import cv2
 import pickle
+import configparser
+
 
 def check_dir(dir_path):
     if not os.path.isdir(dir_path):
@@ -58,3 +60,19 @@ def load_pik(filepath):
         return pickle.load(f)
 
 
+def save_config(a_dict, filepath):
+    config = configparser.ConfigParser(a_dict)
+
+    with open(filepath, 'w+') as configfile:
+        config.write(configfile)
+
+def load_config(filepath):
+    config = configparser.ConfigParser()
+    config.read(filepath)
+
+    a_dict = dict()
+    c = config['DEFAULT']
+    for key in c.keys():
+        a_dict[key] = c[key]
+
+    return a_dict
