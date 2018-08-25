@@ -5,6 +5,11 @@ import mri_utils
 import utils
 
 
+DEEPLABV3_NAME = 'deeplabv3_2d'
+SEGNET_NAME = 'segnet_2d'
+UNET_NAME = 'unet_2d'
+ENSEMBLE_UDS_NAME = 'ensemble_uds'
+
 class Config():
     VERSION = 1
 
@@ -163,7 +168,7 @@ class Config():
 
 
 class DeeplabV3Config(Config):
-    CP_SAVE_TAG = 'deeplabv3_2d'
+    CP_SAVE_TAG = DEEPLABV3_NAME
     DIL_RATES = (1, 1, 1)
     AT_DIVISOR = 2
 
@@ -179,7 +184,7 @@ class DeeplabV3Config(Config):
 
 
 class SegnetConfig(Config):
-    CP_SAVE_TAG = 'segnet_2d'
+    CP_SAVE_TAG = SEGNET_NAME
 
     TRAIN_BATCH_SIZE = 15
     #INITIAL_LEARNING_RATE = 2e-6
@@ -196,14 +201,14 @@ class SegnetConfig(Config):
 
 
 class UNetConfig(Config):
-    CP_SAVE_TAG='unet_2d'
+    CP_SAVE_TAG = UNET_NAME
     TEST_WEIGHT_PATH = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/select_weights/unet_2d_fc_weights.004--0.8968.h5'
     def __init__(self, state='training', create_dirs=True):
         super().__init__(self.CP_SAVE_TAG, state, create_dirs=create_dirs)
 
 
 class EnsembleUDSConfig(Config):
-    CP_SAVE_TAG = 'ensemble_uds'
+    CP_SAVE_TAG = ENSEMBLE_UDS_NAME
     DEEPLAB_INIT_WEIGHTS = '/bmrNAS/people/akshay/dl/oai_data/deeplab_2d_end-to-end/2018-08-15-06-46-12/deeplab_2d_end-to-end_weights.019-0.1253.h5'
     UNET_INIT_WEIGHTS = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/select_weights/unet_2d_fc_weights.004--0.8968.h5'
     SEGNET_INIT_WEIGHTS = '/bmrNAS/people/arjun/msk_seg_networks/oai_data/segnet_2d/2018-08-18-19-55-54/segnet_2d_weights.005-0.3353.h5'
@@ -211,6 +216,3 @@ class EnsembleUDSConfig(Config):
 
     def __init__(self, state='training', create_dirs=True):
         super().__init__(self.CP_SAVE_TAG, state, create_dirs=create_dirs)
-
-
-

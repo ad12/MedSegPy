@@ -20,8 +20,10 @@ from losses import dice_loss
 
 from models import get_model
 
+import utils
 
-def train_model(config):
+
+def train_model(config, optimizer=None):
     
     train_path = config.TRAIN_PATH
     valid_path = config.VALID_PATH
@@ -45,8 +47,9 @@ def train_model(config):
         print('loading weights')
         model.load_weights(config.INIT_WEIGHT_PATH, by_name=True)
 
+    if optimizer is None:
+        optimizer = Adam(lr=config.INITIAL_LEARNING_RATE, beta_1=0.99, beta_2=0.995, epsilon=1e-8, decay=0)
 
-    optimizer = Adam(lr=config.INITIAL_LEARNING_RATE, beta_1=0.99, beta_2=0.995, epsilon=1e-8, decay=0)
     lr_metric = get_lr_metric(optimizer)
     model.compile(optimizer=optimizer,
                   loss=dice_loss, metrics=[lr_metric])
@@ -146,6 +149,32 @@ def train_deeplab(OS, dilation_rates):
     config.save_config()
 
     K.clear_session()
+
+def fine_tune_deeplab(base_path):
+    files = os.listdir(base_path)
+    f_subdirs = []
+
+    for file in files:
+        possible_dir = os.path.join(base_path, file)
+        if (os.path.isdir(possible_dir) and
+                os.path.isfile(os.path.join(possible_dir,'config.ini')) and
+                not os.path.isdir(os.path.join(possible_dir, 'fine_tune'))):
+            f_subdirs.append(possible_dir)
+
+    for subdir in f_subdirs:
+        # Initialize config
+        config = DeeplabV3Config(create_dirs=False)
+        config.load_config(os.path.join(base_path, 'config.ini'))
+        best_weight_path = utils.get_weights(subdir)
+        config.init_fine_tune(best_weight_path)
+
+        optimizer = config.model_from_dict_w_opt(utils.load_pik(os.path.join(subdir, 'config.dat')))
+        config.N_EPOCHS = 10
+        config.INITIAL_LEARNING_RATE = 1e-6
+
+        train_model(config, optimizer)
+
+
 
 def train_debug():
     print('')

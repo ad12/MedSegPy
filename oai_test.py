@@ -19,7 +19,7 @@ from config import DeeplabV3Config, SegnetConfig, EnsembleUDSConfig, UNetConfig
 import utils
 
 
-def test_model(config, save_file=1):
+def test_model(config, save_file=0):
     # set image format to be (N, dim1, dim2, dim3, ch)
 
     test_path = config.TEST_PATH
@@ -83,14 +83,23 @@ def test_model(config, save_file=1):
 
     end = time.time()
 
+    stats_string = get_stats_string(dice_losses, skipped_count, end-start)
     # Print some summary statistics
     print('--'*20)
-    print('Overall Summary:')
-    print('%d Skipped' % skipped_count)
-    print('Mean= %0.4f Std = %0.3f' % (np.mean(dice_losses),np.std(dice_losses)))
-    print('Median = %0.4f' % np.median(dice_losses))
-    print('Time required = %0.1f seconds.'%(end-start))
+    print(stats_string)
     print('--'*20)
+
+    # Write details to test file
+    with open(os.path.join(test_result_path, 'results.txt'), 'w+') as f:
+        f.write(stats_string)
+
+
+def get_stats_string(dice_losses, skipped_count, testing_time):
+    s = 'Overall Summary:\n'
+    s += '%d Skipped\n' % skipped_count
+    s += 'Mean= %0.4f Std = %0.3f\n' % (np.mean(dice_losses),np.std(dice_losses))
+    s += 'Median = %0.4f\n' % np.median(dice_losses)
+    s += 'Time required = %0.1f seconds.\n'% testing_time
 
 
 def get_valid_subdirs(base_path):
@@ -102,7 +111,7 @@ def get_valid_subdirs(base_path):
     files = os.listdir(base_path)
     subdirs = []
     for file in files:
-        if (os.path.isdir(file) and os.path.isfile(os.path.join(base_path, file, 'config.txt'))):
+        if (os.path.isdir(os.path.join(base_path, file)) and os.path.isfile(os.path.join(base_path, file, 'config.ini'))):
             subdir = os.path.join(base_path, file)
             subdirs.append(subdir)
 
@@ -113,43 +122,22 @@ def get_valid_subdirs(base_path):
     return subdirs
 
 
-def get_weights(base_folder):
-    """
-    Gets the best weights file inside the base_folder
-    :param base_folder: dirpath where weights are stored
-    :return: h5 file
-
-    Assumes that only the best weights are stored, so searching for the epoch should be enough
-    """
-    files = os.listdir(base_folder)
-    max_epoch = -1
-    best_file = ''
-    for file in files:
-        # Ensure the file is an h5 file
-        if not(os.path.isfile(file) and file.endswith('.h5')):
-            continue
-
-        # Get file with max epochs
-        train_info = file.split('.')[1]
-        epoch = int(train_info.split('-')[0])
-
-        if (epoch > max_epoch):
-            max_epoch = epoch
-            best_file = file
-
-    return os.path.join(base_folder, best_file)
-
-
 def batch_test(base_folder):
     # get list of directories to get info from
     subdirs = get_valid_subdirs(base_folder)
 
     for subdir in subdirs:
         # Initialize config
-
+        config = DeeplabV3Config(create_dirs=False)
+        config.load_config(os.path.join(base_folder, 'config.ini'))
+        config.change_to_test()
 
         # Get best weight path
-        config.TEST_WEIGHT_PATH = get_weights(subdir)
+        best_weight_path = utils.get_weights(subdir)
+        print('Best weight path: %s' % best_weight_path)
+        config.TEST_WEIGHT_PATH = best_weight_path
+
+        test_model(config)
 
 
 local_testing_test_path = '../sample_data/test_data'
@@ -160,5 +148,6 @@ if __name__ == '__main__':
     os.environ['CUDA_VISIBLE_DEVICES']="3"
 
     # set config based on what you want to train
-    config = UNetConfig(state='testing')
-    test_model(config)
+    #config = UNetConfig(state='testing')
+    #test_model(config)
+
