@@ -116,11 +116,14 @@ class Config():
     def load_config(self, ini_filepath):
         vars_dict = utils.load_config(ini_filepath)
 
-        if(vars_dict['CP_SAVE_PATH'] != self.CP_SAVE_PATH):
-            raise ValueError('Wrong config. Expected %s' % str(vars_dict['CP_SAVE_PATH']))
+        if(vars_dict['CP_SAVE_TAG'] != self.CP_SAVE_TAG):
+            raise ValueError('Wrong config. Expected %s' % str(vars_dict['CP_SAVE_TAG']))
 
         for key in vars_dict.keys():
-            self.__setattr__(key, vars_dict[key])
+            upper_case_key = str(key).upper()
+            if not hasattr(self, upper_case_key):
+                raise ValueError('Key %s does not exist. Please make sure all variable names are fully capitalized' % upper_case_key)
+            self.__setattr__(str(key).upper(), vars_dict[key])
 
     def to_dict_w_opt(self, model):
         """Serialize a model and add the config of the optimizer
@@ -162,7 +165,8 @@ class Config():
 class DeeplabV3Config(Config):
     CP_SAVE_TAG = 'deeplabv3_2d'
     DIL_RATES = (1, 1, 1)
-
+    AT_DIVISOR = 2
+    
     FINE_TUNE = False
     INIT_WEIGHT_PATH = '/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d/2018-08-21-07-03-24/deeplabv3_2d_weights.018-0.1191.h5'
 

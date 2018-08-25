@@ -70,9 +70,11 @@ def load_config(filepath):
     config = configparser.ConfigParser()
     config.read(filepath)
 
-    a_dict = dict()
-    c = config['DEFAULT']
-    for key in c.keys():
-        a_dict[key] = c[key]
+    return config['DEFAULT']
 
-    return a_dict
+
+if __name__ == '__main__':
+    from config import DeeplabV3Config
+
+    config = DeeplabV3Config(create_dirs=False)
+    config.load_config('test_data/config.ini')
