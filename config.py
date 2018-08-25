@@ -22,7 +22,7 @@ class Config():
     IMG_SIZE = (288, 288, 1)
 
     # Training epochs
-    N_EPOCHS = 30
+    N_EPOCHS = 20
 
     TRAIN_BATCH_SIZE = 12
     VALID_BATCH_SIZE = 35
