@@ -14,7 +14,8 @@ from keras.callbacks import ReduceLROnPlateau as rlrp
 from keras.callbacks import TensorBoard as tfb
 import keras.callbacks as kc
 
-from config import DeeplabV3Config, SegnetConfig, EnsembleUDSConfig
+import config as MCONFIG
+from config import DeeplabV3Config, SegnetConfig, EnsembleUDSConfig, UNetConfig
 from im_generator import calc_generator_info, img_generator
 from losses import dice_loss
 
@@ -95,7 +96,7 @@ def train_model(config, optimizer=None):
 
     # Save optimizer state
     utils.save_optimizer(model.optimizer, config.CP_SAVE_PATH)
-    
+
     # Save files to write as output
     data = [hist_cb.epoch, hist_cb.losses, hist_cb.val_losses]
     with open(pik_save_path, "wb") as f:
@@ -192,6 +193,15 @@ def train_debug():
     train_model(config)
 
     K.clear_session()
+
+
+def data_limitation_train():
+    MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_data_limit/oai_data'
+    
+    config = UNetConfig()
+    config.
+    # must exit because config constant has been overwritten
+    exit()
 
 if __name__ == '__main__':
     os.environ["CUDA_VISIBLE_DEVICES"]="1"

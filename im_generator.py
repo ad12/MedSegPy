@@ -25,7 +25,10 @@ def preprocess_input_scale(im):
 
 
 # find unique data regardless of the file prefix
-def calc_generator_info(data_path, batch_size, learn_files=[]):
+def calc_generator_info(data_path, batch_size, learn_files=[], pids=None):
+    if pids is not None:
+        learn_files=[]
+
     files = listdir(data_path)
     unique_filename = {}
 
@@ -45,6 +48,19 @@ def calc_generator_info(data_path, batch_size, learn_files=[]):
     batches_per_epoch = nfiles // batch_size
 
     return (files, batches_per_epoch)
+
+
+def add_file(file, unique_filename, pids):
+    if pids is None:
+        return file not in unique_filename
+
+    if (not file in unique_filename):
+        for pid in pids:
+            pid_str = str(pid)
+            if pid_str in file:
+                return True
+
+    return False
 
 
 def dess_generator(data_path, batch_size, img_size, file_types, tag,
@@ -170,8 +186,8 @@ def add_background_layer(seg):
     a = np.concatenate([background, temp_seg], axis=-1)
     return a
 
-def img_generator(data_path, batch_size, img_size, tag, tissue_inds, shuffle_epoch=True):
-    files, batches_per_epoch = calc_generator_info(data_path, batch_size)
+def img_generator(data_path, batch_size, img_size, tag, tissue_inds, shuffle_epoch=True, pids=None):
+    files, batches_per_epoch = calc_generator_info(data_path, batch_size, pids)
 
     # img_size must be 3D
     assert(len(img_size) == 3)

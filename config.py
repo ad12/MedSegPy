@@ -10,8 +10,13 @@ SEGNET_NAME = 'segnet_2d'
 UNET_NAME = 'unet_2d'
 ENSEMBLE_UDS_NAME = 'ensemble_uds'
 
+# This is the default save path prefix - please change if you desire something else
+SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/oai_data'
+
 class Config():
     VERSION = 1
+
+    PIDS = None
 
     DEBUG = False
 
@@ -88,7 +93,7 @@ class Config():
                 self.TEST_RESULT_PATH = utils.check_dir(os.path.join('./test_results', self.CP_SAVE_TAG, self.TAG, self.DATE_TIME_STR))
 
     def init_training_paths(self, prefix):
-        self.CP_SAVE_PATH = utils.check_dir(os.path.join('/bmrNAS/people/arjun/msk_seg_networks/oai_data', self.CP_SAVE_TAG, prefix))
+        self.CP_SAVE_PATH = utils.check_dir(os.path.join(SAVE_PATH_PREFIX, self.CP_SAVE_TAG, prefix))
         self.PIK_SAVE_PATH = os.path.join(self.CP_SAVE_PATH, 'pik_data.dat')
         self.PIK_SAVE_PATH_DIR = utils.check_dir(os.path.dirname(self.PIK_SAVE_PATH))
         self.TF_LOG_DIR = utils.check_dir(os.path.join(self.CP_SAVE_PATH, 'tf_log'))
