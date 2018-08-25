@@ -230,17 +230,19 @@ def data_limitation_train():
     exit()
 
 if __name__ == '__main__':
-    os.environ["CUDA_VISIBLE_DEVICES"]="0"
+    os.environ["CUDA_VISIBLE_DEVICES"]="2"
     os.environ["TF_CPP_MIN_LOG_LEVEL"]="2"
     
-    train_deeplab(16, (1, 9, 18))
-    #train_deeplab(16, (2, 4, 6))
-    #train_deeplab(16, (3, 6, 9))
+    #train_deeplab(16, (1, 9, 18))
+    #train_deeplab(16, (2, 4, 6)) - next
+    #train_deeplab(16, (3, 6, 9)) - next
 
     #train_deeplab(8, (1, 9, 18))
     #train_deeplab(8, (2, 4, 6))
     #train_deeplab(8, (3, 6, 9))
-    train_deeplab(8, (2, 6, 12))
+    #train_deeplab(8, (2, 6, 12))
+
+    data_limitation_train()
 
     #train_debug()
 
