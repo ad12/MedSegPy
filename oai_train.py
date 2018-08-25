@@ -4,6 +4,7 @@ from __future__ import print_function, division
 
 import pickle
 import os
+import random
 
 from keras.optimizers import Adam
 from keras import backend as K
@@ -22,7 +23,7 @@ from losses import dice_loss
 from models import get_model
 
 import utils
-
+import parse_pids
 
 def train_model(config, optimizer=None):
     
@@ -173,8 +174,10 @@ def fine_tune_deeplab(base_path):
         config.init_fine_tune(best_weight_path)
 
         optimizer = config.model_from_dict_w_opt(utils.load_pik(os.path.join(subdir, 'config.dat')))
+
         config.N_EPOCHS = 10
         config.INITIAL_LEARNING_RATE = 1e-6
+        config.DROP_RATE = 2.0
 
         train_model(config, optimizer)
 
@@ -197,9 +200,32 @@ def train_debug():
 
 def data_limitation_train():
     MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_data_limit/oai_data'
-    
-    config = UNetConfig()
-    config.
+    pids = utils.load_pik(parse_pids.PID_TXT_PATH)
+    num_pids = len(pids)
+
+    # run network training
+    pid_counts = [1]
+    pid_counts.extend(list(range(5,num_pids+1,5)))
+
+    for pid_count in pid_counts:
+        MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_data_limit/oai_data/%03d' % pid_count
+
+        if (pid_count > num_pids):
+            pid_count = num_pids
+
+        # Randomly subsample pids
+        pids_sampled = random.sample(pids, pid_count)
+
+        config = UNetConfig()
+        config.N_EPOCHS = 10
+        config.PIDS = pids_sampled
+
+        config.save_config()
+
+        train_model(config)
+
+        K.clear_session()
+
     # must exit because config constant has been overwritten
     exit()
 
