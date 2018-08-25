@@ -58,7 +58,7 @@ def train_model(config, optimizer=None):
 
     # set image format to be (N, dim1, dim2, dim3, ch)
     K.set_image_data_format('channels_last')
-    train_files, train_nbatches = calc_generator_info(train_path, train_batch_size, learn_files)
+    train_files, train_nbatches = calc_generator_info(train_path, train_batch_size, learn_files, pids=config.PIDS)
     valid_files, valid_nbatches = calc_generator_info(valid_path, valid_batch_size)
 
     print('INFO: Train size: %d, batch size: %d' % (len(train_files), train_batch_size))
@@ -87,7 +87,7 @@ def train_model(config, optimizer=None):
 
     # Start the training
     model.fit_generator(
-        img_generator(train_path, train_batch_size, img_size, tag, config.TISSUES),
+        img_generator(train_path, train_batch_size, img_size, tag, config.TISSUES, pids=config.PIDS),
         train_nbatches,
         epochs=n_epochs,
         validation_data=img_generator(valid_path, valid_batch_size, img_size, tag, config.TISSUES),
