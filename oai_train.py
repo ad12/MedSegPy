@@ -169,10 +169,10 @@ if __name__ == '__main__':
     #train_deeplab(16, (2, 4, 6))
     #train_deeplab(16, (3, 6, 9))
 
-    #train_deeplab(8, (1, 9, 18))
-    #train_deeplab(8, (2, 4, 6))
-    #train_deeplab(8, (3, 6, 9))
+    train_deeplab(8, (1, 9, 18))
+    train_deeplab(8, (2, 4, 6))
+    train_deeplab(8, (3, 6, 9))
     #train_deeplab(8, (2, 6, 12))
 
-    train_debug()
+    #train_debug()
 
