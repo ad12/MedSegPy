@@ -34,7 +34,7 @@ def calc_generator_info(data_path, batch_size, learn_files=[], pids=None):
 
     for file in files:
         file, _ = splitext(file)
-        if not file in unique_filename:
+        if add_file(file, unique_filename, pids):
             unique_filename[file] = file
 
     files = list(unique_filename.keys())
@@ -187,7 +187,7 @@ def add_background_layer(seg):
     return a
 
 def img_generator(data_path, batch_size, img_size, tag, tissue_inds, shuffle_epoch=True, pids=None):
-    files, batches_per_epoch = calc_generator_info(data_path, batch_size, pids)
+    files, batches_per_epoch = calc_generator_info(data_path, batch_size, pids=pids)
 
     # img_size must be 3D
     assert(len(img_size) == 3)
