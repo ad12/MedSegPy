@@ -75,6 +75,10 @@ def train_model(config):
     callbacks_list = [tfb_cb, cp_cb, lr_cb, hist_cb]
     
     print('Starting training')
+    
+    if (config.DEBUG):
+        config.N_EPOCHS = 1
+        train_nbatches = 5
 
     # Start the training
     model.fit_generator(
@@ -143,6 +147,19 @@ def train_deeplab(OS, dilation_rates):
 
     K.clear_session()
 
+def train_debug():
+    print('')
+    print('DEBUGGING.....')
+    config = DeeplabV3Config()
+    config.DEBUG = True
+    config.N_EPOCHS = 1
+    config.OS = 8
+    config.DIL_RATES = (1, 1, 1)
+    train_model(config)
+
+    config.save_config()
+
+    K.clear_session()
 
 if __name__ == '__main__':
     os.environ["CUDA_VISIBLE_DEVICES"]="1"
@@ -152,10 +169,10 @@ if __name__ == '__main__':
     #train_deeplab(16, (2, 4, 6))
     #train_deeplab(16, (3, 6, 9))
 
-    train_deeplab(8, (1, 9, 18))
-    train_deeplab(8, (2, 4, 6))
-    train_deeplab(8, (3, 6, 9))
+    #train_deeplab(8, (1, 9, 18))
+    #train_deeplab(8, (2, 4, 6))
+    #train_deeplab(8, (3, 6, 9))
     #train_deeplab(8, (2, 6, 12))
 
-
+    train_debug()
 
