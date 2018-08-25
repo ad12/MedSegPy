@@ -93,6 +93,9 @@ def train_model(config, optimizer=None):
         callbacks=callbacks_list,
         verbose=1)
 
+    # Save optimizer state
+    utils.save_optimizer(model.optimizer, config.CP_SAVE_PATH)
+    
     # Save files to write as output
     data = [hist_cb.epoch, hist_cb.losses, hist_cb.val_losses]
     with open(pik_save_path, "wb") as f:
@@ -139,14 +142,14 @@ class LossHistory(kc.Callback):
        # self.lr.append(step_decay(len(self.losses)))
         self.epoch.append(len(self.losses))
 
-
 def train_deeplab(OS, dilation_rates):
     config = DeeplabV3Config()
     config.OS = OS
     config.DIL_RATES = dilation_rates
-    train_model(config)
-    
+
     config.save_config()
+
+    train_model(config)
 
     K.clear_session()
 
@@ -175,7 +178,6 @@ def fine_tune_deeplab(base_path):
         train_model(config, optimizer)
 
 
-
 def train_debug():
     print('')
     print('DEBUGGING.....')
@@ -184,9 +186,10 @@ def train_debug():
     config.N_EPOCHS = 1
     config.OS = 8
     config.DIL_RATES = (1, 1, 1)
-    train_model(config)
 
     config.save_config()
+
+    train_model(config)
 
     K.clear_session()
 

@@ -99,6 +99,30 @@ def get_weights(base_folder):
 
     return os.path.join(base_folder, best_file)
 
+def save_optimizer(optimizer, dirpath):
+    """Serialize a model and add the config of the optimizer
+    """
+    if optimizer is None:
+        return
+
+    config = dict()
+    config['optimizer'] = optimizer.get_config()
+
+    filepath = os.path.join(dirpath, 'optimizer.dat')
+    # Save optimizer state
+    save_pik(config, filepath)
+
+def load_optimizer(dirpath):
+    """ Return model and optimizer in previous state
+    """
+    from keras import optimizers
+    filepath = os.path.join(dirpath, 'optimizer.dat')
+    model_dict = load_pik(filepath)
+    optimizer_params = dict([(k,v) for k,v in model_dict.get('optimizer').items()])
+    optimizer = optimizers.get(optimizer_params)
+
+    return optimizer
+
 if __name__ == '__main__':
     from config import DeeplabV3Config
 

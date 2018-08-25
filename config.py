@@ -108,13 +108,7 @@ class Config():
             config_vars[m_var] = getattr(self, m_var)
         utils.save_config(config_vars, filename)
 
-        # Save optimizer state
-        filename = os.path.join(self.CP_SAVE_PATH, 'config.dat')
-        m_config = self.to_dict_w_opt(model)
-        utils.save_pik(m_config, filename)
-
         # Save as object to make it easy to load
-        self.M_CONFIG = m_config
         filename = os.path.join(self.CP_SAVE_PATH, 'config_obj.dat')
         utils.save_pik(self, filename)
 
@@ -129,28 +123,6 @@ class Config():
             if not hasattr(self, upper_case_key):
                 raise ValueError('Key %s does not exist. Please make sure all variable names are fully capitalized' % upper_case_key)
             self.__setattr__(str(key).upper(), vars_dict[key])
-
-    def to_dict_w_opt(self, model):
-        """Serialize a model and add the config of the optimizer
-        """
-        if model is None:
-            return None
-        config = dict()
-        config_m = model.get_config()
-        config['config'] = {'class_name': model.__class__.__name__,'config': config_m,}
-        if hasattr(model, 'optimizer'):
-            config['optimizer'] = model.optimizer.get_config()
-
-        return config
-
-    def model_from_dict_w_opt(self, model_dict):
-        """ Return model and optimizer in previous state
-        """
-        from keras import optimizers
-        optimizer_params = dict([(k,v) for k,v in model_dict.get('optimizer').items()])
-        optimizer = optimizers.get(optimizer_params)
-
-        return optimizer
 
     def init_fine_tune(self, init_weight_path):
         if (self.state != 'training'):
