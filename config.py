@@ -52,7 +52,8 @@ class Config():
     # Dataset Paths
     TRAIN_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/train_aug_2d'
     VALID_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/valid_2d'
-    TEST_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/test_2d'
+    #TEST_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/test_2d'
+    TEST_PATH = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/test'
 
     # Training Model Paths
     CP_SAVE_TAG = ''
