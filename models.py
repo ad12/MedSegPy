@@ -29,7 +29,7 @@ def get_model(config):
 def unet_2d_multi_contrast(config):
     if (type(config) is not UNetMultiContrastConfig):
         raise ValueError('config must be instance of UNetMultiContrastConfig')
-
+    print('Initializing multi contrast 2d unet: input size - ' + str(config.IMG_SIZE))
     input_shape = config.IMG_SIZE
     x = Input(input_shape)
     x = Conv2D(1, (1,1), name='conv_mc_comp')(x)

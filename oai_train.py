@@ -87,7 +87,7 @@ def train_model(config, optimizer=None):
 
     # Determine training generator based on version of config
     if (config.VERSION > 1):
-        train_gen = img_generator_oai(train_path, train_batch_size, config.TISSUES, shuffle_epoch=True, pids=config.PIDS)
+        train_gen = img_generator_oai(train_path, train_batch_size, img_size, config.TISSUES, shuffle_epoch=True, pids=config.PIDS)
     else:
         train_gen = img_generator(train_path, train_batch_size, img_size, tag, config.TISSUES, pids=config.PIDS)
 
@@ -273,7 +273,9 @@ if __name__ == '__main__':
     #train_deeplab(8, (3, 6, 9))
     #train_deeplab(8, (2, 6, 12))
 
-    data_limitation_train()
+    #data_limitation_train()
 
     #train_debug()
+
+    unet_2d_multi_contrast_train()
 
