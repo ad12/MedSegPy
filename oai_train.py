@@ -244,6 +244,7 @@ def data_limitation_train():
 
 
 def unet_2d_multi_contrast_train():
+    MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/akshay/dl/oai_data/segnet_2d/'
 
     # By default, loads weights from original 2D unet
     config = UNetMultiContrastConfig()
@@ -258,6 +259,9 @@ def unet_2d_multi_contrast_train():
     config.DROP_RATE = 1.0
 
     train_model(config)
+
+    # need to exit because overwritting config parameters
+    exit()
 
 
 
