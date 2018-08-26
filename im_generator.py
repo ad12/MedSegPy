@@ -265,11 +265,16 @@ def img_generator_test(data_path, batch_size, img_size, tag, tissue_inds, shuffl
 def inspect_vals(x):
     print('0: %0.2f, 1: %0.2f' %(np.sum(x==0), np.sum(x==1)))
 
-def img_generator_oai(data_path, mask_path, batch_size, img_size, tissue, shuffle_epoch=True):
-    files, batches_per_epoch = calc_generator_info(data_path, batch_size)
+def img_generator_oai(data_path, batch_size, img_size, tissue, shuffle_epoch=True, pids=None):
+    files, batches_per_epoch = calc_generator_info(data_path, batch_size, pids=pids)
 
-    x = np.zeros((batch_size,) + img_size + (1,))
-    y = np.zeros((batch_size,) + img_size + (1,))
+    # img_size must be 3D
+    assert(len(img_size) == 3)
+    total_classes = len(tissue)
+    mask_size = (img_size[0], img_size[1], total_classes)
+
+    x = np.zeros((batch_size,) + img_size)
+    y = np.zeros((batch_size,) + mask_size)
 
     while True:
 
@@ -289,9 +294,9 @@ def img_generator_oai(data_path, mask_path, batch_size, img_size, tissue, shuffl
                 with h5py.File(seg_path, 'r') as f:
                     seg = f['data'][:].astype('float32')
 
-                x[file_cnt, ..., 0] = preprocess_input_scale(im)
+                x[file_cnt, ..., 0] = im
                 y[file_cnt, ..., 0] = seg[..., tissue]
-            yield (preprocess_input(x), y)
+            yield (x, y)
 
 
 def sort_files(files, tag):

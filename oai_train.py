@@ -16,8 +16,8 @@ from keras.callbacks import TensorBoard as tfb
 import keras.callbacks as kc
 
 import config as MCONFIG
-from config import DeeplabV3Config, SegnetConfig, EnsembleUDSConfig, UNetConfig
-from im_generator import calc_generator_info, img_generator
+from config import DeeplabV3Config, SegnetConfig, EnsembleUDSConfig, UNetConfig, UNetMultiContrastConfig
+from im_generator import calc_generator_info, img_generator, img_generator_oai
 from losses import dice_loss
 
 from models import get_model
@@ -85,9 +85,16 @@ def train_model(config, optimizer=None):
         config.N_EPOCHS = 1
         train_nbatches = 5
 
+    # Determine training generator based on version of config
+    if (config.VERSION > 1):
+        train_gen = img_generator_oai(train_path, train_batch_size, config.TISSUES, shuffle_epoch=True, pids=config.PIDS)
+    else:
+        train_gen = img_generator(train_path, train_batch_size, img_size, tag, config.TISSUES, pids=config.PIDS)
+
+
     # Start the training
     model.fit_generator(
-        img_generator(train_path, train_batch_size, img_size, tag, config.TISSUES, pids=config.PIDS),
+        train_gen,
         train_nbatches,
         epochs=n_epochs,
         validation_data=img_generator(valid_path, valid_batch_size, img_size, tag, config.TISSUES),
@@ -233,6 +240,25 @@ def data_limitation_train():
 
     # must exit because config constant has been overwritten
     exit()
+
+
+def unet_2d_multi_contrast_train():
+
+    # By default, loads weights from original 2D unet
+    config = UNetMultiContrastConfig()
+
+    # By default, loads weights from original 2D unet
+    # To not load these weights by default, uncomment line below
+    #config.INIT_UNET_2D = False
+
+    # Adjust hyperparameters
+    config.N_EPOCHS = 10
+    config.DROP_FACTOR = 0.8
+    config.DROP_RATE = 1.0
+
+    train_model(config)
+
+
 
 if __name__ == '__main__':
     os.environ["CUDA_VISIBLE_DEVICES"]="2"
