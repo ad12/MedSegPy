@@ -14,7 +14,7 @@ ENSEMBLE_UDS_NAME = 'ensemble_uds'
 SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/oai_data'
 
 class Config():
-    VERSION = 1
+    VERSION = 2
 
     PIDS = None
 
@@ -50,9 +50,9 @@ class Config():
     INIT_WEIGHT_PATH = ''
 
     # Dataset Paths
-    TRAIN_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/train_aug_2d'
-    VALID_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/valid_2d'
-    TEST_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/test_2d'
+    TRAIN_PATH = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/train_aug/'
+    VALID_PATH = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/valid/'
+    TEST_PATH = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/test'
 
     # Training Model Paths
     CP_SAVE_TAG = ''
@@ -193,3 +193,18 @@ class EnsembleUDSConfig(Config):
 
     def __init__(self, state='training', create_dirs=True):
         super().__init__(self.CP_SAVE_TAG, state, create_dirs=create_dirs)
+
+
+class UNetMultiContrastConfig(Config):
+    IMG_SIZE = (288, 288, 3)
+
+    CP_SAVE_TAG = 'unet_2d_multi_contrast'
+
+    # Whether to load weights from original unet model
+    INIT_UNET_2D = True
+    INIT_UNET_2D_WEIGHTS = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/select_weights/unet_2d_fc_weights.004--0.8968.h5'
+
+    def __init__(self, state='training', create_dirs=True):
+        super().__init__(self.CP_SAVE_TAG, state, create_dirs=create_dirs)
+
+

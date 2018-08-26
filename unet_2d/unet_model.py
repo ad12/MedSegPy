@@ -7,6 +7,7 @@ from keras.models import Model
 from keras.layers import Input, Conv2D, MaxPooling2D, Conv2DTranspose, concatenate, Dropout, Concatenate
 from keras.layers import BatchNormalization as BN
 import keras.backend as K
+from keras.engine.topology import get_source_inputs
 
 # List of tissues that can be segmented
 FEMORAL_CARTILAGE_STR = 'fc'
@@ -37,7 +38,7 @@ def unet_2d_model(input_size=DEFAULT_INPUT_SIZE, input_tensor=None):
     :raise ValueError if input_size is not tuple or dimensions of input_size do not match (height, width, 1)
     """
 
-    if type(input_size) is not tuple or len(input_size) != 3 or input_size[2] != 1:
+    if input_tensor is None and (type(input_size) is not tuple or len(input_size) != 3):
         raise ValueError('input_size must be a tuple of size (height, width, 1)')
 
     nfeatures = [2 ** feat * 32 for feat in np.arange(6)]
@@ -110,6 +111,9 @@ def unet_2d_model(input_size=DEFAULT_INPUT_SIZE, input_tensor=None):
     # combine features
     recon = Conv2D(1, (1, 1), padding='same', activation='sigmoid')(conv)
 
-    model = Model(inputs=[inputs], outputs=[recon])
+    if (input_tensor is not None):
+        inputs = get_source_inputs(input_tensor)
+
+    model = Model(inputs=inputs, outputs=[recon])
 
     return model

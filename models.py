@@ -3,7 +3,7 @@ from keras.layers import Input, Conv2D, Concatenate, ZeroPadding2D, Cropping2D
 from keras import Model
 from keras.initializers import Zeros, Ones, Constant
 
-from config import DeeplabV3Config, SegnetConfig, UNetConfig, EnsembleUDSConfig
+from config import DeeplabV3Config, SegnetConfig, UNetConfig, EnsembleUDSConfig, UNetMultiContrastConfig
 from deeplab_2d.deeplab_model import Deeplabv3
 from segnet_2d.segnet import Segnet, Segnet_v2
 from unet_2d.unet_model import unet_2d_model
@@ -20,8 +20,26 @@ def get_model(config):
         return unet_2d(config)
     elif (type(config) is EnsembleUDSConfig):
         return ensemble_uds(config)
+    elif (type(config) is UNetMultiContrastConfig):
+        return unet_2d_multi_contrast(config)
     else:
         raise ValueError('This config type has not been implemented') 
+
+
+def unet_2d_multi_contrast(config):
+    if (type(config) is not UNetMultiContrastConfig):
+        raise ValueError('config must be instance of UNetMultiContrastConfig')
+
+    input_shape = config.IMG_SIZE
+    x = Input(input_shape)
+    x = Conv2D(1, (1,1), name='conv_mc_comp')(x)
+    model = unet_2d_model(input_tensor=x)
+
+    # only load weights for layers that share the same name
+    if (config.INIT_UNET_2D):
+        model.load_weights(config.INIT_UNET_2D_WEIGHTS, by_name=True)
+
+    return model
 
 def ensemble_uds(config):
     if (type(config) is not EnsembleUDSConfig):
@@ -109,3 +127,10 @@ def __sigmoid_activation_layer(output, num_classes):
     # Initializing kernel weights to 1 and bias to 0.
     # i.e. without training, the output would be a sigmoid activation on each pixel of the input
     return Conv2D(num_classes, (1,1), activation='sigmoid', kernel_initializer=Ones(), bias_initializer=Zeros(), name='output_activation')(output)
+
+
+if __name__ == '__main__':
+    config = UNetMultiContrastConfig(create_dirs=False)
+    config.INIT_UNET_2D_WEIGHTS = './test_data/unet_2d_fc_weights.004--0.8968.h5'
+
+    unet_2d_multi_contrast(config)
