@@ -88,8 +88,10 @@ def train_model(config, optimizer=None):
     # Determine training generator based on version of config
     if (config.VERSION > 1):
         train_gen = img_generator_oai(train_path, train_batch_size, img_size, config.TISSUES, shuffle_epoch=True, pids=config.PIDS)
+        val_gen = img_generator_oai(valid_path, valid_batch_size, img_size, config.TISSUES, tag=tag, shuffle_epoch=False)
     else:
         train_gen = img_generator(train_path, train_batch_size, img_size, tag, config.TISSUES, pids=config.PIDS)
+        val_gen = img_generator(valid_path, valid_batch_size, img_size, tag, config.TISSUES)
 
 
     # Start the training
@@ -97,7 +99,7 @@ def train_model(config, optimizer=None):
         train_gen,
         train_nbatches,
         epochs=n_epochs,
-        validation_data=img_generator(valid_path, valid_batch_size, img_size, tag, config.TISSUES),
+        validation_data=val_gen,
         validation_steps=valid_nbatches,
         callbacks=callbacks_list,
         verbose=1)
@@ -196,7 +198,7 @@ def train_debug():
     config = DeeplabV3Config()
     config.DEBUG = True
     config.N_EPOCHS = 1
-    config.OS = 8
+    config.OS = 16
     config.DIL_RATES = (1, 1, 1)
 
     config.save_config()
@@ -270,7 +272,7 @@ if __name__ == '__main__':
     os.environ["TF_CPP_MIN_LOG_LEVEL"]="2"
     
     #train_deeplab(8, (6, 12, 18))  
-    train_deeplab(16, (6, 12, 18))
+    #train_deeplab(16, (6, 12, 18))
     #train_deeplab(16, (1, 9, 18))
     #train_deeplab(16, (2, 4, 6)) - next
     #train_deeplab(16, (3, 6, 9)) - next
@@ -282,7 +284,7 @@ if __name__ == '__main__':
 
     #data_limitation_train()
 
-    #train_debug()
+    train_debug()
 
     #unet_2d_multi_contrast_train()
 
