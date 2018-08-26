@@ -199,6 +199,7 @@ def train_debug():
 
 
 def data_limitation_train():
+    import math
     MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_data_limit/oai_data'
     pids = utils.load_pik(parse_pids.PID_TXT_PATH)
     num_pids = len(pids)
@@ -206,6 +207,7 @@ def data_limitation_train():
     # run network training
     pid_counts = [1]
     pid_counts.extend(list(range(5,num_pids+1,5)))
+    pid_counts = [5, 15, 30, 60]
 
     for pid_count in pid_counts:
         MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_data_limit/oai_data/%03d' % pid_count
@@ -215,9 +217,12 @@ def data_limitation_train():
 
         # Randomly subsample pids
         pids_sampled = random.sample(pids, pid_count)
+        s_ratio = math.ceil(num_pids / pid_count)
 
         config = UNetConfig()
-        config.N_EPOCHS = 10
+        config.N_EPOCHS = 10 * math.ceil(num_pids / pid_count)
+        config.DROP_FACTOR = config.DROP_FACTOR ** (1/s_ratio)
+       
         config.PIDS = pids_sampled
 
         config.save_config()
