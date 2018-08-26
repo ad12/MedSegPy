@@ -57,7 +57,7 @@ def test_model(config, save_file=0):
         # TODO: Define multi-class dice loss during testing
         dl = dice_loss_test(labels,y_test)
         skipped=''
-        if (dl > 0.15):
+        if (dl > 0.11):
             dice_losses = np.append(dice_losses,dl)
         else:
             skipped = '- skipped'
@@ -100,7 +100,7 @@ def get_stats_string(dice_losses, skipped_count, testing_time):
     s += 'Mean= %0.4f Std = %0.3f\n' % (np.mean(dice_losses),np.std(dice_losses))
     s += 'Median = %0.4f\n' % np.median(dice_losses)
     s += 'Time required = %0.1f seconds.\n'% testing_time
-
+    return s
 
 def get_valid_subdirs(base_path):
     if base_path is None:
@@ -144,10 +144,10 @@ local_testing_test_path = '../sample_data/test_data'
 local_test_results_path = '../sample_data/results'
 
 if __name__ == '__main__':
-    os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
+    os.environ['TF_CPP_MIN_LOG_LEVEL']='3'
     os.environ['CUDA_VISIBLE_DEVICES']="3"
 
     # set config based on what you want to train
-    #config = UNetConfig(state='testing')
-    #test_model(config)
+    config = UNetConfig(state='testing')
+    test_model(config)
 
