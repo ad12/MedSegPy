@@ -294,7 +294,10 @@ def img_generator_oai(data_path, batch_size, img_size, tissue, shuffle_epoch=Tru
                 with h5py.File(seg_path, 'r') as f:
                     seg = f['data'][:].astype('float32')
                 
-                x[file_cnt, ..., 0] = im
+                if (len(im.shape) == 2):
+                    im = im[..., np.newaxis]
+
+                x[file_cnt, ...] = im
                 y[file_cnt, ...] = seg[..., 0, tissue]
             yield (x, y)
 
