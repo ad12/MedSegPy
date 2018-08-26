@@ -158,7 +158,7 @@ def train_deeplab(OS, dilation_rates):
     
     config.N_EPOCHS = 10
     config.save_config()
-
+    #config.TRAIN_BATCH_SIZE = 5
     train_model(config)
 
     K.clear_session()
@@ -269,7 +269,7 @@ if __name__ == '__main__':
     os.environ["CUDA_VISIBLE_DEVICES"]="1"
     os.environ["TF_CPP_MIN_LOG_LEVEL"]="2"
     
-    train_deeplab(8, (6, 12, 18))  
+    #train_deeplab(8, (6, 12, 18))  
     train_deeplab(16, (6, 12, 18))
     #train_deeplab(16, (1, 9, 18))
     #train_deeplab(16, (2, 4, 6)) - next
