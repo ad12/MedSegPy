@@ -93,11 +93,15 @@ def unet_2d(config):
 def deeplabv3_2d(config):
     if (type(config) is not DeeplabV3Config):
         raise ValueError('config must be an instance of DeeplabConfig')
-
+    print('Initializing deeplab model') 
     input_shape = config.IMG_SIZE
-    OS = 16
+    OS = config.OS
+    dil_rate_input = config.DIL_RATES
+    
+    print('OS: %d' % OS)
+    print('DIL_RATES: ' + str(dil_rate_input))
 
-    model = Deeplabv3(weights=None, input_shape=input_shape, classes=config.NUM_CLASSES, backbone='xception', OS=OS, dilation_divisor=config.AT_DIVISOR)
+    model = Deeplabv3(weights=None, input_shape=input_shape, classes=config.NUM_CLASSES, backbone='xception', OS=OS, dil_rate_input=dil_rate_input)
 
     # Add sigmoid activation layer -
     x = __sigmoid_activation_layer(output=model.layers[-1].output, num_classes=config.NUM_CLASSES)

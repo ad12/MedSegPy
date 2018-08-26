@@ -155,7 +155,8 @@ def train_deeplab(OS, dilation_rates):
     config = DeeplabV3Config()
     config.OS = OS
     config.DIL_RATES = dilation_rates
-
+    
+    config.N_EPOCHS = 10
     config.save_config()
 
     train_model(config)
@@ -261,9 +262,11 @@ def unet_2d_multi_contrast_train():
 
 
 if __name__ == '__main__':
-    os.environ["CUDA_VISIBLE_DEVICES"]="2"
+    os.environ["CUDA_VISIBLE_DEVICES"]="1"
     os.environ["TF_CPP_MIN_LOG_LEVEL"]="2"
     
+    train_deeplab(8, (6, 12, 18))  
+    train_deeplab(16, (6, 12, 18))
     #train_deeplab(16, (1, 9, 18))
     #train_deeplab(16, (2, 4, 6)) - next
     #train_deeplab(16, (3, 6, 9)) - next
@@ -277,5 +280,5 @@ if __name__ == '__main__':
 
     #train_debug()
 
-    unet_2d_multi_contrast_train()
+    #unet_2d_multi_contrast_train()
 

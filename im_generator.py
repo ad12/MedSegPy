@@ -267,7 +267,8 @@ def inspect_vals(x):
 
 def img_generator_oai(data_path, batch_size, img_size, tissue, shuffle_epoch=True, pids=None):
     files, batches_per_epoch = calc_generator_info(data_path, batch_size, pids=pids)
-
+    
+    print('entered')
     # img_size must be 3D
     assert(len(img_size) == 3)
     total_classes = len(tissue)
@@ -290,7 +291,7 @@ def img_generator_oai(data_path, batch_size, img_size, tissue, shuffle_epoch=Tru
                 with h5py.File(im_path, 'r') as f:
                     im = f['data'][:]
 
-                seg_path = '%s/%s.seg' % (mask_path, files[file_ind])
+                seg_path = '%s/%s.seg' % (data_path, files[file_ind])
                 with h5py.File(seg_path, 'r') as f:
                     seg = f['data'][:].astype('float32')
 
