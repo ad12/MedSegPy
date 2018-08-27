@@ -127,7 +127,11 @@ class Config():
             upper_case_key = str(key).upper()
             if not hasattr(self, upper_case_key):
                 raise ValueError('Key %s does not exist. Please make sure all variable names are fully capitalized' % upper_case_key)
-            self.__setattr__(str(key).upper(), vars_dict[key])
+
+            # all data is of type string, but we need to cast back to original data type
+            data_type = type(getattr(self, upper_case_key))
+            var_converted = utils.convert_data_type(vars_dict[key], data_type)
+            self.__setattr__(str(key).upper(), var_converted)
 
     def init_fine_tune(self, init_weight_path):
         if (self.state != 'training'):

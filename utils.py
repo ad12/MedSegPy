@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 import pickle
 import configparser
-
+import ast
 
 def check_dir(dir_path):
     if not os.path.isdir(dir_path):
@@ -72,6 +72,26 @@ def load_config(filepath):
 
     return config['DEFAULT']
 
+def convert_data_type(var_string, data_type):
+    if (data_type is str):
+        return var_string
+
+    if (data_type is float):
+        return float(var_string)
+
+    if (data_type is int):
+        return int(var_string)
+
+    if (data_type is bool):
+        return bool(data_type)
+
+    if (data_type is list):
+        return ast.literal_eval(var_string)
+
+    if (data_type is tuple):
+        return ast.literal_eval(var_string)
+
+
 
 def get_weights(base_folder):
     """
@@ -128,3 +148,5 @@ if __name__ == '__main__':
 
     config = DeeplabV3Config(create_dirs=False)
     config.load_config('test_data/config.ini')
+
+    print('')
