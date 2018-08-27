@@ -307,11 +307,11 @@ def img_generator_oai(data_path, batch_size, img_size, tissue, tag=None, shuffle
 
                 if f_pid not in f_pids:
                     print(f_pid)
-                    f_pids.append(fname)
+                    f_pids.append(f_pid)
 
             if (testing):
                 if len(f_pids) > 1:
-                    raise ValueError('Multiple pids: in this batch: ' + str(fnames))
+                    raise ValueError('Multiple pids: in this batch: ' + str(f_pids))
                 yield (x,y, fname)
             else:
                 yield (x, y)
