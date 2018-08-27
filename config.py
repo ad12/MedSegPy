@@ -161,7 +161,8 @@ class DeeplabV3Config(Config):
 
     def change_to_test(self):
         self.state = 'testing'
-        config_str = '%d_%d-%d-%d' % ((self.OS, ) + self.DIL_RATES)
+        config_tuple = (self.OS, ) + self.DIL_RATES
+        config_str = '%d_%d-%d-%d' % config_tuple
         self.TEST_RESULT_PATH = utils.check_dir(os.path.join(self.CP_SAVE_PATH, 'test_results', config_str))
 
 
