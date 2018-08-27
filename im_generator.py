@@ -324,7 +324,8 @@ def img_generator_oai_test(data_path, batch_size, img_size, tissue, tag):
         pid = get_file_pid(fname)
         pids.append(pid)
 
-    pids_unique = set(pids)
+    pids_unique = list(set(pids))
+    pids_unique.sort()
 
     pids_dict = dict()
     for pid in pids_unique:
