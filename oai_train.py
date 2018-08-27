@@ -209,6 +209,7 @@ def train_debug():
 
 
 def data_limitation_train():
+    print('Data limitation......')
     import math
     MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_data_limit/oai_data'
     pids = utils.load_pik(parse_pids.PID_TXT_PATH)
@@ -268,23 +269,22 @@ def unet_2d_multi_contrast_train():
 
 
 if __name__ == '__main__':
-    os.environ["CUDA_VISIBLE_DEVICES"]="1"
+    os.environ["CUDA_VISIBLE_DEVICES"]="0"
     os.environ["TF_CPP_MIN_LOG_LEVEL"]="2"
-    
-    #train_deeplab(8, (6, 12, 18))  
+
     #train_deeplab(16, (6, 12, 18))
     #train_deeplab(16, (1, 9, 18))
-    #train_deeplab(16, (2, 4, 6)) - next
-    #train_deeplab(16, (3, 6, 9)) - next
+    #train_deeplab(16, (2, 4, 6))
+    #train_deeplab(16, (3, 6, 9))
 
     #train_deeplab(8, (1, 9, 18))
     #train_deeplab(8, (2, 4, 6))
     #train_deeplab(8, (3, 6, 9))
     #train_deeplab(8, (2, 6, 12))
 
-    #data_limitation_train()
+    data_limitation_train()
 
-    train_debug()
+    #train_debug()
 
     #unet_2d_multi_contrast_train()
 

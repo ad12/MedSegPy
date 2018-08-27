@@ -105,8 +105,9 @@ def get_weights(base_folder):
     max_epoch = -1
     best_file = ''
     for file in files:
+        file_fullpath = os.path.join(base_folder, file)
         # Ensure the file is an h5 file
-        if not(os.path.isfile(file) and file.endswith('.h5')):
+        if not(os.path.isfile(file_fullpath) and file_fullpath.endswith('.h5')):
             continue
 
         # Get file with max epochs
@@ -115,9 +116,9 @@ def get_weights(base_folder):
 
         if (epoch > max_epoch):
             max_epoch = epoch
-            best_file = file
+            best_file = file_fullpath
 
-    return os.path.join(base_folder, best_file)
+    return best_file
 
 def save_optimizer(optimizer, dirpath):
     """Serialize a model and add the config of the optimizer
