@@ -45,7 +45,7 @@ def test_model(config, save_file=0):
     print('Save path: %s' % (test_result_path))
 
     if (config.VERSION > 1):
-        test_gen = img_generator_oai(test_path, test_batch_size, img_size, config.TISSUES, tag=config.TAG, shuffle_epoch=False, pids=None)
+        test_gen = img_generator_oai(test_path, test_batch_size, img_size, config.TISSUES, tag=config.TAG, shuffle_epoch=False, pids=None, testing=True)
     else:
         test_gen = img_generator_test(test_path, test_batch_size, img_size, config.TAG, config.TISSUES, shuffle_epoch=False)
 
@@ -141,12 +141,15 @@ def test_dir(dirpath):
     best_weight_path = utils.get_weights(dirpath)
     print('Best weight path: %s' % best_weight_path)
 
-    config = DeeplabV3Config(create_dirs=False)
+    config = UNetConfig(create_dirs=False)
     config.load_config(os.path.join(dirpath, 'config.ini'))
-    config.change_to_test()
     config.TEST_WEIGHT_PATH = best_weight_path
-
-    test_model(config)
+    #config.OS = 16
+    #config.DIL_RATES = (1, 9, 18)
+    config.change_to_test()
+    print(config.TEST_RESULT_PATH)
+    #config.TEST_BATCH_SIZE = 9
+    test_model(config, save_file=1)
 
     K.clear_session()
 
@@ -163,5 +166,5 @@ if __name__ == '__main__':
     #config = UNetConfig(state='testing')
     #test_model(config)
 
-    test_dir('/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d/2018-08-26-20-01-32')
+    test_dir('/bmrNAS/people/arjun/msk_data_limit/oai_data/005/unet_2d/2018-08-26-20-19-31')
 
