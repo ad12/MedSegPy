@@ -49,8 +49,10 @@ def test_model(config, save_file=0):
     else:
         test_gen = img_generator_test(test_path, test_batch_size, img_size, config.TAG, config.TISSUES, shuffle_epoch=False)
 
+    pids_str = ''
+
     # # Iterature through the files to be segmented
-    for x_test, y_test, fname in test_gen:
+    for x_test, y_test, fname, num_slices in test_gen:
 
         # Perform the actual segmentation using pre-loaded model
         recon = model.predict(x_test, batch_size = test_batch_size)
@@ -68,7 +70,9 @@ def test_model(config, save_file=0):
             skipped_count += 1
         # print(dl)
 
-        print('Dice score for image #%d (name = %s) = %0.3f %s'%(img_cnt, fname, np.mean(dl), skipped))
+        print_str = 'Dice score for image #%d (name = %s, %d slices) = %0.3f %s' % (img_cnt, fname, num_slices, np.mean(dl), skipped)
+        pids_str = pids_str + print_str + '\n'
+        print(print_str)
 
         if (save_file == 1):
             save_name = '%s/%s_recon.pred' %(test_result_path,fname)
@@ -95,7 +99,14 @@ def test_model(config, save_file=0):
 
     # Write details to test file
     with open(os.path.join(test_result_path, 'results.txt'), 'w+') as f:
+        f.write('--'*20)
+        f.write('\n')
+        f.write(pids_str)
+        f.write('--' * 20)
+        f.write('\n')
         f.write(stats_string)
+        f.write('--' * 20)
+        f.write('\n')
 
 
 def get_stats_string(dice_losses, skipped_count, testing_time):

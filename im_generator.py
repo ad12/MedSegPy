@@ -340,6 +340,9 @@ def img_generator_oai_test(data_path, batch_size, img_size, tissue, tag):
             ind = inds[file_cnt]
             fname = files[ind]
 
+            # Make sure that this pid is actually in the filename
+            assert(pid in fname)
+
             im_path = '%s/%s.im' % (data_path, fname)
             with h5py.File(im_path, 'r') as f:
                 im = f['data'][:]
@@ -354,7 +357,7 @@ def img_generator_oai_test(data_path, batch_size, img_size, tissue, tag):
             x[file_cnt, ...] = im
             y[file_cnt, ...] = seg[..., 0, tissue]
 
-        yield (x, y, pid)
+        yield (x, y, pid, num_slices)
 
 def sort_files(files, tag):
     def argsort(seq):
