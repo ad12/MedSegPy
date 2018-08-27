@@ -306,7 +306,6 @@ def img_generator_oai(data_path, batch_size, img_size, tissue, tag=None, shuffle
                 f_pid = f_pid[0]
 
                 if f_pid not in f_pids:
-                    print(f_pid)
                     f_pids.append(f_pid)
 
             if (testing):
