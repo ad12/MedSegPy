@@ -159,6 +159,11 @@ class DeeplabV3Config(Config):
     def __init__(self, state='training', create_dirs=True):
         super().__init__(self.CP_SAVE_TAG, state, create_dirs=create_dirs)
 
+    def change_to_test(self):
+        self.state = 'testing'
+        config_str = '%d_%d-%d-%d' % ((self.OS, ) + self.DIL_RATES)
+        self.TEST_RESULT_PATH = utils.check_dir(os.path.join(self.CP_SAVE_PATH, 'test_results', config_str))
+
 
 class SegnetConfig(Config):
     CP_SAVE_TAG = SEGNET_NAME

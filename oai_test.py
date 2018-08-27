@@ -11,7 +11,7 @@ import os
 
 from keras import backend as K
 
-from im_generator import img_generator_test, calc_generator_info
+from im_generator import img_generator_test, calc_generator_info, img_generator_oai
 from losses import dice_loss_test
 from models import get_model
 
@@ -44,9 +44,13 @@ def test_model(config, save_file=0):
     print('INFO: Test size: %d, batch size: %d, # subjects: %d' % (len(test_files), test_batch_size, ntest))
     print('Save path: %s' % (test_result_path))
 
+    if (config.VERSION > 1):
+        test_gen = img_generator_oai(test_path, test_batch_size, img_size, config.TISSUES, shuffle_epoch=False, pids=None)
+    else:
+        test_gen = img_generator_test(test_path, test_batch_size, img_size, config.TAG, config.TISSUES, shuffle_epoch=False)
+
     # # Iterature through the files to be segmented
-    for x_test, y_test, fname in img_generator_test(test_path, test_batch_size,
-                                                img_size, config.TAG, config.TISSUES, shuffle_epoch=False):
+    for x_test, y_test, fname in test_gen
 
         # Perform the actual segmentation using pre-loaded model
         recon = model.predict(x_test, batch_size = test_batch_size)
@@ -97,10 +101,11 @@ def test_model(config, save_file=0):
 def get_stats_string(dice_losses, skipped_count, testing_time):
     s = 'Overall Summary:\n'
     s += '%d Skipped\n' % skipped_count
-    s += 'Mean= %0.4f Std = %0.3f\n' % (np.mean(dice_losses),np.std(dice_losses))
+    s += 'Mean= %0.4f Std = %0.3f\n' % (np.mean(dice_losses), np.std(dice_losses))
     s += 'Median = %0.4f\n' % np.median(dice_losses)
     s += 'Time required = %0.1f seconds.\n'% testing_time
     return s
+
 
 def get_valid_subdirs(base_path):
     if base_path is None:
@@ -127,27 +132,36 @@ def batch_test(base_folder):
     subdirs = get_valid_subdirs(base_folder)
 
     for subdir in subdirs:
-        # Initialize config
-        config = DeeplabV3Config(create_dirs=False)
-        config.load_config(os.path.join(base_folder, 'config.ini'))
-        config.change_to_test()
+        test_dir(subdir)
 
-        # Get best weight path
-        best_weight_path = utils.get_weights(subdir)
-        print('Best weight path: %s' % best_weight_path)
-        config.TEST_WEIGHT_PATH = best_weight_path
 
-        test_model(config)
+def test_dir(dirpath):
 
+    # Get best weight path
+    best_weight_path = utils.get_weights(dirpath)
+    print('Best weight path: %s' % best_weight_path)
+
+    config = DeeplabV3Config(create_dirs=False)
+    config.load_config(os.path.join(dirpath, 'config.ini'))
+    config.change_to_test()
+    config.TEST_WEIGHT_PATH = best_weight_path
+
+    test_model(config)
+
+    K.clear_session()
+    
 
 local_testing_test_path = '../sample_data/test_data'
 local_test_results_path = '../sample_data/results'
 
+
 if __name__ == '__main__':
-    os.environ['TF_CPP_MIN_LOG_LEVEL']='3'
+    os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
     os.environ['CUDA_VISIBLE_DEVICES']="3"
 
     # set config based on what you want to train
-    config = UNetConfig(state='testing')
-    test_model(config)
+    #config = UNetConfig(state='testing')
+    #test_model(config)
+
+    test_dir('/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d/2018-08-26-20-01-32')
 
