@@ -147,7 +147,6 @@ def test_dir(dirpath):
     #config.OS = 16
     #config.DIL_RATES = (1, 9, 18)
     config.change_to_test()
-    print(config.TEST_RESULT_PATH)
     #config.TEST_BATCH_SIZE = 9
     test_model(config, save_file=1)
 

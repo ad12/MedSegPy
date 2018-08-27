@@ -304,11 +304,12 @@ def img_generator_oai(data_path, batch_size, img_size, tissue, tag=None, shuffle
                 fname = files[file_ind]
 
                 if fname not in fnames:
+                    print(fname)
                     fnames.append(fname)
 
             if (testing):
                 if len(fnames) > 1:
-                    raise ValueError('Multiple filenames in this batch')
+                    raise ValueError('Multiple filenames in this batch: ' + str(fnames))
                 yield (x,y, fname)
             else:
                 yield (x, y)
