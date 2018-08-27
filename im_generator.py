@@ -304,7 +304,7 @@ def img_generator_oai(data_path, batch_size, img_size, tissue, tag=None, shuffle
             yield (x, y)
 
 def get_file_pid(fname):
-    f_pid = fname.split('_')
+    f_pid = fname.split('-')
     return f_pid[0]
 
 def img_generator_oai_test(data_path, batch_size, img_size, tissue, tag):
