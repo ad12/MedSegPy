@@ -50,7 +50,7 @@ def test_model(config, save_file=0):
         test_gen = img_generator_test(test_path, test_batch_size, img_size, config.TAG, config.TISSUES, shuffle_epoch=False)
 
     # # Iterature through the files to be segmented
-    for x_test, y_test, fname in test_gen
+    for x_test, y_test, fname in test_gen:
 
         # Perform the actual segmentation using pre-loaded model
         recon = model.predict(x_test, batch_size = test_batch_size)
@@ -149,7 +149,7 @@ def test_dir(dirpath):
     test_model(config)
 
     K.clear_session()
-    
+
 
 local_testing_test_path = '../sample_data/test_data'
 local_test_results_path = '../sample_data/results'
