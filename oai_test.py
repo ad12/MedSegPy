@@ -11,7 +11,7 @@ import os
 
 from keras import backend as K
 
-from im_generator import img_generator_test, calc_generator_info, img_generator_oai
+from im_generator import img_generator_test, calc_generator_info, img_generator_oai_test
 from losses import dice_loss_test
 from models import get_model
 
@@ -45,7 +45,7 @@ def test_model(config, save_file=0):
     print('Save path: %s' % (test_result_path))
 
     if (config.VERSION > 1):
-        test_gen = img_generator_oai(test_path, test_batch_size, img_size, config.TISSUES, tag=config.TAG, shuffle_epoch=False, pids=None, testing=True)
+        test_gen = img_generator_oai_test(test_path, test_batch_size, img_size, config.TISSUES, tag=config.TAG)
     else:
         test_gen = img_generator_test(test_path, test_batch_size, img_size, config.TAG, config.TISSUES, shuffle_epoch=False)
 

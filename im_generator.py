@@ -265,7 +265,7 @@ def img_generator_test(data_path, batch_size, img_size, tag, tissue_inds, shuffl
 def inspect_vals(x):
     print('0: %0.2f, 1: %0.2f' %(np.sum(x==0), np.sum(x==1)))
 
-def img_generator_oai(data_path, batch_size, img_size, tissue, tag=None, shuffle_epoch=True, pids=None, testing=False):
+def img_generator_oai(data_path, batch_size, img_size, tissue, tag=None, shuffle_epoch=True, pids=None):
     files, batches_per_epoch = calc_generator_info(data_path, batch_size, pids=pids)
     
     # img_size must be 3D
@@ -275,7 +275,6 @@ def img_generator_oai(data_path, batch_size, img_size, tissue, tag=None, shuffle
 
     x = np.zeros((batch_size,) + img_size)
     y = np.zeros((batch_size,) + mask_size)
-    f_pids = []
 
     while True:
 
@@ -301,20 +300,61 @@ def img_generator_oai(data_path, batch_size, img_size, tissue, tag=None, shuffle
                 x[file_cnt, ...] = im
                 y[file_cnt, ...] = seg[..., 0, tissue]
 
-                fname = files[file_ind]
-                f_pid = fname.split('_')
-                f_pid = f_pid[0]
 
-                if f_pid not in f_pids:
-                    f_pids.append(f_pid)
+            yield (x, y)
 
-            if (testing):
-                if len(f_pids) > 1:
-                    raise ValueError('Multiple pids: in this batch: ' + str(f_pids))
-                yield (x,y, fname)
-            else:
-                yield (x, y)
+def get_file_pid(fname):
+    f_pid = fname.split('_')
+    return f_pid[0]
 
+def img_generator_oai_test(data_path, batch_size, img_size, tissue, tag):
+    files, batches_per_epoch = calc_generator_info(data_path, batch_size)
+    files = sort_files(files, tag)
+
+    # img_size must be 3D
+    assert (len(img_size) == 3)
+    total_classes = len(tissue)
+    mask_size = (img_size[0], img_size[1], total_classes)
+
+    x = np.zeros((batch_size,) + img_size)
+    y = np.zeros((batch_size,) + mask_size)
+
+    pids = []
+    for fname in files:
+        pid = get_file_pid(fname)
+        pids.append(pid)
+
+    pids_unique = set(pids)
+
+    pids_dict = dict()
+    for pid in pids_unique:
+        indices = [i for i, x in enumerate(pids) if x == pid]
+        pids_dict[pid] = indices
+
+    for pid in list(pids_unique):
+        inds = pids_dict[pid]
+        num_slices = len(inds)
+        x = np.zeros((num_slices,) + img_size)
+        y = np.zeros((num_slices,) + mask_size)
+        for file_cnt in range(num_slices):
+            ind = inds[file_cnt]
+            fname = files[ind]
+
+            im_path = '%s/%s.im' % (data_path, fname)
+            with h5py.File(im_path, 'r') as f:
+                im = f['data'][:]
+
+            seg_path = '%s/%s.seg' % (data_path, fname)
+            with h5py.File(seg_path, 'r') as f:
+                seg = f['data'][:].astype('float32')
+
+            if (len(im.shape) == 2):
+                im = im[..., np.newaxis]
+
+            x[file_cnt, ...] = im
+            y[file_cnt, ...] = seg[..., 0, tissue]
+
+        yield (x, y, pid)
 
 def sort_files(files, tag):
     def argsort(seq):
