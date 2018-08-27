@@ -102,11 +102,9 @@ def test_model(config, save_file=0):
         f.write('--'*20)
         f.write('\n')
         f.write(pids_str)
-        f.write('--' * 20)
+        f.write('--'*20)
         f.write('\n')
         f.write(stats_string)
-        f.write('--' * 20)
-        f.write('\n')
 
 
 def get_stats_string(dice_losses, skipped_count, testing_time):
