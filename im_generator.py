@@ -265,7 +265,7 @@ def img_generator_test(data_path, batch_size, img_size, tag, tissue_inds, shuffl
 def inspect_vals(x):
     print('0: %0.2f, 1: %0.2f' %(np.sum(x==0), np.sum(x==1)))
 
-def img_generator_oai(data_path, batch_size, img_size, tissue, tag=None, shuffle_epoch=True, pids=None):
+def img_generator_oai(data_path, batch_size, img_size, tissue, tag=None, shuffle_epoch=True, pids=None, testing=False):
     files, batches_per_epoch = calc_generator_info(data_path, batch_size, pids=pids)
     
     # img_size must be 3D
@@ -299,7 +299,13 @@ def img_generator_oai(data_path, batch_size, img_size, tissue, tag=None, shuffle
                 
                 x[file_cnt, ...] = im
                 y[file_cnt, ...] = seg[..., 0, tissue]
-            yield (x, y)
+
+                fname = files[file_ind]
+
+            if (testing):
+                yield (x,y, fname)
+            else:
+                yield (x, y)
 
 
 def sort_files(files, tag):
