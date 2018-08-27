@@ -218,7 +218,7 @@ def data_limitation_train():
     # run network training
     pid_counts = [1]
     pid_counts.extend(list(range(5,num_pids+1,5)))
-    pid_counts = [5, 15, 30, 60]
+    pid_counts = [30, 60]
 
     for pid_count in pid_counts:
         MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_data_limit/oai_data/%03d' % pid_count
@@ -231,7 +231,7 @@ def data_limitation_train():
         s_ratio = math.ceil(num_pids / pid_count)
 
         config = UNetConfig()
-        config.N_EPOCHS = 10 * math.ceil(num_pids / pid_count)
+        config.N_EPOCHS = math.ceil(10 * num_pids / pid_count)
         config.DROP_FACTOR = config.DROP_FACTOR ** (1/s_ratio)
        
         config.PIDS = pids_sampled
@@ -239,7 +239,8 @@ def data_limitation_train():
         config.save_config()
 
         train_model(config)
-
+        
+        print('Epochs: %d' % config.N_EPOCHS)
         K.clear_session()
 
     # must exit because config constant has been overwritten
@@ -269,20 +270,21 @@ def unet_2d_multi_contrast_train():
 
 
 if __name__ == '__main__':
-    os.environ["CUDA_VISIBLE_DEVICES"]="0"
+    os.environ["CUDA_VISIBLE_DEVICES"]="1"
     os.environ["TF_CPP_MIN_LOG_LEVEL"]="2"
 
     #train_deeplab(16, (6, 12, 18))
     #train_deeplab(16, (1, 9, 18))
-    #train_deeplab(16, (2, 4, 6))
-    #train_deeplab(16, (3, 6, 9))
+    train_deeplab(16, (3, 6, 9))
+    train_deeplab(16, (2, 4, 6))
+    train_deeplab(16, (2, 3, 8))
 
     #train_deeplab(8, (1, 9, 18))
     #train_deeplab(8, (2, 4, 6))
     #train_deeplab(8, (3, 6, 9))
     #train_deeplab(8, (2, 6, 12))
 
-    data_limitation_train()
+    #data_limitation_train()
 
     #train_debug()
 

@@ -154,7 +154,7 @@ def test_dir(dirpath):
     config.load_config(os.path.join(dirpath, 'config.ini'))
     config.TEST_WEIGHT_PATH = best_weight_path
     #config.OS = 16
-    #config.DIL_RATES = (1, 9, 18)
+    #config.DIL_RATES = (1, 2, 3)
     config.change_to_test()
     #config.TEST_BATCH_SIZE = 9
     test_model(config, save_file=1)
@@ -174,5 +174,5 @@ if __name__ == '__main__':
     #config = UNetConfig(state='testing')
     #test_model(config)
 
-    test_dir('/bmrNAS/people/arjun/msk_data_limit/oai_data/005/unet_2d/2018-08-26-20-19-31')
-
+    #test_dir('/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d/2018-08-26-20-01-32')
+    test_dir('/bmrNAS/people/arjun/msk_data_limit/oai_data/030/unet_2d//2018-08-27-11-18-07')
