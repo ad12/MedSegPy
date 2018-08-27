@@ -275,7 +275,7 @@ def img_generator_oai(data_path, batch_size, img_size, tissue, tag=None, shuffle
 
     x = np.zeros((batch_size,) + img_size)
     y = np.zeros((batch_size,) + mask_size)
-    fnames = []
+    f_pids = []
 
     while True:
 
@@ -302,14 +302,16 @@ def img_generator_oai(data_path, batch_size, img_size, tissue, tag=None, shuffle
                 y[file_cnt, ...] = seg[..., 0, tissue]
 
                 fname = files[file_ind]
+                f_pid = fname.split('_')
+                f_pid = f_pid[0]
 
-                if fname not in fnames:
-                    print(fname)
-                    fnames.append(fname)
+                if f_pid not in f_pids:
+                    print(f_pid)
+                    f_pids.append(fname)
 
             if (testing):
-                if len(fnames) > 1:
-                    raise ValueError('Multiple filenames in this batch: ' + str(fnames))
+                if len(f_pids) > 1:
+                    raise ValueError('Multiple pids: in this batch: ' + str(fnames))
                 yield (x,y, fname)
             else:
                 yield (x, y)
