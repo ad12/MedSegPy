@@ -59,6 +59,7 @@ def train_model(config, optimizer=None):
 
     # set image format to be (N, dim1, dim2, dim3, ch)
     K.set_image_data_format('channels_last')
+    print(type(config.PIDS))
     train_files, train_nbatches = calc_generator_info(train_path, train_batch_size, learn_files=learn_files, pids=config.PIDS)
     valid_files, valid_nbatches = calc_generator_info(valid_path, valid_batch_size)
 
@@ -80,12 +81,6 @@ def train_model(config, optimizer=None):
 
     callbacks_list = [tfb_cb, cp_cb, lr_cb, hist_cb]
     
-    print('Starting training')
-    
-    if (config.DEBUG):
-        config.N_EPOCHS = 1
-        train_nbatches = 5
-
     # Determine training generator based on version of config
     if (config.VERSION > 1):
         train_gen = img_generator_oai(train_path, train_batch_size, img_size, config.TISSUES, shuffle_epoch=True, pids=config.PIDS)
@@ -181,9 +176,10 @@ def fine_tune(dirpath, config):
     config.init_fine_tune(best_weight_path)
 
     config.N_EPOCHS = 10
-    config.INITIAL_LEARNING_RATE = 1e-6
+    config.INITIAL_LEARNING_RATE = 2e-7
     config.DROP_RATE = 2.0
     config.DROP_FACTOR = 0.5
+    config.MIN_LEARNING_RATE=1e-9
 
     config.summary()
 

@@ -191,19 +191,7 @@ if __name__ == '__main__':
 
     os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
     os.environ['CUDA_VISIBLE_DEVICES']=gpu
-
-    # Test deeplab
-    for i in range(1, len(DEEPLAB_TEST_PATHS)):
-        mdir = DEEPLAB_TEST_PATHS[i]
-        dil_rates = DEEPLAB_DIL_RATES[i]
-        filepath = os.path.join(DEEPLAB_TEST_PATHS_PREFIX, mdir)
-        for OS in [8, 16]:
-            test_batch_size = 9 if OS == 8 else 72
-            for dil_rate in dil_rates:
-                config = DeeplabV3Config(create_dirs=False)
-                vals_dict = {'OS':OS, 'DIL_RATES':dil_rate, "TEST_BATCH_SIZE":test_batch_size}
-                test_dir(filepath, config, vals_dict)
-
+                
     # Test data limit
     for num_subjects in DATA_LIMIT_NUM_DATE_DICT.keys():
         date_str = DATA_LIMIT_NUM_DATE_DICT[num_subjects]
