@@ -375,7 +375,7 @@ def sort_files(files, tag):
         elif (tag == 'oai_new'):
             tmp = int(tmp[0] + tmp[1][1:])
         elif (tag == 'oai_aug'):
-            tmp = int(tmp[0] + tmp[1][2:3])
+            tmp = int(tmp[0] + tmp[1][2:3] + tmp[2])
         else:
             raise ValueError('Specified tag (%s) is unsupported' % tag)
 
@@ -384,3 +384,13 @@ def sort_files(files, tag):
     order = argsort(file_id)
 
     return [files[cnt1] for cnt1 in order]
+
+
+if __name__ == '__main__':
+    filename = '9967358_V01-Aug00_072'
+    tmp = split('_', filename)
+    print(tmp)
+
+    #tmp = int(tmp[0] + tmp[1][2:3])
+
+    print(tmp[1][2:3])
