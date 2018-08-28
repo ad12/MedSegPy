@@ -160,6 +160,12 @@ class Config():
         self.state = 'testing'
         self.TEST_RESULT_PATH = utils.check_dir(os.path.join(self.CP_SAVE_PATH, 'test_results'))
 
+    def summary(self):
+        """Print summary of config
+        """
+        pass
+
+
 
 class DeeplabV3Config(Config):
     CP_SAVE_TAG = DEEPLABV3_NAME
