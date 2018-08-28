@@ -267,6 +267,12 @@ def unet_2d_multi_contrast_train():
     # need to exit because overwritting config parameters
     exit()
 
+# Use these for fine tuning
+DEEPLAB_TEST_PATHS_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d'
+DEEPLAB_TEST_PATHS = ['2018-08-26-20-01-32', # OS=16, DIL_RATES=(6, 12, 18)
+                      '2018-08-27-02-49-06', # OS=16, DIL_RATES=(1, 9, 18)
+                      '2018-08-27-15-48-56', # OS=16, DIL_RATES=(3, 6, 9)
+                     ]
 
 
 if __name__ == '__main__':
