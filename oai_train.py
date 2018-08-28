@@ -81,9 +81,9 @@ def train_model(config, optimizer=None):
 
     callbacks_list = [tfb_cb, cp_cb, lr_cb, hist_cb]
 
-    if (config.DEBUG):
-        train_nbatches = 5
-        config.N_EPOCHS = 1
+    #if (config.DEBUG):
+     #   train_nbatches = 5
+      #  config.N_EPOCHS = 1
 
     # Determine training generator based on version of config
     if (config.VERSION > 1):
@@ -161,7 +161,7 @@ def train_deeplab(OS, dilation_rates):
     config.OS = OS
     config.DIL_RATES = dilation_rates
     
-    config.N_EPOCHS = 10
+    config.N_EPOCHS = 25
     config.save_config()
     #config.TRAIN_BATCH_SIZE = 5
     train_model(config)
@@ -183,8 +183,8 @@ def fine_tune(dirpath, config):
     config.init_fine_tune(best_weight_path)
 
     config.N_EPOCHS = 10
-    config.INITIAL_LEARNING_RATE = 2e-7
-    config.DROP_RATE = 2.0
+    config.INITIAL_LEARNING_RATE = 4e-7
+    config.DROP_RATE = 1.0
     config.DROP_FACTOR = 0.5
     config.MIN_LEARNING_RATE=1e-9
 
@@ -286,7 +286,7 @@ def unet_2d_multi_contrast_train():
     #config.INIT_UNET_2D = False
 
     # Adjust hyperparameters
-    config.N_EPOCHS = 10
+    config.N_EPOCHS = 25
     config.DROP_FACTOR = 0.8
     config.DROP_RATE = 1.0
 
@@ -318,15 +318,17 @@ if __name__ == '__main__':
     print('Using gpu id: %s' % gpu)
     os.environ["CUDA_VISIBLE_DEVICES"]=args.gpu
     os.environ["TF_CPP_MIN_LOG_LEVEL"]="2"
+    
+    train_deeplab(16, (6, 12, 18))
+    train_deeplab(16, (1, 9, 18))
+    train_deeplab(16, (3, 6, 9))
+    train_deeplab(16, (2, 4, 6))
+    train_deeplab(16, (2, 3, 8))
 
-    # train_deeplab(16, (3, 6, 9))
-    # train_deeplab(16, (2, 4, 6))
-    # train_deeplab(16, (2, 3, 8))
+    #Fine tune deeplab
+    #for mdir in DEEPLAB_TEST_PATHS:
+     #   filepath = os.path.join(DEEPLAB_TEST_PATHS_PREFIX, mdir)
+      #  config = DeeplabV3Config(create_dirs=False)
+       # fine_tune(filepath, config)
 
-    # Fine tune deeplab
-    # for mdir in DEEPLAB_TEST_PATHS:
-    #     filepath = os.path.join(DEEPLAB_TEST_PATHS_PREFIX, mdir)
-    #     config = DeeplabV3Config(create_dirs=False)
-    #     fine_tune(filepath, config)
-
-    train_debug()
+    #train_debug()
