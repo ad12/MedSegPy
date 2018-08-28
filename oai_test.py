@@ -136,12 +136,12 @@ def get_valid_subdirs(base_path):
     return subdirs
 
 
-def batch_test(base_folder):
-    # get list of directories to get info from
-    subdirs = get_valid_subdirs(base_folder)
-
-    for subdir in subdirs:
-        test_dir(subdir)
+# def batch_test(base_folder):
+#     # get list of directories to get info from
+#     subdirs = get_valid_subdirs(base_folder)
+#
+#     for subdir in subdirs:
+#         test_dir(subdir)
 
 
 def test_dir(dirpath, config, vals_dict=None):
@@ -188,15 +188,16 @@ if __name__ == '__main__':
     os.environ['CUDA_VISIBLE_DEVICES']="3"
 
     # Test deeplab
-    for mdir in DEEPLAB_TEST_PATHS:
+    for i in range(len(DEEPLAB_TEST_PATHS)):
+        mdir = DEEPLAB_TEST_PATHS[i]
+        dil_rates = DEEPLAB_DIL_RATES[i]
         filepath = os.path.join(DEEPLAB_TEST_PATHS_PREFIX, mdir)
         for OS in [8, 16]:
             test_batch_size = 9 if OS == 8 else 72
-            for dil_rates in DEEPLAB_DIL_RATES:
-                for dil_rate in dil_rates:
-                    config = DeeplabV3Config(create_dirs=False)
-                    vals_dict = {'OS':OS, 'DIL_RATES':dil_rate, "TEST_BATCH_SIZE":test_batch_size}
-                    test_dir(filepath, config, vals_dict)
+            for dil_rate in dil_rates:
+                config = DeeplabV3Config(create_dirs=False)
+                vals_dict = {'OS':OS, 'DIL_RATES':dil_rate, "TEST_BATCH_SIZE":test_batch_size}
+                test_dir(filepath, config, vals_dict)
 
     # Test data limit
     for num_subjects in DATA_LIMIT_NUM_DATE_DICT.keys():

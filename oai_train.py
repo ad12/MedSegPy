@@ -165,6 +165,28 @@ def train_deeplab(OS, dilation_rates):
 
     K.clear_session()
 
+
+def fine_tune(dirpath, config, vals_dict=None):
+
+    # Get best weight path
+    best_weight_path = utils.get_weights(dirpath)
+    print('Best weight path: %s' % best_weight_path)
+
+    # Initialize for fine tuning
+    config.load_config(os.path.join(dirpath, 'config.ini'))
+    config.TEST_WEIGHT_PATH = best_weight_path
+    config.init_fine_tune(best_weight_path)
+
+    config.N_EPOCHS = 10
+    config.INITIAL_LEARNING_RATE = 1e-6
+    config.DROP_RATE = 2.0
+    config.DROP_FACTOR = 0.5
+
+    train_model(config)
+
+    K.clear_session()
+
+
 def fine_tune_deeplab(base_path):
     files = os.listdir(base_path)
     f_subdirs = []
@@ -183,13 +205,11 @@ def fine_tune_deeplab(base_path):
         best_weight_path = utils.get_weights(subdir)
         config.init_fine_tune(best_weight_path)
 
-        optimizer = config.model_from_dict_w_opt(utils.load_pik(os.path.join(subdir, 'config.dat')))
-
         config.N_EPOCHS = 10
         config.INITIAL_LEARNING_RATE = 1e-6
         config.DROP_RATE = 2.0
 
-        train_model(config, optimizer)
+        train_model(config)
 
 
 def train_debug():

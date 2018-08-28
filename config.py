@@ -160,11 +160,23 @@ class Config():
         self.state = 'testing'
         self.TEST_RESULT_PATH = utils.check_dir(os.path.join(self.CP_SAVE_PATH, 'test_results'))
 
-    def summary(self):
+    # TODO: implement summary (arjundd)
+    def summary(self, additional_vars=[]):
         """Print summary of config
         """
-        pass
+        summary_vals = ['CP_SAVE_TAG']
 
+        if self.state == 'training':
+            summary_vals.extend(['N_EPOCHS', 'TRAIN_BATCH_SIZE', 'VALID_BATCH_SIZE', 'INITIAL_LEARNING_RATE', 'MIN_LEARNING_RATE', 'DROP_FACTOR', 'DROP_RATE'])
+            if self.FINE_TUNE:
+                summary_vals.extend(['INIT_WEIGHT_PATH'])
+        else:
+            summary_vals.extend(['TEST_RESULT_PATH', 'TEST_WEIGHT_PATH', 'TEST_BATCH_SIZE'])
+
+        summary_vals.extend(additional_vars)
+
+        for attr in summary_vals:
+            print(attr + ": " + str(self.__getattribute__(attr)))
 
 
 class DeeplabV3Config(Config):
@@ -187,6 +199,10 @@ class DeeplabV3Config(Config):
         config_tuple = (self.OS, ) + self.DIL_RATES
         config_str = '%d_%d-%d-%d' % config_tuple
         self.TEST_RESULT_PATH = utils.check_dir(os.path.join(self.CP_SAVE_PATH, 'test_results', config_str))
+
+    def summary(self, additional_vars=[]):
+        summary_attrs = ['OS', 'DIL_RATES']
+        super().summary(summary_attrs)
 
 
 class SegnetConfig(Config):
