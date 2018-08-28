@@ -155,6 +155,8 @@ def test_dir(dirpath, config, vals_dict=None):
 
     if vals_dict is not None:
         for key, val in vals_dict:
+            print('key' + str(key))
+            print('val' + str(val))
             config.set_attr(key, val)
 
     config.change_to_test()
