@@ -144,19 +144,21 @@ def batch_test(base_folder):
         test_dir(subdir)
 
 
-def test_dir(dirpath):
+def test_dir(dirpath, config, vals_dict=None):
 
     # Get best weight path
     best_weight_path = utils.get_weights(dirpath)
     print('Best weight path: %s' % best_weight_path)
 
-    config = UNetConfig(create_dirs=False)
     config.load_config(os.path.join(dirpath, 'config.ini'))
     config.TEST_WEIGHT_PATH = best_weight_path
-    #config.OS = 16
-    #config.DIL_RATES = (1, 2, 3)
+
+    if vals_dict is not None:
+        for key, val in vals_dict:
+            config.set_attr(key, val)
+
     config.change_to_test()
-    #config.TEST_BATCH_SIZE = 9
+
     test_model(config, save_file=1)
 
     K.clear_session()
@@ -165,14 +167,37 @@ def test_dir(dirpath):
 local_testing_test_path = '../sample_data/test_data'
 local_test_results_path = '../sample_data/results'
 
+DEEPLAB_TEST_PATHS_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d'
+DEEPLAB_TEST_PATHS = ['2018-08-26-20-01-32', # OS=16, DIL_RATES=(6, 12, 18)
+                      '2018-08-27-02-49-06', # OS=16, DIL_RATES=(1, 9, 18)
+                      '2018-08-27-15-48-56', # OS=16, DIL_RATES=(3, 6, 9)
+                      ]
+DEEPLAB_DIL_RATES = [ [(6, 12, 18), (3, 6, 9), (2, 4, 6), (1, 2, 3), (12, 24, 36)],
+                      [(1, 9, 18), (1, 3, 6), (1, 2, 4), (1, 1, 2)],
+                      [(3, 6, 9), (6, 12, 18), (2, 4, 6), (1, 2, 3), (12, 24, 36)],
+                    ]
 
+DATA_LIMIT_PATHS_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_data_limit/oai_data', '%03d', 'unet_2d')
+DATA_LIMIT_NUM_DATE_DICT = {5:'2018-08-26-20-19-31',
+                            15:'2018-08-27-03-43-46',
+                            30:'2018-08-27-11-18-07',
+                            60:'2018-08-27-18-29-19'}
 if __name__ == '__main__':
     os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
     os.environ['CUDA_VISIBLE_DEVICES']="3"
 
-    # set config based on what you want to train
-    #config = UNetConfig(state='testing')
-    #test_model(config)
+    # Test deeplab
+    for mdir in DEEPLAB_TEST_PATHS:
+        filepath = os.path.join(DEEPLAB_TEST_PATHS_PREFIX, mdir)
+        for dil_rates in DEEPLAB_DIL_RATES:
+            for OS in [8, 16]:
+                config = DeeplabV3Config(create_dirs=False)
+                vals_dict = {'OS':OS, 'DIL_RATES':dil_rates}
+                test_dir(filepath, config, vals_dict)
 
-    #test_dir('/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d/2018-08-26-20-01-32')
-    test_dir('/bmrNAS/people/arjun/msk_data_limit/oai_data/030/unet_2d//2018-08-27-11-18-07')
+    # Test data limit
+    for num_subjects, date_str in DATA_LIMIT_NUM_DATE_DICT:
+        filepath = os.path.join(DATA_LIMIT_PATHS_PREFIX % num_subjects, date_str)
+        config = UNetConfig(create_dirs=False)
+        test_dir(filepath, config)
+

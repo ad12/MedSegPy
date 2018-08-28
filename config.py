@@ -133,6 +133,19 @@ class Config():
             var_converted = utils.convert_data_type(vars_dict[key], data_type)
             self.__setattr__(str(key).upper(), var_converted)
 
+    def set_attr(self, attr, val):
+        if type(attr) is not str:
+            raise ValueError('attr must be of type str')
+
+        if not hasattr(self, attr):
+            raise ValueError('The attribute %s does not exist' % attr)
+        curr_val = self.__getattribute__(attr)
+
+        if (type(val) != type(curr_val)):
+            raise ValueError('Input value is of type %s. Expected %s' %(str(type(val)), str(type(curr_val))))
+
+        self.__setattr__(attr, val)
+
     def init_fine_tune(self, init_weight_path):
         if (self.state != 'training'):
             raise ValueError('Must be in training state')
