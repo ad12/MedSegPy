@@ -147,7 +147,7 @@ class Config():
         self.__setattr__(attr, val)
 
     def init_fine_tune(self, init_weight_path):
-        if (self.state != 'training'):
+        if (self.STATE != 'training'):
             raise ValueError('Must be in training state')
 
         self.FINE_TUNE = True
@@ -157,7 +157,7 @@ class Config():
         self.init_training_paths(prefix)
 
     def change_to_test(self):
-        self.state = 'testing'
+        self.STATE = 'testing'
         self.TEST_RESULT_PATH = utils.check_dir(os.path.join(self.CP_SAVE_PATH, 'test_results'))
 
     # TODO: implement summary (arjundd)
@@ -167,7 +167,7 @@ class Config():
 
         summary_vals = ['CP_SAVE_TAG']
 
-        if self.state == 'training':
+        if self.STATE == 'training':
             summary_vals.extend(['N_EPOCHS', 'TRAIN_BATCH_SIZE', 'VALID_BATCH_SIZE', 'INITIAL_LEARNING_RATE', 'MIN_LEARNING_RATE', 'DROP_FACTOR', 'DROP_RATE'])
             if self.FINE_TUNE:
                 summary_vals.extend(['INIT_WEIGHT_PATH'])

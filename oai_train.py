@@ -324,5 +324,5 @@ if __name__ == '__main__':
     for mdir in DEEPLAB_TEST_PATHS:
         filepath = os.path.join(DEEPLAB_TEST_PATHS_PREFIX, mdir)
         config = DeeplabV3Config(create_dirs=False)
-
+        fine_tune(filepath, config)
 
