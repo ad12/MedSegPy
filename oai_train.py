@@ -80,7 +80,11 @@ def train_model(config, optimizer=None):
     hist_cb = LossHistory()
 
     callbacks_list = [tfb_cb, cp_cb, lr_cb, hist_cb]
-    
+
+    if (config.DEBUG):
+        train_nbatches = 5
+        config.N_EPOCHS = 1
+        
     # Determine training generator based on version of config
     if (config.VERSION > 1):
         train_gen = img_generator_oai(train_path, train_batch_size, img_size, config.TISSUES, shuffle_epoch=True, pids=config.PIDS)
@@ -107,6 +111,9 @@ def train_model(config, optimizer=None):
     data = [hist_cb.epoch, hist_cb.losses, hist_cb.val_losses]
     with open(pik_save_path, "wb") as f:
         pickle.dump(data, f)
+
+    # Save model
+    model.save(filepath=os.path.join(config.CP_SAVE_PATH, 'model.h5'), overwrite=True)
 
     return hist_cb
 
