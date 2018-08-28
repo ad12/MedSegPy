@@ -84,7 +84,7 @@ def train_model(config, optimizer=None):
     if (config.DEBUG):
         train_nbatches = 5
         config.N_EPOCHS = 1
-        
+
     # Determine training generator based on version of config
     if (config.VERSION > 1):
         train_gen = img_generator_oai(train_path, train_batch_size, img_size, config.TISSUES, shuffle_epoch=True, pids=config.PIDS)
@@ -324,8 +324,9 @@ if __name__ == '__main__':
     # train_deeplab(16, (2, 3, 8))
 
     # Fine tune deeplab
-    for mdir in DEEPLAB_TEST_PATHS:
-        filepath = os.path.join(DEEPLAB_TEST_PATHS_PREFIX, mdir)
-        config = DeeplabV3Config(create_dirs=False)
-        fine_tune(filepath, config)
+    # for mdir in DEEPLAB_TEST_PATHS:
+    #     filepath = os.path.join(DEEPLAB_TEST_PATHS_PREFIX, mdir)
+    #     config = DeeplabV3Config(create_dirs=False)
+    #     fine_tune(filepath, config)
 
+    train_debug()
