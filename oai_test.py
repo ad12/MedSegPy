@@ -154,9 +154,8 @@ def test_dir(dirpath, config, vals_dict=None):
     config.TEST_WEIGHT_PATH = best_weight_path
 
     if vals_dict is not None:
-        for key, val in vals_dict.items():
-            print('key' + str(key))
-            print('val' + str(val))
+        for key in vals_dict.keys():
+            val = vals_dict[key]
             config.set_attr(key, val)
 
     config.change_to_test()
@@ -193,12 +192,15 @@ if __name__ == '__main__':
         filepath = os.path.join(DEEPLAB_TEST_PATHS_PREFIX, mdir)
         for dil_rates in DEEPLAB_DIL_RATES:
             for OS in [8, 16]:
+                print('OS: ' + str(OS))
+                print('DIL_RATES: ' + str(dil_rates))
                 config = DeeplabV3Config(create_dirs=False)
                 vals_dict = {'OS':OS, 'DIL_RATES':dil_rates}
                 test_dir(filepath, config, vals_dict)
 
     # Test data limit
-    for num_subjects, date_str in DATA_LIMIT_NUM_DATE_DICT:
+    for num_subjects in DATA_LIMIT_NUM_DATE_DICT.keys():
+        date_str = DATA_LIMIT_NUM_DATE_DICT[num_subjects]
         filepath = os.path.join(DATA_LIMIT_PATHS_PREFIX % num_subjects, date_str)
         config = UNetConfig(create_dirs=False)
         test_dir(filepath, config)
