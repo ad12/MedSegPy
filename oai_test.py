@@ -154,7 +154,7 @@ def test_dir(dirpath, config, vals_dict=None):
     config.TEST_WEIGHT_PATH = best_weight_path
 
     if vals_dict is not None:
-        for key, val in vals_dict:
+        for key, val in vals_dict.items():
             print('key' + str(key))
             print('val' + str(val))
             config.set_attr(key, val)
