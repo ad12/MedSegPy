@@ -4,6 +4,7 @@
 
 from __future__ import print_function, division
 
+import argparse
 import numpy as np
 import h5py
 import time
@@ -20,7 +21,6 @@ import utils
 
 
 def test_model(config, save_file=0):
-    # set image format to be (N, dim1, dim2, dim3, ch)
 
     test_path = config.TEST_PATH
     test_result_path = config.TEST_RESULT_PATH
@@ -55,12 +55,12 @@ def test_model(config, save_file=0):
     for x_test, y_test, fname, num_slices in test_gen:
 
         # Perform the actual segmentation using pre-loaded model
+        # Threshold at 0.5
         recon = model.predict(x_test, batch_size = test_batch_size)
         labels = (recon > 0.5).astype(np.float32)
        
         
         # Calculate real time dice coeff for analysis
-        # TODO: Define multi-class dice loss during testing
         dl = dice_loss_test(labels,y_test)
         skipped=''
         if (dl > 0.11):
@@ -68,7 +68,6 @@ def test_model(config, save_file=0):
         else:
             skipped = '- skipped'
             skipped_count += 1
-        # print(dl)
 
         print_str = 'Dice score for image #%d (name = %s, %d slices) = %0.3f %s' % (img_cnt, fname, num_slices, np.mean(dl), skipped)
         pids_str = pids_str + print_str + '\n'
@@ -184,8 +183,14 @@ DATA_LIMIT_NUM_DATE_DICT = {5:'2018-08-26-20-19-31',
                             30:'2018-08-27-11-18-07',
                             60:'2018-08-27-18-29-19'}
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Train OAI dataset')
+    parser.add_argument('-g', '--gpu', metavar='G', type=str, nargs='?', default='0',
+                        help='gpu id to use')
+    args = parser.parse_args()
+    gpu = args.gpu
+
     os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
-    os.environ['CUDA_VISIBLE_DEVICES']="0"
+    os.environ['CUDA_VISIBLE_DEVICES']=gpu
 
     # Test deeplab
     for i in range(1, len(DEEPLAB_TEST_PATHS)):
