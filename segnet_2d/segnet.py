@@ -6,6 +6,7 @@ from keras.layers.convolutional import Convolution2D, MaxPooling2D, UpSampling2D
 from keras.layers.normalization import BatchNormalization
 from keras.layers.merge import Multiply, Concatenate
 from keras.utils import np_utils
+from keras.utils import plot_model
 
 from segnet_2d.Mylayers import MaxPoolingWithArgmax2D, MaxUnpooling2D
 
@@ -227,3 +228,9 @@ def Segnet(input_shape=(288,288,1), input_tensor=None, n_labels=1, kernel=3, poo
     segnet = Model(inputs=inputs, outputs=outputs, name="segnet")
 
     return segnet
+
+if __name__ == '__main__':
+    model = Segnet_v2(input_shape=(288, 288, 1), input_tensor=None, n_labels=1, depth=6, num_conv_layers=[2, 2, 3, 3, 3, 3],
+              num_filters=[64, 128, 256, 512, 512, 512], kernel=3, pool_size=(2, 2), output_mode="sigmoid")
+
+    plot_model(model, to_file='%s.png' % model.name, show_shapes=True)
