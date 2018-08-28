@@ -190,13 +190,12 @@ if __name__ == '__main__':
     # Test deeplab
     for mdir in DEEPLAB_TEST_PATHS:
         filepath = os.path.join(DEEPLAB_TEST_PATHS_PREFIX, mdir)
-        for dil_rates in DEEPLAB_DIL_RATES:
-            for OS in [8, 16]:
-                print('OS: ' + str(OS))
-                print('DIL_RATES: ' + str(dil_rates))
-                config = DeeplabV3Config(create_dirs=False)
-                vals_dict = {'OS':OS, 'DIL_RATES':dil_rates}
-                test_dir(filepath, config, vals_dict)
+        for OS in [8, 16]:
+            for dil_rates in DEEPLAB_DIL_RATES:
+                for dil_rate in dil_rates:
+                    config = DeeplabV3Config(create_dirs=False)
+                    vals_dict = {'OS':OS, 'DIL_RATES':dil_rate}
+                    test_dir(filepath, config, vals_dict)
 
     # Test data limit
     for num_subjects in DATA_LIMIT_NUM_DATE_DICT.keys():
