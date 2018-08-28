@@ -4,6 +4,7 @@
 
 from __future__ import print_function, division
 
+import argparse
 import numpy as np
 import h5py
 import time
@@ -184,8 +185,14 @@ DATA_LIMIT_NUM_DATE_DICT = {5:'2018-08-26-20-19-31',
                             30:'2018-08-27-11-18-07',
                             60:'2018-08-27-18-29-19'}
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Train OAI dataset')
+    parser.add_argument('-g', '--gpu', metavar='G', type=str, nargs='?', default='0',
+                        help='gpu id to use')
+    args = parser.parse_args()
+    gpu = args.gpu
+
     os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
-    os.environ['CUDA_VISIBLE_DEVICES']="0"
+    os.environ['CUDA_VISIBLE_DEVICES']=gpu
 
     # Test deeplab
     for i in range(len(DEEPLAB_TEST_PATHS)):

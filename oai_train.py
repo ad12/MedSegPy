@@ -2,6 +2,7 @@
 
 from __future__ import print_function, division
 
+import argparse
 import pickle
 import os
 import random
@@ -296,7 +297,13 @@ DEEPLAB_TEST_PATHS = ['2018-08-26-20-01-32', # OS=16, DIL_RATES=(6, 12, 18)
 
 
 if __name__ == '__main__':
-    os.environ["CUDA_VISIBLE_DEVICES"]="1"
+    parser = argparse.ArgumentParser(description='Train OAI dataset')
+    parser.add_argument('-g', '--gpu', metavar='G', type=str, nargs='?', default='0',
+                        help='gpu id to use')
+    args = parser.parse_args()
+    gpu = args.gpu
+
+    os.environ["CUDA_VISIBLE_DEVICES"]=args.gpu
     os.environ["TF_CPP_MIN_LOG_LEVEL"]="2"
 
     #train_deeplab(16, (6, 12, 18))
