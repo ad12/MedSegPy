@@ -164,6 +164,7 @@ class Config():
     def summary(self, additional_vars=[]):
         """Print summary of config
         """
+
         summary_vals = ['CP_SAVE_TAG']
 
         if self.state == 'training':
@@ -175,8 +176,16 @@ class Config():
 
         summary_vals.extend(additional_vars)
 
+        print('')
+        print('=='*40)
+        print("Config Summary")
+        print('==' * 40)
+
         for attr in summary_vals:
             print(attr + ": " + str(self.__getattribute__(attr)))
+
+        print('==' * 40)
+        print('')
 
 
 class DeeplabV3Config(Config):

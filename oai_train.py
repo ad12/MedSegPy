@@ -167,21 +167,25 @@ def train_deeplab(OS, dilation_rates):
     K.clear_session()
 
 
-def fine_tune(dirpath, config, vals_dict=None):
+def fine_tune(dirpath, config):
+    # If a fine-tune directory already exits, skip this directory
+    if (os.path.isdir(os.path.join(dirpath, 'fine_tune'))):
+        print('Skipping %s - fine_tune folder exists' % dirpath)
+
+    # Initialize for fine tuning
+    config.load_config(os.path.join(dirpath, 'config.ini'))
 
     # Get best weight path
     best_weight_path = utils.get_weights(dirpath)
     print('Best weight path: %s' % best_weight_path)
-
-    # Initialize for fine tuning
-    config.load_config(os.path.join(dirpath, 'config.ini'))
-    config.TEST_WEIGHT_PATH = best_weight_path
     config.init_fine_tune(best_weight_path)
 
     config.N_EPOCHS = 10
     config.INITIAL_LEARNING_RATE = 1e-6
     config.DROP_RATE = 2.0
     config.DROP_FACTOR = 0.5
+
+    config.summary()
 
     train_model(config)
 
@@ -295,6 +299,11 @@ DEEPLAB_TEST_PATHS = ['2018-08-26-20-01-32', # OS=16, DIL_RATES=(6, 12, 18)
                       '2018-08-27-15-48-56', # OS=16, DIL_RATES=(3, 6, 9)
                      ]
 
+DATA_LIMIT_PATHS_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_data_limit/oai_data', '%03d', 'unet_2d')
+DATA_LIMIT_NUM_DATE_DICT = {5:'2018-08-26-20-19-31',
+                            15:'2018-08-27-03-43-46',
+                            30:'2018-08-27-11-18-07',
+                            60:'2018-08-27-18-29-19'}
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train OAI dataset')
@@ -303,23 +312,17 @@ if __name__ == '__main__':
     args = parser.parse_args()
     gpu = args.gpu
 
+    print('Using gpu id: %s' % gpu)
     os.environ["CUDA_VISIBLE_DEVICES"]=args.gpu
     os.environ["TF_CPP_MIN_LOG_LEVEL"]="2"
 
-    #train_deeplab(16, (6, 12, 18))
-    #train_deeplab(16, (1, 9, 18))
-    train_deeplab(16, (3, 6, 9))
-    train_deeplab(16, (2, 4, 6))
-    train_deeplab(16, (2, 3, 8))
+    # train_deeplab(16, (3, 6, 9))
+    # train_deeplab(16, (2, 4, 6))
+    # train_deeplab(16, (2, 3, 8))
 
-    #train_deeplab(8, (1, 9, 18))
-    #train_deeplab(8, (2, 4, 6))
-    #train_deeplab(8, (3, 6, 9))
-    #train_deeplab(8, (2, 6, 12))
+    # Fine tune deeplab
+    for mdir in DEEPLAB_TEST_PATHS:
+        filepath = os.path.join(DEEPLAB_TEST_PATHS_PREFIX, mdir)
+        config = DeeplabV3Config(create_dirs=False)
 
-    #data_limitation_train()
-
-    #train_debug()
-
-    #unet_2d_multi_contrast_train()
 

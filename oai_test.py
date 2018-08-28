@@ -21,7 +21,6 @@ import utils
 
 
 def test_model(config, save_file=0):
-    # set image format to be (N, dim1, dim2, dim3, ch)
 
     test_path = config.TEST_PATH
     test_result_path = config.TEST_RESULT_PATH
@@ -56,12 +55,12 @@ def test_model(config, save_file=0):
     for x_test, y_test, fname, num_slices in test_gen:
 
         # Perform the actual segmentation using pre-loaded model
+        # Threshold at 0.5
         recon = model.predict(x_test, batch_size = test_batch_size)
         labels = (recon > 0.5).astype(np.float32)
        
         
         # Calculate real time dice coeff for analysis
-        # TODO: Define multi-class dice loss during testing
         dl = dice_loss_test(labels,y_test)
         skipped=''
         if (dl > 0.11):
@@ -69,7 +68,6 @@ def test_model(config, save_file=0):
         else:
             skipped = '- skipped'
             skipped_count += 1
-        # print(dl)
 
         print_str = 'Dice score for image #%d (name = %s, %d slices) = %0.3f %s' % (img_cnt, fname, num_slices, np.mean(dl), skipped)
         pids_str = pids_str + print_str + '\n'
