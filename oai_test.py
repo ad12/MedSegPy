@@ -185,7 +185,7 @@ DATA_LIMIT_NUM_DATE_DICT = {5:'2018-08-26-20-19-31',
                             60:'2018-08-27-18-29-19'}
 if __name__ == '__main__':
     os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
-    os.environ['CUDA_VISIBLE_DEVICES']="3"
+    os.environ['CUDA_VISIBLE_DEVICES']="0"
 
     # Test deeplab
     for mdir in DEEPLAB_TEST_PATHS:
