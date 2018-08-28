@@ -188,7 +188,7 @@ if __name__ == '__main__':
     os.environ['CUDA_VISIBLE_DEVICES']="0"
 
     # Test deeplab
-    for i in range(len(DEEPLAB_TEST_PATHS)):
+    for i in range(1, len(DEEPLAB_TEST_PATHS)):
         mdir = DEEPLAB_TEST_PATHS[i]
         dil_rates = DEEPLAB_DIL_RATES[i]
         filepath = os.path.join(DEEPLAB_TEST_PATHS_PREFIX, mdir)
