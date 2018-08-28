@@ -191,7 +191,7 @@ if __name__ == '__main__':
     for mdir in DEEPLAB_TEST_PATHS:
         filepath = os.path.join(DEEPLAB_TEST_PATHS_PREFIX, mdir)
         for OS in [8, 16]:
-            test_batch_size = 18 if OS == 8 else 72
+            test_batch_size = 9 if OS == 8 else 72
             for dil_rates in DEEPLAB_DIL_RATES:
                 for dil_rate in dil_rates:
                     config = DeeplabV3Config(create_dirs=False)
