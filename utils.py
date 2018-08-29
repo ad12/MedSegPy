@@ -107,7 +107,7 @@ def get_weights(base_folder):
     for file in files:
         file_fullpath = os.path.join(base_folder, file)
         # Ensure the file is an h5 file
-        if not(os.path.isfile(file_fullpath) and file_fullpath.endswith('.h5')):
+        if not(os.path.isfile(file_fullpath) and file_fullpath.endswith('.h5') and 'weights' in file):
             continue
 
         # Get file with max epochs

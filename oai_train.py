@@ -319,8 +319,8 @@ if __name__ == '__main__':
     os.environ["CUDA_VISIBLE_DEVICES"]=args.gpu
     os.environ["TF_CPP_MIN_LOG_LEVEL"]="2"
     
-    train_deeplab(16, (6, 12, 18))
-    train_deeplab(16, (1, 9, 18))
+    #train_deeplab(16, (6, 12, 18))
+    #train_deeplab(16, (1, 9, 18))
     train_deeplab(16, (3, 6, 9))
     train_deeplab(16, (2, 4, 6))
     train_deeplab(16, (2, 3, 8))

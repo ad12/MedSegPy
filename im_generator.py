@@ -260,7 +260,7 @@ def img_generator_test(data_path, batch_size, img_size, tag, tissue_inds, shuffl
                 fname = files[file_ind]
 
             #yield (preprocess_input(x), y, fname)
-            yield (x, y, fname)
+            yield (x, y, fname, 72)
 
 def inspect_vals(x):
     print('0: %0.2f, 1: %0.2f' %(np.sum(x==0), np.sum(x==1)))

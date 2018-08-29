@@ -143,10 +143,11 @@ def get_valid_subdirs(base_path):
 #         test_dir(subdir)
 
 
-def test_dir(dirpath, config, vals_dict=None):
+def test_dir(dirpath, config, vals_dict=None, best_weight_path=None):
 
     # Get best weight path
-    best_weight_path = utils.get_weights(dirpath)
+    if best_weight_path is None:
+        best_weight_path = utils.get_weights(dirpath)
     print('Best weight path: %s' % best_weight_path)
 
     config.load_config(os.path.join(dirpath, 'config.ini'))
@@ -193,9 +194,11 @@ if __name__ == '__main__':
     os.environ['CUDA_VISIBLE_DEVICES']=gpu
                 
     # Test data limit
-    for num_subjects in DATA_LIMIT_NUM_DATE_DICT.keys():
-        date_str = DATA_LIMIT_NUM_DATE_DICT[num_subjects]
-        filepath = os.path.join(DATA_LIMIT_PATHS_PREFIX % num_subjects, date_str)
-        config = UNetConfig(create_dirs=False)
-        test_dir(filepath, config)
+    #for num_subjects in DATA_LIMIT_NUM_DATE_DICT.keys():
+     #   date_str = DATA_LIMIT_NUM_DATE_DICT[num_subjects]
+      #  filepath = os.path.join(DATA_LIMIT_PATHS_PREFIX % num_subjects, date_str)
+       # config = UNetConfig(create_dirs=False)
+       # test_dir(filepath, config)
 
+    config = DeeplabV3Config(create_dirs=False)
+    test_dir(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-08-21-07-03-24'), config, {'OS':16, 'DIL_RATES':(6, 12, 18), 'TEST_BATCH_SIZE':72, 'TEST_PATH':'/bmrNAS/people/akshay/dl/oai_data/oai_aug/test_2d'})
