@@ -62,7 +62,7 @@ def test_model(config, save_file=0):
         
         # Calculate real time dice coeff for analysis
         dl = dice_loss_test(labels,y_test)
-
+        dice_losses = np.append(dice_losses, dl)
         print_str = 'Dice score for image #%d (name = %s, %d slices) = %0.3f' % (img_cnt, fname, num_slices, np.mean(dl))
         pids_str = pids_str + print_str + '\n'
         print(print_str)
@@ -196,4 +196,5 @@ if __name__ == '__main__':
        # test_dir(filepath, config)
 
     config = DeeplabV3Config(create_dirs=False)
-    test_dir(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-08-29-05-39-09'), config, {'OS':8, 'DIL_RATES':(12, 24, 36), 'TEST_BATCH_SIZE':9})
+    test_dir(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-08-30-05-37-55'), config, {'OS':16, 'DIL_RATES':(1, 9, 18), 'TEST_BATCH_SIZE':72})
+    #test_dir(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-08-30-05-37-55'), config, {'OS':8, 'DIL_RATES':(1, 9, 18), 'TEST_BATCH_SIZE':9})
