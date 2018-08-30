@@ -224,6 +224,7 @@ def img_generator(data_path, batch_size, img_size, tag, tissue_inds, shuffle_epo
 
 def img_generator_test(data_path, batch_size, img_size, tag, tissue_inds, shuffle_epoch=False):
     files, batches_per_epoch = calc_generator_info(data_path, batch_size)
+    files = sort_files(files, tag)
 
     # img_size must be 3D
     assert(len(img_size) == 3)
@@ -233,34 +234,46 @@ def img_generator_test(data_path, batch_size, img_size, tag, tissue_inds, shuffl
     x = np.zeros((batch_size,) + img_size)
     y = np.zeros((batch_size,) + mask_size)
 
-    while True:
+    pids = []
+    for fname in files:
+        pid = get_file_pid(fname)
+        pids.append(pid)
 
-        if shuffle_epoch:
-            shuffle(files)
-        else:
-            files = sort_files(files, tag)
+    pids_unique = list(set(pids))
+    pids_unique.sort()
 
-        for batch_cnt in range(batches_per_epoch):
-            for file_cnt in range(batch_size):
-                file_ind = batch_cnt * batch_size + file_cnt
-                im_path = '%s/%s.im' % (data_path, files[file_ind])
-                with h5py.File(im_path, 'r') as f:
-                    im = f['data'][:]
+    pids_dict = dict()
+    for pid in pids_unique:
+        indices = [i for i, x in enumerate(pids) if x == pid]
+        pids_dict[pid] = indices
 
-                seg_path = '%s/%s.seg' % (data_path, files[file_ind])
-                with h5py.File(seg_path, 'r') as f:
-                    seg = f['data'][:].astype('float32')
+    for pid in list(pids_unique):
+        inds = pids_dict[pid]
+        num_slices = len(inds)
+        x = np.zeros((num_slices,) + img_size)
+        y = np.zeros((num_slices,) + mask_size)
+        for file_cnt in range(num_slices):
+            ind = inds[file_cnt]
+            fname = files[ind]
 
-                #x[file_cnt, ..., 0] = preprocess_input_scale(im)
-                x[file_cnt, ..., 0] = im
-                y[file_cnt, ...] = seg[..., np.newaxis]
-                
-                #inspect_vals(seg)
+            # Make sure that this pid is actually in the filename
+            assert(pid in fname)
 
-                fname = files[file_ind]
+            im_path = '%s/%s.im' % (data_path, fname)
+            with h5py.File(im_path, 'r') as f:
+                im = f['data'][:]
 
-            #yield (preprocess_input(x), y, fname)
-            yield (x, y, fname, 72)
+            seg_path = '%s/%s.seg' % (data_path, fname)
+            with h5py.File(seg_path, 'r') as f:
+                seg = f['data'][:].astype('float32')
+
+            # x[file_cnt, ..., 0] = preprocess_input_scale(im)
+            x[file_cnt, ..., 0] = im
+            y[file_cnt, ...] = seg[..., np.newaxis]
+
+
+        yield (x, y, pid, num_slices)
+
 
 def inspect_vals(x):
     print('0: %0.2f, 1: %0.2f' %(np.sum(x==0), np.sum(x==1)))
