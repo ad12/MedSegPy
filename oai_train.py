@@ -59,7 +59,6 @@ def train_model(config, optimizer=None):
 
     # set image format to be (N, dim1, dim2, dim3, ch)
     K.set_image_data_format('channels_last')
-    print(type(config.PIDS))
     train_files, train_nbatches = calc_generator_info(train_path, train_batch_size, learn_files=learn_files, pids=config.PIDS, augment_data=config.AUGMENT_DATA)
     valid_files, valid_nbatches = calc_generator_info(valid_path, valid_batch_size)
 
