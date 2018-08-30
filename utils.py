@@ -11,14 +11,16 @@ def check_dir(dir_path):
     return dir_path
 
 def write_im_overlay(dir_path, xs, im_overlay):
+    dir_path = check_dir(dir_path)
     num_slices = xs.shape[0]
     for i in range(num_slices):
-        x = xs[i, ...]
+        x = np.squeeze(xs[i, ...])
+        x = np.stack([x, x, x], axis=-1).astype(np.uint8)
         im = im_overlay[i]
 
         slice_name = '%03d.png' % i
 
-        overlap_img = cv2.addWeighted(x, 1, im_overlay, 0.3, 0)
+        overlap_img = cv2.addWeighted(x, 1, im, 0.3, 0)
         cv2.imwrite(os.path.join(dir_path, slice_name), overlap_img)
 
 def write_ovlp_masks(dir_path, y_true, y_pred):
@@ -38,6 +40,8 @@ def write_ovlp_masks(dir_path, y_true, y_pred):
         slice_name = '%03d.png' % i
         cv2.imwrite(os.path.join(dir_path, slice_name), img)
 
+    return ims
+
 def write_mask(dir_path, y_true):
     dir_path = check_dir(dir_path)
     y_true = np.squeeze(y_true) * 255
@@ -52,8 +56,9 @@ def write_prob_map(dir_path, y_probs):
     num_slices = y_probs.shape[0]
     for i in range(num_slices):
         slice_name = '%03d.png' % i
-        Image
-        imC = cv2.applyColorMap(y_probs[i, :, :], cv2.COLORMAP_JET)
+        im = y_probs[i,:,:] * 255
+        im = im[..., np.newaxis].astype(np.uint8)
+        imC = cv2.applyColorMap(im, cv2.COLORMAP_JET)
         cv2.imwrite(os.path.join(dir_path, slice_name), imC)
 
 
