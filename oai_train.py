@@ -51,7 +51,7 @@ def train_model(config, optimizer=None):
         model.load_weights(config.INIT_WEIGHT_PATH, by_name=True)
 
     if optimizer is None:
-        optimizer = Adam(lr=config.INITIAL_LEARNING_RATE, beta_1=0.99, beta_2=0.995, epsilon=1e-8, decay=config.ADAM_DECAY)
+        optimizer = Adam(lr=config.INITIAL_LEARNING_RATE, beta_1=0.99, beta_2=0.995, epsilon=1e-8, decay=config.ADAM_DECAY, amsgrad=config.USE_AMSGRAD)
 
     lr_metric = get_lr_metric(optimizer)
     model.compile(optimizer=optimizer,
