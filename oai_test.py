@@ -202,4 +202,4 @@ if __name__ == '__main__':
        # test_dir(filepath, config)
 
     config = DeeplabV3Config(create_dirs=False)
-    test_dir(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-08-21-07-03-24'), config, {'OS':16, 'DIL_RATES':(6, 12, 18), 'TEST_BATCH_SIZE':72, 'TEST_PATH':'/bmrNAS/people/akshay/dl/oai_data/oai_aug/test_2d'})
+    test_dir(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-08-29-05-39-09'), config, {'OS':8, 'DIL_RATES':(12, 24, 36), 'TEST_BATCH_SIZE':9})
