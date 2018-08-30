@@ -29,16 +29,17 @@ class Config():
     # Training parameters
     N_EPOCHS = 20
     AUGMENT_DATA = True
-    USE_STEP_DECAY = True
+    USE_STEP_DECAY = False
 
     # Step Decay params
-    INITIAL_LEARNING_RATE = 2e-2
+    INITIAL_LEARNING_RATE = 1e-4
     MIN_LEARNING_RATE = 1e-8
     DROP_FACTOR = 0.7
     DROP_RATE = 1.0
 
     # ADAM optimizer decay
     ADAM_DECAY = 0.0
+    USE_AMSGRAD = False
 
     TRAIN_BATCH_SIZE = 12
     VALID_BATCH_SIZE = 35

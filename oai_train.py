@@ -358,13 +358,15 @@ if __name__ == '__main__':
     #train_debug()
 
     # No step decay
-    train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (1, 9, 18), 'USE_STEP_DECAY': False, 'INITIAL_LEARNING_RATE': 5e-3})
+    #print('\nDeeplab - no step decay, adam optimizer')
+    #train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (1, 9, 18), 'USE_STEP_DECAY': False, 'INITIAL_LEARNING_RATE': 1e-5})
 
     # No augmentation
+    print('\nDeeplab - no augmentation')
     train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (1, 9, 18), 'AUGMENT_DATA': False, 'N_EPOCHS': 75})
 
     # Train with lr, etc from original setup
-    train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (1, 9, 18), 'INITIAL_LEARNING_RATE': 2e-3, 'DROP_FACTOR': 0.5,
-                              'DROP_RATE': 2.0})
+    print('\nDeeplab - original config')
+    train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (1, 9, 18), 'INITIAL_LEARNING_RATE': 2e-5, 'USE_AMSGRAD':True})
 
 
