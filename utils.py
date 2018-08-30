@@ -52,6 +52,7 @@ def write_prob_map(dir_path, y_probs):
     num_slices = y_probs.shape[0]
     for i in range(num_slices):
         slice_name = '%03d.png' % i
+        Image
         imC = cv2.applyColorMap(y_probs[i, :, :], cv2.COLORMAP_JET)
         cv2.imwrite(os.path.join(dir_path, slice_name), imC)
 
