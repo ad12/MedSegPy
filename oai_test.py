@@ -62,14 +62,8 @@ def test_model(config, save_file=0):
         
         # Calculate real time dice coeff for analysis
         dl = dice_loss_test(labels,y_test)
-        skipped=''
-        if (dl > 0.11):
-            dice_losses = np.append(dice_losses,dl)
-        else:
-            skipped = '- skipped'
-            skipped_count += 1
 
-        print_str = 'Dice score for image #%d (name = %s, %d slices) = %0.3f %s' % (img_cnt, fname, num_slices, np.mean(dl), skipped)
+        print_str = 'Dice score for image #%d (name = %s, %d slices) = %0.3f' % (img_cnt, fname, num_slices, np.mean(dl))
         pids_str = pids_str + print_str + '\n'
         print(print_str)
 
