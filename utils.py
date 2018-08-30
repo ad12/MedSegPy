@@ -14,7 +14,7 @@ def write_im_overlay(dir_path, xs, im_overlay):
     dir_path = check_dir(dir_path)
     num_slices = xs.shape[0]
     for i in range(num_slices):
-        x = np.squeeze(xs[i, ...])
+        x = scale_img(np.squeeze(xs[i, ...]))
         x = np.stack([x, x, x], axis=-1).astype(np.uint8)
         im = im_overlay[i]
 
@@ -61,6 +61,14 @@ def write_prob_map(dir_path, y_probs):
         imC = cv2.applyColorMap(im, cv2.COLORMAP_JET)
         cv2.imwrite(os.path.join(dir_path, slice_name), imC)
 
+
+def scale_img(im, scale=255):
+    im = im.astype(np.float32)
+    im = im - np.min(im)
+    im = im / np.max(im)
+    im *= scale
+
+    return im
 
 def generate_ovlp_image(y_true, y_pred):
     assert(y_true.shape == y_pred.shape)
