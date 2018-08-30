@@ -357,11 +357,11 @@ if __name__ == '__main__':
 
     #train_debug()
 
-    # No augmentation
-    train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (1, 9, 18), 'AUGMENT_DATA': False, 'N_EPOCHS': 75})
-
     # No step decay
     train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (1, 9, 18), 'USE_STEP_DECAY': False, 'INITIAL_LEARNING_RATE': 5e-3})
+
+    # No augmentation
+    train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (1, 9, 18), 'AUGMENT_DATA': False, 'N_EPOCHS': 75})
 
     # Train with lr, etc from original setup
     train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (1, 9, 18), 'INITIAL_LEARNING_RATE': 2e-3, 'DROP_FACTOR': 0.5,
