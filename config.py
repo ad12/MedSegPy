@@ -26,17 +26,23 @@ class Config():
     # Training and validation image size
     IMG_SIZE = (288, 288, 1)
 
-    # Training epochs
+    # Training parameters
     N_EPOCHS = 20
+    AUGMENT_DATA = True
+    USE_STEP_DECAY = True
 
-    TRAIN_BATCH_SIZE = 12
-    VALID_BATCH_SIZE = 35
-    TEST_BATCH_SIZE = 72
-
+    # Step Decay params
     INITIAL_LEARNING_RATE = 2e-2
     MIN_LEARNING_RATE = 1e-8
     DROP_FACTOR = 0.7
     DROP_RATE = 1.0
+
+    # ADAM optimizer decay
+    ADAM_DECAY = 0.0
+
+    TRAIN_BATCH_SIZE = 12
+    VALID_BATCH_SIZE = 35
+    TEST_BATCH_SIZE = 72
 
     # Tissues to render
     TISSUES = [mri_utils.MASK_FEMORAL_CARTILAGE]

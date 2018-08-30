@@ -25,7 +25,7 @@ def preprocess_input_scale(im):
 
 
 # find unique data regardless of the file prefix
-def calc_generator_info(data_path, batch_size, learn_files=[], pids=None):
+def calc_generator_info(data_path, batch_size, learn_files=[], pids=None, augment_data=True):
     if pids is not None:
         learn_files=[]
 
@@ -34,7 +34,7 @@ def calc_generator_info(data_path, batch_size, learn_files=[], pids=None):
 
     for file in files:
         file, _ = splitext(file)
-        if add_file(file, unique_filename, pids):
+        if add_file(file, unique_filename, pids, augment_data):
             unique_filename[file] = file
 
     files = list(unique_filename.keys())
@@ -50,17 +50,21 @@ def calc_generator_info(data_path, batch_size, learn_files=[], pids=None):
     return (files, batches_per_epoch)
 
 
-def add_file(file, unique_filename, pids):
-    if pids is None:
-        return file not in unique_filename
+def add_file(file, unique_filename, pids, augment_data):
+    should_add_file = file not in unique_filename
 
-    if (not file in unique_filename):
-        for pid in pids:
-            pid_str = str(pid)
-            if pid_str in file:
-                return True
+    if (pids is not None):
+        contains_pid = [str(x) in file for x in pids]
 
-    return False
+        # if any pid is included, only 1 can be included
+        assert(sum(contains_pid) in {0, 1})
+
+        should_add_file &= contains_pid
+
+    if (not augment_data):
+        should_add_file &= ('Aug00' in file)
+
+    return should_add_file
 
 
 def dess_generator(data_path, batch_size, img_size, file_types, tag,
@@ -278,8 +282,8 @@ def img_generator_test(data_path, batch_size, img_size, tag, tissue_inds, shuffl
 def inspect_vals(x):
     print('0: %0.2f, 1: %0.2f' %(np.sum(x==0), np.sum(x==1)))
 
-def img_generator_oai(data_path, batch_size, img_size, tissue, tag=None, shuffle_epoch=True, pids=None):
-    files, batches_per_epoch = calc_generator_info(data_path, batch_size, pids=pids)
+def img_generator_oai(data_path, batch_size, img_size, tissue, tag=None, shuffle_epoch=True, pids=None, augment_data=True):
+    files, batches_per_epoch = calc_generator_info(data_path, batch_size, pids=pids, augment_data=augment_data)
     
     # img_size must be 3D
     assert(len(img_size) == 3)
@@ -389,6 +393,8 @@ def sort_files(files, tag):
             tmp = int(tmp[0] + tmp[1][1:])
         elif (tag == 'oai_aug'):
             tmp = int(tmp[0] + tmp[1][2:3] + tmp[2])
+        elif (tag == 'oai_aug_2d_3d'):
+            tmp = int(tmp[0] + tmp[1][2:3] + tmp[2] + tmp[3])
         else:
             raise ValueError('Specified tag (%s) is unsupported' % tag)
 

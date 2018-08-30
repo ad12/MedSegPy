@@ -51,7 +51,7 @@ def train_model(config, optimizer=None):
         model.load_weights(config.INIT_WEIGHT_PATH, by_name=True)
 
     if optimizer is None:
-        optimizer = Adam(lr=config.INITIAL_LEARNING_RATE, beta_1=0.99, beta_2=0.995, epsilon=1e-8, decay=0)
+        optimizer = Adam(lr=config.INITIAL_LEARNING_RATE, beta_1=0.99, beta_2=0.995, epsilon=1e-8, decay=config.ADAM_DECAY)
 
     lr_metric = get_lr_metric(optimizer)
     model.compile(optimizer=optimizer,
@@ -60,7 +60,7 @@ def train_model(config, optimizer=None):
     # set image format to be (N, dim1, dim2, dim3, ch)
     K.set_image_data_format('channels_last')
     print(type(config.PIDS))
-    train_files, train_nbatches = calc_generator_info(train_path, train_batch_size, learn_files=learn_files, pids=config.PIDS)
+    train_files, train_nbatches = calc_generator_info(train_path, train_batch_size, learn_files=learn_files, pids=config.PIDS, augment_data=config.AUGMENT_DATA)
     valid_files, valid_nbatches = calc_generator_info(valid_path, valid_batch_size)
 
     print('INFO: Train size: %d, batch size: %d' % (len(train_files), train_batch_size))
@@ -76,19 +76,31 @@ def train_model(config, optimizer=None):
     tfb_cb = tfb(config.TF_LOG_DIR,
                  write_grads=False,
                  write_images=False)
-    lr_cb = lrs(step_decay_wrapper(config.INITIAL_LEARNING_RATE, config.MIN_LEARNING_RATE, config.DROP_FACTOR, config.DROP_RATE))
     hist_cb = LossHistory()
 
-    callbacks_list = [tfb_cb, cp_cb, lr_cb, hist_cb]
+    callbacks_list = [tfb_cb, cp_cb, hist_cb]
 
-    #if (config.DEBUG):
-     #   train_nbatches = 5
-      #  config.N_EPOCHS = 1
+    if (config.USE_STEP_DECAY):
+        lr_cb = lrs(step_decay_wrapper(config.INITIAL_LEARNING_RATE, config.MIN_LEARNING_RATE, config.DROP_FACTOR,
+                                       config.DROP_RATE))
+        callbacks_list.append(lr_cb)
 
     # Determine training generator based on version of config
     if (config.VERSION > 1):
-        train_gen = img_generator_oai(train_path, train_batch_size, img_size, config.TISSUES, shuffle_epoch=True, pids=config.PIDS)
-        val_gen = img_generator_oai(valid_path, valid_batch_size, img_size, config.TISSUES, tag=tag, shuffle_epoch=False)
+        train_gen = img_generator_oai(train_path,
+                                      train_batch_size,
+                                      img_size,
+                                      config.TISSUES,
+                                      shuffle_epoch=True,
+                                      pids=config.PIDS,
+                                      augment_data=config.AUGMENT_DATA)
+        val_gen = img_generator_oai(valid_path,
+                                    valid_batch_size,
+                                    img_size,
+                                    config.TISSUES,
+                                    tag=tag,
+                                    shuffle_epoch=False,
+                                    augment_data=False)
     else:
         train_gen = img_generator(train_path, train_batch_size, img_size, tag, config.TISSUES, pids=config.PIDS)
         val_gen = img_generator(valid_path, valid_batch_size, img_size, tag, config.TISSUES)
@@ -295,6 +307,18 @@ def unet_2d_multi_contrast_train():
     # need to exit because overwritting config parameters
     exit()
 
+def train(config, vals_dict=None):
+
+    if vals_dict is not None:
+        for key in vals_dict.keys():
+            val = vals_dict[key]
+            config.set_attr(key, val)
+
+    config.save_config()
+    train_model(config)
+
+    K.clear_session()
+
 # Use these for fine tuning
 DEEPLAB_TEST_PATHS_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d'
 DEEPLAB_TEST_PATHS = ['2018-08-26-20-01-32', # OS=16, DIL_RATES=(6, 12, 18)
@@ -315,15 +339,15 @@ if __name__ == '__main__':
     args = parser.parse_args()
     gpu = args.gpu
 
-    print('Using gpu id: %s' % gpu)
+    print('Using GPU %s' % gpu)
     os.environ["CUDA_VISIBLE_DEVICES"]=args.gpu
     os.environ["TF_CPP_MIN_LOG_LEVEL"]="2"
-    
+
     #train_deeplab(16, (6, 12, 18))
     #train_deeplab(16, (1, 9, 18))
-    train_deeplab(16, (3, 6, 9))
-    train_deeplab(16, (2, 4, 6))
-    train_deeplab(16, (2, 3, 8))
+    #train_deeplab(16, (3, 6, 9))
+    #train_deeplab(16, (2, 4, 6))
+    #train_deeplab(16, (2, 3, 8))
 
     #Fine tune deeplab
     #for mdir in DEEPLAB_TEST_PATHS:
@@ -332,3 +356,15 @@ if __name__ == '__main__':
        # fine_tune(filepath, config)
 
     #train_debug()
+
+    # No augmentation
+    train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (1, 9, 18), 'AUGMENT_DATA': False, 'N_EPOCHS': 75})
+
+    # No step decay
+    train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (1, 9, 18), 'USE_STEP_DECAY': False, 'INITIAL_LEARNING_RATE': 5e-3})
+
+    # Train with lr, etc from original setup
+    train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (1, 9, 18), 'INITIAL_LEARNING_RATE': 2e-3, 'DROP_FACTOR': 0.5,
+                              'DROP_RATE': 2.0})
+
+
