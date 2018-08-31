@@ -13,4 +13,6 @@
 
 # Ignore test_data
 **/test_data
+**/testing_data
+**/sample_data
 **/test_results

@@ -180,7 +180,7 @@ def train_deeplab(OS, dilation_rates):
     K.clear_session()
 
 
-def fine_tune(dirpath, config):
+def fine_tune(dirpath, config, vals_dict=None):
     # If a fine-tune directory already exits, skip this directory
     if (os.path.isdir(os.path.join(dirpath, 'fine_tune'))):
         print('Skipping %s - fine_tune folder exists' % dirpath)
@@ -191,15 +191,15 @@ def fine_tune(dirpath, config):
     # Get best weight path
     best_weight_path = utils.get_weights(dirpath)
     print('Best weight path: %s' % best_weight_path)
-    config.init_fine_tune(best_weight_path)
 
-    config.N_EPOCHS = 10
-    config.INITIAL_LEARNING_RATE = 4e-7
-    config.DROP_RATE = 1.0
-    config.DROP_FACTOR = 0.5
-    config.MIN_LEARNING_RATE=1e-9
+    config.init_fine_tune(best_weight_path)
+    if vals_dict is not None:
+        for key in vals_dict.keys():
+            val = vals_dict[key]
+            config.set_attr(key, val)
 
     config.summary()
+    config.save_config()
 
     train_model(config)
 
@@ -361,11 +361,15 @@ if __name__ == '__main__':
     #train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (1, 9, 18), 'USE_STEP_DECAY': False, 'INITIAL_LEARNING_RATE': 1e-5})
 
     # No augmentation
-    print('\nDeeplab - no augmentation')
-    train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (1, 9, 18), 'AUGMENT_DATA': False, 'N_EPOCHS': 75})
+    #print('\nDeeplab - no augmentation')
+    #train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (1, 9, 18), 'AUGMENT_DATA': False, 'N_EPOCHS': 75})
 
     # Train with lr, etc from original setup
-    print('\nDeeplab - original config')
-    train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (1, 9, 18), 'INITIAL_LEARNING_RATE': 2e-5, 'USE_AMSGRAD':True})
+    #print('\nDeeplab - original config')
+    #train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (1, 9, 18), 'INITIAL_LEARNING_RATE': 2e-5, 'USE_AMSGRAD':True})
 
+    #fine tune
+    fine_tune('/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d/2018-08-30-05-37-55/', DeeplabV3Config(),
+              vals_dict={'INITIAL_LEARNING_RATE': 1e-7, 'USE_STEP_DECAY': False, 'N_EPOCHS': 15})
 
+    train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (3, 9, 12)})

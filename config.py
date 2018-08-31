@@ -105,7 +105,7 @@ class Config():
         self.PIK_SAVE_PATH_DIR = utils.check_dir(os.path.dirname(self.PIK_SAVE_PATH))
         self.TF_LOG_DIR = utils.check_dir(os.path.join(self.CP_SAVE_PATH, 'tf_log'))
 
-    def save_config(self, model=None):
+    def save_config(self):
         """
         Save params of config to ini file
         :param model:

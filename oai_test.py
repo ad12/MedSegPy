@@ -16,9 +16,20 @@ from im_generator import img_generator_test, calc_generator_info, img_generator_
 from losses import dice_loss_test
 from models import get_model
 
+import config as MCONFIG
 from config import DeeplabV3Config, SegnetConfig, EnsembleUDSConfig, UNetConfig
 import utils
 
+#from DenseInferenceWrapper.denseinference import CRFProcessor
+
+# def crf(prob_volume, labels):
+#     print(prob_volume.shape)
+#     print(labels.shape)
+#     #prob_volume = np.transpose(prob_volume, [1, 2, 0])
+#     processor = CRFProcessor()
+#     output = processor(prob_volume, labels)
+#
+#     print(output.shape)
 
 def test_model(config, save_file=0):
 
@@ -58,7 +69,8 @@ def test_model(config, save_file=0):
         # Threshold at 0.5
         recon = model.predict(x_test, batch_size = test_batch_size)
         labels = (recon > 0.5).astype(np.float32)
-       
+
+        crf(recon, y_test)
         
         # Calculate real time dice coeff for analysis
         dl = dice_loss_test(labels,y_test)
@@ -159,7 +171,6 @@ def test_dir(dirpath, config, vals_dict=None, best_weight_path=None):
 
     K.clear_session()
 
-
 local_testing_test_path = '../sample_data/test_data'
 local_test_results_path = '../sample_data/results'
 
@@ -182,11 +193,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train OAI dataset')
     parser.add_argument('-g', '--gpu', metavar='G', type=str, nargs='?', default='0',
                         help='gpu id to use')
+    parser.add_argument('-c', '--cpu', metavar='C', action='store_const', default=False, const=True)
     args = parser.parse_args()
     gpu = args.gpu
-
-    os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
-    os.environ['CUDA_VISIBLE_DEVICES']=gpu
+    cpu = args.cpu
+    if (not cpu):
+        os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
+        os.environ['CUDA_VISIBLE_DEVICES']=gpu
                 
     # Test data limit
     #for num_subjects in DATA_LIMIT_NUM_DATE_DICT.keys():
@@ -195,6 +208,10 @@ if __name__ == '__main__':
        # config = UNetConfig(create_dirs=False)
        # test_dir(filepath, config)
 
+    MCONFIG.SAVE_PATH_PREFIX='/Users/arjundesai/Documents/stanford/research/msk_seg_networks/result_data'
     config = DeeplabV3Config(create_dirs=False)
-    test_dir(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-08-30-05-37-55'), config, {'OS':16, 'DIL_RATES':(1, 9, 18), 'TEST_BATCH_SIZE':72})
+    test_dir('/Users/arjundesai/Documents/stanford/research/msk_seg_networks/sample_data', config,
+             vals_dict={'TEST_PATH': '/Users/arjundesai/Documents/stanford/research/msk_seg_networks/sample_data/test_data'})
+
+    #test_dir(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-08-30-05-37-55'), config, {'OS':16, 'DIL_RATES':(1, 9, 18), 'TEST_BATCH_SIZE':72})
     #test_dir(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-08-30-05-37-55'), config, {'OS':8, 'DIL_RATES':(1, 9, 18), 'TEST_BATCH_SIZE':9})
