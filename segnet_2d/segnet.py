@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 from keras.models import Model
 from keras.layers import Input
-from keras.layers.core import Dense, Dropout, Activation, Flatten, Reshape, Permute
-from keras.layers.convolutional import Convolution2D, MaxPooling2D, UpSampling2D, ZeroPadding2D
+from keras.layers.core import Activation
+from keras.layers.convolutional import Convolution2D
 from keras.layers.normalization import BatchNormalization
-from keras.layers.merge import Multiply, Concatenate
-from keras.utils import np_utils
 from keras.utils import plot_model
 
 from segnet_2d.Mylayers import MaxPoolingWithArgmax2D, MaxUnpooling2D

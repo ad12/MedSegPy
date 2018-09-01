@@ -222,26 +222,27 @@ class DeeplabV3Config(Config):
 
     def summary(self, additional_vars=[]):
         summary_attrs = ['OS', 'DIL_RATES']
-        super().summary(summary_attrs)
+        super().summary(summary_attrs.extend(additional_vars))
 
 
 class SegnetConfig(Config):
     CP_SAVE_TAG = SEGNET_NAME
 
     TRAIN_BATCH_SIZE = 15
-    #INITIAL_LEARNING_RATE = 2e-6
     FINE_TUNE=False
     INIT_WEIGHT_PATH='/bmrNAS/people/arjun/msk_seg_networks/oai_data/segnet_2d/2018-08-18-19-55-54/segnet_2d_weights.005-0.3353.h5'
     TEST_WEIGHT_PATH='/bmrNAS/people/arjun/msk_seg_networks/oai_data/segnet_2d/2018-08-18-19-55-54/segnet_2d_weights.005-0.3353.h5'
 
     DEPTH = 6
     NUM_CONV_LAYERS = [2, 2, 3, 3, 3, 3]
-    NUM_FILTERS = [64,128,256,256,512,512]
-    #DEPTH = 5
-    #NUM_CONV_LAYERS = [2, 2, 3, 3, 3]
-    #NUM_FILTERS = [64, 128, 256, 512, 512]
+    NUM_FILTERS = [64, 128, 256, 256, 512, 512]
+
     def __init__(self, state='training', create_dirs=True):
         super().__init__(self.CP_SAVE_TAG, state, create_dirs=create_dirs)
+
+    def summary(self, additional_vars=[]):
+        summary_attrs = ['DEPTH', 'NUM_CONV_LAYERS', 'NUM_FILTERS']
+        super().summary(summary_attrs.extend(additional_vars))
 
 
 class UNetConfig(Config):
