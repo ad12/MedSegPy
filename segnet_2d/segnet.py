@@ -23,7 +23,7 @@ def _encoder_block(x, level, num_conv_layers=2, num_filters=64, kernel=3, pool_s
         conv = Activation("relu", name='enc_%d_relu_%d' % (level, i+1))(conv)
         curr_layer = conv
 
-    l_pool, l_mask = MaxPoolingWithArgmax2D(pool_size, name='enc_%d_pool' % level )(curr_layer)
+    l_pool, l_mask = MaxPoolingWithArgmax2D(pool_size=pool_size, strides=pool_size, name='enc_%d_pool' % level )(curr_layer)
 
     return (l_pool, l_mask)
 
