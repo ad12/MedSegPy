@@ -222,7 +222,7 @@ class DeeplabV3Config(Config):
 
     def summary(self, additional_vars=[]):
         summary_attrs = ['OS', 'DIL_RATES']
-        super().summary(summary_attrs.extend(additional_vars))
+        super().summary(summary_attrs)
 
 
 class SegnetConfig(Config):
@@ -242,7 +242,7 @@ class SegnetConfig(Config):
 
     def summary(self, additional_vars=[]):
         summary_attrs = ['DEPTH', 'NUM_CONV_LAYERS', 'NUM_FILTERS']
-        super().summary(summary_attrs.extend(additional_vars))
+        super().summary(summary_attrs)
 
 
 class UNetConfig(Config):
