@@ -67,7 +67,6 @@ def Segnet_v2(input_shape=(288,288,1), input_tensor=None, n_labels=1, depth=5, n
     print('Building Encoder...')
     for i in range(depth):
         eff_pool_size = eff_pool_sizes[i]
-        print(eff_pool_size)
         curr_layer, l_mask = _encoder_block(curr_layer, 
                                             level=i+1, 
                                             num_conv_layers=num_conv_layers[i], 
