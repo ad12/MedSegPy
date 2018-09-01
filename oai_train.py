@@ -343,33 +343,9 @@ if __name__ == '__main__':
     os.environ["CUDA_VISIBLE_DEVICES"]=args.gpu
     os.environ["TF_CPP_MIN_LOG_LEVEL"]="2"
 
-    #train_deeplab(16, (6, 12, 18))
-    #train_deeplab(16, (1, 9, 18))
-    #train_deeplab(16, (3, 6, 9))
-    #train_deeplab(16, (2, 4, 6))
-    #train_deeplab(16, (2, 3, 8))
-
-    #Fine tune deeplab
-    #for mdir in DEEPLAB_TEST_PATHS:
-     #   filepath = os.path.join(DEEPLAB_TEST_PATHS_PREFIX, mdir)
-      #  config = DeeplabV3Config(create_dirs=False)
-       # fine_tune(filepath, config)
-
-    #train_debug()
-
-    # No step decay
-    #print('\nDeeplab - no step decay, adam optimizer')
-    #train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (1, 9, 18), 'USE_STEP_DECAY': False, 'INITIAL_LEARNING_RATE': 1e-5})
-
-    # No augmentation
-    #print('\nDeeplab - no augmentation')
-    #train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (1, 9, 18), 'AUGMENT_DATA': False, 'N_EPOCHS': 75})
-
-    # Train with lr, etc from original setup
-    #print('\nDeeplab - original config')
-    #train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (1, 9, 18), 'INITIAL_LEARNING_RATE': 2e-5, 'USE_AMSGRAD':True})
-
     #fine tune
-    fine_tune('/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d/2018-08-30-17-13-50/', DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE': 1e-6, 'USE_STEP_DECAY': False, 'N_EPOCHS': 75})
+    #fine_tune('/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d/2018-08-30-17-13-50/', DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE': 1e-6, 'USE_STEP_DECAY': False, 'N_EPOCHS': 75})
 
     #train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (2, 4, 6)})
+
+    train(SegnetConfig())

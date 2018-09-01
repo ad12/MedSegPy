@@ -115,9 +115,10 @@ def deeplabv3_2d(config):
 def segnet_2d(config):
     if (type(config) is not SegnetConfig):
         raise ValueError('config must be an instance of SegnetConfig')
+
     input_shape = config.IMG_SIZE
     model = Segnet_v2(input_shape=input_shape, n_labels=config.NUM_CLASSES, depth=config.DEPTH, num_conv_layers=config.NUM_CONV_LAYERS, num_filters=config.NUM_FILTERS)
-    #model = Segnet(input_shape=input_shape, n_labels=config.NUM_CLASSES)
+
     plot_model(model, os.path.join(config.PLOT_MODEL_PATH, config.CP_SAVE_TAG + '.png'), show_shapes=True)
 
     return model
