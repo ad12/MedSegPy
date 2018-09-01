@@ -70,7 +70,6 @@ def test_model(config, save_file=0):
         recon = model.predict(x_test, batch_size = test_batch_size)
         labels = (recon > 0.5).astype(np.float32)
 
-        crf(recon, y_test)
         
         # Calculate real time dice coeff for analysis
         dl = dice_loss_test(labels,y_test)
@@ -208,10 +207,7 @@ if __name__ == '__main__':
        # config = UNetConfig(create_dirs=False)
        # test_dir(filepath, config)
 
-    MCONFIG.SAVE_PATH_PREFIX='/Users/arjundesai/Documents/stanford/research/msk_seg_networks/result_data'
+    #MCONFIG.SAVE_PATH_PREFIX='/Users/arjundesai/Documents/stanford/research/msk_seg_networks/result_data'
     config = DeeplabV3Config(create_dirs=False)
-    test_dir('/Users/arjundesai/Documents/stanford/research/msk_seg_networks/sample_data', config,
-             vals_dict={'TEST_PATH': '/Users/arjundesai/Documents/stanford/research/msk_seg_networks/sample_data/test_data'})
-
-    #test_dir(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-08-30-05-37-55'), config, {'OS':16, 'DIL_RATES':(1, 9, 18), 'TEST_BATCH_SIZE':72})
+    test_dir(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-08-30-05-37-55/fine_tune'), config, {'OS':16, 'DIL_RATES':(2, 9, 18), 'TEST_BATCH_SIZE':72})
     #test_dir(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-08-30-05-37-55'), config, {'OS':8, 'DIL_RATES':(1, 9, 18), 'TEST_BATCH_SIZE':9})

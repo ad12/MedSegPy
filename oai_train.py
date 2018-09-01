@@ -369,7 +369,6 @@ if __name__ == '__main__':
     #train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (1, 9, 18), 'INITIAL_LEARNING_RATE': 2e-5, 'USE_AMSGRAD':True})
 
     #fine tune
-    fine_tune('/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d/2018-08-30-05-37-55/', DeeplabV3Config(),
-              vals_dict={'INITIAL_LEARNING_RATE': 1e-7, 'USE_STEP_DECAY': False, 'N_EPOCHS': 15})
+    fine_tune('/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d/2018-08-30-17-13-50/', DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE': 1e-6, 'USE_STEP_DECAY': False, 'N_EPOCHS': 75})
 
-    train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (3, 9, 12)})
+    #train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (2, 4, 6)})

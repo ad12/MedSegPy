@@ -137,7 +137,11 @@ class Config():
 
             # all data is of type string, but we need to cast back to original data type
             data_type = type(getattr(self, upper_case_key))
+
+            #print(upper_case_key + ': ' + str(vars_dict[key]) + ' (' + str(data_type) + ')')
             var_converted = utils.convert_data_type(vars_dict[key], data_type)
+
+            # Loading config
             self.__setattr__(str(key).upper(), var_converted)
 
     def set_attr(self, attr, val):
@@ -175,7 +179,7 @@ class Config():
         summary_vals = ['CP_SAVE_TAG']
 
         if self.STATE == 'training':
-            summary_vals.extend(['N_EPOCHS', 'TRAIN_BATCH_SIZE', 'VALID_BATCH_SIZE', 'INITIAL_LEARNING_RATE', 'MIN_LEARNING_RATE', 'DROP_FACTOR', 'DROP_RATE'])
+            summary_vals.extend(['N_EPOCHS', 'AUGMENT_DATA', 'TRAIN_BATCH_SIZE', 'VALID_BATCH_SIZE', 'USE_STEP_DECAY', 'INITIAL_LEARNING_RATE', 'MIN_LEARNING_RATE', 'DROP_FACTOR', 'DROP_RATE', 'FINE_TUNE'])
             if self.FINE_TUNE:
                 summary_vals.extend(['INIT_WEIGHT_PATH'])
         else:

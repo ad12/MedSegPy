@@ -119,7 +119,7 @@ def convert_data_type(var_string, data_type):
         return int(var_string)
 
     if (data_type is bool):
-        return bool(data_type)
+        return ast.literal_eval(var_string)
 
     if (data_type is list):
         return ast.literal_eval(var_string)
