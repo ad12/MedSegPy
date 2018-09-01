@@ -209,5 +209,5 @@ if __name__ == '__main__':
 
     #MCONFIG.SAVE_PATH_PREFIX='/Users/arjundesai/Documents/stanford/research/msk_seg_networks/result_data'
     config = DeeplabV3Config(create_dirs=False)
-    test_dir(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-08-30-05-37-55/fine_tune'), config, {'OS':16, 'DIL_RATES':(2, 9, 18), 'TEST_BATCH_SIZE':72})
+    test_dir(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-08-31-20-31-13'), config, {'OS':8, 'DIL_RATES':(4, 8, 12), 'TEST_BATCH_SIZE':9})
     #test_dir(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-08-30-05-37-55'), config, {'OS':8, 'DIL_RATES':(1, 9, 18), 'TEST_BATCH_SIZE':9})

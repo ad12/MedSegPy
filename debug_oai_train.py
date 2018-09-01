@@ -4,11 +4,9 @@ from config import SegnetConfig
 
 
 if __name__ == '__main__':
-    MCONFIG.SAVE_PATH_PREFIX = './sample_data'
+    #MCONFIG.SAVE_PATH_PREFIX = './sample_data'
 
-    val_dict = {'TRAIN_PATH': './sample_data/train_data',
-                'TEST_PATH': './sample_data/test_data',
-                'VALID_PATH': './sample_data/val_data',
+    val_dict = {
                 'N_EPOCHS': 1,
                 'DEBUG': True,
                 }
