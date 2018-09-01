@@ -314,6 +314,7 @@ def train(config, vals_dict=None):
             config.set_attr(key, val)
 
     config.save_config()
+    config.summary()
     train_model(config)
 
     K.clear_session()
