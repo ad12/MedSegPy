@@ -1,8 +1,11 @@
-PID_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/train_aug_2d'
+import os
+import utils
+
+
+PID_PATH = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/train_aug'
 PID_TXT_PATH = '/bmrNAS/people/arjun/msk_seg_networks/train_pid.dat'
 
-import utils
-import os
+# Create list of pids
 if __name__ == '__main__':
     files = os.listdir(PID_PATH)
     pids = []

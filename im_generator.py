@@ -1,5 +1,6 @@
 # Author: Zhongnan Fang, zhongnanf@gmail.com, 2017 July
 # Modified: Akshay Chaudhari, akshaysc@stanford.edu 2017 August
+#           Arjun Desai, arjundd@stanford.edu, 2018 June
 
 from __future__ import print_function, division
 from deprecated import deprecated
@@ -11,7 +12,6 @@ from random import shuffle
 from re import split
 import h5py
 
-from deeplab_2d.deeplab_model import preprocess_input
 
 def preprocess_input_scale(im):
     p_min = np.amin(im)

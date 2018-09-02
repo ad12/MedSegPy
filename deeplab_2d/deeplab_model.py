@@ -310,6 +310,7 @@ def Deeplabv3(weights='pascal_voc', input_tensor=None, input_shape=(512, 512, 3)
         ValueError: in case of invalid argument for `weights` or `backbone`
 
     """
+    print('Initializing deeplab model')
 
     if not (weights in {'pascal_voc', None}):
         raise ValueError('The `weights` argument should be either '
