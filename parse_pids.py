@@ -13,5 +13,5 @@ if __name__ == '__main__':
         pids.append(pid)
     
     pids = list(set(pids))
-    
+    print('%d subjects' % len(pids))
     utils.save_pik(pids, PID_TXT_PATH)

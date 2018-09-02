@@ -348,4 +348,4 @@ if __name__ == '__main__':
 
     #train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (2, 4, 6)})
 
-    train(SegnetConfig())
+    train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3})
