@@ -32,7 +32,13 @@ import utils
 #     print(output.shape)
 
 def test_model(config, save_file=0):
+    """
+    Test model
+    :param config: a Config object
+    :param save_file: save data (default = 0)
+    """
 
+    # Load config data
     test_path = config.TEST_PATH
     test_result_path = config.TEST_RESULT_PATH
     test_batch_size = config.TEST_BATCH_SIZE
@@ -113,6 +119,13 @@ def test_model(config, save_file=0):
 
 
 def get_stats_string(dice_losses, skipped_count, testing_time):
+    """
+    Return string detailing statistics
+    :param dice_losses: list of dice losses per exam
+    :param skipped_count: number of exams skipped
+    :param testing_time: time to run tests for all exams
+    :return: a string
+    """
     s = 'Overall Summary:\n'
     s += '%d Skipped\n' % skipped_count
     s += 'Mean= %0.4f Std = %0.3f\n' % (np.mean(dice_losses), np.std(dice_losses))
@@ -122,6 +135,11 @@ def get_stats_string(dice_losses, skipped_count, testing_time):
 
 
 def get_valid_subdirs(base_path):
+    """
+    Return subdirectories that have data to be tested
+    :param base_path: root folder to search
+    :return: list of paths (strings)
+    """
     if base_path is None:
         return []
 
@@ -150,7 +168,16 @@ def get_valid_subdirs(base_path):
 
 
 def test_dir(dirpath, config, vals_dict=None, best_weight_path=None):
-
+    """
+    Run testing experiment
+    By default, save all data
+    :param dirpath: path to directory storing model config
+    :param config: a Config object
+    :param vals_dict: vals_dict: a dictionary of config parameters to change (default = None)
+                      e.g. {'INITIAL_LEARNING_RATE': 1e-6, 'USE_STEP_DECAY': True}
+    :param best_weight_path: path to best weights (default = None)
+                                if None, automatically search dirpath for the best weight path
+    """
     # Get best weight path
     if best_weight_path is None:
         best_weight_path = utils.get_weights(dirpath)

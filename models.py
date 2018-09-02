@@ -1,5 +1,5 @@
 from keras.utils import plot_model
-from keras.layers import Input, Conv2D, Concatenate, ZeroPadding2D, Cropping2D
+from keras.layers import Input, Conv2D, Concatenate
 from keras import Model
 from keras.initializers import Zeros, Ones, Constant
 
@@ -12,6 +12,11 @@ import os
 
 
 def get_model(config):
+    """
+    Get model corresponding to config
+    :param config: Config object with specific architecture configurations
+    :return: a Keras model
+    """
     if (type(config) is DeeplabV3Config):
         return deeplabv3_2d(config)
     elif (type(config) is SegnetConfig):
@@ -25,8 +30,73 @@ def get_model(config):
     else:
         raise ValueError('This config type has not been implemented') 
 
+def unet_2d(config):
+    """
+     Returns Unet2D model
+     :param config: a UNetConfig object
+     :return: a Keras model
+
+     :raises ValueError: if config not of type UNetConfig
+     """
+    input_shape = config.IMG_SIZE
+    model = unet_2d_model(input_size=input_shape)
+
+    return model
+
+def deeplabv3_2d(config):
+    """
+    Returns DeeplabV3+ model
+    :param config: a DeeplabV3Config object
+    :return: a Keras model
+
+    :raises ValueError: if config not of type DeeplabV3Config
+    """
+    if (type(config) is not DeeplabV3Config):
+        raise ValueError('config must be an instance of DeeplabV3Config')
+
+    input_shape = config.IMG_SIZE
+    OS = config.OS
+    dil_rate_input = config.DIL_RATES
+
+    model = Deeplabv3(weights=None, input_shape=input_shape, classes=config.NUM_CLASSES, backbone='xception', OS=OS, dil_rate_input=dil_rate_input)
+
+    # Add sigmoid activation layer -
+    x = __sigmoid_activation_layer(output=model.layers[-1].output, num_classes=config.NUM_CLASSES)
+    model = Model(inputs=model.input, outputs=x)
+
+    plot_model(model, os.path.join(config.PLOT_MODEL_PATH, config.CP_SAVE_TAG + '.png'), show_shapes=True)
+
+    return model
+
+
+def segnet_2d(config):
+    """
+    Returns SegnetConfig model
+    :param config: a SegnetConfig object
+    :return: a Keras model
+
+    :raises ValueError: if config not of type SegnetConfig
+    """
+    if (type(config) is not SegnetConfig):
+        raise ValueError('config must be an instance of SegnetConfig')
+
+    input_shape = config.IMG_SIZE
+
+    model = Segnet_v2(input_shape=input_shape, n_labels=config.NUM_CLASSES, depth=config.DEPTH, num_conv_layers=config.NUM_CONV_LAYERS, num_filters=config.NUM_FILTERS)
+
+    plot_model(model, os.path.join(config.PLOT_MODEL_PATH, config.CP_SAVE_TAG + '.png'), show_shapes=True)
+
+    return model
+
 
 def unet_2d_multi_contrast(config):
+    """
+    Returns unet model corresponding to 3-channel multi-contrast inputs
+    :param config: a UNetMultiContrastConfig object
+    :return: a Keras model
+
+    :raises ValueError: if config not of type UNetMultiContrastConfig
+    """
     if (type(config) is not UNetMultiContrastConfig):
         raise ValueError('config must be instance of UNetMultiContrastConfig')
     print('Initializing multi contrast 2d unet: input size - ' + str(config.IMG_SIZE))
@@ -41,7 +111,15 @@ def unet_2d_multi_contrast(config):
 
     return model
 
+
 def ensemble_uds(config):
+    """
+    Returns model corresponding to ensemble of unet, deeplab, and segnet
+    :param config: a EnsembleUDSConfig object
+    :return: a Keras model
+
+    :raises ValueError: if config not of type EnsembleUDSConfig
+    """
     if (type(config) is not EnsembleUDSConfig):
         raise ValueError('config must be instance of EnsembleUDSConfig')
     # Deeplab
@@ -68,7 +146,16 @@ def ensemble_uds(config):
 
     return model
 
+
 def combine_models(x_input, models, ensemble_name='ensemble', num_classes=1):
+    """
+    Combine Keras models to form single ensemble model
+    :param x_input: a Keras Input tensor
+    :param models: list of Keras models
+    :param ensemble_name: name of ensemble model
+    :param num_classes: number of output classes
+    :return:
+    """
     outputs = []
     for model in models:
         outputs.append(model.layers[-1].output)
@@ -84,50 +171,11 @@ def combine_models(x_input, models, ensemble_name='ensemble', num_classes=1):
     return model
 
 
-def unet_2d(config):
-    input_shape = config.IMG_SIZE
-    model = unet_2d_model(input_size=input_shape)
-
-    return model
-
-def deeplabv3_2d(config):
-    if (type(config) is not DeeplabV3Config):
-        raise ValueError('config must be an instance of DeeplabConfig')
-    print('Initializing deeplab model') 
-    input_shape = config.IMG_SIZE
-    OS = config.OS
-    dil_rate_input = config.DIL_RATES
-    
-    print('OS: %d' % OS)
-    print('DIL_RATES: ' + str(dil_rate_input))
-
-    model = Deeplabv3(weights=None, input_shape=input_shape, classes=config.NUM_CLASSES, backbone='xception', OS=OS, dil_rate_input=dil_rate_input)
-
-    # Add sigmoid activation layer -
-    x = __sigmoid_activation_layer(output=model.layers[-1].output, num_classes=config.NUM_CLASSES)
-    model = Model(inputs=model.input, outputs=x)
-
-    plot_model(model, os.path.join(config.PLOT_MODEL_PATH, config.CP_SAVE_TAG + '.png'), show_shapes=True)
-
-    return model
-
-
-def segnet_2d(config):
-    if (type(config) is not SegnetConfig):
-        raise ValueError('config must be an instance of SegnetConfig')
-
-    input_shape = config.IMG_SIZE
-    model = Segnet_v2(input_shape=input_shape, n_labels=config.NUM_CLASSES, depth=config.DEPTH, num_conv_layers=config.NUM_CONV_LAYERS, num_filters=config.NUM_FILTERS)
-
-    plot_model(model, os.path.join(config.PLOT_MODEL_PATH, config.CP_SAVE_TAG + '.png'), show_shapes=True)
-
-    return model
-
-
 def __sigmoid_activation_layer(output, num_classes):
-    ''' Return sigmoid activation layer
-        @param: output   The output of the previous layer
-    '''
+    """
+    Return sigmoid activation layer
+    :param: output: The output of the previous layer
+    """
 
     # Initializing kernel weights to 1 and bias to 0.
     # i.e. without training, the output would be a sigmoid activation on each pixel of the input

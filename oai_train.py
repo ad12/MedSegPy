@@ -26,8 +26,15 @@ from models import get_model
 import utils
 import parse_pids
 
+
 def train_model(config, optimizer=None):
-    
+    """
+    Train model
+    :param config: a Config object
+    :param optimizer: a Keras optimizer (default = None)
+    """
+
+    # Load data from config
     train_path = config.TRAIN_PATH
     valid_path = config.VALID_PATH
     train_batch_size = config.TRAIN_BATCH_SIZE
@@ -42,14 +49,16 @@ def train_model(config, optimizer=None):
     layers_to_freeze = []
 
 
-    # Create Deeplab model
+    # Get model based on config
     img_size = config.IMG_SIZE
     model = get_model(config)
 
+    # Fine tune - initialize with weights
     if (config.FINE_TUNE):
         print('loading weights')
         model.load_weights(config.INIT_WEIGHT_PATH, by_name=True)
 
+    # If no optimizer is provided, default to Adam
     if optimizer is None:
         optimizer = Adam(lr=config.INITIAL_LEARNING_RATE, beta_1=0.99, beta_2=0.995, epsilon=1e-8, decay=config.ADAM_DECAY, amsgrad=config.USE_AMSGRAD)
 
@@ -79,6 +88,7 @@ def train_model(config, optimizer=None):
 
     callbacks_list = [tfb_cb, cp_cb, hist_cb]
 
+    # Step decay for learning rate
     if (config.USE_STEP_DECAY):
         lr_cb = lrs(step_decay_wrapper(config.INITIAL_LEARNING_RATE, config.MIN_LEARNING_RATE, config.DROP_FACTOR,
                                        config.DROP_RATE))
@@ -105,7 +115,7 @@ def train_model(config, optimizer=None):
         val_gen = img_generator(valid_path, valid_batch_size, img_size, tag, config.TISSUES)
 
 
-    # Start the training
+    # Start training
     model.fit_generator(
         train_gen,
         train_nbatches,
@@ -126,16 +136,27 @@ def train_model(config, optimizer=None):
     # Save model
     model.save(filepath=os.path.join(config.CP_SAVE_PATH, 'model.h5'), overwrite=True)
 
-    return hist_cb
 
 def get_lr_metric(optimizer):
+    """
+    Wrapper for learning rate tensorflow metric
+    :param optimizer: a Keras optimizer
+    :return: a Tensorflow callback
+    """
     def lr(y_true, y_pred):
         return optimizer.lr
     return lr
 
-# learning rate schedule
 
-def step_decay_wrapper(initial_lr, min_lr, drop_factor, drop_rate):
+def step_decay_wrapper(initial_lr=1e-4, min_lr=1e-8, drop_factor=0.8, drop_rate=1.0):
+    """
+    Wrapper for learning rate step decay
+    :param initial_lr: initial learning rate (default = 1e-4)
+    :param min_lr: minimum learning rate (default = None)
+    :param drop_factor: factor to drop (default = 0.8)
+    :param drop_rate: rate of learning rate drop (default = 1.0 epochs)
+    :return: a Tensorflow callback
+    """
     initial_lr = initial_lr
     drop_factor = drop_factor
     drop_rate = drop_rate
@@ -153,8 +174,10 @@ def step_decay_wrapper(initial_lr, min_lr, drop_factor, drop_rate):
     return step_decay
 
 
-# Print and asve the training history
 class LossHistory(kc.Callback):
+    """
+    A Keras callback to log training history
+    """
     def on_train_begin(self, logs={}):
         self.val_losses = []
         self.losses = []
@@ -166,18 +189,6 @@ class LossHistory(kc.Callback):
         self.losses.append(logs.get('loss'))
        # self.lr.append(step_decay(len(self.losses)))
         self.epoch.append(len(self.losses))
-
-def train_deeplab(OS, dilation_rates):
-    config = DeeplabV3Config()
-    config.OS = OS
-    config.DIL_RATES = dilation_rates
-    
-    config.N_EPOCHS = 25
-    config.save_config()
-    #config.TRAIN_BATCH_SIZE = 5
-    train_model(config)
-
-    K.clear_session()
 
 
 def fine_tune(dirpath, config, vals_dict=None):
@@ -206,31 +217,6 @@ def fine_tune(dirpath, config, vals_dict=None):
     K.clear_session()
 
 
-def fine_tune_deeplab(base_path):
-    files = os.listdir(base_path)
-    f_subdirs = []
-
-    for file in files:
-        possible_dir = os.path.join(base_path, file)
-        if (os.path.isdir(possible_dir) and
-                os.path.isfile(os.path.join(possible_dir,'config.ini')) and
-                not os.path.isdir(os.path.join(possible_dir, 'fine_tune'))):
-            f_subdirs.append(possible_dir)
-
-    for subdir in f_subdirs:
-        # Initialize config
-        config = DeeplabV3Config(create_dirs=False)
-        config.load_config(os.path.join(base_path, 'config.ini'))
-        best_weight_path = utils.get_weights(subdir)
-        config.init_fine_tune(best_weight_path)
-
-        config.N_EPOCHS = 10
-        config.INITIAL_LEARNING_RATE = 1e-6
-        config.DROP_RATE = 2.0
-
-        train_model(config)
-
-
 def train_debug():
     print('')
     print('DEBUGGING.....')
@@ -248,6 +234,10 @@ def train_debug():
 
 
 def data_limitation_train():
+    """
+    Train data limited networks
+    :return:
+    """
     print('Data limitation......')
     import math
     MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_data_limit/oai_data'
@@ -287,6 +277,9 @@ def data_limitation_train():
 
 
 def unet_2d_multi_contrast_train():
+    """
+    Train multi contrast network
+    """
     MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/akshay/dl/oai_data/segnet_2d/'
 
     # By default, loads weights from original 2D unet
@@ -307,6 +300,12 @@ def unet_2d_multi_contrast_train():
     exit()
 
 def train(config, vals_dict=None):
+    """
+    Train config after applying vals_dict
+    :param config: a Config object
+    :param vals_dict: a dictionary of config parameters to change (default = None)
+                      e.g. {'INITIAL_LEARNING_RATE': 1e-6, 'USE_STEP_DECAY': True}
+    """
 
     if vals_dict is not None:
         for key in vals_dict.keys():

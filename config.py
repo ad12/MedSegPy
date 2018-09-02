@@ -16,6 +16,7 @@ SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/oai_data'
 class Config():
     VERSION = 2
 
+    # PIDS to include, None = all pids
     PIDS = None
 
     DEBUG = False
@@ -100,6 +101,10 @@ class Config():
                 self.TEST_RESULT_PATH = utils.check_dir(os.path.join('./test_results', self.CP_SAVE_TAG, self.TAG, self.DATE_TIME_STR))
 
     def init_training_paths(self, prefix):
+        """
+        Intitialize training paths
+        :param prefix: a string to uniquely identify this experiment
+        """
         self.CP_SAVE_PATH = utils.check_dir(os.path.join(SAVE_PATH_PREFIX, self.CP_SAVE_TAG, prefix))
         self.PIK_SAVE_PATH = os.path.join(self.CP_SAVE_PATH, 'pik_data.dat')
         self.PIK_SAVE_PATH_DIR = utils.check_dir(os.path.dirname(self.PIK_SAVE_PATH))
@@ -108,8 +113,6 @@ class Config():
     def save_config(self):
         """
         Save params of config to ini file
-        :param model:
-        :return:
         """
 
         members = [attr for attr in dir(self) if not callable(getattr(self, attr)) and not attr.startswith("__")]
@@ -125,6 +128,10 @@ class Config():
         utils.save_pik(self, filename)
 
     def load_config(self, ini_filepath):
+        """
+        Load params of config from ini file
+        :param ini_filepath: path to ini file
+        """
         vars_dict = utils.load_config(ini_filepath)
 
         if(vars_dict['CP_SAVE_TAG'] != self.CP_SAVE_TAG):
@@ -145,6 +152,15 @@ class Config():
             self.__setattr__(str(key).upper(), var_converted)
 
     def set_attr(self, attr, val):
+        """
+        Wrapper method to set attributes of config
+        :param attr: a string attr
+        :param val: value to set attribute to
+
+        :raises ValueError: if attr is not a string
+                            if attr does not exist for the config
+                            if type of val is different from the default type
+        """
         if type(attr) is not str:
             raise ValueError('attr must be of type str')
 
@@ -152,12 +168,16 @@ class Config():
             raise ValueError('The attribute %s does not exist' % attr)
         curr_val = self.__getattribute__(attr)
 
-        if (type(val) != type(curr_val)):
+        if (curr_val is not None and (type(val) != type(curr_val))):
             raise ValueError('Input value is of type %s. Expected %s' %(str(type(val)), str(type(curr_val))))
 
         self.__setattr__(attr, val)
 
     def init_fine_tune(self, init_weight_path):
+        """
+        Initialize fine tune state
+        :param init_weight_path: path to initial weights
+        """
         if (self.STATE != 'training'):
             raise ValueError('Must be in training state')
 
@@ -168,12 +188,17 @@ class Config():
         self.init_training_paths(prefix)
 
     def change_to_test(self):
+        """
+        Initialize testing state
+        """
         self.STATE = 'testing'
         self.TEST_RESULT_PATH = utils.check_dir(os.path.join(self.CP_SAVE_PATH, 'test_results'))
 
-    # TODO: implement summary (arjundd)
     def summary(self, additional_vars=[]):
-        """Print summary of config
+        """
+        Print config summary
+        :param additional_vars: additional list of variables to print
+        :return:
         """
 
         summary_vals = ['CP_SAVE_TAG']
