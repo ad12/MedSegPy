@@ -185,6 +185,13 @@ class Config():
         self.INIT_WEIGHT_PATH = init_weight_path
 
         prefix = os.path.join(self.DATE_TIME_STR, 'fine_tune')
+
+        # if fine_tune folder already exists, do not overwrite
+        count=2
+        while os.path.isdir(prefix):
+            prefix = os.path.join(self.DATE_TIME_STR, 'fine_tune_%03d' % count)
+            count += 1
+
         self.init_training_paths(prefix)
 
     def change_to_test(self):
