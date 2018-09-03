@@ -85,9 +85,27 @@ def segnet_2d(config):
 
     input_shape = config.IMG_SIZE
 
-    model = Segnet_v2(input_shape=input_shape, n_labels=config.NUM_CLASSES, depth=config.DEPTH, num_conv_layers=config.NUM_CONV_LAYERS, num_filters=config.NUM_FILTERS)
+    model = Segnet_v2(input_shape=input_shape,
+                      n_labels=config.NUM_CLASSES,
+                      depth=config.DEPTH,
+                      num_conv_layers=config.NUM_CONV_LAYERS,
+                      num_filters=config.NUM_FILTERS,
+                      single_bn=config.SINGLE_BN,
+                      conv_act_bn=config.CONV_ACT_BN)
 
-    plot_model(model, os.path.join(config.PLOT_MODEL_PATH, config.CP_SAVE_TAG + '.png'), show_shapes=True)
+    model_name = config.CP_SAVE_TAG + '_%d' + '_%s' + '_%s'
+    bn_str = 'xbn'
+    conv_act_bn_str = 'cba'
+
+    if config.SINGLE_BN:
+        bn_str = '1bn'
+
+    if config.CONV_ACT_BN:
+        conv_act_bn_str='cab'
+
+    model_name = model_name % (config.DEPTH, bn_str, conv_act_bn_str)
+
+    plot_model(model, os.path.join(config.PLOT_MODEL_PATH, model_name + '.png'), show_shapes=True)
 
     return model
 

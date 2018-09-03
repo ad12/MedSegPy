@@ -16,3 +16,6 @@
 **/testing_data
 **/sample_data
 **/test_results
+
+# Ignore images
+**/model_imgs

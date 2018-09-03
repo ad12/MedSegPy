@@ -9,7 +9,7 @@ from keras.utils import plot_model
 from segnet_2d.Mylayers import MaxPoolingWithArgmax2D, MaxUnpooling2D
 
 
-def _encoder_block(x, level, num_conv_layers=2, num_filters=64, kernel=3, pool_size=(2,2)):
+def _encoder_block(x, level, num_conv_layers=2, num_filters=64, kernel=3, pool_size=(2,2), single_bn=False):
     if (num_conv_layers <= 0):
         raise ValueError('Must have at least 1 conv layer')
 
@@ -17,16 +17,20 @@ def _encoder_block(x, level, num_conv_layers=2, num_filters=64, kernel=3, pool_s
 
     for i in range(num_conv_layers):
         conv = Convolution2D(num_filters, (kernel, kernel), padding="same", name='enc_%d_conv_%d' % (level, i+1))(curr_layer)
-        conv = BatchNormalization(name='enc_%d_bn_%d' % (level, i+1))(conv)
+        if not single_bn:
+            conv = BatchNormalization(name='enc_%d_bn_%d' % (level, i+1))(conv)
         conv = Activation("relu", name='enc_%d_relu_%d' % (level, i+1))(conv)
         curr_layer = conv
+
+    if single_bn:
+        curr_layer = BatchNormalization(name='enc_%d_bn' % level)(curr_layer)
 
     l_pool, l_mask = MaxPoolingWithArgmax2D(pool_size=pool_size, strides=pool_size, name='enc_%d_pool' % level )(curr_layer)
 
     return (l_pool, l_mask)
 
 
-def _decoder_block(x_pool, x_mask, level, num_conv_layers=2, num_filters=64, num_filters_next=32, kernel=3, pool_size=(2,2)):
+def _decoder_block(x_pool, x_mask, level, num_conv_layers=2, num_filters=64, num_filters_next=32, kernel=3, pool_size=(2,2), single_bn=False):
 
     unpool_1 = MaxUnpooling2D(pool_size)([x_pool, x_mask])
 
@@ -35,14 +39,52 @@ def _decoder_block(x_pool, x_mask, level, num_conv_layers=2, num_filters=64, num
     for i in range(num_conv_layers):
         used_num_filters = num_filters_next if i==num_conv_layers-1 else num_filters
         conv = Convolution2D(used_num_filters, (kernel, kernel), padding="same", name='dec_%d_conv_%d' % (level, i+1))(curr_layer)
-        conv = BatchNormalization(name='dec_%d_bn_%d' % (level, i+1))(conv)
+
+        if not single_bn:
+            conv = BatchNormalization(name='dec_%d_bn_%d' % (level, i+1))(conv)
+
         conv = Activation("relu", name='dec_%d_relu_%d' % (level, i+1))(conv)
         curr_layer = conv
+
+    if single_bn:
+        curr_layer = BatchNormalization(name='dec_%d_bn' % level)(curr_layer)
 
     return curr_layer
 
 
-def Segnet_v2(input_shape=(288,288,1), input_tensor=None, n_labels=1, depth=5, num_conv_layers=[2, 2, 3, 3, 3], num_filters=[64, 128, 256, 512, 512], kernel=3, pool_size=(2, 2), output_mode="sigmoid"):
+def _encoder_block_conv_act_bn(x, level, num_conv_layers=2, num_filters=64, kernel=3, pool_size=(2,2)):
+    if (num_conv_layers <= 0):
+        raise ValueError('Must have at least 1 conv layer')
+
+    curr_layer = x
+
+    for i in range(num_conv_layers):
+        conv = Convolution2D(num_filters, (kernel, kernel), padding="same", name='enc_%d_conv_%d' % (level, i+1))(curr_layer)
+        conv = Activation("relu", name='enc_%d_relu_%d' % (level, i+1))(conv)
+        conv = BatchNormalization(name='enc_%d_bn_%d' % (level, i+1))(conv)
+        curr_layer = conv
+
+    l_pool, l_mask = MaxPoolingWithArgmax2D(pool_size=pool_size, strides=pool_size, name='enc_%d_pool' % level )(curr_layer)
+
+    return (l_pool, l_mask)
+
+
+def _decoder_block_conv_act_bn(x_pool, x_mask, level, num_conv_layers=2, num_filters=64, num_filters_next=32, kernel=3, pool_size=(2,2)):
+
+    unpool_1 = MaxUnpooling2D(pool_size)([x_pool, x_mask])
+
+    curr_layer = unpool_1
+
+    for i in range(num_conv_layers):
+        used_num_filters = num_filters_next if i==num_conv_layers-1 else num_filters
+        conv = Convolution2D(used_num_filters, (kernel, kernel), padding="same", name='dec_%d_conv_%d' % (level, i+1))(curr_layer)
+        conv = Activation("relu", name='dec_%d_relu_%d' % (level, i+1))(conv)
+        conv = BatchNormalization(name='dec_%d_bn_%d' % (level, i + 1))(conv)
+        curr_layer = conv
+
+    return curr_layer
+
+def Segnet_v2(input_shape=(288,288,1), input_tensor=None, n_labels=1, depth=5, num_conv_layers=[2, 2, 3, 3, 3], num_filters=[64, 128, 256, 512, 512], kernel=3, pool_size=(2, 2), output_mode="sigmoid", single_bn=False, conv_act_bn=False):
     
     if input_tensor is not None:
         inputs = input_tensor
@@ -67,12 +109,21 @@ def Segnet_v2(input_shape=(288,288,1), input_tensor=None, n_labels=1, depth=5, n
     print('Building Encoder...')
     for i in range(depth):
         eff_pool_size = eff_pool_sizes[i]
-        curr_layer, l_mask = _encoder_block(curr_layer, 
-                                            level=i+1, 
-                                            num_conv_layers=num_conv_layers[i], 
-                                            num_filters=num_filters[i],
-                                            kernel=kernel,
-                                            pool_size=eff_pool_size)
+        if (conv_act_bn):
+            curr_layer, l_mask = _encoder_block_conv_act_bn(curr_layer,
+                                                            level=i + 1,
+                                                            num_conv_layers=num_conv_layers[i],
+                                                            num_filters=num_filters[i],
+                                                            kernel=kernel,
+                                                            pool_size=eff_pool_size)
+        else:
+            curr_layer, l_mask = _encoder_block(curr_layer,
+                                                level=i+1,
+                                                num_conv_layers=num_conv_layers[i],
+                                                num_filters=num_filters[i],
+                                                kernel=kernel,
+                                                pool_size=eff_pool_size,
+                                                single_bn=single_bn)
 
         mask_layers.append(l_mask)
 
@@ -81,22 +132,31 @@ def Segnet_v2(input_shape=(288,288,1), input_tensor=None, n_labels=1, depth=5, n
     for i in reversed(range(depth)):
         l_mask = mask_layers[i]
         eff_pool_size = eff_pool_sizes[i]
-        curr_layer = _decoder_block(curr_layer,
-                                    l_mask,
-                                    level=i+1, 
-                                    num_conv_layers=num_conv_layers[i], 
-                                    num_filters=num_filters[i],
-                                    num_filters_next = 1 if i==0 else num_filters[i-1],
-                                    kernel=kernel,
-                                    pool_size=eff_pool_size)
+        if (conv_act_bn):
+            curr_layer = _decoder_block_conv_act_bn(curr_layer,
+                                                    l_mask,
+                                                    level=i+1,
+                                                    num_conv_layers=num_conv_layers[i],
+                                                    num_filters=num_filters[i],
+                                                    num_filters_next = 1 if i==0 else num_filters[i-1],
+                                                    kernel=kernel,
+                                                    pool_size=eff_pool_size)
+        else:
+            curr_layer = _decoder_block(curr_layer,
+                                        l_mask,
+                                        level=i+1,
+                                        num_conv_layers=num_conv_layers[i],
+                                        num_filters=num_filters[i],
+                                        num_filters_next = 1 if i==0 else num_filters[i-1],
+                                        kernel=kernel,
+                                        pool_size=eff_pool_size,
+                                        single_bn=single_bn)
 
-    outputs = Convolution2D(n_labels, (1,1), activation=output_mode)(curr_layer)
+    outputs = Convolution2D(n_labels, (1, 1), activation=output_mode)(curr_layer)
 
     segnet = Model(inputs=inputs, outputs=outputs, name="segnet")
 
     return segnet
-
-
 
 
 def Segnet(input_shape=(288,288,1), input_tensor=None, n_labels=1, kernel=3, pool_size=(2, 2), output_mode="sigmoid"):

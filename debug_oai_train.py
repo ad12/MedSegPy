@@ -16,8 +16,6 @@ if __name__ == '__main__':
     #     get_model(config)
     #     K.clear_session()
     config = SegnetConfig()
-    config.DEPTH = 7
-    config.NUM_CONV_LAYERS = [2]*7
-    config.NUM_FILTERS = [16, 32, 64, 128, 256, 512, 1024]
+    config.SINGLE_BN = True
     m = get_model(config)
     m.summary()

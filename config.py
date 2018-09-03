@@ -269,6 +269,10 @@ class SegnetConfig(Config):
     NUM_CONV_LAYERS = [2, 2, 3, 3, 3, 3]
     NUM_FILTERS = [64, 128, 256, 256, 512, 512]
 
+    SINGLE_BN = False
+    CONV_ACT_BN = False
+
+
     def __init__(self, state='training', create_dirs=True):
         super().__init__(self.CP_SAVE_TAG, state, create_dirs=create_dirs)
 
