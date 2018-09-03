@@ -343,9 +343,10 @@ def Deeplabv3(weights='pascal_voc', input_tensor=None, input_shape=(512, 512, 3)
             entry_block3_stride = 2
             middle_block_rate = 1
             exit_block_rates = (1, 2)
-        atrous_rates = (6 // dilation_divisor, 12 // dilation_divisor, 18 // dilation_divisor)
+            atrous_rates = (6 // dilation_divisor, 12 // dilation_divisor, 18 // dilation_divisor)
+
         if dil_rate_input is not None:
-            atrous_rates = dil_rate_input 
+            atrous_rates = dil_rate_input
 
         x = Conv2D(32, (3, 3), strides=(2, 2),
                    name='entry_flow_conv1_1', use_bias=False, padding='same')(img_input)

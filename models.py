@@ -64,7 +64,10 @@ def deeplabv3_2d(config):
     x = __sigmoid_activation_layer(output=model.layers[-1].output, num_classes=config.NUM_CLASSES)
     model = Model(inputs=model.input, outputs=x)
 
-    plot_model(model, os.path.join(config.PLOT_MODEL_PATH, config.CP_SAVE_TAG + '.png'), show_shapes=True)
+    # Save image
+    dil_rates_str = str(dil_rate_input[0]) + '-' + str(dil_rate_input[1]) + '-' + str(dil_rate_input[2])
+    img_name = config.CP_SAVE_TAG + '_' + str(OS) + '_' + dil_rates_str + '.png'
+    plot_model(model, os.path.join(config.PLOT_MODEL_PATH, img_name), show_shapes=True)
 
     return model
 
