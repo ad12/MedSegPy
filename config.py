@@ -253,7 +253,7 @@ class DeeplabV3Config(Config):
 class SegnetConfig(Config):
     CP_SAVE_TAG = SEGNET_NAME
 
-    TRAIN_BATCH_SIZE = 15
+    TRAIN_BATCH_SIZE = 35
     FINE_TUNE=False
     INIT_WEIGHT_PATH=''
     TEST_WEIGHT_PATH=''

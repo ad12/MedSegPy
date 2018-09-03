@@ -128,7 +128,7 @@ def get_stats_string(dice_losses, skipped_count, testing_time):
     """
     s = 'Overall Summary:\n'
     s += '%d Skipped\n' % skipped_count
-    s += 'Mean= %0.4f Std = %0.3f\n' % (np.mean(dice_losses), np.std(dice_losses))
+    s += 'Mean +/- Std = %0.4f +/- %0.3f\n' % (np.mean(dice_losses), np.std(dice_losses))
     s += 'Median = %0.4f\n' % np.median(dice_losses)
     s += 'Time required = %0.1f seconds.\n'% testing_time
     return s
@@ -182,8 +182,10 @@ def test_dir(dirpath, config, vals_dict=None, best_weight_path=None):
     if best_weight_path is None:
         best_weight_path = utils.get_weights(dirpath)
     print('Best weight path: %s' % best_weight_path)
-
-    config.load_config(os.path.join(dirpath, 'config.ini'))
+    if (type(config) is not UNetConfig):
+        config.load_config(os.path.join(dirpath, 'config.ini'))
+    else:
+        config.CP_SAVE_PATH = dirpath
     config.TEST_WEIGHT_PATH = best_weight_path
 
     if vals_dict is not None:
@@ -215,6 +217,9 @@ DATA_LIMIT_NUM_DATE_DICT = {5:'2018-08-26-20-19-31',
                             15:'2018-08-27-03-43-46',
                             30:'2018-08-27-11-18-07',
                             60:'2018-08-27-18-29-19'}
+
+SEGNET_TEST_PATHS_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/oai_data/segnet_2d'
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train OAI dataset')
     parser.add_argument('-g', '--gpu', metavar='G', type=str, nargs='?', default='0',
@@ -235,6 +240,10 @@ if __name__ == '__main__':
        # test_dir(filepath, config)
 
     #MCONFIG.SAVE_PATH_PREFIX='/Users/arjundesai/Documents/stanford/research/msk_seg_networks/result_data'
-    config = DeeplabV3Config(create_dirs=False)
-    test_dir(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-08-31-20-31-13'), config, {'OS':8, 'DIL_RATES':(4, 8, 12), 'TEST_BATCH_SIZE':9})
-    #test_dir(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-08-30-05-37-55'), config, {'OS':8, 'DIL_RATES':(1, 9, 18), 'TEST_BATCH_SIZE':9})
+    #config = DeeplabV3Config(create_dirs=False)
+    #test_dir(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-08-30-17-13-50/fine_tune'), config, {'OS':16, 'DIL_RATES':(1, 9, 18), 'TEST_BATCH_SIZE':72})
+    config = UNetConfig(create_dirs=False)
+    test_dir('/bmrNAS/people/arjun/msk_seg_networks/oai_data/unet_2d/original_akshaysc', config)
+
+    #config = SegnetConfig(create_dirs=False)
+    #test_dir(os.path.join(SEGNET_TEST_PATHS_PREFIX, '2018-09-01-22-39-39'), config)

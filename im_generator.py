@@ -55,9 +55,10 @@ def add_file(file, unique_filename, pids, augment_data):
 
     if (pids is not None):
         contains_pid = [str(x) in file for x in pids]
-
+     
         # if any pid is included, only 1 can be included
         assert(sum(contains_pid) in {0, 1})
+        contains_pid = any(contains_pid)
 
         should_add_file &= contains_pid
 

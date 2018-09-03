@@ -243,11 +243,9 @@ def data_limitation_train():
     MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_data_limit/oai_data'
     pids = utils.load_pik(parse_pids.PID_TXT_PATH)
     num_pids = len(pids)
-
+    
     # run network training
-    pid_counts = [1]
-    pid_counts.extend(list(range(5,num_pids+1,5)))
-    pid_counts = [30, 60]
+    pid_counts = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
 
     for pid_count in pid_counts:
         MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_data_limit/oai_data/%03d' % pid_count
@@ -262,10 +260,12 @@ def data_limitation_train():
         config = UNetConfig()
         config.N_EPOCHS = math.ceil(10 * num_pids / pid_count)
         config.DROP_FACTOR = config.DROP_FACTOR ** (1/s_ratio)
-       
+        config.INITIAL_LEARNING_RATE = 1e-4
+        config.USE_STEP_DECAY = False
         config.PIDS = pids_sampled
-
+        print('# Subjects: %d' % len(config.PIDS))
         config.save_config()
+        config.summary()
 
         train_model(config)
         
@@ -314,6 +314,7 @@ def train(config, vals_dict=None):
 
     config.save_config()
     config.summary()
+    
     train_model(config)
 
     K.clear_session()
@@ -341,10 +342,11 @@ if __name__ == '__main__':
     print('Using GPU %s' % gpu)
     os.environ["CUDA_VISIBLE_DEVICES"]=args.gpu
     os.environ["TF_CPP_MIN_LOG_LEVEL"]="2"
-
+    
+    #data_limitation_train()
     #fine tune
-    #fine_tune('/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d/2018-08-30-17-13-50/', DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE': 1e-6, 'USE_STEP_DECAY': False, 'N_EPOCHS': 75})
-
+    #fine_tune('/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d/2018-08-30-17-13-50/', DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE': 1e-6, 'USE_STEP_DECAY': False, 'N_EPOCHS': 20})
     #train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (2, 4, 6)})
 
-    train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3})
+    train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'DEPTH': 7, 'NUM_CONV_LAYERS': [3, 3, 3, 3, 3, 3, 3], 'NUM_FILTERS': [16, 32, 64, 128, 256, 512, 1024], 'TRAIN_BATCH_SIZE': 35})
+    #fine_tune('/bmrNAS/people/arjun/msk_seg_networks/oai_data/segnet_2d/2018-09-01-22-39-39', SegnetConfig(), vals_dict = {'INITIAL_LEARNING_RATE': 1e-5, 'USE_STEP_DECAY': False, 'N_EPOCHS': 20})
