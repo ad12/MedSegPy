@@ -186,7 +186,7 @@ class Config():
 
         prefix = os.path.join(self.DATE_TIME_STR, 'fine_tune')
 
-        # if fine_tune folder already exists, do not overwrite
+        # if fine_tune folder already exists, do not overwrite it
         count=2
         while os.path.isdir(prefix):
             prefix = os.path.join(self.DATE_TIME_STR, 'fine_tune_%03d' % count)
