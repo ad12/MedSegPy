@@ -39,6 +39,7 @@ def get_class_freq(data_path, class_ids=[0, 1], pids=None, augment_data=True):
     files = list(unique_filename.keys())
 
     freqs = np.zeros([len(class_ids), 1])
+    count = 0
     for file in files:
         seg_path = '%s/%s.seg' % (data_path, file)
         with h5py.File(seg_path, 'r') as f:
@@ -47,7 +48,10 @@ def get_class_freq(data_path, class_ids=[0, 1], pids=None, augment_data=True):
 
             for i in range(len(class_ids)):
                 freqs[i] += np.sum(seg == class_ids[i])
+        count += 1
 
+        if count % 1000 == 0:
+            print('%d/%d' % (count, len(files)))
     return freqs
 
 
