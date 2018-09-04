@@ -73,6 +73,7 @@ def train_model(config, optimizer=None):
         print('calculating freq')
         class_freqs = utils.load_pik(CLASS_FREQ_DAT_PATH)
         class_weights = get_class_weights(class_freqs)
+        class_weights = list(class_weights)
         print(class_weights)
 
     loss_func = get_training_loss(loss, weights=class_weights)
