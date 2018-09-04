@@ -67,10 +67,11 @@ def train_model(config, optimizer=None):
     # Load loss function
     class_weights = None
     # if weighted cross entropy, load weights
-    if loss == WEIGHTED_CROSS_ENTROPY_LOSS:
+    if loss == WEIGHTED_CROSS_ENTROPY_LOSS and class_weights is None:
         print('calculating freq')
         class_freqs = get_class_freq(train_path, class_ids=[0, 1], pids=config.PIDS, augment_data=config.AUGMENT_DATA)
         class_weights = get_class_weights(class_freqs)
+        print(class_weights)
 
     loss_func = get_training_loss(loss, weights=class_weights)
     lr_metric = get_lr_metric(optimizer)
