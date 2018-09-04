@@ -362,7 +362,7 @@ if __name__ == '__main__':
     os.environ["TF_CPP_MIN_LOG_LEVEL"]="2"
 
     # train with weighted cross entropy
-    train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (2,4,6), 'N_EPOCHS': 1, 'LOSS': Loss.WEIGHTED_CROSS_ENTROPY})
+    train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (2,4,6), 'N_EPOCHS': 1, 'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS})
 
     #data_limitation_train()
     #fine tune
