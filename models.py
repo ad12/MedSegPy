@@ -18,17 +18,20 @@ def get_model(config):
     :return: a Keras model
     """
     if (type(config) is DeeplabV3Config):
-        return deeplabv3_2d(config)
+        model = deeplabv3_2d(config)
     elif (type(config) is SegnetConfig):
-        return segnet_2d(config)
+        model = segnet_2d(config)
     elif (type(config) is UNetConfig):
-        return unet_2d(config)
+        model = unet_2d(config)
     elif (type(config) is EnsembleUDSConfig):
-        return ensemble_uds(config)
+        model = ensemble_uds(config)
     elif (type(config) is UNetMultiContrastConfig):
-        return unet_2d_multi_contrast(config)
+        model = unet_2d_multi_contrast(config)
     else:
-        raise ValueError('This config type has not been implemented') 
+        raise ValueError('This config type has not been implemented')
+
+    # if weighted cross entropy, use softmax
+    return model
 
 def unet_2d(config):
     """
@@ -39,7 +42,8 @@ def unet_2d(config):
      :raises ValueError: if config not of type UNetConfig
      """
     input_shape = config.IMG_SIZE
-    model = unet_2d_model(input_size=input_shape)
+    output_mode = config.LOSS[1]
+    model = unet_2d_model(input_size=input_shape, output_mode=output_mode)
 
     return model
 
@@ -84,14 +88,15 @@ def segnet_2d(config):
         raise ValueError('config must be an instance of SegnetConfig')
 
     input_shape = config.IMG_SIZE
-
+    output_mode = config.LOSS[1]
     model = Segnet_v2(input_shape=input_shape,
                       n_labels=config.NUM_CLASSES,
                       depth=config.DEPTH,
                       num_conv_layers=config.NUM_CONV_LAYERS,
                       num_filters=config.NUM_FILTERS,
                       single_bn=config.SINGLE_BN,
-                      conv_act_bn=config.CONV_ACT_BN)
+                      conv_act_bn=config.CONV_ACT_BN,
+                      output_mode=output_mode)
 
     model_name = config.CP_SAVE_TAG + '_%d' + '_%s' + '_%s'
     bn_str = 'xbn'
@@ -191,7 +196,14 @@ def combine_models(x_input, models, ensemble_name='ensemble', num_classes=1):
     model.summary()
     return model
 
-
+def __softmax_activation_layer(output, num_classes):
+    """
+    Returns softmax activation layer
+    :param output:
+    :param num_classes:
+    :return:
+    """
+    return
 def __sigmoid_activation_layer(output, num_classes):
     """
     Return sigmoid activation layer

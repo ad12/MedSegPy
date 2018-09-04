@@ -6,6 +6,7 @@ import argparse
 import pickle
 import os
 import random
+import numpy as np
 
 from keras.optimizers import Adam
 from keras import backend as K
@@ -18,8 +19,8 @@ import keras.callbacks as kc
 
 import config as MCONFIG
 from config import DeeplabV3Config, SegnetConfig, EnsembleUDSConfig, UNetConfig, UNetMultiContrastConfig
-from im_generator import calc_generator_info, img_generator, img_generator_oai
-from losses import dice_loss
+from im_generator import calc_generator_info, img_generator, img_generator_oai, get_class_freq
+from losses import get_training_loss, Loss
 
 from models import get_model
 
@@ -46,6 +47,7 @@ def train_model(config, optimizer=None):
     pik_save_path = config.PIK_SAVE_PATH
     tag = config.TAG
     learn_files = config.LEARN_FILES
+    loss = config.LOSS
     layers_to_freeze = []
 
 
@@ -62,9 +64,17 @@ def train_model(config, optimizer=None):
     if optimizer is None:
         optimizer = Adam(lr=config.INITIAL_LEARNING_RATE, beta_1=0.99, beta_2=0.995, epsilon=1e-8, decay=config.ADAM_DECAY, amsgrad=config.USE_AMSGRAD)
 
+    # Load loss function
+    class_weights = None
+    # if weighted cross entropy, load weights
+    if loss == Loss.WEIGHTED_CROSS_ENTROPY:
+        class_freqs = get_class_freq(train_path, class_ids=[0, 1], pids=config.PIDS, augment_data=config.AUGMENT_DATA)
+        class_weights = get_class_weights(class_freqs)
+
+    loss_func = get_training_loss(loss, weights=class_weights)
     lr_metric = get_lr_metric(optimizer)
     model.compile(optimizer=optimizer,
-                  loss=dice_loss, metrics=[lr_metric])
+                  loss=loss_func, metrics=[lr_metric])
 
     # set image format to be (N, dim1, dim2, dim3, ch)
     K.set_image_data_format('channels_last')
@@ -135,6 +145,13 @@ def train_model(config, optimizer=None):
 
     # Save model
     model.save(filepath=os.path.join(config.CP_SAVE_PATH, 'model.h5'), overwrite=True)
+
+def get_class_weights(freqs):
+    # weight by median and scale to 1
+    weights = np.median(freqs) / freqs
+    weights = weights / np.min(weights)
+
+    return weights
 
 
 def get_lr_metric(optimizer):

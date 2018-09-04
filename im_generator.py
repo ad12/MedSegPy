@@ -24,6 +24,35 @@ def preprocess_input_scale(im):
     return im
 
 
+def get_class_freq(data_path, class_ids=[0, 1], pids=None, augment_data=True):
+    if pids is not None:
+        learn_files = []
+
+    files = listdir(data_path)
+    unique_filename = {}
+
+    for file in files:
+        file, _ = splitext(file)
+        if add_file(file, unique_filename, pids, augment_data):
+            unique_filename[file] = file
+
+    files = list(unique_filename.keys())
+
+    freqs = np.zeros([len(class_ids), 1])
+    for file in files:
+        seg_path = '%s/%s.seg' % (data_path, file)
+        with h5py.File(seg_path, 'r') as f:
+            seg = f['data'][:].astype('float32')
+            seg = seg.flatten()
+
+            for i in range(len(class_ids)):
+                freqs[i] += np.sum(seg == class_ids[i])
+
+    return freqs
+
+
+
+
 # find unique data regardless of the file prefix
 def calc_generator_info(data_path, batch_size, learn_files=[], pids=None, augment_data=True):
     if pids is not None:
