@@ -61,11 +61,11 @@ def deeplabv3_2d(config):
     input_shape = config.IMG_SIZE
     OS = config.OS
     dil_rate_input = config.DIL_RATES
-
+    activation = config.LOSS[1]
     model = Deeplabv3(weights=None, input_shape=input_shape, classes=config.NUM_CLASSES, backbone='xception', OS=OS, dil_rate_input=dil_rate_input)
 
     # Add sigmoid activation layer -
-    x = __sigmoid_activation_layer(output=model.layers[-1].output, num_classes=config.NUM_CLASSES)
+    x = __add_activation_layer(output=model.layers[-1].output, num_classes=config.NUM_CLASSES, activation=activation)
     model = Model(inputs=model.input, outputs=x)
 
     # Save image
@@ -204,7 +204,7 @@ def __softmax_activation_layer(output, num_classes):
     :return:
     """
     return
-def __sigmoid_activation_layer(output, num_classes):
+def __add_activation_layer(output, num_classes, activation='sigmoid'):
     """
     Return sigmoid activation layer
     :param: output: The output of the previous layer
@@ -212,7 +212,7 @@ def __sigmoid_activation_layer(output, num_classes):
 
     # Initializing kernel weights to 1 and bias to 0.
     # i.e. without training, the output would be a sigmoid activation on each pixel of the input
-    return Conv2D(num_classes, (1,1), activation='sigmoid', kernel_initializer=Ones(), bias_initializer=Zeros(), name='output_activation')(output)
+    return Conv2D(num_classes, (1,1), activation=activation, kernel_initializer=Ones(), bias_initializer=Zeros(), name='output_activation')(output)
 
 
 if __name__ == '__main__':
