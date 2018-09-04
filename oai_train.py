@@ -22,6 +22,8 @@ from config import DeeplabV3Config, SegnetConfig, EnsembleUDSConfig, UNetConfig,
 from im_generator import calc_generator_info, img_generator, img_generator_oai, get_class_freq
 from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS
 
+from weight_classes import CLASS_FREQ_DAT_PATH
+
 from models import get_model
 
 import utils
@@ -69,7 +71,7 @@ def train_model(config, optimizer=None):
     # if weighted cross entropy, load weights
     if loss == WEIGHTED_CROSS_ENTROPY_LOSS and class_weights is None:
         print('calculating freq')
-        class_freqs = get_class_freq(train_path, class_ids=[0, 1], pids=config.PIDS, augment_data=config.AUGMENT_DATA)
+        class_freqs = utils.load_pik(CLASS_FREQ_DAT_PATH)
         class_weights = get_class_weights(class_freqs)
         print(class_weights)
 
