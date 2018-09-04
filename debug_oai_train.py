@@ -15,7 +15,6 @@ if __name__ == '__main__':
     #     config.DIL_RATES = dil_rates
     #     get_model(config)
     #     K.clear_session()
-    config = SegnetConfig()
-    config.SINGLE_BN = True
+    config = DeeplabV3Config()
     m = get_model(config)
     m.summary()

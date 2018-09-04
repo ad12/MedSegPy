@@ -1,6 +1,7 @@
 import os
 from time import gmtime, strftime
 
+from losses import Loss
 import mri_utils
 import utils
 
@@ -15,6 +16,9 @@ SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/oai_data'
 
 class Config():
     VERSION = 2
+
+    # Loss function in form (id, output_mode)
+    LOSS = Loss.DICE
 
     # PIDS to include, None = all pids
     PIDS = None
