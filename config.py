@@ -215,7 +215,7 @@ class Config():
         summary_vals = ['CP_SAVE_TAG']
 
         if self.STATE == 'training':
-            summary_vals.extend(['N_EPOCHS', 'AUGMENT_DATA', 'TRAIN_BATCH_SIZE', 'VALID_BATCH_SIZE', 'USE_STEP_DECAY', 'INITIAL_LEARNING_RATE', 'MIN_LEARNING_RATE', 'DROP_FACTOR', 'DROP_RATE', 'FINE_TUNE'])
+            summary_vals.extend(['N_EPOCHS', 'AUGMENT_DATA', 'LOSS', 'TRAIN_BATCH_SIZE', 'VALID_BATCH_SIZE', 'USE_STEP_DECAY', 'INITIAL_LEARNING_RATE', 'MIN_LEARNING_RATE', 'DROP_FACTOR', 'DROP_RATE', 'FINE_TUNE'])
             if self.FINE_TUNE:
                 summary_vals.extend(['INIT_WEIGHT_PATH'])
         else:
