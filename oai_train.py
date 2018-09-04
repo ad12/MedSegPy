@@ -20,7 +20,7 @@ import keras.callbacks as kc
 import config as MCONFIG
 from config import DeeplabV3Config, SegnetConfig, EnsembleUDSConfig, UNetConfig, UNetMultiContrastConfig
 from im_generator import calc_generator_info, img_generator, img_generator_oai, get_class_freq
-from losses import get_training_loss, Loss
+from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS
 
 from models import get_model
 
@@ -67,7 +67,8 @@ def train_model(config, optimizer=None):
     # Load loss function
     class_weights = None
     # if weighted cross entropy, load weights
-    if loss == Loss.WEIGHTED_CROSS_ENTROPY:
+    if loss == WEIGHTED_CROSS_ENTROPY_LOSS:
+        print('calculating freq')
         class_freqs = get_class_freq(train_path, class_ids=[0, 1], pids=config.PIDS, augment_data=config.AUGMENT_DATA)
         class_weights = get_class_weights(class_freqs)
 
@@ -362,7 +363,7 @@ if __name__ == '__main__':
 
     # train with weighted cross entropy
     train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (2,4,6), 'N_EPOCHS': 1, 'LOSS': Loss.WEIGHTED_CROSS_ENTROPY})
-    
+
     #data_limitation_train()
     #fine tune
     #fine_tune('/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d/2018-08-30-17-13-50/', DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE': 1e-6, 'USE_STEP_DECAY': False, 'N_EPOCHS': 20})

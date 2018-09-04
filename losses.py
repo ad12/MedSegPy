@@ -3,15 +3,15 @@ from enum import Enum
 from keras import backend as K
 
 
-class Loss(Enum):
-    DICE = (0, 'sigmoid')
-    WEIGHTED_CROSS_ENTROPY = (1, 'softmax')
+# Losses
+DICE_LOSS = ('dice', 'sigmoid')
+WEIGHTED_CROSS_ENTROPY_LOSS = ('weighted_cross_entropy', 'softmax')
 
 
 def get_training_loss(loss, weights=None):
-    if loss == Loss.DICE:
+    if loss == DICE_LOSS:
         return dice_loss
-    elif loss == Loss.WEIGHTED_CROSS_ENTROPY:
+    elif loss == WEIGHTED_CROSS_ENTROPY_LOSS:
         if weights is None:
             raise ValueError("Weights must be specified to initialize weighted_cross_entropy")
         return weighted_categorical_crossentropy(weights)

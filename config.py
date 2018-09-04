@@ -1,7 +1,7 @@
 import os
 from time import gmtime, strftime
 
-from losses import Loss
+from losses import DICE_LOSS, WEIGHTED_CROSS_ENTROPY_LOSS
 import mri_utils
 import utils
 
@@ -18,7 +18,7 @@ class Config():
     VERSION = 2
 
     # Loss function in form (id, output_mode)
-    LOSS = Loss.DICE
+    LOSS = DICE_LOSS
 
     # PIDS to include, None = all pids
     PIDS = None
