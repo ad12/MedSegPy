@@ -62,7 +62,14 @@ def deeplabv3_2d(config):
     OS = config.OS
     dil_rate_input = config.DIL_RATES
     activation = config.LOSS[1]
-    model = Deeplabv3(weights=None, input_shape=input_shape, classes=config.NUM_CLASSES, backbone='xception', OS=OS, dil_rate_input=dil_rate_input)
+    dropout_rate = config.DROPOUT_RATE
+    model = Deeplabv3(weights=None,
+                      input_shape=input_shape,
+                      classes=config.NUM_CLASSES,
+                      backbone='xception',
+                      OS=OS,
+                      dil_rate_input=dil_rate_input,
+                      dropout_rate=dropout_rate)
 
     # Add sigmoid activation layer -
     x = __add_activation_layer(output=model.layers[-1].output, num_classes=config.NUM_CLASSES, activation=activation)

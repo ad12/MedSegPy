@@ -239,7 +239,7 @@ class DeeplabV3Config(Config):
     CP_SAVE_TAG = DEEPLABV3_NAME
     DIL_RATES = (1, 1, 1)
     AT_DIVISOR = 2
-
+    DROPOUT_RATE = 0.1
     FINE_TUNE = False
     INIT_WEIGHT_PATH = '/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d/2018-08-21-07-03-24/deeplabv3_2d_weights.018-0.1191.h5'
 
