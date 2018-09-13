@@ -264,7 +264,7 @@ class DeeplabV3Config(Config):
 class SegnetConfig(Config):
     CP_SAVE_TAG = SEGNET_NAME
 
-    TRAIN_BATCH_SIZE = 35
+    TRAIN_BATCH_SIZE = 15
     FINE_TUNE=False
     INIT_WEIGHT_PATH=''
     TEST_WEIGHT_PATH=''
@@ -275,7 +275,7 @@ class SegnetConfig(Config):
 
     SINGLE_BN = False
     CONV_ACT_BN = False
-
+    INITIAL_LEARNING_RATE = 1e-3
 
     def __init__(self, state='training', create_dirs=True):
         super().__init__(self.CP_SAVE_TAG, state, create_dirs=create_dirs)
