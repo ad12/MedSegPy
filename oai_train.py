@@ -73,7 +73,7 @@ def train_model(config, optimizer=None):
         print('calculating freq')
         class_freqs = utils.load_pik(CLASS_FREQ_DAT_PATH)
         class_weights = get_class_weights(class_freqs)
-        class_weights = list(class_weights)
+        class_weights = np.reshape(class_weights, (1,2))
         print(class_weights)
 
     loss_func = get_training_loss(loss, weights=class_weights)
@@ -267,7 +267,7 @@ def data_limitation_train():
     num_pids = len(pids)
     
     # run network training
-    pid_counts = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
+    pid_counts = [5, 15, 30, 60]
 
     for pid_count in pid_counts:
         MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_data_limit/oai_data/%03d' % pid_count
@@ -279,10 +279,11 @@ def data_limitation_train():
         pids_sampled = random.sample(pids, pid_count)
         s_ratio = math.ceil(num_pids / pid_count)
 
-        config = UNetConfig()
-        config.N_EPOCHS = math.ceil(10 * num_pids / pid_count)
+        config = SegnetConfig()
+        #config.DIL_RATES = (1, 9, 18)
+        config.N_EPOCHS = math.ceil(20 * num_pids / pid_count)
         config.DROP_FACTOR = config.DROP_FACTOR ** (1/s_ratio)
-        config.INITIAL_LEARNING_RATE = 1e-4
+        config.INITIAL_LEARNING_RATE = 1e-3
         config.USE_STEP_DECAY = False
         config.PIDS = pids_sampled
         print('# Subjects: %d' % len(config.PIDS))
