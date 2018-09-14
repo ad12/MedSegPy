@@ -257,7 +257,7 @@ class DeeplabV3Config(Config):
         self.TEST_RESULT_PATH = utils.check_dir(os.path.join(self.CP_SAVE_PATH, 'test_results', config_str))
 
     def summary(self, additional_vars=[]):
-        summary_attrs = ['OS', 'DIL_RATES']
+        summary_attrs = ['OS', 'DIL_RATES', 'DROPOUT_RATE']
         super().summary(summary_attrs)
 
 

@@ -255,7 +255,7 @@ def train_debug():
     K.clear_session()
 
 
-def data_limitation_train():
+def data_limitation_train(pid_counts=[5, 15, 30, 60]):
     """
     Train data limited networks
     :return:
@@ -265,9 +265,6 @@ def data_limitation_train():
     MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_data_limit/oai_data'
     pids = utils.load_pik(parse_pids.PID_TXT_PATH)
     num_pids = len(pids)
-    
-    # run network training
-    pid_counts = [5, 15, 30, 60]
 
     for pid_count in pid_counts:
         MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_data_limit/oai_data/%03d' % pid_count
@@ -345,7 +342,7 @@ def train(config, vals_dict=None):
 # Use these for fine tuning
 DEEPLAB_TEST_PATHS_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d'
 DEEPLAB_TEST_PATHS = ['2018-08-26-20-01-32', # OS=16, DIL_RATES=(6, 12, 18)
-                      '2018-08-27-02-49-06', # OS=16, DIL_RATES=(1, 9, 18)
+        '2018-08-27-02-49-06', # OS=16, DIL_RATES=(1, 9, 18)
                       '2018-08-27-15-48-56', # OS=16, DIL_RATES=(3, 6, 9)
                      ]
 
@@ -367,14 +364,14 @@ if __name__ == '__main__':
     os.environ["TF_CPP_MIN_LOG_LEVEL"]="2"
 
     # train with weighted cross entropy
-    train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (2,4,6), 'N_EPOCHS': 1, 'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS})
+    #train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (2,4,6), 'DROPOUT_RATE': 0.0})
 
-    #data_limitation_train()
+    #data_limitation_train(pid_counts=[60])
     #fine tune
-    #fine_tune('/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d/2018-08-30-17-13-50/', DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE': 1e-6, 'USE_STEP_DECAY': False, 'N_EPOCHS': 20})
+    #fine_tune('/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d/2018-09-13-07-11-03/', DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE': 1e-6, 'USE_STEP_DECAY': False, 'N_EPOCHS': 20})
     #train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (2, 4, 6)})
 
-    #train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'SINGLE_BN': True, 'TRAIN_BATCH_SIZE': 15})
+    train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'FINE_TUNE': False, 'TRAIN_BATCH_SIZE': 15})
     #train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'CONV_ACT_BN': True, 'TRAIN_BATCH_SIZE': 15})
 
     #train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'DEPTH': 7, 'NUM_CONV_LAYERS': [3, 3, 3, 3, 3, 3, 3], 'NUM_FILTERS': [16, 32, 64, 128, 256, 512, 1024], 'TRAIN_BATCH_SIZE': 35})
