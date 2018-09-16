@@ -148,23 +148,31 @@ def get_valid_subdirs(base_path):
     files = os.listdir(base_path)
     subdirs = []
     for file in files:
-        if (os.path.isdir(os.path.join(base_path, file)) and os.path.isfile(os.path.join(base_path, file, 'config.ini'))):
-            subdir = os.path.join(base_path, file)
-            subdirs.append(subdir)
+        possible_dir = os.path.join(base_path, file)
+        config_path = os.path.join(base_path, file, 'config.ini')
+        test_results_filepath = os.path.join(base_path, file, 'test_results','results.txt')
 
-            # recursively search directories for any folders that have similar setup
+        if os.path.isdir(possible_dir) and os.path.isfile(config_path) and not os.path.isfile(test_results_filepath):
+            subdir = possible_dir
+            subdirs.append(subdir)
             rec_subdirs = get_valid_subdirs(subdir)
-            subdirs.append(rec_subdirs)
+            subdirs.extend(rec_subdirs)
 
     return subdirs
 
 
-# def batch_test(base_folder):
-#     # get list of directories to get info from
-#     subdirs = get_valid_subdirs(base_folder)
-#
-#     for subdir in subdirs:
-#         test_dir(subdir)
+def batch_test(base_folder, model_str, vals_dicts=[None]):
+    # get list of directories to get info from
+    subdirs = get_valid_subdirs(base_folder)
+
+    for subdir in subdirs:
+        for vals_dict in vals_dicts:
+            if (model_str == 'deeplab'):
+                config = DeeplabV3Config(create_dirs=False)
+            elif model_str == 'segnet':
+                config = SegnetConfig(create_dirs=False)
+
+            test_dir(subdir, config, vals_dict=vals_dict)
 
 
 def test_dir(dirpath, config, vals_dict=None, best_weight_path=None):
@@ -246,5 +254,7 @@ if __name__ == '__main__':
     #config = UNetConfig(create_dirs=False)
     #test_dir('/bmrNAS/people/arjun/msk_seg_networks/oai_data/segnet_2d/2018-09-14-16-23-59/', config)
 
-    config = SegnetConfig(create_dirs=False)
-    test_dir(os.path.join(SEGNET_TEST_PATHS_PREFIX, '2018-09-14-16-23-59'), config)
+    #config = SegnetConfig(create_dirs=False)
+    #test_dir(os.path.join(SEGNET_TEST_PATHS_PREFIX, '2018-09-14-16-23-59'), config)
+
+    batch_test(SEGNET_TEST_PATHS_PREFIX, 'segnet')

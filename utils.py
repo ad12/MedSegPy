@@ -4,7 +4,7 @@ import cv2
 import os
 import pickle
 import numpy as np
-
+import h5py
 
 def check_dir(dir_path):
     """
@@ -267,10 +267,21 @@ def load_optimizer(dirpath):
     return optimizer
 
 
+def save_ims(filepath):
+    im_path = '%s.im' % filepath
+    with h5py.File(im_path, 'r') as f:
+        im = f['data'][:]
+
+    seg_path = '%s.seg' % filepath
+    with h5py.File(seg_path, 'r') as f:
+        seg = f['data'][:].astype('float32')
+        seg = seg[..., 0, 0]
+    filepath = check_dir(filepath)
+    # save ims
+    cv2.imwrite(os.path.join(filepath, 'im.png'), scale_img(im))
+
+    # save segs
+    cv2.imwrite(os.path.join(filepath, 'seg.png'), scale_img(seg))
+
 if __name__ == '__main__':
-    from config import DeeplabV3Config
-
-    config = DeeplabV3Config(create_dirs=False)
-    config.load_config('test_data/config.ini')
-
-    print('')
+    save_ims('./test_data/9971275_V00-Aug00_050')
