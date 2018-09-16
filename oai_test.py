@@ -182,8 +182,8 @@ def get_valid_subdirs(base_path, no_results=True):
         # search in subdirectories recursively
         possible_dir = os.path.join(base_path, file)
         if (os.path.isdir(possible_dir)):
-            print(possible_dir)
             rec_subdirs = get_valid_subdirs(possible_dir)
+            print('%s --- %d' % (possible_dir, len(rec_subdirs)))
             subdirs.extend(rec_subdirs)
 
     return subdirs
