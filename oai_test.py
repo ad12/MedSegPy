@@ -168,13 +168,11 @@ def get_valid_subdirs(base_path, no_results=True):
     test_results_dirpath = os.path.join(base_path, 'test_results')
     results_file_exists = len(check_results_file(test_results_dirpath)) > 0
 
-    if (results_file_exists and os.path.isfile(config_path)):
-        print(base_path)
-
     # 1. Check if you are a valid subdirectory
     if os.path.isfile(config_path):
         if (no_results and (not results_file_exists)) or ((not no_results) and results_file_exists):
             subdirs.append(base_path)
+            print('hello')
 
     files = os.listdir(base_path)
     # 2. Recursively search through other subdirectories
