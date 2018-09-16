@@ -190,6 +190,8 @@ def get_valid_subdirs(base_path, no_results=True):
 def batch_test(base_folder, model_str, vals_dicts=[None]):
     # get list of directories to get info from
     subdirs = get_valid_subdirs(base_folder)
+    for subdir in subdirs:
+        print(subdir)
 
     for subdir in subdirs:
         for vals_dict in vals_dicts:
