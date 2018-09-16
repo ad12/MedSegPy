@@ -172,6 +172,7 @@ def get_valid_subdirs(base_path, no_results=True):
     if os.path.isfile(config_path):
         if (no_results and not results_file_exists) or (not no_results and results_file_exists):
             subdirs.append(base_path)
+            print('hello')
 
     files = os.listdir(base_path)
     # 2. Recursively search through other subdirectories
