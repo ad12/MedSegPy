@@ -173,6 +173,7 @@ def get_valid_subdirs(base_path, no_results=True):
         if (results_file_exists and os.path.isfile(config_path)):
             print(base_path)
             print('no_results: ' + str(no_results))
+            print('not no_results: ' + str(not(no_results)))
             print('results_file_exists: ' + str(results_file_exists))
             print('case 1: ' + str(no_results and (not results_file_exists)))
             print('case 2: ' + str((not no_results) and results_file_exists))
