@@ -193,6 +193,7 @@ def batch_test(base_folder, model_str, vals_dicts=[None]):
     for subdir in subdirs:
         print(subdir)
 
+    print('')
     for subdir in subdirs:
         for vals_dict in vals_dicts:
             if (model_str == 'deeplab'):
@@ -200,7 +201,11 @@ def batch_test(base_folder, model_str, vals_dicts=[None]):
             elif model_str == 'segnet':
                 config = SegnetConfig(create_dirs=False)
 
-            test_dir(subdir, config, vals_dict=vals_dict)
+            try:
+                test_dir(subdir, config, vals_dict=vals_dict)
+            except:
+                print('Failed for %s\n' % subdir)
+                break
 
 
 def find_best_test_dir(base_folder):
