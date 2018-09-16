@@ -168,7 +168,8 @@ def get_valid_subdirs(base_path, no_results=True):
     test_results_dirpath = os.path.join(base_path, 'test_results')
     results_file_exists = len(check_results_file(test_results_dirpath)) > 0
 
-    print(base_path + '----' + str(results_file_exists))
+    if (results_file_exists):
+        print(base_path)
 
     # 1. Check if you are a valid subdirectory
     if os.path.isfile(config_path):
