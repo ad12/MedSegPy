@@ -134,13 +134,32 @@ def get_stats_string(dice_losses, skipped_count, testing_time):
     return s
 
 
-def get_valid_subdirs(base_path):
+def check_results_file(base_path):
+    if (base_path is None) or (not os.path.isdir(base_path)) or (base_path == ''):
+        return False
+
+    results_filepath = os.path.join(base_path, 'results.txt')
+    contains_results_file = os.path.isfile(results_filepath)
+
+    if contains_results_file:
+        return True
+
+    files = os.listdir(base_path)
+    for file in files:
+        possible_dir = os.path.join(base_path, file)
+        if os.path.isdir(possible_dir):
+            contains_results_file = contains_results_file | check_results_file(possible_dir)
+
+    return contains_results_file
+
+
+def get_valid_subdirs(base_path, no_results=True):
     """
     Return subdirectories that have data to be tested
     :param base_path: root folder to search
     :return: list of paths (strings)
     """
-    if base_path is None:
+    if (base_path is None) or (not os.path.isdir(base_path)) or (base_path == []):
         return []
 
     # Find all subdirectories
@@ -150,12 +169,19 @@ def get_valid_subdirs(base_path):
     for file in files:
         possible_dir = os.path.join(base_path, file)
         config_path = os.path.join(base_path, file, 'config.ini')
-        test_results_filepath = os.path.join(base_path, file, 'test_results','results.txt')
+        test_results_dirpath = os.path.join(base_path, file, 'test_results')
 
-        if os.path.isdir(possible_dir) and os.path.isfile(config_path) and not os.path.isfile(test_results_filepath):
-            subdir = possible_dir
-            subdirs.append(subdir)
-            rec_subdirs = get_valid_subdirs(subdir)
+        if os.path.isdir(possible_dir) and os.path.isfile(config_path):
+            results_file_exists = check_results_file(test_results_dirpath)
+            if (no_results and not results_file_exists) or (not no_results and results_file_exists):
+                subdir = possible_dir
+                subdirs.append(subdir)
+
+    for file in files:
+        # search in subdirectories recursively
+        possible_dir = os.path.join(base_path, file)
+        if (os.path.isdir(possible_dir)):
+            rec_subdirs = get_valid_subdirs(possible_dir)
             subdirs.extend(rec_subdirs)
 
     return subdirs
@@ -176,6 +202,14 @@ def batch_test(base_folder, model_str, vals_dicts=[None]):
 
             test_dir(subdir, config, vals_dict=vals_dict)
 
+
+def find_best_test_dir(base_folder):
+    subdirs = get_valid_subdirs(base_folder, no_results=False)
+    max_dsc_details = (0, '')
+
+    for subdir in subdirs:
+        # get
+        dsc_details = utils.parse_dsc(subdirs)
 
 def test_dir(dirpath, config, vals_dict=None, best_weight_path=None):
     """
