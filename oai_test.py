@@ -163,27 +163,22 @@ def get_valid_subdirs(base_path, no_results=True):
     if (base_path is None) or (not os.path.isdir(base_path)) or (base_path == []):
         return []
 
-    # Find all subdirectories
-    # subdirectory is valid if it contains a 'config.txt' file
-    files = os.listdir(base_path)
     subdirs = []
+    config_path = os.path.join(base_path, 'config.ini')
+    test_results_dirpath = os.path.join(base_path, 'test_results')
+    results_file_exists = len(check_results_file(test_results_dirpath)) > 0
+
+    # 1. Check if you are a valid subdirectory
+    if os.path.isfile(config_path):
+        if (no_results and not results_file_exists) or (not no_results and results_file_exists):
+            subdirs.append(base_path)
+
+    files = os.listdir(base_path)
+    # 2. Recursively search through other subdirectories
     for file in files:
         possible_dir = os.path.join(base_path, file)
-        config_path = os.path.join(base_path, file, 'config.ini')
-        test_results_dirpath = os.path.join(base_path, file, 'test_results')
-
-        if os.path.isdir(possible_dir) and os.path.isfile(config_path):
-            results_file_exists = len(check_results_file(test_results_dirpath)) > 0
-            if (no_results and not results_file_exists) or (not no_results and results_file_exists):
-                subdir = possible_dir
-                subdirs.append(subdir)
-
-    for file in files:
-        # search in subdirectories recursively
-        possible_dir = os.path.join(base_path, file)
-        if (os.path.isdir(possible_dir)):
+        if os.path.isdir(possible_dir):
             rec_subdirs = get_valid_subdirs(possible_dir)
-            print('%s --- %d' % (possible_dir, len(rec_subdirs)))
             subdirs.extend(rec_subdirs)
 
     return subdirs
