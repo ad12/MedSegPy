@@ -259,4 +259,4 @@ if __name__ == '__main__':
     #config = SegnetConfig(create_dirs=False)
     #test_dir(os.path.join(SEGNET_TEST_PATHS_PREFIX, '2018-09-14-16-23-59'), config)
 
-    batch_test(SEGNET_TEST_PATHS_PREFIX, 'segnet')
+    batch_test(DEEPLAB_TEST_PATHS_PREFIX, 'deeplab')
