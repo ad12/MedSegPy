@@ -170,14 +170,6 @@ def get_valid_subdirs(base_path, no_results=True):
 
     # 1. Check if you are a valid subdirectory
     if os.path.isfile(config_path):
-        if (results_file_exists and os.path.isfile(config_path)):
-            print(base_path)
-            print('no_results: ' + str(no_results))
-            print('not no_results: ' + str(not(no_results)))
-            print('results_file_exists: ' + str(results_file_exists))
-            print('case 1: ' + str(no_results and (not results_file_exists)))
-            print('case 2: ' + str((not no_results) and results_file_exists))
-
         if (no_results and (not results_file_exists)) or ((not no_results) and results_file_exists):
             subdirs.append(base_path)
 
@@ -216,8 +208,7 @@ def batch_test(base_folder, model_str, vals_dicts=[None]):
 def find_best_test_dir(base_folder):
     subdirs = get_valid_subdirs(base_folder, no_results=False)
     max_dsc_details = (0, '')
-    for subdir in subdirs:
-        print(subdir)
+
     for subdir in subdirs:
         base_results = os.path.join(subdir, 'test_results')
         results_files = check_results_file(base_results)
