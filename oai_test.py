@@ -173,7 +173,7 @@ def get_valid_subdirs(base_path, no_results=True):
 
     # 1. Check if you are a valid subdirectory
     if os.path.isfile(config_path):
-        if (no_results and not results_file_exists) or (not no_results and results_file_exists):
+        if (no_results and (not results_file_exists)) or ((not no_results) and results_file_exists):
             subdirs.append(base_path)
 
     files = os.listdir(base_path)
