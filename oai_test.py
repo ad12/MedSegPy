@@ -186,7 +186,7 @@ def get_valid_subdirs(base_path, no_results=True):
     for file in files:
         possible_dir = os.path.join(base_path, file)
         if os.path.isdir(possible_dir):
-            rec_subdirs = get_valid_subdirs(possible_dir)
+            rec_subdirs = get_valid_subdirs(possible_dir, no_results)
             subdirs.extend(rec_subdirs)
 
     return subdirs
