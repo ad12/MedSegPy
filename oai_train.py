@@ -282,8 +282,8 @@ def data_limitation_train(pid_counts=[5, 15, 30, 60]):
         config.DROP_FACTOR = config.DROP_FACTOR ** (1/s_ratio)
         config.INITIAL_LEARNING_RATE = 1e-3
         config.USE_STEP_DECAY = False
-        config.PIDS = pids_sampled
-        print('# Subjects: %d' % len(config.PIDS))
+        config.PIDS = pids_sampled if pid_count != num_pids else None
+        print('# Subjects: %d' % pid_count)
         config.save_config()
         config.summary()
 
@@ -366,12 +366,12 @@ if __name__ == '__main__':
     # train with weighted cross entropy
     #train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (2,4,6), 'DROPOUT_RATE': 0.0})
 
-    #data_limitation_train(pid_counts=[60])
+    data_limitation_train(pid_counts=[60])
     #fine tune
     #fine_tune('/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d/2018-09-13-07-11-03/', DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE': 1e-6, 'USE_STEP_DECAY': False, 'N_EPOCHS': 20})
     #train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (2, 4, 6)})
 
-    train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'FINE_TUNE': False, 'TRAIN_BATCH_SIZE': 15})
+    #train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'FINE_TUNE': False, 'TRAIN_BATCH_SIZE': 15})
     #train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'CONV_ACT_BN': True, 'TRAIN_BATCH_SIZE': 15})
 
     #train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'DEPTH': 7, 'NUM_CONV_LAYERS': [3, 3, 3, 3, 3, 3, 3], 'NUM_FILTERS': [16, 32, 64, 128, 256, 512, 1024], 'TRAIN_BATCH_SIZE': 35})

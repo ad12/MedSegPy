@@ -186,6 +186,7 @@ def test_dir(dirpath, config, vals_dict=None, best_weight_path=None):
         config.load_config(os.path.join(dirpath, 'config.ini'))
     else:
         config.CP_SAVE_PATH = dirpath
+
     config.TEST_WEIGHT_PATH = best_weight_path
 
     if vals_dict is not None:
@@ -242,8 +243,8 @@ if __name__ == '__main__':
     #MCONFIG.SAVE_PATH_PREFIX='/Users/arjundesai/Documents/stanford/research/msk_seg_networks/result_data'
     #config = DeeplabV3Config(create_dirs=False)
     #test_dir(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-08-30-17-13-50/fine_tune'), config, {'OS':16, 'DIL_RATES':(1, 9, 18), 'TEST_BATCH_SIZE':72})
-    config = UNetConfig(create_dirs=False)
-    test_dir('/bmrNAS/people/arjun/msk_seg_networks/oai_data/unet_2d/original_akshaysc', config)
+    #config = UNetConfig(create_dirs=False)
+    #test_dir('/bmrNAS/people/arjun/msk_seg_networks/oai_data/segnet_2d/2018-09-14-16-23-59/', config)
 
-    #config = SegnetConfig(create_dirs=False)
-    #test_dir(os.path.join(SEGNET_TEST_PATHS_PREFIX, '2018-09-01-22-39-39'), config)
+    config = SegnetConfig(create_dirs=False)
+    test_dir(os.path.join(SEGNET_TEST_PATHS_PREFIX, '2018-09-14-16-23-59'), config)

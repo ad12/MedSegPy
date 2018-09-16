@@ -32,7 +32,7 @@ class DataLimitationTest(unittest.TestCase):
                                                      learn_files=[],
                                                      pids=config.PIDS,
                                                      augment_data=config.AUGMENT_DATA)
-
+            assert(len(pids_train_files) == len(gen_train_files))
             assert(collections.Counter(gen_train_files) == collections.Counter(pids_train_files))
 
 
