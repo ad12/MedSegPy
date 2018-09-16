@@ -294,7 +294,7 @@ def parse_results_file(filepath):
                 continue
 
             vals = re.findall("\d+\.\d+", line)
-            return vals[0]
+            return float(vals[0])
 
 if __name__ == '__main__':
     parse_results_file('./test_data/results.txt')
