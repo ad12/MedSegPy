@@ -136,21 +136,22 @@ def get_stats_string(dice_losses, skipped_count, testing_time):
 
 def check_results_file(base_path):
     if (base_path is None) or (not os.path.isdir(base_path)) or (base_path == ''):
-        return False
+        return []
 
     results_filepath = os.path.join(base_path, 'results.txt')
-    contains_results_file = os.path.isfile(results_filepath)
 
-    if contains_results_file:
-        return True
+    results_paths = []
+    if os.path.isfile(results_filepath):
+        results_paths.append(results_filepath)
 
     files = os.listdir(base_path)
     for file in files:
         possible_dir = os.path.join(base_path, file)
         if os.path.isdir(possible_dir):
-            contains_results_file = contains_results_file | check_results_file(possible_dir)
+            subdir_results_files = check_results_file(possible_dir)
+            results_paths.extend(subdir_results_files)
 
-    return contains_results_file
+    return results_paths
 
 
 def get_valid_subdirs(base_path, no_results=True):
@@ -172,7 +173,7 @@ def get_valid_subdirs(base_path, no_results=True):
         test_results_dirpath = os.path.join(base_path, file, 'test_results')
 
         if os.path.isdir(possible_dir) and os.path.isfile(config_path):
-            results_file_exists = check_results_file(test_results_dirpath)
+            results_file_exists = len(check_results_file(test_results_dirpath)) > 0
             if (no_results and not results_file_exists) or (not no_results and results_file_exists):
                 subdir = possible_dir
                 subdirs.append(subdir)
@@ -213,8 +214,16 @@ def find_best_test_dir(base_folder):
     max_dsc_details = (0, '')
 
     for subdir in subdirs:
-        # get
-        dsc_details = utils.parse_dsc(subdirs)
+        base_results = os.path.join(subdir, 'test_results')
+        results_files = check_results_file(base_results)
+        assert not((results_files is None) or (len(results_file) == 0)), "Checking results file failed - %s" % subdir
+        for results_file in results_files:
+            mean = utils.parse_results_file(results_file)
+            if mean > max_dsc_details[0]:
+                max_dsc_details = (mean, results_file)
+
+    print(max_dsc_details)
+
 
 def test_dir(dirpath, config, vals_dict=None, best_weight_path=None):
     """

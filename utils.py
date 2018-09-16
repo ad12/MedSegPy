@@ -5,6 +5,7 @@ import os
 import pickle
 import numpy as np
 import h5py
+import re
 
 def check_dir(dir_path):
     """
@@ -283,5 +284,17 @@ def save_ims(filepath):
     # save segs
     cv2.imwrite(os.path.join(filepath, 'seg.png'), scale_img(seg))
 
+
+def parse_results_file(filepath):
+    # returns mean
+    with open(filepath) as search:
+        for line in search:
+            line = line.rstrip()  # remove '\n' at end of line
+            if 'MEAN' not in line.upper():
+                continue
+
+            vals = re.findall("\d+\.\d+", line)
+            return vals[0]
+
 if __name__ == '__main__':
-    save_ims('./test_data/9971275_V00-Aug00_050')
+    parse_results_file('./test_data/results.txt')
