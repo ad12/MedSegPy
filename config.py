@@ -288,6 +288,13 @@ class SegnetConfig(Config):
 class UNetConfig(Config):
     CP_SAVE_TAG = UNET_NAME
     TEST_WEIGHT_PATH = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/select_weights/unet_2d_fc_weights.004--0.8968.h5'
+
+
+    USE_STEP_DECAY = True
+    INITIAL_LEARNING_RATE = 1e-4
+    DROP_FACTOR = 0.8
+    DROP_RATE = 2
+
     def __init__(self, state='training', create_dirs=True):
         super().__init__(self.CP_SAVE_TAG, state, create_dirs=create_dirs)
 

@@ -1,11 +1,13 @@
 import numpy as np
 from enum import Enum
 from keras import backend as K
+from keras.losses import binary_crossentropy
 import tensorflow as tf
 
 # Losses
 DICE_LOSS = ('dice', 'sigmoid')
 WEIGHTED_CROSS_ENTROPY_LOSS = ('weighted_cross_entropy', 'softmax')
+BINARY_CROSS_ENTROPY_LOSS = ('binary_crossentropy', 'softmax')
 
 
 def get_training_loss(loss, weights=None):
@@ -15,6 +17,8 @@ def get_training_loss(loss, weights=None):
         if weights is None:
             raise ValueError("Weights must be specified to initialize weighted_cross_entropy")
         return weighted_categorical_crossentropy(weights)
+    elif loss == BINARY_CROSS_ENTROPY_LOSS:
+        return binary_crossentropy
     else:
         raise ValueError("Loss type not supported")
 

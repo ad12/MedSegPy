@@ -297,4 +297,4 @@ def parse_results_file(filepath):
             return float(vals[0])
 
 if __name__ == '__main__':
-    parse_results_file('./test_data/results.txt')
+    save_ims('./test_data/9968924_V01-Aug00_056')

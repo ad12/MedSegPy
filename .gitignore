@@ -19,3 +19,6 @@
 
 # Ignore images
 **/model_imgs
+
+# Ignore data visualization scripts/images
+**/data_visualization

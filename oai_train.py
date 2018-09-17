@@ -20,7 +20,7 @@ import keras.callbacks as kc
 import config as MCONFIG
 from config import DeeplabV3Config, SegnetConfig, EnsembleUDSConfig, UNetConfig, UNetMultiContrastConfig
 from im_generator import calc_generator_info, img_generator, img_generator_oai, get_class_freq
-from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS
+from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS, BINARY_CROSS_ENTROPY_LOSS
 
 from weight_classes import CLASS_FREQ_DAT_PATH
 
@@ -366,7 +366,7 @@ if __name__ == '__main__':
     # train with weighted cross entropy
     #train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (2,4,6), 'DROPOUT_RATE': 0.0})
 
-    data_limitation_train(pid_counts=[60])
+    #data_limitation_train(pid_counts=[60])
     #fine tune
     #fine_tune('/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d/2018-09-13-07-11-03/', DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE': 1e-6, 'USE_STEP_DECAY': False, 'N_EPOCHS': 20})
     #train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (2, 4, 6)})
@@ -376,3 +376,6 @@ if __name__ == '__main__':
 
     #train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'DEPTH': 7, 'NUM_CONV_LAYERS': [3, 3, 3, 3, 3, 3, 3], 'NUM_FILTERS': [16, 32, 64, 128, 256, 512, 1024], 'TRAIN_BATCH_SIZE': 35})
     #fine_tune('/bmrNAS/people/arjun/msk_seg_networks/oai_data/segnet_2d/2018-09-01-22-39-39', SegnetConfig(), vals_dict = {'INITIAL_LEARNING_RATE': 1e-5, 'USE_STEP_DECAY': True, 'DROP_FACTOR': 0.7, 'DROP_RATE': 8.0, 'N_EPOCHS': 20})
+
+    # train with binary cross entropy loss
+    train(UNetConfig(), {'LOSS': BINARY_CROSS_ENTROPY_LOSS, 'TRAIN_BATCH_SIZE': 30})
