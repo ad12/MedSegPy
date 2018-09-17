@@ -269,11 +269,11 @@ DEEPLAB_DIL_RATES = [ [(6, 12, 18), (3, 6, 9), (2, 4, 6), (1, 2, 3), (12, 24, 36
                       [(3, 6, 9), (6, 12, 18), (2, 4, 6), (1, 2, 3), (12, 24, 36)],
                     ]
 
-DATA_LIMIT_PATHS_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_data_limit/oai_data', '%03d', 'unet_2d')
-DATA_LIMIT_NUM_DATE_DICT = {5:'2018-08-26-20-19-31',
-                            15:'2018-08-27-03-43-46',
-                            30:'2018-08-27-11-18-07',
-                            60:'2018-08-27-18-29-19'}
+DATA_LIMIT_PATHS_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_data_limit/oai_data', '%03d', 'segnet_2d')
+DATA_LIMIT_NUM_DATE_DICT = {5:'2018-09-06-20-33-37',
+                            15:'2018-09-07-05-11-47',
+                            30:'2018-09-07-12-53-36',
+                            60:'2018-09-07-19-50-59'}
 
 SEGNET_TEST_PATHS_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/oai_data/segnet_2d'
 
@@ -291,10 +291,10 @@ if __name__ == '__main__':
                 
     # Test data limit
     #for num_subjects in DATA_LIMIT_NUM_DATE_DICT.keys():
-     #   date_str = DATA_LIMIT_NUM_DATE_DICT[num_subjects]
-      #  filepath = os.path.join(DATA_LIMIT_PATHS_PREFIX % num_subjects, date_str)
-       # config = UNetConfig(create_dirs=False)
-       # test_dir(filepath, config)
+    #    date_str = DATA_LIMIT_NUM_DATE_DICT[num_subjects]
+    #    filepath = os.path.join(DATA_LIMIT_PATHS_PREFIX % num_subjects, date_str)
+    #    config = SegnetConfig(create_dirs=False)
+    #    test_dir(filepath, config)
 
     #MCONFIG.SAVE_PATH_PREFIX='/Users/arjundesai/Documents/stanford/research/msk_seg_networks/result_data'
     #config = DeeplabV3Config(create_dirs=False)
@@ -304,5 +304,4 @@ if __name__ == '__main__':
 
     #config = SegnetConfig(create_dirs=False)
     #test_dir(os.path.join(SEGNET_TEST_PATHS_PREFIX, '2018-09-14-16-23-59'), config)
-
     find_best_test_dir(SEGNET_TEST_PATHS_PREFIX)
