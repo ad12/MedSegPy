@@ -4,6 +4,9 @@ from time import gmtime, strftime
 from losses import DICE_LOSS, WEIGHTED_CROSS_ENTROPY_LOSS
 import mri_utils
 import utils
+import warnings
+
+DEPRECATED_KEYS = ['NUM_CLASSES']
 
 
 DEEPLABV3_NAME = 'deeplabv3_2d'
@@ -52,7 +55,7 @@ class Config():
 
     # Tissues to render
     TISSUES = [mri_utils.MASK_FEMORAL_CARTILAGE]
-    NUM_CLASSES = len(TISSUES)
+    INCLUDE_BACKGROUND = False
 
     # File Types
     FILE_TYPES = ['im']
@@ -146,6 +149,10 @@ class Config():
             if not hasattr(self, upper_case_key):
                 raise ValueError('Key %s does not exist. Please make sure all variable names are fully capitalized' % upper_case_key)
 
+            if upper_case_key in DEPRECATED_KEYS:
+                warnings.warn('Key %s is deprecated, not loading', upper_case_key)
+                continue
+
             # all data is of type string, but we need to cast back to original data type
             data_type = type(getattr(self, upper_case_key))
 
@@ -233,6 +240,12 @@ class Config():
 
         print('==' * 40)
         print('')
+
+    def get_num_classes(self):
+        if (self.INCLUDE_BACKGROUND):
+            return len(self.TISSUES) + 1
+
+        return len(self.TISSUES)
 
 
 class DeeplabV3Config(Config):

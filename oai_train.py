@@ -113,18 +113,14 @@ def train_model(config, optimizer=None):
     if (config.VERSION > 1):
         train_gen = img_generator_oai(train_path,
                                       train_batch_size,
-                                      img_size,
-                                      config.TISSUES,
-                                      shuffle_epoch=True,
-                                      pids=config.PIDS,
-                                      augment_data=config.AUGMENT_DATA)
+                                      config=config,
+                                      state='training',
+                                      shuffle_epoch=True)
         val_gen = img_generator_oai(valid_path,
                                     valid_batch_size,
-                                    img_size,
-                                    config.TISSUES,
-                                    tag=tag,
-                                    shuffle_epoch=False,
-                                    augment_data=False)
+                                    config=config,
+                                    state='validation',
+                                    shuffle_epoch=False)
     else:
         train_gen = img_generator(train_path, train_batch_size, img_size, tag, config.TISSUES, pids=config.PIDS)
         val_gen = img_generator(valid_path, valid_batch_size, img_size, tag, config.TISSUES)

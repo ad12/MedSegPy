@@ -69,7 +69,7 @@ def weighted_categorical_crossentropy(weights):
     @:param: weights: numpy array of shape (C,) where C is the number of classes
 
     Use Case:
-        weights = np.array([0.5,2]) # Class one at 0.5, class 2 2x the normal weights
+        weights = np.array([0.5, 2]) # Class one at 0.5, class 2 2x the normal weights
         loss = weighted_categorical_crossentropy(weights)
         model.compile(loss=loss,optimizer='adam')
     """

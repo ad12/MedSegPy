@@ -63,16 +63,17 @@ def deeplabv3_2d(config):
     dil_rate_input = config.DIL_RATES
     activation = config.LOSS[1]
     dropout_rate = config.DROPOUT_RATE
+    num_classes = config.get_num_classes()
     model = Deeplabv3(weights=None,
                       input_shape=input_shape,
-                      classes=config.NUM_CLASSES,
+                      classes=num_classes,
                       backbone='xception',
                       OS=OS,
                       dil_rate_input=dil_rate_input,
                       dropout_rate=dropout_rate)
 
     # Add sigmoid activation layer -
-    x = __add_activation_layer(output=model.layers[-1].output, num_classes=config.NUM_CLASSES, activation=activation)
+    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation)
     model = Model(inputs=model.input, outputs=x)
 
     # Save image
@@ -158,7 +159,8 @@ def ensemble_uds(config):
     # Deeplab
     input_shape = config.IMG_SIZE
 
-    deeplab_model = Deeplabv3(weights=None, input_shape=input_shape, classes=config.NUM_CLASSES, backbone='xception', OS=config.OS, dil_rate_input=config.DIL_RATES)
+    num_classes = config.get_num_classes()
+    deeplab_model = Deeplabv3(weights=None, input_shape=input_shape, classes=num_classes, backbone='xception', OS=config.OS, dil_rate_input=config.DIL_RATES)
     deeplab_model.load_weights(config.DEEPLAB_INIT_WEIGHTS, by_name=True)
     deeplab_model.trainable = False
     x = deeplab_model.input
@@ -169,7 +171,7 @@ def ensemble_uds(config):
     unet_model.trainable = False
 
     # Segnet
-    segnet_model = Segnet(input_tensor=x, n_labels=config.NUM_CLASSES)
+    segnet_model = Segnet(input_tensor=x, n_labels=num_classes)
     print('Loaded Segnet')
     segnet_model.load_weights(config.SEGNET_INIT_WEIGHTS)
     segnet_model.trainable = False

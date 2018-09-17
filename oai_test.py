@@ -62,7 +62,7 @@ def test_model(config, save_file=0):
     print('Save path: %s' % (test_result_path))
 
     if (config.VERSION > 1):
-        test_gen = img_generator_oai_test(test_path, test_batch_size, img_size, config.TISSUES, tag=config.TAG)
+        test_gen = img_generator_oai_test(test_path, test_batch_size, config)
     else:
         test_gen = img_generator_test(test_path, test_batch_size, img_size, config.TAG, config.TISSUES, shuffle_epoch=False)
 

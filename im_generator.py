@@ -316,12 +316,28 @@ def img_generator_test(data_path, batch_size, img_size, tag, tissue_inds, shuffl
 def inspect_vals(x):
     print('0: %0.2f, 1: %0.2f' %(np.sum(x==0), np.sum(x==1)))
 
-def img_generator_oai(data_path, batch_size, img_size, tissue, tag=None, shuffle_epoch=True, pids=None, augment_data=True):
+def img_generator_oai(data_path, batch_size, config, state='training', shuffle_epoch=True):
+    if (state not in ['training', 'validation']):
+        raise ValueError('state must be in [\'training\', \'validation\']')
+
+    img_size = config.IMG_SIZE
+    tissues = config.TISSUES
+    include_background = config.INCLUDE_BACKGROUND
+    tag = config.TAG
+
+    pids = None
+    augment_data = False
+    if state == 'training':
+        pids = config.PIDS
+        augment_data = config.AUGMENT_DATA
+
     files, batches_per_epoch = calc_generator_info(data_path, batch_size, pids=pids, augment_data=augment_data)
     
     # img_size must be 3D
-    assert(len(img_size) == 3)
-    total_classes = len(tissue)
+    if len(img_size) != 3:
+        raise ValueError('Image size must be 3D')
+
+    total_classes = config.get_num_classes()
     mask_size = (img_size[0], img_size[1], total_classes)
 
     x = np.zeros((batch_size,) + img_size)
@@ -347,9 +363,16 @@ def img_generator_oai(data_path, batch_size, img_size, tissue, tag=None, shuffle
                 
                 if (len(im.shape) == 2):
                     im = im[..., np.newaxis]
-                
+
+                seg_tissues = seg[..., 0, tissues]
+                seg_total = seg_tissues
+                # if considering background, add class
+                # background should mark every other pixel that is not already accounted for in segmentation
+                if include_background:
+                    seg_total = add_background(seg_tissues)
+
                 x[file_cnt, ...] = im
-                y[file_cnt, ...] = seg[..., 0, tissue]
+                y[file_cnt, ...] = seg_total
 
 
             yield (x, y)
@@ -358,7 +381,19 @@ def get_file_pid(fname):
     f_pid = fname.split('-')
     return f_pid[0]
 
-def img_generator_oai_test(data_path, batch_size, img_size, tissue, tag):
+def add_background(segs):
+    all_tissues = np.sum(segs, axis=-1, dtype=np.bool)
+    background = ~all_tissues
+    background = background[np.newaxis, ...]
+    seg_total = np.concatenate([background, segs])
+
+    return seg_total
+
+def img_generator_oai_test(data_path, batch_size, config):
+    img_size = config.IMG_SIZE
+    tissue = config.TISSUES
+    include_background = config.INCLUDE_BACKGROUND
+    tag = config.TAG
     files, batches_per_epoch = calc_generator_info(data_path, batch_size)
     files = sort_files(files, tag)
 
@@ -403,11 +438,18 @@ def img_generator_oai_test(data_path, batch_size, img_size, tissue, tag):
             with h5py.File(seg_path, 'r') as f:
                 seg = f['data'][:].astype('float32')
 
-            if (len(im.shape) == 2):
+            if len(im.shape) == 2:
                 im = im[..., np.newaxis]
 
+            seg_tissues = seg[..., 0, tissue]
+            seg_total = seg_tissues
+            # if considering background, add class
+            # background should mark every other pixel that is not already accounted for in segmentation
+            if include_background:
+                seg_total = add_background(seg_tissues)
+
             x[file_cnt, ...] = im
-            y[file_cnt, ...] = seg[..., 0, tissue]
+            y[file_cnt, ...] = seg_total
 
         yield (x, y, pid, num_slices)
 
