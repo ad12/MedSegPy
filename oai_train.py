@@ -378,4 +378,4 @@ if __name__ == '__main__':
     #fine_tune('/bmrNAS/people/arjun/msk_seg_networks/oai_data/segnet_2d/2018-09-01-22-39-39', SegnetConfig(), vals_dict = {'INITIAL_LEARNING_RATE': 1e-5, 'USE_STEP_DECAY': True, 'DROP_FACTOR': 0.7, 'DROP_RATE': 8.0, 'N_EPOCHS': 20})
 
     # train with binary cross entropy loss
-    train(UNetConfig(), {'LOSS': BINARY_CROSS_ENTROPY_LOSS, 'TRAIN_BATCH_SIZE': 30})
+    train(UNetConfig(), {'LOSS': BINARY_CROSS_ENTROPY_LOSS, 'TRAIN_BATCH_SIZE': 35, 'INITIAL_LEARNING_RATE': 5e-3})
