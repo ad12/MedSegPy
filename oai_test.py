@@ -77,6 +77,8 @@ def test_model(config, save_file=0):
         if (config.INCLUDE_BACKGROUND):
             y_test = y_test[..., 1]
             recon = recon[..., 1]
+            y_test = y_test[..., np.newaxis]
+            recon = recon[..., np.newaxis]
         labels = (recon > 0.5).astype(np.float32)
 
         
