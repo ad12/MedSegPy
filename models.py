@@ -94,11 +94,11 @@ def segnet_2d(config):
     """
     if (type(config) is not SegnetConfig):
         raise ValueError('config must be an instance of SegnetConfig')
-
+    num_classes = config.get_num_classes()
     input_shape = config.IMG_SIZE
     output_mode = config.LOSS[1]
     model = Segnet_v2(input_shape=input_shape,
-                      n_labels=config.NUM_CLASSES,
+                      n_labels=num_classes,
                       depth=config.DEPTH,
                       num_conv_layers=config.NUM_CONV_LAYERS,
                       num_filters=config.NUM_FILTERS,

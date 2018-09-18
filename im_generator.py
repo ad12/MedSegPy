@@ -383,9 +383,9 @@ def get_file_pid(fname):
 
 def add_background(segs):
     all_tissues = np.sum(segs, axis=-1, dtype=np.bool)
-    background = ~all_tissues
-    background = background[np.newaxis, ...]
-    seg_total = np.concatenate([background, segs])
+    background = np.asarray(~all_tissues, dtype=np.float)
+    background = background[..., np.newaxis]
+    seg_total = np.concatenate([background, segs], axis=-1)
 
     return seg_total
 
