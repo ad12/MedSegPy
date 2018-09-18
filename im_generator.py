@@ -11,6 +11,7 @@ from os.path import splitext
 from random import shuffle
 from re import split
 import h5py
+import os
 
 
 def preprocess_input_scale(im):
@@ -324,6 +325,7 @@ def img_generator_oai(data_path, batch_size, config, state='training', shuffle_e
     tissues = config.TISSUES
     include_background = config.INCLUDE_BACKGROUND
     tag = config.TAG
+    num_slices = config.num_neighboring_slices()
 
     pids = None
     augment_data = False
@@ -353,23 +355,20 @@ def img_generator_oai(data_path, batch_size, config, state='training', shuffle_e
         for batch_cnt in range(batches_per_epoch):
             for file_cnt in range(batch_size):
                 file_ind = batch_cnt * batch_size + file_cnt
-                im_path = '%s/%s.im' % (data_path, files[file_ind])
-                with h5py.File(im_path, 'r') as f:
-                    im = f['data'][:]
 
-                seg_path = '%s/%s.seg' % (data_path, files[file_ind])
-                with h5py.File(seg_path, 'r') as f:
-                    seg = f['data'][:].astype('float32')
-                
-                if (len(im.shape) == 2):
-                    im = im[..., np.newaxis]
+                if num_slices is not None:
+                    im, seg = get_neighboring_ims(num_slices=num_slices, data_path=data_path, filename=files[file_ind])
+                else:
+                    im, seg = load_inputs(data_path, files[file_ind])
+                    if (len(im.shape) == 2):
+                        im = im[..., np.newaxis]
 
                 seg_tissues = seg[..., 0, tissues]
                 seg_total = seg_tissues
                 # if considering background, add class
                 # background should mark every other pixel that is not already accounted for in segmentation
                 if include_background:
-                    seg_total = add_background(seg_tissues)
+                    seg_total = add_background_labels(seg_tissues)
 
                 x[file_cnt, ...] = im
                 y[file_cnt, ...] = seg_total
@@ -377,17 +376,70 @@ def img_generator_oai(data_path, batch_size, config, state='training', shuffle_e
 
             yield (x, y)
 
+
+def get_neighboring_ims(num_slices, data_path, filename):
+    filename_split = filename.split('_')
+    slice_no = int(filename_split[-1])
+    base_filename = '_'.join(filename_split[:-1]) + '_%03d'
+
+    ims = []
+    inds = []
+    r_seg = None
+    d_slice_range = list(range(-num_slices, num_slices+1))
+    for i in range(len(d_slice_range)):
+        d_slice = d_slice_range[i]
+        slice_filepath = base_filename % (slice_no + d_slice)
+        if os.path.isfile('%s/%s.im' % (data_path, slice_filepath)):
+            im, seg = load_inputs(data_path, slice_filepath)
+            if d_slice == 0:
+                r_seg = seg
+        else:
+            im = None
+
+        if im is not None:
+            inds.append(i)
+        ims.append(im)
+
+    # replace None in first 1/2
+    for i in range(0, inds[0]):
+        im = ims[i]
+        if im is not None:
+            break
+        ims[i] = ims[inds[0]]
+
+    # replace None in second 1/2
+    for i in range(inds[-1], num_slices):
+        im = ims[i]
+        if im is not None:
+            break
+        ims[i] = ims[inds[-1]]
+
+    assert r_seg is not None
+    return np.stack(ims), r_seg
+
+
 def get_file_pid(fname):
     f_pid = fname.split('-')
     return f_pid[0]
 
-def add_background(segs):
+def add_background_labels(segs):
     all_tissues = np.sum(segs, axis=-1, dtype=np.bool)
     background = np.asarray(~all_tissues, dtype=np.float)
     background = background[..., np.newaxis]
     seg_total = np.concatenate([background, segs], axis=-1)
 
     return seg_total
+
+def load_inputs(data_path, file):
+    im_path = '%s/%s.im' % (data_path, file)
+    with h5py.File(im_path, 'r') as f:
+        im = f['data'][:]
+
+    seg_path = '%s/%s.seg' % (data_path, file)
+    with h5py.File(seg_path, 'r') as f:
+        seg = f['data'][:].astype('float32')
+
+    return (im, seg)
 
 def img_generator_oai_test(data_path, batch_size, config):
     img_size = config.IMG_SIZE
@@ -430,23 +482,20 @@ def img_generator_oai_test(data_path, batch_size, config):
             # Make sure that this pid is actually in the filename
             assert(pid in fname)
 
-            im_path = '%s/%s.im' % (data_path, fname)
-            with h5py.File(im_path, 'r') as f:
-                im = f['data'][:]
-
-            seg_path = '%s/%s.seg' % (data_path, fname)
-            with h5py.File(seg_path, 'r') as f:
-                seg = f['data'][:].astype('float32')
-
-            if len(im.shape) == 2:
-                im = im[..., np.newaxis]
+            if num_slices is not None:
+                im, seg = get_neighboring_ims(num_slices=num_slices, data_path=data_path, filename=fname)
+            else:
+                im, seg = load_inputs(data_path, fname)
+                if (len(im.shape) == 2):
+                    im = im[..., np.newaxis]
 
             seg_tissues = seg[..., 0, tissue]
             seg_total = seg_tissues
+
             # if considering background, add class
             # background should mark every other pixel that is not already accounted for in segmentation
             if include_background:
-                seg_total = add_background(seg_tissues)
+                seg_total = add_background_labels(seg_tissues)
 
             x[file_cnt, ...] = im
             y[file_cnt, ...] = seg_total

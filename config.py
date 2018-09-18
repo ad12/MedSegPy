@@ -247,6 +247,9 @@ class Config():
 
         return len(self.TISSUES)
 
+    def num_neighboring_slices(self):
+        return None
+
 
 class DeeplabV3Config(Config):
     CP_SAVE_TAG = DEEPLABV3_NAME
@@ -323,7 +326,7 @@ class EnsembleUDSConfig(Config):
         super().__init__(self.CP_SAVE_TAG, state, create_dirs=create_dirs)
 
 
-class UNetMultiContrastConfig(Config):
+class UNetMultiContrastConfig(UNetConfig):
     IMG_SIZE = (288, 288, 3)
 
     CP_SAVE_TAG = 'unet_2d_multi_contrast'
@@ -335,4 +338,12 @@ class UNetMultiContrastConfig(Config):
     def __init__(self, state='training', create_dirs=True):
         super().__init__(self.CP_SAVE_TAG, state, create_dirs=create_dirs)
 
+
+class UNet2_5DConfig(UNetConfig):
+    IMG_SIZE =  (288, 288, 3)
+
+    CP_SAVE_TAG = 'unet_2_5d'
+
+    def num_neighboring_slices(self):
+        return self.IMG_SIZE[2]
 

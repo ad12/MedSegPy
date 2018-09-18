@@ -285,6 +285,7 @@ def save_ims(filepath):
     cv2.imwrite(os.path.join(filepath, 'seg.png'), scale_img(seg))
 
 
+
 def parse_results_file(filepath):
     # returns mean
     with open(filepath) as search:
