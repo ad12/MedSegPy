@@ -18,7 +18,7 @@ from keras.callbacks import TensorBoard as tfb
 import keras.callbacks as kc
 
 import config as MCONFIG
-from config import DeeplabV3Config, SegnetConfig, EnsembleUDSConfig, UNetConfig, UNetMultiContrastConfig
+from config import DeeplabV3Config, SegnetConfig, EnsembleUDSConfig, UNetConfig, UNetMultiContrastConfig, UNet2_5DConfig
 from im_generator import calc_generator_info, img_generator, img_generator_oai, get_class_freq
 from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS, BINARY_CROSS_ENTROPY_LOSS
 
@@ -374,6 +374,8 @@ if __name__ == '__main__':
     #fine_tune('/bmrNAS/people/arjun/msk_seg_networks/oai_data/segnet_2d/2018-09-01-22-39-39', SegnetConfig(), vals_dict = {'INITIAL_LEARNING_RATE': 1e-5, 'USE_STEP_DECAY': True, 'DROP_FACTOR': 0.7, 'DROP_RATE': 8.0, 'N_EPOCHS': 20})
 
     # train with binary cross entropy loss
-    train(SegnetConfig(), {'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS, 'INCLUDE_BACKGROUND': True})
-    
+    #train(SegnetConfig(), {'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS, 'INCLUDE_BACKGROUND': True})
     #train(DeeplabV3Config(), {'DIL_RATES': (1, 9 ,18), 'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS,  'INCLUDE_BACKGROUND': True})
+
+    # Train 2.5D
+    train(UNet2_5DConfig())

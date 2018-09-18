@@ -305,6 +305,7 @@ class UNetConfig(Config):
     CP_SAVE_TAG = UNET_NAME
     TEST_WEIGHT_PATH = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/select_weights/unet_2d_fc_weights.004--0.8968.h5'
 
+    INIT_UNET_2D = False
 
     USE_STEP_DECAY = True
     INITIAL_LEARNING_RATE = 1e-4

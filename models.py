@@ -3,7 +3,8 @@ from keras.layers import Input, Conv2D, Concatenate
 from keras import Model
 from keras.initializers import Zeros, Ones, Constant
 
-from config import DeeplabV3Config, SegnetConfig, UNetConfig, EnsembleUDSConfig, UNetMultiContrastConfig
+from config import DeeplabV3Config, SegnetConfig, UNetConfig, \
+                    EnsembleUDSConfig, UNetMultiContrastConfig, UNet2_5DConfig
 from deeplab_2d.deeplab_model import Deeplabv3
 from segnet_2d.segnet import Segnet, Segnet_v2
 from unet_2d.unet_model import unet_2d_model
@@ -27,6 +28,8 @@ def get_model(config):
         model = ensemble_uds(config)
     elif (type(config) is UNetMultiContrastConfig):
         model = unet_2d_multi_contrast(config)
+    elif (type(config) is UNet2_5DConfig):
+        model = unet_2_5d(config)
     else:
         raise ValueError('This config type has not been implemented')
 
@@ -145,6 +148,26 @@ def unet_2d_multi_contrast(config):
 
     return model
 
+def unet_2_5d(config):
+    """
+    Returns unet model corresponding to 3-channel multi-contrast inputs
+    :param config: a UNetMultiContrastConfig object
+    :return: a Keras model
+
+    :raises ValueError: if config not of type UNetMultiContrastConfig
+    """
+    if (type(config) is not UNet2_5DConfig):
+        raise ValueError('config must be instance of UNet2_5DConfig')
+    print('Initializing 2.5d unet: input size - ' + str(config.IMG_SIZE))
+    input_shape = config.IMG_SIZE
+    x = Input(input_shape)
+    model = unet_2d_model(input_tensor=x)
+
+    # only load weights for layers that share the same name
+    if (config.INIT_UNET_2D):
+        model.load_weights(config.INIT_UNET_2D_WEIGHTS, by_name=True)
+
+    return model
 
 def ensemble_uds(config):
     """
