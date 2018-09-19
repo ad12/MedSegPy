@@ -378,6 +378,8 @@ def img_generator_oai(data_path, batch_size, config, state='training', shuffle_e
 
 
 def get_neighboring_ims(num_slices, data_path, filename):
+    num_slices_orig = num_slices
+    num_slices = num_slices // 2
     filename_split = filename.split('_')
     slice_no = int(filename_split[-1])
     base_filename = '_'.join(filename_split[:-1]) + '_%03d'
@@ -408,13 +410,20 @@ def get_neighboring_ims(num_slices, data_path, filename):
         ims[i] = ims[inds[0]]
 
     # replace None in second 1/2
-    for i in range(inds[-1], num_slices):
+    for i in range(inds[-1] + 1, num_slices_orig):
         im = ims[i]
         if im is not None:
             break
         ims[i] = ims[inds[-1]]
 
     assert r_seg is not None
+    
+    try:
+        ims = np.stack(ims)
+    except ValueError:
+        for i in ims:
+            print(i)
+    ims = np.transpose(ims, (1, 2, 0))
     return np.stack(ims), r_seg
 
 
@@ -448,10 +457,10 @@ def img_generator_oai_test(data_path, batch_size, config):
     tag = config.TAG
     files, batches_per_epoch = calc_generator_info(data_path, batch_size)
     files = sort_files(files, tag)
-
+    num_neighboring = config.num_neighboring_slices()
     # img_size must be 3D
     assert (len(img_size) == 3)
-    total_classes = len(tissue)
+    total_classes = config.get_num_classes()
     mask_size = (img_size[0], img_size[1], total_classes)
 
     x = np.zeros((batch_size,) + img_size)
@@ -482,13 +491,13 @@ def img_generator_oai_test(data_path, batch_size, config):
             # Make sure that this pid is actually in the filename
             assert(pid in fname)
 
-            if num_slices is not None:
+            if num_neighboring is not None:
                 im, seg = get_neighboring_ims(num_slices=num_slices, data_path=data_path, filename=fname)
             else:
                 im, seg = load_inputs(data_path, fname)
                 if (len(im.shape) == 2):
                     im = im[..., np.newaxis]
-
+            
             seg_tissues = seg[..., 0, tissue]
             seg_total = seg_tissues
 

@@ -74,6 +74,11 @@ def test_model(config, save_file=0):
         # Perform the actual segmentation using pre-loaded model
         # Threshold at 0.5
         recon = model.predict(x_test, batch_size = test_batch_size)
+        if (config.INCLUDE_BACKGROUND):
+            y_test = y_test[..., 1]
+            recon = recon[..., 1]
+            y_test = y_test[..., np.newaxis]
+            recon = recon[..., np.newaxis]
         labels = (recon > 0.5).astype(np.float32)
 
         
@@ -304,4 +309,6 @@ if __name__ == '__main__':
 
     #config = SegnetConfig(create_dirs=False)
     #test_dir(os.path.join(SEGNET_TEST_PATHS_PREFIX, '2018-09-14-16-23-59'), config)
-    find_best_test_dir(SEGNET_TEST_PATHS_PREFIX)
+    #find_best_test_dir(SEGNET_TEST_PATHS_PREFIX)
+    config = DeeplabV3Config(create_dirs=False)
+    test_dir(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-09-17-23-49-49'), config)

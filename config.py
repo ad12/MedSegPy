@@ -311,6 +311,7 @@ class UNetConfig(Config):
     INITIAL_LEARNING_RATE = 1e-4
     DROP_FACTOR = 0.8
     DROP_RATE = 2
+    TRAIN_BATCH_SIZE = 35
 
     def __init__(self, state='training', create_dirs=True):
         super().__init__(self.CP_SAVE_TAG, state, create_dirs=create_dirs)
