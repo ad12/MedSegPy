@@ -348,3 +348,11 @@ class UNet2_5DConfig(UNetConfig):
     def num_neighboring_slices(self):
         return self.IMG_SIZE[2]
 
+class DeeplabV3_2_5DConfig(DeeplabV3Config):
+    IMG_SIZE = (288, 288, 3)
+
+    CP_SAVE_TAG = 'deeplabv3_2_5d'
+
+    def num_neighboring_slices(self):
+        return self.IMG_SIZE[2]
+
