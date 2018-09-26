@@ -8,6 +8,9 @@ from keras.layers import Input, Conv2D, MaxPooling2D, Conv2DTranspose, concatena
 from keras.layers import BatchNormalization as BN
 import keras.backend as K
 from keras.engine.topology import get_source_inputs
+from keras.initializers import glorot_uniform, he_normal
+
+from glob_constants import SEED
 
 # List of tissues that can be segmented
 FEMORAL_CARTILAGE_STR = 'fc'
@@ -56,11 +59,11 @@ def unet_2d_model(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, output_mode=
         conv = Conv2D(nfeatures[depth_cnt], (3, 3),
                       padding='same',
                       activation='relu',
-                      kernel_initializer='he_normal')(pool)
+                      kernel_initializer=glorot_uniform(seed=SEED))(pool)
         conv = Conv2D(nfeatures[depth_cnt], (3, 3),
                       padding='same',
                       activation='relu',
-                      kernel_initializer='he_normal')(conv)
+                      kernel_initializer=glorot_uniform(seed=SEED))(conv)
 
         conv = BN(axis=-1, momentum=0.95, epsilon=0.001)(conv)
         conv = Dropout(rate=0.0)(conv)
@@ -99,17 +102,17 @@ def unet_2d_model(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, output_mode=
         conv = Conv2D(nfeatures[depth_cnt], (3, 3),
                       padding='same',
                       activation='relu',
-                      kernel_initializer='he_normal')(up)
+                      kernel_initializer=glorot_uniform(seed=SEED))(up)
         conv = Conv2D(nfeatures[depth_cnt], (3, 3),
                       padding='same',
                       activation='relu',
-                      kernel_initializer='he_normal')(conv)
+                      kernel_initializer=glorot_uniform(seed=SEED))(conv)
 
         conv = BN(axis=-1, momentum=0.95, epsilon=0.001)(conv)
         conv = Dropout(rate=0.00)(conv)
 
     # combine features
-    recon = Conv2D(1, (1, 1), padding='same', activation=output_mode)(conv)
+    recon = Conv2D(1, (1, 1), padding='same', activation=output_mode, kernel_initializer=he_normal(seed=SEED))(conv)
 
     if (input_tensor is not None):
         inputs = get_source_inputs(input_tensor)

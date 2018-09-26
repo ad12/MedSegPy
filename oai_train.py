@@ -16,6 +16,7 @@ from keras.callbacks import LearningRateScheduler as lrs
 from keras.callbacks import ReduceLROnPlateau as rlrp
 from keras.callbacks import TensorBoard as tfb
 import keras.callbacks as kc
+import glob_constants
 
 import config as MCONFIG
 from config import DeeplabV3Config, SegnetConfig, EnsembleUDSConfig, UNetConfig, UNetMultiContrastConfig, UNet2_5DConfig, DeeplabV3_2_5DConfig
@@ -352,15 +353,17 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train OAI dataset')
     parser.add_argument('-g', '--gpu', metavar='G', type=str, nargs='?', default='0',
                         help='gpu id to use')
+    parser.add_argument('-s' '--seed', metavar='S', type=int, nargs='?', default=None)
     args = parser.parse_args()
     gpu = args.gpu
+    glob_constants.SEED = args.seed
 
     print('Using GPU %s' % gpu)
     os.environ["CUDA_VISIBLE_DEVICES"]=args.gpu
     os.environ["TF_CPP_MIN_LOG_LEVEL"]="2"
 
     # train with weighted cross entropy
-    #train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (2,4,6), 'DROPOUT_RATE': 0.0})
+    # train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (2,4,6), 'DROPOUT_RATE': 0.0})
 
     #data_limitation_train(pid_counts=[60])
     #fine tune
@@ -374,8 +377,9 @@ if __name__ == '__main__':
     #fine_tune('/bmrNAS/people/arjun/msk_seg_networks/oai_data/segnet_2d/2018-09-01-22-39-39', SegnetConfig(), vals_dict = {'INITIAL_LEARNING_RATE': 1e-5, 'USE_STEP_DECAY': True, 'DROP_FACTOR': 0.7, 'DROP_RATE': 8.0, 'N_EPOCHS': 20})
 
     # train with binary cross entropy loss
-    #train(SegnetConfig(), {'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS, 'INCLUDE_BACKGROUND': True})
-   # train(DeeplabV3Config(), {'DIL_RATES': (1, 9 ,18), 'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS,  'INCLUDE_BACKGROUND': True})
+    # train(SegnetConfig(), {'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS, 'INCLUDE_BACKGROUND': True})
+    # train(DeeplabV3Config(), {'DIL_RATES': (1, 9 ,18), 'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS,  'INCLUDE_BACKGROUND': True})
+
 
     # Train 2.5D
-    train(UNet2_5DConfig(), {'IMG_SIZE': (288, 288, 5)})
+    #train(UNet2_5DConfig(), {'IMG_SIZE': (288, 288, 5)})

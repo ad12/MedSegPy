@@ -8,7 +8,8 @@ from config import DeeplabV3Config, SegnetConfig, UNetConfig, \
 from deeplab_2d.deeplab_model import Deeplabv3
 from segnet_2d.segnet import Segnet, Segnet_v2
 from unet_2d.unet_model import unet_2d_model
-
+from keras.initializers import glorot_uniform
+from glob_constants import SEED
 import os
 
 
@@ -275,6 +276,7 @@ def __softmax_activation_layer(output, num_classes):
     :return:
     """
     return
+
 def __add_activation_layer(output, num_classes, activation='sigmoid'):
     """
     Return sigmoid activation layer
@@ -283,7 +285,9 @@ def __add_activation_layer(output, num_classes, activation='sigmoid'):
 
     # Initializing kernel weights to 1 and bias to 0.
     # i.e. without training, the output would be a sigmoid activation on each pixel of the input
-    return Conv2D(num_classes, (1,1), activation=activation, kernel_initializer=Ones(), bias_initializer=Zeros(), name='output_activation')(output)
+    return Conv2D(num_classes, (1,1), activation=activation,
+                  kernel_initializer=glorot_uniform(seed=SEED),
+                  name='output_activation')(output)
 
 
 if __name__ == '__main__':
