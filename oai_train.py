@@ -257,10 +257,22 @@ def data_limitation_train(pid_counts=[5, 15, 30, 60], vals_dict=None):
     Train data limited networks
     :return:
     """
+
+    pids = utils.load_pik(parse_pids.PID_TXT_PATH)
+    pids_dict = {5: [9003406, 9007827, 9047800, 9056363, 9068453],
+                 15: [9003406, 9007827, 9040390, 9094865, 9172459,
+                      9047800, 9056363, 9068453, 9085290, 9087863,
+                      9102858, 9211869, 9311328, 9331465, 9279291],
+                 30: [9003406, 9007827, 9040390, 9094865, 9172459,
+                      9192885, 9215390, 9264046, 9309170, 9382271,
+                      9047800, 9056363, 9068453, 9085290, 9087863,
+                      9102858, 9211869, 9311328, 9331465, 9332085,
+                      9352437, 9357137, 9357383, 9369649, 9444401,
+                      9493245, 9567704, 9597990, 9279291, 9596610],
+                 60: random.sample(pids, 60)}
     print('Data limitation......')
     import math
     MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_data_limit/oai_data'
-    pids = utils.load_pik(parse_pids.PID_TXT_PATH)
     num_pids = len(pids)
 
     for pid_count in pid_counts:
@@ -269,8 +281,8 @@ def data_limitation_train(pid_counts=[5, 15, 30, 60], vals_dict=None):
         if (pid_count > num_pids):
             pid_count = num_pids
 
-        # Randomly subsample pids
-        pids_sampled = random.sample(pids, pid_count)
+        # select pids that were sampled
+        pids_sampled = pids_dict[pid_count]
         s_ratio = math.ceil(num_pids / pid_count)
 
         config = UNetConfig()
