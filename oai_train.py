@@ -252,7 +252,7 @@ def train_debug():
     K.clear_session()
 
 
-def data_limitation_train(pid_counts=[5, 15, 30, 60]):
+def data_limitation_train(pid_counts=[5, 15, 30, 60], vals_dict=None):
     """
     Train data limited networks
     :return:
@@ -273,14 +273,18 @@ def data_limitation_train(pid_counts=[5, 15, 30, 60]):
         pids_sampled = random.sample(pids, pid_count)
         s_ratio = math.ceil(num_pids / pid_count)
 
-        config = SegnetConfig()
-        #config.DIL_RATES = (1, 9, 18)
-        config.N_EPOCHS = math.ceil(20 * num_pids / pid_count)
+        config = UNetConfig()
+        config.N_EPOCHS = math.ceil(10 * num_pids / pid_count)
         config.DROP_FACTOR = config.DROP_FACTOR ** (1/s_ratio)
-        config.INITIAL_LEARNING_RATE = 1e-3
-        config.USE_STEP_DECAY = False
+
         config.PIDS = pids_sampled if pid_count != num_pids else None
         print('# Subjects: %d' % pid_count)
+
+        if vals_dict is not None:
+            for key in vals_dict.keys():
+                val = vals_dict[key]
+                config.set_attr(key, val)
+
         config.save_config()
         config.summary()
 
@@ -383,3 +387,16 @@ if __name__ == '__main__':
 
     # Train 2.5D
     #train(UNet2_5DConfig(), {'IMG_SIZE': (288, 288, 5)})
+
+    # Architecture experiment: Train deeplab, segnet end-to-end
+    train(DeeplabV3Config(), {'OS':16, 'DIL_RATES': (2, 4, 6)})
+    print('\n\n')
+    train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'FINE_TUNE': False, 'TRAIN_BATCH_SIZE': 15})
+
+
+    # Data limitation experiment: Train Unet, Deeplab, and Segnet with limited data
+    # data_limitation_train(vals_dict={'INITIAL_LEARNING_RATE': 0.02}) # unet
+    # data_limitation_train(vals_dict={'OS':16, 'DIL_RATES': (2, 4, 6)}) # deeplab
+    # data_limitation_train(vals_dict={'INITIAL_LEARNING_RATE': 1e-3}) # segnet
+
+
