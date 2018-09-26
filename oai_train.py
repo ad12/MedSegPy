@@ -357,8 +357,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train OAI dataset')
     parser.add_argument('-g', '--gpu', metavar='G', type=str, nargs='?', default='0',
                         help='gpu id to use')
-    parser.add_argument('-s' '--seed', metavar='S', type=int, nargs='?', default=None)
+    parser.add_argument('-s', '--seed', metavar='S', type=int, nargs='?', default=None)
     args = parser.parse_args()
+    print(args)
     gpu = args.gpu
     glob_constants.SEED = args.seed
 
@@ -391,7 +392,7 @@ if __name__ == '__main__':
     # Architecture experiment: Train deeplab, segnet end-to-end
     train(DeeplabV3Config(), {'OS':16, 'DIL_RATES': (2, 4, 6)})
     print('\n\n')
-    train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'FINE_TUNE': False, 'TRAIN_BATCH_SIZE': 15})
+    #train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'FINE_TUNE': False, 'TRAIN_BATCH_SIZE': 15})
 
 
     # Data limitation experiment: Train Unet, Deeplab, and Segnet with limited data
