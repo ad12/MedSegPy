@@ -345,7 +345,9 @@ class UNet2_5DConfig(UNetConfig):
     IMG_SIZE =  (288, 288, 3)
 
     CP_SAVE_TAG = 'unet_2_5d'
-
+    N_EPOCHS = 100
+    AUGMENT_DATA = False
+    INITIAL_LEARNING_RATE = 5e-2
     def num_neighboring_slices(self):
         return self.IMG_SIZE[2]
 
@@ -353,7 +355,8 @@ class DeeplabV3_2_5DConfig(DeeplabV3Config):
     IMG_SIZE = (288, 288, 3)
 
     CP_SAVE_TAG = 'deeplabv3_2_5d'
-
+    N_EPOCHS = 100
+    AUGMENT_DATA = False
     def num_neighboring_slices(self):
         return self.IMG_SIZE[2]
 

@@ -311,4 +311,4 @@ if __name__ == '__main__':
     #test_dir(os.path.join(SEGNET_TEST_PATHS_PREFIX, '2018-09-14-16-23-59'), config)
     #find_best_test_dir(SEGNET_TEST_PATHS_PREFIX)
     config = DeeplabV3Config(create_dirs=False)
-    test_dir(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-09-17-23-49-49'), config)
+    test_dir(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-09-18-15-41-09/fine_tune'), config)

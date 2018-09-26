@@ -364,7 +364,7 @@ if __name__ == '__main__':
 
     #data_limitation_train(pid_counts=[60])
     #fine tune
-    #fine_tune('/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d/2018-09-13-07-11-03/', DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE': 1e-6, 'USE_STEP_DECAY': False, 'N_EPOCHS': 20})
+    #fine_tune('/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d/2018-09-18-15-41-09/', DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE': 1e-6, 'USE_STEP_DECAY': False, 'N_EPOCHS': 20})
     #train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (2, 4, 6)})
 
     #train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'FINE_TUNE': False, 'TRAIN_BATCH_SIZE': 15})
@@ -375,7 +375,7 @@ if __name__ == '__main__':
 
     # train with binary cross entropy loss
     #train(SegnetConfig(), {'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS, 'INCLUDE_BACKGROUND': True})
-    train(DeeplabV3Config(), {'DIL_RATES': (1, 9 ,18), 'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS,  'INCLUDE_BACKGROUND': True})
+   # train(DeeplabV3Config(), {'DIL_RATES': (1, 9 ,18), 'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS,  'INCLUDE_BACKGROUND': True})
 
     # Train 2.5D
-    train(DeeplabV3_2_5DConfig(), {'DIL_RATES': (1, 9 ,18)})
+    train(UNet2_5DConfig(), {'IMG_SIZE': (288, 288, 5)})
