@@ -402,14 +402,15 @@ if __name__ == '__main__':
     #train(UNet2_5DConfig(), {'IMG_SIZE': (288, 288, 5)})
 
     # Architecture experiment: Train deeplab, segnet end-to-end
-    train(DeeplabV3Config(), {'OS':16, 'DIL_RATES': (2, 4, 6)})
+    #train(DeeplabV3Config(), {'OS':16, 'DIL_RATES': (2, 4, 6), 'DROPOUT_RATE':0.0})
+    fine_tune(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-09-26-19-07-53'), DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE':1e-6})
     print('\n\n')
-    #train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'FINE_TUNE': False, 'TRAIN_BATCH_SIZE': 15})
+   # train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'FINE_TUNE': False, 'TRAIN_BATCH_SIZE': 15})
 
 
     # Data limitation experiment: Train Unet, Deeplab, and Segnet with limited data
-    # data_limitation_train(vals_dict={'INITIAL_LEARNING_RATE': 0.02}) # unet
-    # data_limitation_train(vals_dict={'OS':16, 'DIL_RATES': (2, 4, 6)}) # deeplab
+    #data_limitation_train(vals_dict={'INITIAL_LEARNING_RATE': 0.02}) # unet
+    #data_limitation_train(vals_dict={'OS':16, 'DIL_RATES': (2, 4, 6)}) # deeplab
     # data_limitation_train(vals_dict={'INITIAL_LEARNING_RATE': 1e-3}) # segnet
 
 
