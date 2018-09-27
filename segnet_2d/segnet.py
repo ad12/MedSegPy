@@ -8,7 +8,7 @@ from keras.utils import plot_model
 from keras.initializers import glorot_uniform, he_normal
 from segnet_2d.Mylayers import MaxPoolingWithArgmax2D, MaxUnpooling2D
 
-from glob_constants import SEED
+import glob_constants as glc
 
 def _encoder_block(x, level, num_conv_layers=2, num_filters=64, kernel=3, pool_size=(2,2), single_bn=False):
     if (num_conv_layers <= 0):
@@ -20,7 +20,7 @@ def _encoder_block(x, level, num_conv_layers=2, num_filters=64, kernel=3, pool_s
         conv = Convolution2D(num_filters,
                              (kernel, kernel),
                              padding="same",
-                             kernel_initializer=he_normal(seed=SEED),
+                             kernel_initializer=he_normal(seed=glc.SEED),
                              name='enc_%d_conv_%d' % (level, i+1))(curr_layer)
         if not single_bn:
             conv = BatchNormalization(name='enc_%d_bn_%d' % (level, i+1))(conv)
@@ -45,7 +45,7 @@ def _decoder_block(x_pool, x_mask, level, num_conv_layers=2, num_filters=64, num
         used_num_filters = num_filters_next if i==num_conv_layers-1 else num_filters
         conv = Convolution2D(used_num_filters,
                              (kernel, kernel),
-                             kernel_initializer=he_normal(seed=SEED),
+                             kernel_initializer=he_normal(seed=glc.SEED),
                              padding="same",
                              name='dec_%d_conv_%d' % (level, i+1))(curr_layer)
 
@@ -71,7 +71,7 @@ def _encoder_block_conv_act_bn(x, level, num_conv_layers=2, num_filters=64, kern
         conv = Convolution2D(num_filters,
                              (kernel, kernel),
                              padding="same",
-                             kernel_initializer=he_normal(seed=SEED),
+                             kernel_initializer=he_normal(seed=glc.SEED),
                              name='enc_%d_conv_%d' % (level, i+1))(curr_layer)
         conv = Activation("relu",
                           name='enc_%d_relu_%d' % (level, i+1))(conv)
@@ -94,7 +94,7 @@ def _decoder_block_conv_act_bn(x_pool, x_mask, level, num_conv_layers=2, num_fil
         conv = Convolution2D(used_num_filters,
                              (kernel, kernel),
                              padding="same",
-                             kernel_initializer=he_normal(seed=SEED),
+                             kernel_initializer=he_normal(seed=glc.SEED),
                              name='dec_%d_conv_%d' % (level, i+1))(curr_layer)
         conv = Activation("relu", name='dec_%d_relu_%d' % (level, i+1))(conv)
         conv = BatchNormalization(name='dec_%d_bn_%d' % (level, i + 1))(conv)
@@ -103,7 +103,9 @@ def _decoder_block_conv_act_bn(x_pool, x_mask, level, num_conv_layers=2, num_fil
     return curr_layer
 
 def Segnet_v2(input_shape=(288,288,1), input_tensor=None, n_labels=1, depth=5, num_conv_layers=[2, 2, 3, 3, 3], num_filters=[64, 128, 256, 512, 512], kernel=3, pool_size=(2, 2), output_mode="sigmoid", single_bn=False, conv_act_bn=False):
-    
+
+    print('Initializing segnet with seed: %s' % str(glc.SEED))
+
     if input_tensor is not None:
         inputs = input_tensor
     else:
@@ -172,7 +174,7 @@ def Segnet_v2(input_shape=(288,288,1), input_tensor=None, n_labels=1, depth=5, n
 
     outputs = Convolution2D(n_labels,
                             (1, 1),
-                            kernel_initializer=glorot_uniform(seed=SEED),
+                            kernel_initializer=glorot_uniform(seed=glc.SEED),
                             activation=output_mode)(curr_layer)
 
     segnet = Model(inputs=inputs, outputs=outputs, name="segnet")
