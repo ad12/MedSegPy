@@ -48,7 +48,7 @@ from keras.utils import conv_utils
 from keras.utils.data_utils import get_file
 from keras.initializers import he_normal
 
-from glob_constants import SEED
+import glob_constants as glc
 
 
 WEIGHTS_PATH_X = "https://github.com/bonlime/keras-deeplab-v3-plus/releases/download/1.1/deeplabv3_xception_tf_dim_ordering_tf_kernels.h5"
@@ -140,7 +140,7 @@ def SepConv_BN(x, filters, prefix, stride=1, kernel_size=3, rate=1, depth_activa
                         dilation_rate=(rate, rate),
                         padding=depth_padding,
                         use_bias=False,
-                        kernel_initializer=he_normal(seed=SEED),
+                        kernel_initializer=he_normal(seed=glc.SEED),
                         name=prefix + '_depthwise')(x)
     x = BatchNormalization(name=prefix + '_depthwise_BN', epsilon=epsilon)(x)
     if depth_activation:

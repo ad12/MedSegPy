@@ -1,2 +1,1 @@
-
-SEED = 9001
+SEED = None

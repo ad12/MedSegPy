@@ -10,8 +10,6 @@ import keras.backend as K
 from keras.engine.topology import get_source_inputs
 from keras.initializers import glorot_uniform, he_normal
 
-from glob_constants import SEED
-
 # List of tissues that can be segmented
 FEMORAL_CARTILAGE_STR = 'fc'
 MENISCUS_STR = 'men'
@@ -40,7 +38,9 @@ def unet_2d_model(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, output_mode=
 
     :raise ValueError if input_size is not tuple or dimensions of input_size do not match (height, width, 1)
     """
-
+    import glob_constants
+    print('Initializing unet with seed: %s' % str(glob_constants.SEED))
+    SEED = glob_constants.SEED
     if input_tensor is None and (type(input_size) is not tuple or len(input_size) != 3):
         raise ValueError('input_size must be a tuple of size (height, width, 1)')
 
