@@ -122,7 +122,6 @@ def SepConv_BN(x, filters, prefix, stride=1, kernel_size=3, rate=1, depth_activa
             depth_activation: flag to use activation between depthwise & poinwise convs
             epsilon: epsilon to use in BN layer
     """
-
     if stride == 1:
         depth_padding = 'same'
     else:

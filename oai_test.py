@@ -307,8 +307,8 @@ if __name__ == '__main__':
     #config = UNetConfig(create_dirs=False)
     #test_dir('/bmrNAS/people/arjun/msk_seg_networks/oai_data/segnet_2d/2018-09-14-16-23-59/', config)
 
-    config = SegnetConfig(create_dirs=False)
-    test_dir(os.path.join(SEGNET_TEST_PATHS_PREFIX, '2018-09-26-19-08-34'), config)
+    #config = SegnetConfig(create_dirs=False)
+    #test_dir(os.path.join(SEGNET_TEST_PATHS_PREFIX,), config)
     #find_best_test_dir(SEGNET_TEST_PATHS_PREFIX)
-    #config = DeeplabV3Config(create_dirs=False)
-    #test_dir(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-09-26-19-07-53'), config)
+    config = DeeplabV3Config(create_dirs=False)
+    test_dir(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-09-27-07-52-2'), config)

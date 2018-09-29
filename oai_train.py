@@ -2,6 +2,33 @@
 
 from __future__ import print_function, division
 
+import argparse
+import pickle
+import os
+import random
+import numpy as np
+
+from keras.optimizers import Adam
+from keras import backend as K
+
+from keras.callbacks import ModelCheckpoint
+from keras.callbacks import LearningRateScheduler as lrs
+from keras.callbacks import ReduceLROnPlateau as rlrp
+from keras.callbacks import TensorBoard as tfb
+import keras.callbacks as kc
+import glob_constants
+
+import config as MCONFIG
+from config import DeeplabV3Config, SegnetConfig, EnsembleUDSConfig, UNetConfig, UNetMultiContrastConfig, UNet2_5DConfig, DeeplabV3_2_5DConfig
+from im_generator import calc_generator_info, img_generator, img_generator_oai, get_class_freq
+from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS, BINARY_CROSS_ENTROPY_LOSS
+
+from weight_classes import CLASS_FREQ_DAT_PATH
+
+from models import get_model
+
+import utils
+import parse_pids
 
 def train_model(config, optimizer=None):
     """
@@ -299,17 +326,17 @@ if __name__ == '__main__':
 
     # train with weighted cross entropy
     # train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (2,4,6), 'DROPOUT_RATE': 0.0})
-
+    
     #data_limitation_train(pid_counts=[60])
     #fine tune
-    #fine_tune('/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d/2018-09-18-15-41-09/', DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE': 1e-6, 'USE_STEP_DECAY': False, 'N_EPOCHS': 20})
+    #fine_tune('/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d/2018-09-27-07-52-25/', DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE': 1e-6, 'USE_STEP_DECAY': False, 'N_EPOCHS': 20})
     #train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (2, 4, 6)})
 
     #train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'FINE_TUNE': False, 'TRAIN_BATCH_SIZE': 15})
     #train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'CONV_ACT_BN': True, 'TRAIN_BATCH_SIZE': 15})
 
     #train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'DEPTH': 7, 'NUM_CONV_LAYERS': [3, 3, 3, 3, 3, 3, 3], 'NUM_FILTERS': [16, 32, 64, 128, 256, 512, 1024], 'TRAIN_BATCH_SIZE': 35})
-    #fine_tune('/bmrNAS/people/arjun/msk_seg_networks/oai_data/segnet_2d/2018-09-01-22-39-39', SegnetConfig(), vals_dict = {'INITIAL_LEARNING_RATE': 1e-5, 'USE_STEP_DECAY': True, 'DROP_FACTOR': 0.7, 'DROP_RATE': 8.0, 'N_EPOCHS': 20})
+    #fine_tune('/bmrNAS/people/arjun/msk_seg_networks/oai_data/segnet_2d/2018-09-26-19-08-34', SegnetConfig(), vals_dict = {'INITIAL_LEARNING_RATE': 1e-5, 'USE_STEP_DECAY': True, 'DROP_FACTOR': 0.7, 'DROP_RATE': 8.0, 'N_EPOCHS': 20})
 
     # train with binary cross entropy loss
     # train(SegnetConfig(), {'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS, 'INCLUDE_BACKGROUND': True})
@@ -324,5 +351,3 @@ if __name__ == '__main__':
     #fine_tune(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-09-26-19-07-53'), DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE':1e-6})
     #print('\n\n')
    # train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'FINE_TUNE': False, 'TRAIN_BATCH_SIZE': 15})
-
-
