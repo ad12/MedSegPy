@@ -23,12 +23,25 @@ from weight_classes import CLASS_FREQ_DAT_PATH
 
 from models import get_model
 
+from natsort import natsorted
+
 import oai_train
 
 import utils
 import parse_pids
 
-def data_limitation_train(pid_counts=[5, 15, 30, 60], vals_dict=None):
+
+def get_config(name):
+    configs = [DeeplabV3Config(), UNetConfig(), SegnetConfig()]
+
+    for config in configs:
+        if config.CP_SAVE_TAG == name:
+            return config
+
+    raise ValueError('config %s not found' % name)
+
+
+def data_limitation_train(config_name, vals_dict=None):
     """
     Train data limited networks
     :return:
@@ -51,6 +64,8 @@ def data_limitation_train(pid_counts=[5, 15, 30, 60], vals_dict=None):
     MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_data_limit/oai_data'
     num_pids = len(pids)
 
+    pid_counts = natsorted(list(pids_dict.keys()))
+
     for pid_count in pid_counts:
         MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_data_limit/oai_data/%03d' % pid_count
 
@@ -61,11 +76,12 @@ def data_limitation_train(pid_counts=[5, 15, 30, 60], vals_dict=None):
         pids_sampled = pids_dict[pid_count]
         s_ratio = math.ceil(num_pids / pid_count)
 
-        config = UNetConfig()
+        config = get_config(config_name)
+
         config.N_EPOCHS = math.ceil(10 * num_pids / pid_count)
         config.DROP_FACTOR = config.DROP_FACTOR ** (1 / s_ratio)
-
         config.PIDS = pids_sampled if pid_count != num_pids else None
+
         print('# Subjects: %d' % pid_count)
 
         if vals_dict is not None:
@@ -86,7 +102,22 @@ def data_limitation_train(pid_counts=[5, 15, 30, 60], vals_dict=None):
 
 
 if __name__=='__main__':
+    parser = argparse.ArgumentParser(description='Train OAI dataset')
+    parser.add_argument('-g', '--gpu', metavar='G', type=str, nargs='?', default='0',
+                        help='gpu id to use')
+    parser.add_argument('-s', '--seed', metavar='S', type=int, nargs='?', default=None)
+    args = parser.parse_args()
+    print(args)
+    gpu = args.gpu
+    glob_constants.SEED = args.seed
+
+    print(glob_constants.SEED)
+
+    print('Using GPU %s' % gpu)
+    os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
+    os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+
     # Data limitation experiment: Train Unet, Deeplab, and Segnet with limited data
-    data_limitation_train(vals_dict={'INITIAL_LEARNING_RATE': 0.02, 'DROP_RATE':1, 'TRAIN_BATCH_SIZE':12}) # unet
-    #data_limitation_train(vals_dict={'OS':16, 'DIL_RATES': (2, 4, 6)}) # deeplab
-    # data_limitation_train(vals_dict={'INITIAL_LEARNING_RATE': 1e-3}) # segnet
+    data_limitation_train('unet_2d', vals_dict={'INITIAL_LEARNING_RATE': 0.02, 'DROP_RATE':1, 'TRAIN_BATCH_SIZE':12}) # unet
+    data_limitation_train('deeplabv3_2d', vals_dict={'OS':16, 'DIL_RATES': (2, 4, 6)}) # deeplab
+    data_limitation_train('segnet_2d', vals_dict={'INITIAL_LEARNING_RATE': 1e-3}) # segnet
