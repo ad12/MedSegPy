@@ -374,7 +374,7 @@ def handle_data_limit_exp(vargin):
 
         if do_batch_test:
             batch_test(architecture_folder_path, config_name, [vals_dict], overwrite=overwrite_data)
-            return
+            continue
 
         if date is None:
             raise ValueError('Must specify either \'date\' or \'%s\'' % (BATCH_TEST_KEY))
