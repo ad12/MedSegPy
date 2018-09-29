@@ -28,7 +28,7 @@ from weight_classes import CLASS_FREQ_DAT_PATH
 from models import get_model
 
 import utils
-import parse_pids
+
 
 def train_model(config, optimizer=None):
     """

@@ -20,16 +20,6 @@ import config as MCONFIG
 from config import DeeplabV3Config, SegnetConfig, EnsembleUDSConfig, UNetConfig
 import utils
 
-#from DenseInferenceWrapper.denseinference import CRFProcessor
-
-# def crf(prob_volume, labels):
-#     print(prob_volume.shape)
-#     print(labels.shape)
-#     #prob_volume = np.transpose(prob_volume, [1, 2, 0])
-#     processor = CRFProcessor()
-#     output = processor(prob_volume, labels)
-#
-#     print(output.shape)
 
 def test_model(config, save_file=0):
     """
@@ -163,6 +153,7 @@ def get_valid_subdirs(base_path, no_results=True):
     """
     Return subdirectories that have data to be tested
     :param base_path: root folder to search
+    :param no_results: only select folders that don't have results
     :return: list of paths (strings)
     """
     if (base_path is None) or (not os.path.isdir(base_path)) or (base_path == []):
@@ -189,19 +180,16 @@ def get_valid_subdirs(base_path, no_results=True):
     return subdirs
 
 
-def batch_test(base_folder, model_str, vals_dicts=[None]):
+def batch_test(base_folder, config_name, vals_dicts=[None], overwrite=False):
     # get list of directories to get info from
-    subdirs = get_valid_subdirs(base_folder)
+    subdirs = get_valid_subdirs(base_folder, not overwrite)
     for subdir in subdirs:
         print(subdir)
 
     print('')
     for subdir in subdirs:
         for vals_dict in vals_dicts:
-            if (model_str == 'deeplab'):
-                config = DeeplabV3Config(create_dirs=False)
-            elif model_str == 'segnet':
-                config = SegnetConfig(create_dirs=False)
+            config = get_config(config_name)
 
             try:
                 test_dir(subdir, config, vals_dict=vals_dict)
@@ -261,54 +249,158 @@ def test_dir(dirpath, config, vals_dict=None, best_weight_path=None):
 
     K.clear_session()
 
-local_testing_test_path = '../sample_data/test_data'
-local_test_results_path = '../sample_data/results'
 
-DEEPLAB_TEST_PATHS_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d'
-DEEPLAB_TEST_PATHS = ['2018-08-26-20-01-32', # OS=16, DIL_RATES=(6, 12, 18)
-                      '2018-08-27-02-49-06', # OS=16, DIL_RATES=(1, 9, 18)
-                      '2018-08-27-15-48-56', # OS=16, DIL_RATES=(3, 6, 9)
-                      ]
-DEEPLAB_DIL_RATES = [ [(6, 12, 18), (3, 6, 9), (2, 4, 6), (1, 2, 3), (12, 24, 36)],
-                      [(1, 9, 18), (1, 3, 6), (1, 2, 4), (1, 1, 2)],
-                      [(3, 6, 9), (6, 12, 18), (2, 4, 6), (1, 2, 3), (12, 24, 36)],
-                    ]
+ARCHITECTURE_PATHS_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/oai_data/%s'
+DATA_LIMIT_PATHS_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_data_limit/oai_data', '%03d', '%s')
 
-DATA_LIMIT_PATHS_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_data_limit/oai_data', '%03d', 'segnet_2d')
-DATA_LIMIT_NUM_DATE_DICT = {5:'2018-09-06-20-33-37',
-                            15:'2018-09-07-05-11-47',
-                            30:'2018-09-07-12-53-36',
-                            60:'2018-09-07-19-50-59'}
+EXP_KEY='exp'
+BATCH_TEST_KEY = 'batch'
+SUPPORTED_ARCHITECTURES = ['unet_2d', 'deeplabv3_2d', 'segnet_2d']
+ARCHITECTURE_KEY = 'architecture'
+OVERWRITE_KEY = 'ov'
 
-SEGNET_TEST_PATHS_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/oai_data/segnet_2d'
+OS_KEY = 'OS'
+DIL_RATES_KEY='DIL_RATES'
+
+
+def get_config(name):
+    configs = [DeeplabV3Config(create_dirs=False), UNetConfig(create_dirs=False), SegnetConfig(create_dirs=False)]
+
+    for config in configs:
+        if config.CP_SAVE_TAG == name:
+            return config
+
+    raise ValueError('config %s not found' % name)
+
+
+def init_deeplab_parser(parser):
+    parser.add_argument('-%s' % OS_KEY, nargs='?', default=None, choices=[8, 16])
+    parser.add_argument('-%s' % DIL_RATES_KEY, nargs='?', default=None, type=tuple)
+
+
+def handle_deeplab(vargin):
+    vals_dict = dict()
+    if vargin[OS_KEY]:
+        vals_dict[OS_KEY] = vargin[OS_KEY]
+
+    if vargin[DIL_RATES_KEY]:
+        dil_rates = vargin[DIL_RATES_KEY]
+        if type(dil_rates) is not tuple or len(dil_rates) != 3:
+            raise ValueError('Dilation rates must be a tuple of 3 integers')
+
+        vals_dict[DIL_RATES_KEY] = vargin[DIL_RATES_KEY]
+
+    return vals_dict
+
+
+def handle_architecture_exp(vargin):
+    config_name = vargin[ARCHITECTURE_KEY]
+    do_batch_test = vargin[BATCH_TEST_KEY]
+    overwrite_data = vargin[OVERWRITE_KEY]
+    date = vargin['date']
+    test_batch_size = vargin['batch_size']
+
+    architecture_folder_path = ARCHITECTURE_PATHS_PREFIX % config_name
+
+    vals_dict = {'TEST_BATCH_SIZE': test_batch_size}
+
+    if config_name == 'deeplabv3_2d':
+        vals_dict.update(handle_deeplab(vargin))
+
+    if do_batch_test:
+        batch_test(architecture_folder_path, config_name, [vals_dict], overwrite=overwrite_data)
+        return
+
+    if date is None:
+        raise ValueError('Must specify either \'date\' or \'%s\'' % (BATCH_TEST_KEY))
+
+    fullpath = os.path.join(architecture_folder_path, date)
+    if not os.path.isdir(fullpath):
+        raise NotADirectoryError('%s does not exist. Make sure date is correct' % fullpath)
+
+    test_dir(fullpath, get_config(config_name), vals_dict=vals_dict)
+
+
+def add_base_architecture_parser(architecture_parser):
+    for architecture in SUPPORTED_ARCHITECTURES:
+        parser = architecture_parser.add_parser(architecture, help='use %s' % architecture)
+        parser.add_argument('-%s' % BATCH_TEST_KEY, default=False, const=True, help='batch test directory')
+        parser.add_argument('-%s' % OVERWRITE_KEY, default=False, const=True, help='overwrite current data')
+
+        parser.add_argument('-g', '--gpu', metavar='G', type=str, nargs='?', default='0',
+                            help='gpu id to use')
+        parser.add_argument('-c', '--cpu', metavar='c', action='store_const', default=False, const=True)
+        parser.add_argument('-date', nargs='?')
+        parser.add_argument('-batch_size', default=72, type=int, nargs='?')
+
+        if architecture == 'deeplabv3_2d':
+            init_deeplab_parser(parser)
+
+
+def init_architecture_parser(input_subparser):
+    subparser = input_subparser.add_parser('arch', help='test architecture experiment')
+    architecture_parser = subparser.add_subparsers(help='architecture to use', dest=ARCHITECTURE_KEY)
+
+    add_base_architecture_parser(architecture_parser)
+
+    subparser.set_defaults(func=handle_architecture_exp)
+
+
+def init_data_limit_parser(input_subparser):
+    subparser = input_subparser.add_parser('dl', 'test data limitation experiment')
+    architecture_parser = subparser.add_subparsers(help='architecture to use', dest=ARCHITECTURE_KEY)
+
+    add_base_architecture_parser(architecture_parser)
+
+    subparser.set_defaults(func=handle_data_limit_exp)
+
+
+def handle_data_limit_exp(vargin):
+    config_name = vargin[ARCHITECTURE_KEY]
+    do_batch_test = vargin[BATCH_TEST_KEY]
+    overwrite_data = vargin[OVERWRITE_KEY]
+    date = vargin['date']
+    test_batch_size = vargin['batch_size']
+
+    for count in [5, 15, 30, 60]:
+        architecture_folder_path = DATA_LIMIT_PATHS_PREFIX % (count, config_name)
+
+        vals_dict = {'TEST_BATCH_SIZE': test_batch_size}
+
+        if config_name == 'deeplabv3_2d':
+            vals_dict.update(handle_deeplab(vargin))
+
+        if do_batch_test:
+            batch_test(architecture_folder_path, config_name, [vals_dict], overwrite=overwrite_data)
+            return
+
+        if date is None:
+            raise ValueError('Must specify either \'date\' or \'%s\'' % (BATCH_TEST_KEY))
+
+        fullpath = os.path.join(architecture_folder_path, date)
+        if not os.path.isdir(fullpath):
+            raise NotADirectoryError('%s does not exist. Make sure date is correct' % fullpath)
+
+        test_dir(fullpath, get_config(config_name), vals_dict=vals_dict)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train OAI dataset')
-    parser.add_argument('-g', '--gpu', metavar='G', type=str, nargs='?', default='0',
-                        help='gpu id to use')
-    parser.add_argument('-c', '--cpu', metavar='C', action='store_const', default=False, const=True)
+
+    subparsers = parser.add_subparsers(help='experiment to run', dest=EXP_KEY)
+    init_architecture_parser(subparsers)
+
     args = parser.parse_args()
     gpu = args.gpu
     cpu = args.cpu
-    if (not cpu):
+
+    config_name = args.config[0]
+    date = args.date[0]
+    is_data_limitation = args.dl
+
+    if not cpu:
         os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
         os.environ['CUDA_VISIBLE_DEVICES']=gpu
-                
-    # Test data limit
-    #for num_subjects in DATA_LIMIT_NUM_DATE_DICT.keys():
-    #    date_str = DATA_LIMIT_NUM_DATE_DICT[num_subjects]
-    #    filepath = os.path.join(DATA_LIMIT_PATHS_PREFIX % num_subjects, date_str)
-    #    config = SegnetConfig(create_dirs=False)
-    #    test_dir(filepath, config)
 
-    #MCONFIG.SAVE_PATH_PREFIX='/Users/arjundesai/Documents/stanford/research/msk_seg_networks/result_data'
-    #config = DeeplabV3Config(create_dirs=False)
-    #test_dir(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-08-30-17-13-50/fine_tune'), config, {'OS':16, 'DIL_RATES':(1, 9, 18), 'TEST_BATCH_SIZE':72})
-    #config = UNetConfig(create_dirs=False)
-    #test_dir('/bmrNAS/people/arjun/msk_seg_networks/oai_data/segnet_2d/2018-09-14-16-23-59/', config)
 
-    #config = SegnetConfig(create_dirs=False)
-    #test_dir(os.path.join(SEGNET_TEST_PATHS_PREFIX,), config)
-    #find_best_test_dir(SEGNET_TEST_PATHS_PREFIX)
-    #config = DeeplabV3Config(create_dirs=False)
-    #test_dir(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-09-27-07-52-2'), config)
+
