@@ -310,5 +310,5 @@ if __name__ == '__main__':
     #config = SegnetConfig(create_dirs=False)
     #test_dir(os.path.join(SEGNET_TEST_PATHS_PREFIX,), config)
     #find_best_test_dir(SEGNET_TEST_PATHS_PREFIX)
-    config = DeeplabV3Config(create_dirs=False)
-    test_dir(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-09-27-07-52-2'), config)
+    #config = DeeplabV3Config(create_dirs=False)
+    #test_dir(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-09-27-07-52-2'), config)

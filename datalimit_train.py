@@ -118,6 +118,6 @@ if __name__=='__main__':
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
     # Data limitation experiment: Train Unet, Deeplab, and Segnet with limited data
-    data_limitation_train('unet_2d', vals_dict={'INITIAL_LEARNING_RATE': 0.02, 'DROP_RATE':1, 'TRAIN_BATCH_SIZE':12}) # unet
+    #data_limitation_train('unet_2d', vals_dict={'INITIAL_LEARNING_RATE': 0.02, 'DROP_RATE':1, 'TRAIN_BATCH_SIZE':12}) # unet
     data_limitation_train('deeplabv3_2d', vals_dict={'OS':16, 'DIL_RATES': (2, 4, 6)}) # deeplab
-    data_limitation_train('segnet_2d', vals_dict={'INITIAL_LEARNING_RATE': 1e-3}) # segnet
+    #data_limitation_train('segnet_2d', vals_dict={'INITIAL_LEARNING_RATE': 1e-3}) # segnet
