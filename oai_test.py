@@ -349,7 +349,7 @@ def init_architecture_parser(input_subparser):
 
 
 def init_data_limit_parser(input_subparser):
-    subparser = input_subparser.add_parser('dl', 'test data limitation experiment')
+    subparser = input_subparser.add_parser('dl', help='test data limitation experiment')
     architecture_parser = subparser.add_subparsers(help='architecture to use', dest=ARCHITECTURE_KEY)
 
     add_base_architecture_parser(architecture_parser)
