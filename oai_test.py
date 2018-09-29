@@ -324,8 +324,10 @@ def handle_architecture_exp(vargin):
 def add_base_architecture_parser(architecture_parser):
     for architecture in SUPPORTED_ARCHITECTURES:
         parser = architecture_parser.add_parser(architecture, help='use %s' % architecture)
-        parser.add_argument('-%s' % BATCH_TEST_KEY, default=False, const=True, help='batch test directory')
-        parser.add_argument('-%s' % OVERWRITE_KEY, default=False, const=True, help='overwrite current data')
+        parser.add_argument('-%s' % BATCH_TEST_KEY, action='store_const', default=False, const=True,
+                            help='batch test directory')
+        parser.add_argument('-%s' % OVERWRITE_KEY, action='store_const',default=False, const=True,
+                            help='overwrite current data')
 
         parser.add_argument('-g', '--gpu', metavar='G', type=str, nargs='?', default='0',
                             help='gpu id to use')
@@ -394,13 +396,12 @@ if __name__ == '__main__':
     gpu = args.gpu
     cpu = args.cpu
 
-    config_name = args.config[0]
-    date = args.date[0]
-    is_data_limitation = args.dl
-
     if not cpu:
         os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
         os.environ['CUDA_VISIBLE_DEVICES']=gpu
 
+    vargin = vars(args)
+
+    args.func(vargin)
 
 
