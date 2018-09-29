@@ -391,6 +391,7 @@ if __name__ == '__main__':
 
     subparsers = parser.add_subparsers(help='experiment to run', dest=EXP_KEY)
     init_architecture_parser(subparsers)
+    init_data_limit_parser(subparsers)
 
     args = parser.parse_args()
     gpu = args.gpu
