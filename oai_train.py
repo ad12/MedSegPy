@@ -285,7 +285,7 @@ def data_limitation_train(pid_counts=[5, 15, 30, 60], vals_dict=None):
         pids_sampled = pids_dict[pid_count]
         s_ratio = math.ceil(num_pids / pid_count)
 
-        config = UNetConfig()
+        config = DeeplabV3Config()
         config.N_EPOCHS = math.ceil(10 * num_pids / pid_count)
         config.DROP_FACTOR = config.DROP_FACTOR ** (1/s_ratio)
 
@@ -383,17 +383,17 @@ if __name__ == '__main__':
 
     # train with weighted cross entropy
     # train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (2,4,6), 'DROPOUT_RATE': 0.0})
-
+    
     #data_limitation_train(pid_counts=[60])
     #fine tune
-    #fine_tune('/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d/2018-09-18-15-41-09/', DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE': 1e-6, 'USE_STEP_DECAY': False, 'N_EPOCHS': 20})
+    #fine_tune('/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d/2018-09-27-07-52-25/', DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE': 1e-6, 'USE_STEP_DECAY': False, 'N_EPOCHS': 20})
     #train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (2, 4, 6)})
 
     #train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'FINE_TUNE': False, 'TRAIN_BATCH_SIZE': 15})
     #train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'CONV_ACT_BN': True, 'TRAIN_BATCH_SIZE': 15})
 
     #train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'DEPTH': 7, 'NUM_CONV_LAYERS': [3, 3, 3, 3, 3, 3, 3], 'NUM_FILTERS': [16, 32, 64, 128, 256, 512, 1024], 'TRAIN_BATCH_SIZE': 35})
-    #fine_tune('/bmrNAS/people/arjun/msk_seg_networks/oai_data/segnet_2d/2018-09-01-22-39-39', SegnetConfig(), vals_dict = {'INITIAL_LEARNING_RATE': 1e-5, 'USE_STEP_DECAY': True, 'DROP_FACTOR': 0.7, 'DROP_RATE': 8.0, 'N_EPOCHS': 20})
+    #fine_tune('/bmrNAS/people/arjun/msk_seg_networks/oai_data/segnet_2d/2018-09-26-19-08-34', SegnetConfig(), vals_dict = {'INITIAL_LEARNING_RATE': 1e-5, 'USE_STEP_DECAY': True, 'DROP_FACTOR': 0.7, 'DROP_RATE': 8.0, 'N_EPOCHS': 20})
 
     # train with binary cross entropy loss
     # train(SegnetConfig(), {'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS, 'INCLUDE_BACKGROUND': True})
@@ -411,7 +411,7 @@ if __name__ == '__main__':
 
 
     # Data limitation experiment: Train Unet, Deeplab, and Segnet with limited data
-    data_limitation_train(vals_dict={'INITIAL_LEARNING_RATE': 0.02, 'DROP_RATE':1, 'TRAIN_BATCH_SIZE':12}) # unet
+    #data_limitation_train(vals_dict={'INITIAL_LEARNING_RATE': 0.02, 'DROP_RATE':1.0, 'TRAIN_BATCH_SIZE':12}) # unet
     #data_limitation_train(vals_dict={'OS':16, 'DIL_RATES': (2, 4, 6)}) # deeplab
     # data_limitation_train(vals_dict={'INITIAL_LEARNING_RATE': 1e-3}) # segnet
 
