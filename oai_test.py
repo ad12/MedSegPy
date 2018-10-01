@@ -21,6 +21,7 @@ from config import DeeplabV3Config, SegnetConfig, EnsembleUDSConfig, UNetConfig
 import utils
 import scipy.ndimage as sni
 import scipy.io as sio
+import matplotlib.pyplot as plt
 
 def find_start_and_end_slice(y_true):
     for i in range(y_true.shape[0]):
@@ -148,8 +149,14 @@ def test_model(config, save_file=0):
         f.write('\n')
         f.write(stats_string)
 
-    sio.savemat('total_interp_data.mat', {'xs':xs, 'ys':np.asarray(interp_dice_losses)})
+    ys = np.asarray(interp_dice_losses)
+    sio.savemat(os.path.join(test_result_path, 'total_interp_data.mat'), {'xs': xs, 'ys': ys})
 
+    plt.clf()
+    plt.plot(xs, np.mean(ys, axis=0))
+    plt.xlabel('FOV (%)')
+    plt.ylabel('Dice')
+    plt.savefig(os.path.join(test_result_path, 'interp_slices.png'))
 
 def get_stats_string(dice_losses, skipped_count, testing_time):
     """
