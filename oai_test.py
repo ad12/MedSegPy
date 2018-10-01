@@ -37,9 +37,6 @@ def find_start_and_end_slice(y_true):
         stop = i
         break
 
-    print(start)
-    print(stop)
-
     return start, stop
 
 
