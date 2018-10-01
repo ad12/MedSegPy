@@ -47,9 +47,6 @@ def interp_slice(y_true, y_pred):
     for i in range(start, stop+1):
         dice_losses.append(dice_loss_test(y_true, y_pred))
 
-    import pdb
-    pdb.set_trace()
-
     dice_losses = sni.zoom(dice_losses, 1001)
     xs = np.linspace(0, 100, 1001)
 
@@ -117,6 +114,8 @@ def test_model(config, save_file=0):
 
         # interpolate region of interest
         xs, interp = interp_slice(y_test, labels)
+        print(xs.shape)
+        print(interp.shape)
         interp_dice_losses.append(interp)
 
         if save_file == 1:
