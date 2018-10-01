@@ -21,6 +21,7 @@ from config import DeeplabV3Config, SegnetConfig, EnsembleUDSConfig, UNetConfig
 import utils
 import scipy.ndimage as sni
 import scipy.io as sio
+import scipy.interpolate as spi
 import matplotlib.pyplot as plt
 
 def find_start_and_end_slice(y_true):
@@ -41,16 +42,16 @@ def find_start_and_end_slice(y_true):
     return start, stop
 
 
-def interp_slice(y_true, y_pred):
-    dice_losses = []
-    start, stop = find_start_and_end_slice(y_true)
-    for i in range(start, stop+1):
-        dice_losses.append(dice_loss_test(y_true, y_pred))
-
-    dice_losses = sni.zoom(dice_losses, 1001.0 / len(dice_losses))
-    xs = np.linspace(0, 100, 1001)
-
-    return xs, dice_losses
+# def interp_slice(y_true, y_pred):
+#     dice_losses = []
+#     start, stop = find_start_and_end_slice(y_true)
+#     for i in range(start, stop+1):
+#         dice_losses.append(dice_loss_test(y_true, y_pred))
+#
+#     fit = spi.interp1d(xs, kind='cubic')
+#     xs = np.linspace(0, 100, 1001)
+#
+#     return xs, dice_losses
 
 
 def test_model(config, save_file=0):
@@ -113,10 +114,10 @@ def test_model(config, save_file=0):
         print(print_str)
 
         # interpolate region of interest
-        xs, interp = interp_slice(y_test, labels)
-        print(xs.shape)
-        print(interp.shape)
-        interp_dice_losses.append(interp)
+        # xs, interp = interp_slice(y_test, labels)
+        # print(xs.shape)
+        # print(interp.shape)
+        # interp_dice_losses.append(interp)
 
         if save_file == 1:
             save_name = '%s/%s_recon.pred' %(test_result_path,fname)
@@ -151,19 +152,19 @@ def test_model(config, save_file=0):
         f.write('\n')
         f.write(stats_string)
 
-    ys = np.asarray(interp_dice_losses)
-    print(ys.shape)
-    sio.savemat(os.path.join(test_result_path, 'total_interp_data.mat'), {'xs': xs, 'ys': ys})
-    ys = np.mean(ys, axis=0)
-    print(ys.shape)
-    import pdb
-    pdb.set_trace()
-
-    plt.clf()
-    plt.plot(xs, ys)
-    plt.xlabel('FOV (%)')
-    plt.ylabel('Dice')
-    plt.savefig(os.path.join(test_result_path, 'interp_slices.png'))
+    # ys = np.asarray(interp_dice_losses)
+    # print(ys.shape)
+    # sio.savemat(os.path.join(test_result_path, 'total_interp_data.mat'), {'xs': xs, 'ys': ys})
+    # ys = np.mean(ys, axis=0)
+    # print(ys.shape)
+    # import pdb
+    # pdb.set_trace()
+    #
+    # plt.clf()
+    # plt.plot(xs, ys)
+    # plt.xlabel('FOV (%)')
+    # plt.ylabel('Dice')
+    # plt.savefig(os.path.join(test_result_path, 'interp_slices.png'))
 
 def get_stats_string(dice_losses, skipped_count, testing_time):
     """
