@@ -103,6 +103,7 @@ def data_limitation_train(config_name, vals_dict=None):
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser(description='Train OAI dataset')
+   # parser.add_argument('-m', metavar='M', choices=['unet_2d', 'deeplabv3_2d', 'segnet_2d'], nargs=1)
     parser.add_argument('-g', '--gpu', metavar='G', type=str, nargs='?', default='0',
                         help='gpu id to use')
     parser.add_argument('-s', '--seed', metavar='S', type=int, nargs='?', default=None)
@@ -110,6 +111,8 @@ if __name__=='__main__':
     print(args)
     gpu = args.gpu
     glob_constants.SEED = args.seed
+
+    #model = args.m[0]
 
     print(glob_constants.SEED)
 
