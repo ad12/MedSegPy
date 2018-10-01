@@ -309,6 +309,8 @@ DATA_LIMIT_NUM_DATE_DICT = {5:'2018-08-26-20-19-31',
                             60:'2018-08-27-18-29-19'}
 
 if __name__ == '__main__':
+    MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/architecture_limit'
+
     parser = argparse.ArgumentParser(description='Train OAI dataset')
     parser.add_argument('-g', '--gpu', metavar='G', type=str, nargs='?', default='0',
                         help='gpu id to use')

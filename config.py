@@ -5,7 +5,7 @@ from losses import DICE_LOSS, WEIGHTED_CROSS_ENTROPY_LOSS
 import mri_utils
 import utils
 import warnings
-
+import glob_constants as glc
 DEPRECATED_KEYS = ['NUM_CLASSES']
 
 
@@ -17,7 +17,9 @@ ENSEMBLE_UDS_NAME = 'ensemble_uds'
 # This is the default save path prefix - please change if you desire something else
 SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/oai_data'
 
+
 class Config():
+    SEED = glc.SEED
     VERSION = 2
 
     # Loss function in form (id, output_mode)
@@ -88,6 +90,7 @@ class Config():
 
     def __init__(self, cp_save_tag, state='training', create_dirs=True):
 
+        print("config seed: %s" % str(self.SEED))
         if state not in ['testing', 'training']:
             raise ValueError('state must either be \'training\' or \'testing\'')
 
