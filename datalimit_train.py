@@ -23,16 +23,6 @@ import utils
 import parse_pids
 
 
-def get_config(name):
-    configs = [DeeplabV3Config(), UNetConfig(), SegnetConfig()]
-
-    for config in configs:
-        if config.CP_SAVE_TAG == name:
-            return config
-
-    raise ValueError('config %s not found' % name)
-
-
 def data_limitation_train(config_name, vals_dict=None):
     """
     Train data limited networks
@@ -127,16 +117,16 @@ if __name__=='__main__':
         print(model)
         # Data limitation experiment: Train Unet, Deeplab, and Segnet with limited data
         if model == 'unet':
-            oai_train.train(get_config('unet_2d'), vals_dict={'INITIAL_LEARNING_RATE': 1e-2,
-                                                                   'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS,
-                                                                   'INCLUDE_BACKGROUND': True})
+            config = UNetConfig()
+            oai_train.train(config, vals_dict={'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS,
+                                               'INCLUDE_BACKGROUND': True})
         elif model == 'deeplab':
-            oai_train.train(get_config('deeplabv3_2d'), vals_dict={'OS':16,
-                                                                   'DIL_RATES': (2, 4, 6),
-                                                                   'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS,
-                                                                   'INCLUDE_BACKGROUND': True})
+            config = DeeplabV3Config()
+            oai_train.train(config, vals_dict={'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS,
+                                               'INCLUDE_BACKGROUND': True})
         elif model == 'segnet_2d':
-            oai_train.train(get_config('segnet_2d'), vals_dict={'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS,
+            config = SegnetConfig()
+            oai_train.train(config, vals_dict={'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS,
                                                                 'INCLUDE_BACKGROUND': True,
                                                                 'INITIAL_LEARNING_RATE': 1e-3})
         else:

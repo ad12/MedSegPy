@@ -254,16 +254,18 @@ class Config():
 
 class DeeplabV3Config(Config):
     CP_SAVE_TAG = DEEPLABV3_NAME
-    DIL_RATES = (1, 1, 1)
+
+    OS = 16
+    DIL_RATES = (2, 4, 6)
     AT_DIVISOR = 2
     DROPOUT_RATE = 0.1
+
     FINE_TUNE = False
     INIT_WEIGHT_PATH = '/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d/2018-08-21-07-03-24/deeplabv3_2d_weights.018-0.1191.h5'
 
     # Test weight path is divisor 2
     TEST_WEIGHT_PATH = '/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d/2018-08-21-07-03-24/deeplabv3_2d_weights.018-0.1191.h5'
 
-    OS = 16
     def __init__(self, state='training', create_dirs=True):
         super().__init__(self.CP_SAVE_TAG, state, create_dirs=create_dirs)
 
@@ -309,7 +311,7 @@ class UNetConfig(Config):
     INIT_UNET_2D = False
 
     USE_STEP_DECAY = True
-    INITIAL_LEARNING_RATE = 1e-4
+    INITIAL_LEARNING_RATE = 1e-2
     DROP_FACTOR = 0.8
     DROP_RATE = 2
     TRAIN_BATCH_SIZE = 35
