@@ -50,7 +50,7 @@ def interp_slice(y_true, y_pred):
     import pdb
     pdb.set_trace()
 
-    dice_losses = sni.zoom(dice_losses, 1001)
+    dice_losses = sni.zoom(dice_losses, 1001.0 / len(dice_losses))
     xs = np.linspace(0, 100, 1001)
 
     return xs, dice_losses
