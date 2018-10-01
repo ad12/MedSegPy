@@ -19,6 +19,40 @@ from models import get_model
 import config as MCONFIG
 from config import DeeplabV3Config, SegnetConfig, EnsembleUDSConfig, UNetConfig
 import utils
+import scipy.ndimage as sni
+import scipy.io as sio
+
+def find_start_and_end_slice(y_true):
+    for i in range(y_true.shape[0]):
+        sum_pixels = np.sum(y_true[i, ...])
+        if sum_pixels == 0:
+            continue
+        start = i
+        break
+
+    for i in range(y_true.shape[0]-1, -1, -1):
+        sum_pixels = np.sum(y_true[i, ...])
+        if sum_pixels == 0:
+            continue
+        stop = i
+        break
+
+    print(start)
+    print(stop)
+
+    return start, stop
+
+
+def interp_slice(y_true, y_pred):
+    dice_losses = []
+    start, stop = find_start_and_end_slice(y_true)
+    for i in range(start, stop+1):
+        dice_losses.append(dice_loss_test(y_true, y_pred))
+
+    dice_losses = sni.zoom(dice_losses, 1001)
+    xs = np.linspace(0, 100, 1001)
+
+    return xs, dice_losses
 
 
 def test_model(config, save_file=0):
@@ -58,6 +92,8 @@ def test_model(config, save_file=0):
 
     pids_str = ''
 
+    interp_dice_losses = []
+
     # # Iterature through the files to be segmented
     for x_test, y_test, fname, num_slices in test_gen:
 
@@ -71,15 +107,18 @@ def test_model(config, save_file=0):
             recon = recon[..., np.newaxis]
         labels = (recon > 0.5).astype(np.float32)
 
-        
         # Calculate real time dice coeff for analysis
-        dl = dice_loss_test(labels,y_test)
+        dl = dice_loss_test(y_test, labels)
         dice_losses = np.append(dice_losses, dl)
         print_str = 'Dice score for image #%d (name = %s, %d slices) = %0.3f' % (img_cnt, fname, num_slices, np.mean(dl))
         pids_str = pids_str + print_str + '\n'
         print(print_str)
 
-        if (save_file == 1):
+        # interpolate region of interest
+        xs, interp = interp_slice(y_test, labels)
+        interp_dice_losses.append(interp)
+
+        if save_file == 1:
             save_name = '%s/%s_recon.pred' %(test_result_path,fname)
             with h5py.File(save_name,'w') as h5f:
                 h5f.create_dataset('recon',data=recon)
@@ -111,6 +150,8 @@ def test_model(config, save_file=0):
         f.write('--'*20)
         f.write('\n')
         f.write(stats_string)
+
+    sio.savemat('total_interp_data.mat', {'xs':xs, 'ys':np.asarray(interp_dice_losses)})
 
 
 def get_stats_string(dice_losses, skipped_count, testing_time):

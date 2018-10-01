@@ -40,6 +40,7 @@ def dice_loss(y_true, y_pred):
 
     return loss
 
+
 # Dice function loss optimizer
 # During test time since it includes a discontinuity
 def dice_loss_test(y_true, y_pred):
