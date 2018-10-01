@@ -155,6 +155,9 @@ def test_model(config, save_file=0):
     print(ys.shape)
     sio.savemat(os.path.join(test_result_path, 'total_interp_data.mat'), {'xs': xs, 'ys': ys})
     ys = np.mean(ys, axis=0)
+    print(ys.shape)
+    import pdb
+    pdb.set_trace()
 
     plt.clf()
     plt.plot(xs, ys)
