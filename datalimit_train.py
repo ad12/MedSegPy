@@ -22,6 +22,16 @@ import oai_train
 import utils
 import parse_pids
 
+def get_config(name):
+    if name == 'unet':
+        return UNetConfig()
+    elif name == 'segnet':
+        return SegnetConfig()
+    elif name == 'deeplab':
+        return DeeplabV3Config()
+    else:
+        raise ValueError('config %s not supported' % name)
+
 
 def data_limitation_train(config_name, vals_dict=None):
     """
@@ -117,17 +127,17 @@ if __name__=='__main__':
         print(model)
         # Data limitation experiment: Train Unet, Deeplab, and Segnet with limited data
         if model == 'unet':
+            vals_dict = {'TRAIN_BATCH_SIZE': 12}
             config = UNetConfig()
-            oai_train.train(config, vals_dict={'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS,
-                                               'INCLUDE_BACKGROUND': True})
+            data_limitation_train(model, vals_dict)
         elif model == 'deeplab':
-            config = DeeplabV3Config()
-            oai_train.train(config, vals_dict={'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS,
-                                               'INCLUDE_BACKGROUND': True})
+            data_limitation_train(model, None)
         elif model == 'segnet_2d':
-            config = SegnetConfig()
-            oai_train.train(config, vals_dict={'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS,
-                                                                'INCLUDE_BACKGROUND': True,
-                                                                'INITIAL_LEARNING_RATE': 1e-3})
+            data_limitation_train(model, None)
         else:
             raise ValueError('model %s not supported' % model)
+
+    # data_limitation_train('unet_2d',
+    #                       vals_dict={'INITIAL_LEARNING_RATE': 0.02, 'DROP_RATE': 1, 'TRAIN_BATCH_SIZE': 12})  # unet
+    # data_limitation_train('deeplabv3_2d', vals_dict={'OS': 16, 'DIL_RATES': (2, 4, 6)})  # deeplab
+    # data_limitation_train('segnet_2d', vals_dict={'INITIAL_LEARNING_RATE': 1e-3})  # segnet

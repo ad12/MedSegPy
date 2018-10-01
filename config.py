@@ -311,9 +311,9 @@ class UNetConfig(Config):
     INIT_UNET_2D = False
 
     USE_STEP_DECAY = True
-    INITIAL_LEARNING_RATE = 1e-2
+    INITIAL_LEARNING_RATE = 2e-2
     DROP_FACTOR = 0.8
-    DROP_RATE = 2
+    DROP_RATE = 1.0
     TRAIN_BATCH_SIZE = 35
 
     def __init__(self, state='training', create_dirs=True):
