@@ -161,14 +161,14 @@ def test_model(config, save_file=0):
     sio.savemat(os.path.join(test_result_path, 'total_interp_data.mat'), {'xs': xs, 'ys': ys})
     ys = np.mean(ys, axis=0)
     print(ys.shape)
-    import pdb
-    pdb.set_trace()
+    #import pdb
+    #pdb.set_trace()
 
-    plt.clf()
-    plt.plot(xs, ys)
-    plt.xlabel('FOV (%)')
-    plt.ylabel('Dice')
-    plt.savefig(os.path.join(test_result_path, 'interp_slices.png'))
+#    plt.clf()
+ #   plt.plot(xs, ys)
+  #  plt.xlabel('FOV (%)')
+  #  plt.ylabel('Dice')
+   # plt.savefig(os.path.join(test_result_path, 'interp_slices.png'))
 
 def get_stats_string(dice_losses, skipped_count, testing_time):
     """

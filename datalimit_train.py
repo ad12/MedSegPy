@@ -122,12 +122,12 @@ if __name__=='__main__':
     print('Using GPU %s' % gpu)
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
-
+    print(models)
     for model in models:
+        print(model)
         # Data limitation experiment: Train Unet, Deeplab, and Segnet with limited data
         if model == 'unet':
-            oai_train.train(get_config('deeplabv3_2d'), vals_dict={'OS':16,
-                                                                   'DIL_RATES': (2, 4, 6),
+            oai_train.train(get_config('unet_2d'), vals_dict={'INITIAL_LEARNING_RATE': 1e-2,
                                                                    'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS,
                                                                    'INCLUDE_BACKGROUND': True})
         elif model == 'deeplab':

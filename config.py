@@ -19,7 +19,6 @@ SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/oai_data'
 
 
 class Config():
-    SEED = glc.SEED
     VERSION = 2
 
     # Loss function in form (id, output_mode)
@@ -89,7 +88,7 @@ class Config():
     LEARN_FILES = []
 
     def __init__(self, cp_save_tag, state='training', create_dirs=True):
-
+        self.SEED = glc.SEED
         print("config seed: %s" % str(self.SEED))
         if state not in ['testing', 'training']:
             raise ValueError('state must either be \'training\' or \'testing\'')
@@ -99,7 +98,6 @@ class Config():
         inference = state == 'testing'
         self.CP_SAVE_TAG = cp_save_tag
         self.STATE = state
-
 
         if create_dirs:
             if not inference:
