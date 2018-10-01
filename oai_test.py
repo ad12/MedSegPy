@@ -148,12 +148,15 @@ def test_model(config, save_file=0):
         f.write('--'*20)
         f.write('\n')
         f.write(stats_string)
-
+    import pdb
+    pdb.set_trace()
     ys = np.asarray(interp_dice_losses)
+    print(ys.shape)
     sio.savemat(os.path.join(test_result_path, 'total_interp_data.mat'), {'xs': xs, 'ys': ys})
+    ys = np.mean(ys, axis=0)
 
     plt.clf()
-    plt.plot(xs, np.mean(ys, axis=0))
+    plt.plot(xs, ys)
     plt.xlabel('FOV (%)')
     plt.ylabel('Dice')
     plt.savefig(os.path.join(test_result_path, 'interp_slices.png'))
