@@ -126,8 +126,6 @@ def test_model(config, save_file=0):
 
         #interpolate region of interest
         xs, interp = interp_slice(y_test, labels)
-        print(xs.shape)
-        print(interp.shape)
         interp_dice_losses.append(interp)
 
         if save_file == 1:
@@ -164,10 +162,8 @@ def test_model(config, save_file=0):
         f.write(stats_string)
 
     ys = np.asarray(interp_dice_losses)
-    print(ys.shape)
     sio.savemat(os.path.join(test_result_path, 'total_interp_data.mat'), {'xs': xs, 'ys': ys})
     ys = np.mean(ys, axis=0)
-    print(ys.shape)
 
 #    plt.clf()
  #   plt.plot(xs, ys)
@@ -223,11 +219,12 @@ def get_valid_subdirs(base_path, no_results=True):
 
     subdirs = []
     config_path = os.path.join(base_path, 'config.ini')
+    pik_data_path = os.path.join(base_path, 'pik_data.dat')
     test_results_dirpath = os.path.join(base_path, 'test_results')
     results_file_exists = len(check_results_file(test_results_dirpath)) > 0
 
-    # 1. Check if you are a valid subdirectory
-    if os.path.isfile(config_path):
+    # 1. Check if you are a valid subdirectory - must contain a pik data path
+    if os.path.isfile(config_path) and os.path.isfile(pik_data_path):
         if (no_results and (not results_file_exists)) or ((not no_results) and results_file_exists):
             subdirs.append(base_path)
 
