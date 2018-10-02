@@ -50,7 +50,10 @@ def interp_slice(y_true, y_pred):
     assert y_true.shape == y_pred.shape
 
     for i in range(start, stop+1):
-        dice_losses.append(dice_loss_test(y_true[i, ...], y_pred[i, ...]))
+        y_true_curr = y_true[i, ...]
+        y_pred_curr = y_pred[i, ...]
+
+        dice_losses.append(dice_loss_test(y_true_curr, y_pred_curr))
 
 
     xp = (np.asarray(list(range(start, stop+1))) - start) / (stop - start) * 100.0
@@ -249,12 +252,14 @@ def batch_test(base_folder, config_name, vals_dicts=[None], overwrite=False):
     for subdir in subdirs:
         for vals_dict in vals_dicts:
             config = get_config(config_name)
+            test_dir(subdir, config, vals_dict=vals_dict)
 
-            try:
-                test_dir(subdir, config, vals_dict=vals_dict)
-            except:
-                print('Failed for %s\n' % subdir)
-                break
+            # try:
+            #     test_dir(subdir, config, vals_dict=vals_dict)
+            # except Exception as e:
+            #     #print('Failed for %s\n' % subdir)
+            #     #break
+            #     raise e
 
 
 def find_best_test_dir(base_folder):
