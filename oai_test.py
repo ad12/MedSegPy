@@ -24,6 +24,7 @@ import scipy.io as sio
 import scipy.interpolate as spi
 import matplotlib.pyplot as plt
 
+
 def find_start_and_end_slice(y_true):
     for i in range(y_true.shape[0]):
         sum_pixels = np.sum(y_true[i, ...])
@@ -45,8 +46,11 @@ def find_start_and_end_slice(y_true):
 def interp_slice(y_true, y_pred):
     dice_losses = []
     start, stop = find_start_and_end_slice(y_true)
+
+    assert y_true.shape == y_pred.shape
+
     for i in range(start, stop+1):
-        dice_losses.append(dice_loss_test(y_true, y_pred))
+        dice_losses.append(dice_loss_test(y_true[i, ...], y_pred[i, ...]))
 
     import pdb
     pdb.set_trace()
@@ -162,8 +166,6 @@ def test_model(config, save_file=0):
     sio.savemat(os.path.join(test_result_path, 'total_interp_data.mat'), {'xs': xs, 'ys': ys})
     ys = np.mean(ys, axis=0)
     print(ys.shape)
-    #import pdb
-    #pdb.set_trace()
 
 #    plt.clf()
  #   plt.plot(xs, ys)
