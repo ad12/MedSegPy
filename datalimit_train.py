@@ -22,6 +22,7 @@ import oai_train
 import utils
 import parse_pids
 
+
 def get_config(name):
     if name == 'unet':
         return UNetConfig()
@@ -53,13 +54,13 @@ def data_limitation_train(config_name, vals_dict=None):
                  60: random.sample(pids, 60)}
     print('Data limitation......')
     import math
-    MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_data_limit/oai_data'
     num_pids = len(pids)
 
     pid_counts = natsorted(list(pids_dict.keys()))
 
     for pid_count in pid_counts:
-        MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_data_limit/oai_data/%03d' % pid_count
+
+        MCONFIG.SAVE_PATH_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_seg_networks/data_limit', '%03d' % pid_count)
 
         if pid_count > num_pids:
             pid_count = num_pids
@@ -96,9 +97,6 @@ def data_limitation_train(config_name, vals_dict=None):
 SUPPORTED_MODELS = ['unet', 'segnet', 'deeplab']
 
 if __name__=='__main__':
-
-    MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/data_limit'
-
     parser = argparse.ArgumentParser(description='Train OAI dataset')
 
     parser.add_argument('-g', '--gpu', metavar='G', type=str, nargs='?', default='0',
@@ -128,7 +126,6 @@ if __name__=='__main__':
         # Data limitation experiment: Train Unet, Deeplab, and Segnet with limited data
         if model == 'unet':
             vals_dict = {'TRAIN_BATCH_SIZE': 12}
-            config = UNetConfig()
             data_limitation_train(model, vals_dict)
         elif model == 'deeplab':
             data_limitation_train(model, None)
