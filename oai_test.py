@@ -52,11 +52,10 @@ def interp_slice(y_true, y_pred):
     for i in range(start, stop+1):
         y_true_curr = y_true[i, ...]
         y_pred_curr = y_pred[i, ...]
-
+        y_true_curr = y_true_curr[np.newaxis, ...]
+        y_pred_curr = y_pred_curr[np.newaxis, ...]
         dice_losses.append(dice_loss_test(y_true_curr, y_pred_curr))
 
-    import pdb
-    pdb.set_trace()
     xp = (np.asarray(list(range(start, stop+1))) - start) / (stop - start) * 100.0
     dice_losses = np.asarray(dice_losses)
 
