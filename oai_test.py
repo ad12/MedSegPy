@@ -48,21 +48,25 @@ def interp_slice(y_true, y_pred):
     start, stop = find_start_and_end_slice(y_true)
 
     assert y_true.shape == y_pred.shape
-
-    for i in range(start, stop+1):
+    num_slices = y_true.shape[0]
+    for i in range(num_slices):
         y_true_curr = y_true[i, ...]
         y_pred_curr = y_pred[i, ...]
-        y_true_curr = y_true_curr[np.newaxis, ...]
-        y_pred_curr = y_pred_curr[np.newaxis, ...]
         dice_losses.append(dice_loss_test(y_true_curr, y_pred_curr))
 
-    xp = (np.asarray(list(range(start, stop+1))) - start) / (stop - start) * 100.0
     dice_losses = np.asarray(dice_losses)
 
-    xs = np.linspace(0, 100, 1001)
-    ys = np.interp(xs, xp, dice_losses)
+    xt = (np.asarray(list(range(num_slices))) - start) / (stop - start) * 100.0
+    yt = dice_losses
 
-    return xs, ys
+    # interpolate only between 0 and 100%
+    xp = (np.asarray(list(range(start, stop+1))) - start) / (stop - start) * 100.0
+    yp = dice_losses[start:stop+1]
+
+    xs = np.linspace(0, 100, 1001)
+    ys = np.interp(xs, xp, yp)
+
+    return xs, ys, xt, yt
 
 
 def test_model(config, save_file=0):
@@ -102,7 +106,10 @@ def test_model(config, save_file=0):
 
     pids_str = ''
 
-    interp_dice_losses = []
+    x_interp = []
+    y_interp = []
+    x_total = []
+    y_total = []
 
     # # Iterature through the files to be segmented
     for x_test, y_test, fname, num_slices in test_gen:
@@ -125,8 +132,11 @@ def test_model(config, save_file=0):
         print(print_str)
 
         #interpolate region of interest
-        xs, interp = interp_slice(y_test, labels)
-        interp_dice_losses.append(interp)
+        xs, ys, xt, yt = interp_slice(y_test, labels)
+        x_interp.append(xs)
+        y_interp.append(ys)
+        x_total.append(xt)
+        y_total.append(yt)
 
         if save_file == 1:
             save_name = '%s/%s_recon.pred' %(test_result_path,fname)
@@ -161,9 +171,15 @@ def test_model(config, save_file=0):
         f.write('\n')
         f.write(stats_string)
 
-    ys = np.asarray(interp_dice_losses)
-    sio.savemat(os.path.join(test_result_path, 'total_interp_data.mat'), {'xs': xs, 'ys': ys})
-    ys = np.mean(ys, axis=0)
+    x_interp = np.asarray(x_interp)
+    y_interp = np.asarray(y_interp)
+    x_total = np.asarray(x_total)
+    y_total = np.asarray(y_total)
+
+    sio.savemat(os.path.join(test_result_path, 'total_interp_data.mat'), {'xs': x_interp,
+                                                                          'ys': y_interp,
+                                                                          'xt': x_total,
+                                                                          'yt': y_total})
 
 #    plt.clf()
  #   plt.plot(xs, ys)
@@ -312,7 +328,7 @@ def test_dir(dirpath, config, vals_dict=None, best_weight_path=None):
 
 
 ARCHITECTURE_PATHS_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/oai_data/%s'
-DATA_LIMIT_PATHS_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_data_limit/oai_data', '%03d', '%s')
+DATA_LIMIT_PATHS_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_seg_networks/data_limit', '%03d', '%s')
 
 EXP_KEY='exp'
 BATCH_TEST_KEY = 'batch'

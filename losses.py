@@ -44,13 +44,8 @@ def dice_loss(y_true, y_pred):
 # Dice function loss optimizer
 # During test time since it includes a discontinuity
 def dice_loss_test(y_true, y_pred):
-    
-    recon = np.squeeze(y_true)
-    pred = np.squeeze(y_pred)
-    y_pred = (y_pred > 0.05)*y_pred
 
-    szp = y_pred.shape
-    img_len = szp[1]*szp[2]*szp[3]
+    y_pred = (y_pred > 0.05)*y_pred
 
     y_true = y_true.flatten()
     y_pred = y_pred.flatten()
