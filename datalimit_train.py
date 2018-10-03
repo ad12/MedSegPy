@@ -90,9 +90,6 @@ def data_limitation_train(config_name, vals_dict=None):
         print('Epochs: %d' % config.N_EPOCHS)
         K.clear_session()
 
-    # must exit because config constant has been overwritten
-    exit()
-
 
 SUPPORTED_MODELS = ['unet', 'segnet', 'deeplab']
 
