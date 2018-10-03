@@ -241,7 +241,7 @@ def get_valid_subdirs(base_path, no_results=True):
 
     # 1. Check if you are a valid subdirectory - must contain a pik data path
     if os.path.isfile(config_path) and os.path.isfile(pik_data_path):
-        if (no_results and (not results_file_exists)) or ((not no_results) and results_file_exists):
+        if (no_results and (not results_file_exists)) or ((not no_results)):
             subdirs.append(base_path)
 
     files = os.listdir(base_path)
