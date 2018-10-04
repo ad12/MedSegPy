@@ -122,11 +122,10 @@ if __name__=='__main__':
         print(model)
         # Data limitation experiment: Train Unet, Deeplab, and Segnet with limited data
         if model == 'unet':
-            vals_dict = {'TRAIN_BATCH_SIZE': 12}
-            data_limitation_train(model, vals_dict)
+            data_limitation_train(model, None)
         elif model == 'deeplab':
             data_limitation_train(model, None)
-        elif model == 'segnet_2d':
+        elif model == 'segnet':
             data_limitation_train(model, None)
         else:
             raise ValueError('model %s not supported' % model)
