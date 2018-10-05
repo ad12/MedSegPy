@@ -297,5 +297,14 @@ def parse_results_file(filepath):
             vals = re.findall("\d+\.\d+", line)
             return float(vals[0])
 
+
+def calc_cv(y_true, y_pred):
+
+    y_true = np.squeeze(y_true)
+    y_pred = np.squeeze(y_pred)
+
+    cv = np.std([np.sum(y_true), np.sum(y_pred)])/np.mean([np.sum(y_true), np.sum(y_pred)])
+    return cv
+
 if __name__ == '__main__':
     save_ims('./test_data/9968924_V01-Aug00_056')
