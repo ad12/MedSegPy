@@ -147,12 +147,13 @@ class Config():
 
         for key in vars_dict.keys():
             upper_case_key = str(key).upper()
-            if not hasattr(self, upper_case_key):
-                raise ValueError('Key %s does not exist. Please make sure all variable names are fully capitalized' % upper_case_key)
 
             if upper_case_key in DEPRECATED_KEYS:
                 warnings.warn('Key %s is deprecated, not loading', upper_case_key)
                 continue
+
+            if not hasattr(self, upper_case_key):
+                raise ValueError('Key %s does not exist. Please make sure all variable names are fully capitalized' % upper_case_key)
 
             # all data is of type string, but we need to cast back to original data type
             data_type = type(getattr(self, upper_case_key))
