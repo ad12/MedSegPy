@@ -19,10 +19,7 @@ from models import get_model
 import config as MCONFIG
 from config import DeeplabV3Config, SegnetConfig, EnsembleUDSConfig, UNetConfig
 import utils
-import scipy.ndimage as sni
 import scipy.io as sio
-import scipy.interpolate as spi
-import matplotlib.pyplot as plt
 
 
 def find_start_and_end_slice(y_true):
@@ -337,6 +334,7 @@ def test_dir(dirpath, config, vals_dict=None, best_weight_path=None):
 
 ARCHITECTURE_PATHS_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/oai_data/%s'
 DATA_LIMIT_PATHS_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_seg_networks/data_limit', '%03d', '%s')
+AUGMENTATION_PATH_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_seg_networks/augment_limited, %s')
 
 EXP_KEY='exp'
 BATCH_TEST_KEY = 'batch'
@@ -378,34 +376,6 @@ def handle_deeplab(vargin):
     return vals_dict
 
 
-def handle_architecture_exp(vargin):
-    config_name = vargin[ARCHITECTURE_KEY]
-    do_batch_test = vargin[BATCH_TEST_KEY]
-    overwrite_data = vargin[OVERWRITE_KEY]
-    date = vargin['date']
-    test_batch_size = vargin['batch_size']
-
-    architecture_folder_path = ARCHITECTURE_PATHS_PREFIX % config_name
-
-    vals_dict = {'TEST_BATCH_SIZE': test_batch_size}
-
-    if config_name == 'deeplabv3_2d':
-        vals_dict.update(handle_deeplab(vargin))
-
-    if do_batch_test:
-        batch_test(architecture_folder_path, config_name, [vals_dict], overwrite=overwrite_data)
-        return
-
-    if date is None:
-        raise ValueError('Must specify either \'date\' or \'%s\'' % (BATCH_TEST_KEY))
-
-    fullpath = os.path.join(architecture_folder_path, date)
-    if not os.path.isdir(fullpath):
-        raise NotADirectoryError('%s does not exist. Make sure date is correct' % fullpath)
-
-    test_dir(fullpath, get_config(config_name), vals_dict=vals_dict)
-
-
 def add_base_architecture_parser(architecture_parser):
     for architecture in SUPPORTED_ARCHITECTURES:
         parser = architecture_parser.add_parser(architecture, help='use %s' % architecture)
@@ -442,6 +412,34 @@ def init_data_limit_parser(input_subparser):
     subparser.set_defaults(func=handle_data_limit_exp)
 
 
+def handle_architecture_exp(vargin):
+    config_name = vargin[ARCHITECTURE_KEY]
+    do_batch_test = vargin[BATCH_TEST_KEY]
+    overwrite_data = vargin[OVERWRITE_KEY]
+    date = vargin['date']
+    test_batch_size = vargin['batch_size']
+
+    architecture_folder_path = ARCHITECTURE_PATHS_PREFIX % config_name
+
+    vals_dict = {'TEST_BATCH_SIZE': test_batch_size}
+
+    if config_name == 'deeplabv3_2d':
+        vals_dict.update(handle_deeplab(vargin))
+
+    if do_batch_test:
+        batch_test(architecture_folder_path, config_name, [vals_dict], overwrite=overwrite_data)
+        return
+
+    if date is None:
+        raise ValueError('Must specify either \'date\' or \'%s\'' % (BATCH_TEST_KEY))
+
+    fullpath = os.path.join(architecture_folder_path, date)
+    if not os.path.isdir(fullpath):
+        raise NotADirectoryError('%s does not exist. Make sure date is correct' % fullpath)
+
+    test_dir(fullpath, get_config(config_name), vals_dict=vals_dict)
+
+
 def handle_data_limit_exp(vargin):
     config_name = vargin[ARCHITECTURE_KEY]
     do_batch_test = vargin[BATCH_TEST_KEY]
@@ -471,13 +469,41 @@ def handle_data_limit_exp(vargin):
         test_dir(fullpath, get_config(config_name), vals_dict=vals_dict)
 
 
+def handle_augment_limit(vargin):
+    config_name = vargin[ARCHITECTURE_KEY]
+    do_batch_test = vargin[BATCH_TEST_KEY]
+    overwrite_data = vargin[OVERWRITE_KEY]
+    date = vargin['date']
+    test_batch_size = vargin['batch_size']
+
+    augmentation_folder_path = AUGMENTATION_PATH_PREFIX % config_name
+
+    vals_dict = {'TEST_BATCH_SIZE': test_batch_size}
+
+    if config_name == 'deeplabv3_2d':
+        vals_dict.update(handle_deeplab(vargin))
+
+    if do_batch_test:
+        batch_test(augmentation_folder_path, config_name, [vals_dict], overwrite=overwrite_data)
+        return
+
+    if date is None:
+        raise ValueError('Must specify either \'date\' or \'%s\'' % (BATCH_TEST_KEY))
+
+    fullpath = os.path.join(augmentation_folder_path, date)
+    if not os.path.isdir(fullpath):
+        raise NotADirectoryError('%s does not exist. Make sure date is correct' % fullpath)
+
+    test_dir(fullpath, get_config(config_name), vals_dict=vals_dict)
+
+
 def init_augment_limit_parser(input_subparser):
     subparser = input_subparser.add_parser('aug', help='test augmentation experiment')
     architecture_parser = subparser.add_subparsers(help='architecture to use', dest=ARCHITECTURE_KEY)
 
     add_base_architecture_parser(architecture_parser)
 
-    subparser.set_defaults(func=handle_architecture_exp)
+    subparser.set_defaults(func=handle_augment_limit_exp)
 
 
 if __name__ == '__main__':
