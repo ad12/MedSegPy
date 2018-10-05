@@ -90,8 +90,12 @@ def test_model(config, save_file=0):
     model.load_weights(config.TEST_WEIGHT_PATH, by_name=True)
 
     img_cnt = 0
+
     dice_losses = np.array([])
     voes = np.array([])
+    cv_values = np.array([])
+
+
     start = time.time()
     skipped_count = 0
 
@@ -129,9 +133,13 @@ def test_model(config, save_file=0):
         # Calculate real time dice coeff for analysis
         dl = dice_loss_test(y_test, labels)
         voe = vo_error(y_test, labels)
+        cv = utils.calc_cv(y_test, labels)
+
         dice_losses = np.append(dice_losses, dl)
         voes = np.append(voes, voe)
-        print_str = 'DSC / VOE for image #%d (name = %s, %d slices) = %0.3f / %0.3f' % (img_cnt, fname, num_slices, dl, voe)
+        cv_values = np.append(cv_values, cv)
+
+        print_str = 'DSC, VOE, CV for image #%d (name = %s, %d slices) = %0.3f, %0.3f, %0.3f' % (img_cnt, fname, num_slices, dl, voe, cv)
         pids_str = pids_str + print_str + '\n'
         print(print_str)
 
@@ -160,7 +168,7 @@ def test_model(config, save_file=0):
 
     end = time.time()
 
-    stats_string = get_stats_string(dice_losses, voes, skipped_count, end-start)
+    stats_string = get_stats_string(dice_losses, voes, cv_values, skipped_count, end-start)
     # Print some summary statistics
     print('--'*20)
     print(stats_string)
@@ -191,7 +199,7 @@ def test_model(config, save_file=0):
   #  plt.ylabel('Dice')
    # plt.savefig(os.path.join(test_result_path, 'interp_slices.png'))
 
-def get_stats_string(dice_losses, voes, skipped_count, testing_time):
+def get_stats_string(dice_losses, voes, cv_values, skipped_count, testing_time):
     """
     Return string detailing statistics
     :param dice_losses: list of dice losses per exam
@@ -207,6 +215,9 @@ def get_stats_string(dice_losses, voes, skipped_count, testing_time):
     s += 'VOE - Mean +/- Std, Median = %0.4f +/- %0.3f, %0.4f\n' % (np.mean(voes),
                                                                     np.std(voes),
                                                                     np.median(voes))
+    s += 'CV - Mean +/- Std, Median = %0.4f +/- %0.3f, %0.4f\n' % (np.mean(cv_values),
+                                                                    np.std(cv_values),
+                                                                    np.median(cv_values))
     s += 'Time required = %0.1f seconds.\n'% testing_time
     return s
 
