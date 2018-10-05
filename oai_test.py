@@ -469,7 +469,7 @@ def handle_data_limit_exp(vargin):
         test_dir(fullpath, get_config(config_name), vals_dict=vals_dict)
 
 
-def handle_augment_limit(vargin):
+def handle_augment_limit_exp(vargin):
     config_name = vargin[ARCHITECTURE_KEY]
     do_batch_test = vargin[BATCH_TEST_KEY]
     overwrite_data = vargin[OVERWRITE_KEY]
