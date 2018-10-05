@@ -291,7 +291,7 @@ def parse_results_file(filepath):
     with open(filepath) as search:
         for line in search:
             line = line.rstrip()  # remove '\n' at end of line
-            if 'MEAN' not in line.upper():
+            if 'MEAN' not in line.upper() or 'DSC' not in line.upper():
                 continue
 
             vals = re.findall("\d+\.\d+", line)

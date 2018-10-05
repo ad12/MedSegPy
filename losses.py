@@ -58,6 +58,24 @@ def dice_loss_test(y_true, y_pred):
     return dice
 
 
+def vo_error(y_true, y_pred):
+    y_pred = (y_pred > 0.05) * y_pred
+    print(np.unique(y_pred))
+
+    y_true = y_true.flatten()
+    y_pred = y_pred.flatten()
+
+    TP = np.sum(y_true * y_pred, axis=-1)
+    FP = np.sum(~y_true * y_pred, axis=-1)
+    FN = np.sum(y_true * ~y_pred, axis=-1)
+
+    mu = 1e-07
+
+    voe = 1 - (TP + mu) / (TP + FP + FN + mu)
+
+    return voe
+
+
 def weighted_categorical_crossentropy(weights):
     """
     A weighted version of Keras categorical_crossentropy

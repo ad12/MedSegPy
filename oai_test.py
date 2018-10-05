@@ -13,7 +13,7 @@ import os
 from keras import backend as K
 
 from im_generator import img_generator_test, calc_generator_info, img_generator_oai_test
-from losses import dice_loss_test
+from losses import dice_loss_test, vo_error
 from models import get_model
 
 import config as MCONFIG
@@ -91,6 +91,7 @@ def test_model(config, save_file=0):
 
     img_cnt = 0
     dice_losses = np.array([])
+    voes = np.array([])
     start = time.time()
     skipped_count = 0
 
@@ -122,12 +123,15 @@ def test_model(config, save_file=0):
             recon = recon[..., 1]
             y_test = y_test[..., np.newaxis]
             recon = recon[..., np.newaxis]
+
         labels = (recon > 0.5).astype(np.float32)
 
         # Calculate real time dice coeff for analysis
         dl = dice_loss_test(y_test, labels)
+        voe = vo_error(y_test, labels)
         dice_losses = np.append(dice_losses, dl)
-        print_str = 'Dice score for image #%d (name = %s, %d slices) = %0.3f' % (img_cnt, fname, num_slices, np.mean(dl))
+        voes = np.append(voes, voe)
+        print_str = 'DSC / VOE for image #%d (name = %s, %d slices) = %0.3f / %0.3f' % (img_cnt, fname, num_slices, dl, voe)
         pids_str = pids_str + print_str + '\n'
         print(print_str)
 
@@ -156,7 +160,7 @@ def test_model(config, save_file=0):
 
     end = time.time()
 
-    stats_string = get_stats_string(dice_losses, skipped_count, end-start)
+    stats_string = get_stats_string(dice_losses, voes, skipped_count, end-start)
     # Print some summary statistics
     print('--'*20)
     print(stats_string)
@@ -187,7 +191,7 @@ def test_model(config, save_file=0):
   #  plt.ylabel('Dice')
    # plt.savefig(os.path.join(test_result_path, 'interp_slices.png'))
 
-def get_stats_string(dice_losses, skipped_count, testing_time):
+def get_stats_string(dice_losses, voes, skipped_count, testing_time):
     """
     Return string detailing statistics
     :param dice_losses: list of dice losses per exam
@@ -197,8 +201,12 @@ def get_stats_string(dice_losses, skipped_count, testing_time):
     """
     s = 'Overall Summary:\n'
     s += '%d Skipped\n' % skipped_count
-    s += 'Mean +/- Std = %0.4f +/- %0.3f\n' % (np.mean(dice_losses), np.std(dice_losses))
-    s += 'Median = %0.4f\n' % np.median(dice_losses)
+    s += 'DSC - Mean +/- Std, Median = %0.4f +/- %0.3f, %0.4f\n' % (np.mean(dice_losses),
+                                                                    np.std(dice_losses),
+                                                                    np.median(dice_losses))
+    s += 'VOE - Mean +/- Std, Median = %0.4f +/- %0.3f, %0.4f\n' % (np.mean(voes),
+                                                                    np.std(voes),
+                                                                    np.median(voes))
     s += 'Time required = %0.1f seconds.\n'% testing_time
     return s
 
