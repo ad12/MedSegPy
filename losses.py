@@ -60,14 +60,15 @@ def dice_loss_test(y_true, y_pred):
 
 def vo_error(y_true, y_pred):
     y_pred = (y_pred > 0.05) * y_pred
-    print(np.unique(y_pred))
 
     y_true = y_true.flatten()
     y_pred = y_pred.flatten()
 
-    TP = np.sum(y_true * y_pred, axis=-1)
-    FP = np.sum(~y_true * y_pred, axis=-1)
-    FN = np.sum(y_true * ~y_pred, axis=-1)
+    y_true_bool = np.asarray(y_true, dtype=np.bool)
+    y_pred_bool = np.asarray(y_pred, dtype=np.bool)
+    TP = np.sum(y_true_bool * y_pred_bool, axis=-1)
+    FP = np.sum(~y_true_bool * y_pred_bool, axis=-1)
+    FN = np.sum(y_true_bool * ~y_pred_bool, axis=-1)
 
     mu = 1e-07
 
