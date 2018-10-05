@@ -20,6 +20,9 @@ import config as MCONFIG
 from config import DeeplabV3Config, SegnetConfig, EnsembleUDSConfig, UNetConfig
 import utils
 import scipy.io as sio
+from time import strptime
+
+DATE_THRESHOLD = strptime('2018-09-01-22-39-39', '%Y-%m-%d-%H-%M-%S')
 
 
 def find_start_and_end_slice(y_true):
@@ -237,6 +240,14 @@ def get_valid_subdirs(base_path, no_results=True):
     """
     if (base_path is None) or (not os.path.isdir(base_path)) or (base_path == []):
         return []
+
+    dir_base_name = os.path.basename(base_path)
+    try:
+        d = strptime(dir_base_name)
+        if d < DATE_THRESHOLD:
+            return []
+    except ValueError:
+        is_date_directory = False
 
     subdirs = []
     config_path = os.path.join(base_path, 'config.ini')
