@@ -434,7 +434,7 @@ def init_architecture_parser(input_subparser):
 
 
 def init_data_limit_parser(input_subparser):
-    subparser = input_subparser.add_parser('dl', help='test data limitation experiment')
+    subparser = input_subparser.add_parser('data', help='test data limitation experiment')
     architecture_parser = subparser.add_subparsers(help='architecture to use', dest=ARCHITECTURE_KEY)
 
     add_base_architecture_parser(architecture_parser)
@@ -471,12 +471,22 @@ def handle_data_limit_exp(vargin):
         test_dir(fullpath, get_config(config_name), vals_dict=vals_dict)
 
 
+def init_augment_limit_parser(input_subparser):
+    subparser = input_subparser.add_parser('aug', help='test augmentation experiment')
+    architecture_parser = subparser.add_subparsers(help='architecture to use', dest=ARCHITECTURE_KEY)
+
+    add_base_architecture_parser(architecture_parser)
+
+    subparser.set_defaults(func=handle_architecture_exp)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train OAI dataset')
 
     subparsers = parser.add_subparsers(help='experiment to run', dest=EXP_KEY)
     init_architecture_parser(subparsers)
     init_data_limit_parser(subparsers)
+    init_augment_limit_parser(subparsers)
 
     args = parser.parse_args()
     gpu = args.gpu
