@@ -285,6 +285,7 @@ def get_valid_subdirs(base_path, no_results=True):
 def batch_test(base_folder, config_name, vals_dicts=[None], overwrite=False):
     # get list of directories to get info from
     subdirs = get_valid_subdirs(base_folder, not overwrite)
+
     for subdir in subdirs:
         print(subdir)
 
@@ -356,7 +357,7 @@ def test_dir(dirpath, config, vals_dict=None, best_weight_path=None):
 
 ARCHITECTURE_PATHS_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/oai_data/%s'
 DATA_LIMIT_PATHS_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_seg_networks/data_limit', '%03d', '%s')
-AUGMENTATION_PATH_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_seg_networks/augment_limited, %s')
+AUGMENTATION_PATH_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_seg_networks/augment_limited', '%s')
 
 EXP_KEY='exp'
 BATCH_TEST_KEY = 'batch'
@@ -442,7 +443,6 @@ def handle_architecture_exp(vargin):
     test_batch_size = vargin['batch_size']
 
     architecture_folder_path = ARCHITECTURE_PATHS_PREFIX % config_name
-
     vals_dict = {'TEST_BATCH_SIZE': test_batch_size}
 
     if config_name == 'deeplabv3_2d':
@@ -499,7 +499,6 @@ def handle_augment_limit_exp(vargin):
     test_batch_size = vargin['batch_size']
 
     augmentation_folder_path = AUGMENTATION_PATH_PREFIX % config_name
-
     vals_dict = {'TEST_BATCH_SIZE': test_batch_size}
 
     if config_name == 'deeplabv3_2d':

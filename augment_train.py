@@ -43,7 +43,7 @@ if __name__=='__main__':
         # Data limitation experiment: Train Unet, Deeplab, and Segnet with limited data
         if model == 'unet':
             config = UNetConfig()
-            oai_train.train(config, vals_dict={'AUGMENT_DATA': False, 'N_EPOCHS': 100})
+            oai_train.train(config, vals_dict={'AUGMENT_DATA': False, 'N_EPOCHS': 100, 'DROP_FACTOR': (0.8) ** (1/5)})
 
         # elif model == 'deeplab':
         #     config = DeeplabV3Config()
