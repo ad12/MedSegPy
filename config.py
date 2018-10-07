@@ -346,12 +346,16 @@ class UNetMultiContrastConfig(UNetConfig):
 
 
 class UNet2_5DConfig(UNetConfig):
-    IMG_SIZE =  (288, 288, 3)
+    IMG_SIZE = (288, 288, 3)
 
     CP_SAVE_TAG = 'unet_2_5d'
     N_EPOCHS = 100
     AUGMENT_DATA = False
-    INITIAL_LEARNING_RATE = 5e-2
+    INITIAL_LEARNING_RATE = 1e-2
+
+    DROP_RATE = 1.0
+    DROP_FACTOR = 0.8 ** (1/5)
+
     def num_neighboring_slices(self):
         return self.IMG_SIZE[2]
 
