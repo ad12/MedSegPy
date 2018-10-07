@@ -149,7 +149,7 @@ class Config():
             upper_case_key = str(key).upper()
 
             if upper_case_key in DEPRECATED_KEYS:
-                warnings.warn('Key %s is deprecated, not loading', upper_case_key)
+                warnings.warn('Key %s is deprecated, not loading' % upper_case_key)
                 continue
 
             if not hasattr(self, upper_case_key):
