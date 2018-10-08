@@ -479,6 +479,8 @@ def img_generator_oai_test(data_path, batch_size, config):
 
     pids_dict = dict()
     for pid in pids_unique:
+        import pdb
+        pdb.set_trace()
         indices = [i for i, x in enumerate(pids) if x == pid]
         pids_dict[pid] = indices
 
