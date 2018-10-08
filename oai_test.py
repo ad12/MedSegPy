@@ -288,7 +288,7 @@ def batch_test(base_folder, config_name, vals_dicts=[None], overwrite=False):
 
     for subdir in subdirs:
         print(subdir)
-
+    
     print('')
     for subdir in subdirs:
         for vals_dict in vals_dicts:
