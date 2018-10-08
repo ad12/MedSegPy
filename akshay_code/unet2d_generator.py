@@ -147,7 +147,7 @@ def sort_files(files, tag):
         elif (tag == 'oai_new'):
             tmp = int(tmp[0] + tmp[1][1:])
         elif (tag == 'oai_aug'):
-            tmp = int(tmp[0] + tmp[1][2:3])
+            tmp = int(tmp[0] + tmp[1][2:3] + tmp[2][:3])
         else:
             raise ValueError('Specified tag (%s) is unsupported' % tag)
 
