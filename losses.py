@@ -47,10 +47,10 @@ def dice_loss_test(y_true, y_pred):
     y_true = y_true.flatten()
     y_pred = y_pred.flatten()
 
-    ovlp = np.sum(y_true * y_pred, axis=-1)
+    ovlp = np.sum(y_true * y_pred)
 
     mu = 1e-07
-    dice = (2.0 * ovlp + mu) / (np.sum(y_true, axis=-1) + np.sum(y_pred, axis=-1) + mu)
+    dice = (2.0 * ovlp + mu) / (np.sum(y_true) + np.sum(y_pred) + mu)
 
     return dice
 
