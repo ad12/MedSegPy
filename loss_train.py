@@ -1,18 +1,15 @@
 import argparse
 import os
 
-import glob_constants
-
 import config as MCONFIG
-from config import DeeplabV3Config, SegnetConfig, UNetConfig
-from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS, BINARY_CROSS_ENTROPY_LOSS
-
+import glob_constants
 import oai_train
+from config import DeeplabV3Config, SegnetConfig, UNetConfig
+from losses import WEIGHTED_CROSS_ENTROPY_LOSS
 
 SUPPORTED_MODELS = ['unet', 'segnet', 'deeplab']
 
-
-if __name__=='__main__':
+if __name__ == '__main__':
 
     MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/loss_limit'
 

@@ -1,18 +1,14 @@
 import argparse
 import os
 
-import glob_constants
-
 import config as MCONFIG
-from config import DeeplabV3Config, SegnetConfig, UNetConfig
-from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS, BINARY_CROSS_ENTROPY_LOSS
-
+import glob_constants
 import oai_train
+from config import UNetConfig
 
 SUPPORTED_MODELS = ['unet']
 
-
-if __name__=='__main__':
+if __name__ == '__main__':
 
     MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/augment_limited'
 
@@ -43,7 +39,7 @@ if __name__=='__main__':
         # Data limitation experiment: Train Unet, Deeplab, and Segnet with limited data
         if model == 'unet':
             config = UNetConfig()
-            oai_train.train(config, vals_dict={'AUGMENT_DATA': False, 'N_EPOCHS': 100, 'DROP_FACTOR': (0.8) ** (1/5)})
+            oai_train.train(config, vals_dict={'AUGMENT_DATA': False, 'N_EPOCHS': 100, 'DROP_FACTOR': (0.8) ** (1 / 5)})
 
         # elif model == 'deeplab':
         #     config = DeeplabV3Config()

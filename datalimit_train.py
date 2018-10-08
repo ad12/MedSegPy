@@ -3,24 +3,14 @@ import os
 import random
 
 from keras import backend as K
-
-import glob_constants
-
-import config as MCONFIG
-from config import DeeplabV3Config, SegnetConfig, EnsembleUDSConfig, UNetConfig, UNetMultiContrastConfig, UNet2_5DConfig, DeeplabV3_2_5DConfig
-from im_generator import calc_generator_info, img_generator, img_generator_oai, get_class_freq
-from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS, BINARY_CROSS_ENTROPY_LOSS
-
-from weight_classes import CLASS_FREQ_DAT_PATH
-
-from models import get_model
-
 from natsort import natsorted
 
+import config as MCONFIG
+import glob_constants
 import oai_train
-
-import utils
 import parse_pids
+import utils
+from config import DeeplabV3Config, SegnetConfig, UNetConfig
 
 
 def get_config(name):
@@ -93,7 +83,7 @@ def data_limitation_train(config_name, vals_dict=None):
 
 SUPPORTED_MODELS = ['unet', 'segnet', 'deeplab']
 
-if __name__=='__main__':
+if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train OAI dataset')
 
     parser.add_argument('-g', '--gpu', metavar='G', type=str, nargs='?', default='0',

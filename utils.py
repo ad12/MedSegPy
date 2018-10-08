@@ -1,11 +1,13 @@
 import ast
 import configparser
-import cv2
 import os
 import pickle
-import numpy as np
-import h5py
 import re
+
+import cv2
+import h5py
+import numpy as np
+
 
 def check_dir(dir_path):
     """
@@ -52,7 +54,7 @@ def write_ovlp_masks(dir_path, y_true, y_pred):
     y_true = np.squeeze(y_true)
     y_pred = np.squeeze(y_pred)
 
-    assert(y_true.shape == y_pred.shape)
+    assert (y_true.shape == y_pred.shape)
     ims = []
     num_slices = y_true.shape[0]
     for i in range(num_slices):
@@ -78,7 +80,7 @@ def write_mask(dir_path, y_true):
     num_slices = y_true.shape[0]
     for i in range(num_slices):
         slice_name = '%03d.png' % i
-        cv2.imwrite(os.path.join(dir_path, slice_name), y_true[i,:,:])
+        cv2.imwrite(os.path.join(dir_path, slice_name), y_true[i, :, :])
 
 
 def write_prob_map(dir_path, y_probs):
@@ -92,7 +94,7 @@ def write_prob_map(dir_path, y_probs):
     num_slices = y_probs.shape[0]
     for i in range(num_slices):
         slice_name = '%03d.png' % i
-        im = y_probs[i,:,:] * 255
+        im = y_probs[i, :, :] * 255
         im = im[..., np.newaxis].astype(np.uint8)
         imC = cv2.applyColorMap(im, cv2.COLORMAP_JET)
         cv2.imwrite(os.path.join(dir_path, slice_name), imC)
@@ -120,9 +122,9 @@ def generate_ovlp_image(y_true, y_pred):
     :param y_pred: numpy array of predicted labels
     :return: a BGR image
     """
-    assert(y_true.shape == y_pred.shape)
+    assert (y_true.shape == y_pred.shape)
     assert len(y_true.shape) == 2, "shape should be 2d, but is " + y_true.shape
-    
+
     y_true = y_true.astype(np.bool)
     y_pred = y_pred.astype(np.bool)
 
@@ -181,6 +183,7 @@ def load_config(filepath):
 
     return config['DEFAULT']
 
+
 def convert_data_type(var_string, data_type):
     """
     Convert string to relevant data type
@@ -221,7 +224,7 @@ def get_weights(base_folder):
     for file in files:
         file_fullpath = os.path.join(base_folder, file)
         # Ensure the file is an h5 file
-        if not(os.path.isfile(file_fullpath) and file_fullpath.endswith('.h5') and 'weights' in file):
+        if not (os.path.isfile(file_fullpath) and file_fullpath.endswith('.h5') and 'weights' in file):
             continue
 
         # Get file with max epochs
@@ -262,7 +265,7 @@ def load_optimizer(dirpath):
     from keras import optimizers
     filepath = os.path.join(dirpath, 'optimizer.dat')
     model_dict = load_pik(filepath)
-    optimizer_params = dict([(k,v) for k,v in model_dict.get('optimizer').items()])
+    optimizer_params = dict([(k, v) for k, v in model_dict.get('optimizer').items()])
     optimizer = optimizers.get(optimizer_params)
 
     return optimizer
@@ -285,7 +288,6 @@ def save_ims(filepath):
     cv2.imwrite(os.path.join(filepath, 'seg.png'), scale_img(seg))
 
 
-
 def parse_results_file(filepath):
     # returns mean
     with open(filepath) as search:
@@ -299,12 +301,12 @@ def parse_results_file(filepath):
 
 
 def calc_cv(y_true, y_pred):
-
     y_true = np.squeeze(y_true)
     y_pred = np.squeeze(y_pred)
 
-    cv = np.std([np.sum(y_true), np.sum(y_pred)])/np.mean([np.sum(y_true), np.sum(y_pred)])
+    cv = np.std([np.sum(y_true), np.sum(y_pred)]) / np.mean([np.sum(y_true), np.sum(y_pred)])
     return cv
+
 
 if __name__ == '__main__':
     save_ims('./test_data/9968924_V01-Aug00_056')

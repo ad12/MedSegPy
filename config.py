@@ -1,13 +1,13 @@
 import os
+import warnings
 from time import gmtime, strftime
 
-from losses import DICE_LOSS, WEIGHTED_CROSS_ENTROPY_LOSS
+import glob_constants as glc
 import mri_utils
 import utils
-import warnings
-import glob_constants as glc
-DEPRECATED_KEYS = ['NUM_CLASSES']
+from losses import DICE_LOSS
 
+DEPRECATED_KEYS = ['NUM_CLASSES']
 
 DEEPLABV3_NAME = 'deeplabv3_2d'
 SEGNET_NAME = 'segnet_2d'
@@ -106,7 +106,8 @@ class Config():
                 self.init_training_paths(prefix)
             else:
                 # Testing
-                self.TEST_RESULT_PATH = utils.check_dir(os.path.join('./test_results', self.CP_SAVE_TAG, self.TAG, self.DATE_TIME_STR))
+                self.TEST_RESULT_PATH = utils.check_dir(
+                    os.path.join('./test_results', self.CP_SAVE_TAG, self.TAG, self.DATE_TIME_STR))
 
     def init_training_paths(self, prefix):
         """
@@ -142,7 +143,7 @@ class Config():
         """
         vars_dict = utils.load_config(ini_filepath)
 
-        if(vars_dict['CP_SAVE_TAG'] != self.CP_SAVE_TAG):
+        if (vars_dict['CP_SAVE_TAG'] != self.CP_SAVE_TAG):
             raise ValueError('Wrong config. Expected %s' % str(vars_dict['CP_SAVE_TAG']))
 
         for key in vars_dict.keys():
@@ -153,12 +154,13 @@ class Config():
                 continue
 
             if not hasattr(self, upper_case_key):
-                raise ValueError('Key %s does not exist. Please make sure all variable names are fully capitalized' % upper_case_key)
+                raise ValueError(
+                    'Key %s does not exist. Please make sure all variable names are fully capitalized' % upper_case_key)
 
             # all data is of type string, but we need to cast back to original data type
             data_type = type(getattr(self, upper_case_key))
 
-            #print(upper_case_key + ': ' + str(vars_dict[key]) + ' (' + str(data_type) + ')')
+            # print(upper_case_key + ': ' + str(vars_dict[key]) + ' (' + str(data_type) + ')')
             var_converted = utils.convert_data_type(vars_dict[key], data_type)
 
             # Loading config
@@ -182,7 +184,7 @@ class Config():
         curr_val = self.__getattribute__(attr)
 
         if (curr_val is not None and (type(val) != type(curr_val))):
-            raise ValueError('Input value is of type %s. Expected %s' %(str(type(val)), str(type(curr_val))))
+            raise ValueError('Input value is of type %s. Expected %s' % (str(type(val)), str(type(curr_val))))
 
         self.__setattr__(attr, val)
 
@@ -200,8 +202,8 @@ class Config():
         prefix = os.path.join(self.DATE_TIME_STR, 'fine_tune')
 
         # if fine_tune folder already exists, do not overwrite it
-        count=2
-        while os.path.isdir(os.path.join(SAVE_PATH_PREFIX, self.CP_SAVE_TAG,prefix)):
+        count = 2
+        while os.path.isdir(os.path.join(SAVE_PATH_PREFIX, self.CP_SAVE_TAG, prefix)):
             prefix = os.path.join(self.DATE_TIME_STR, 'fine_tune_%03d' % count)
             count += 1
 
@@ -224,7 +226,9 @@ class Config():
         summary_vals = ['CP_SAVE_TAG']
 
         if self.STATE == 'training':
-            summary_vals.extend(['N_EPOCHS', 'AUGMENT_DATA', 'LOSS', 'TRAIN_BATCH_SIZE', 'VALID_BATCH_SIZE', 'USE_STEP_DECAY', 'INITIAL_LEARNING_RATE', 'MIN_LEARNING_RATE', 'DROP_FACTOR', 'DROP_RATE', 'FINE_TUNE'])
+            summary_vals.extend(
+                ['N_EPOCHS', 'AUGMENT_DATA', 'LOSS', 'TRAIN_BATCH_SIZE', 'VALID_BATCH_SIZE', 'USE_STEP_DECAY',
+                 'INITIAL_LEARNING_RATE', 'MIN_LEARNING_RATE', 'DROP_FACTOR', 'DROP_RATE', 'FINE_TUNE'])
             if self.FINE_TUNE:
                 summary_vals.extend(['INIT_WEIGHT_PATH'])
         else:
@@ -233,7 +237,7 @@ class Config():
         summary_vals.extend(additional_vars)
 
         print('')
-        print('=='*40)
+        print('==' * 40)
         print("Config Summary")
         print('==' * 40)
 
@@ -272,7 +276,7 @@ class DeeplabV3Config(Config):
 
     def change_to_test(self):
         self.state = 'testing'
-        config_tuple = (self.OS, ) + self.DIL_RATES
+        config_tuple = (self.OS,) + self.DIL_RATES
         config_str = '%d_%d-%d-%d' % config_tuple
         self.TEST_RESULT_PATH = utils.check_dir(os.path.join(self.CP_SAVE_PATH, 'test_results', config_str))
 
@@ -285,9 +289,9 @@ class SegnetConfig(Config):
     CP_SAVE_TAG = SEGNET_NAME
 
     TRAIN_BATCH_SIZE = 15
-    FINE_TUNE=False
-    INIT_WEIGHT_PATH=''
-    TEST_WEIGHT_PATH=''
+    FINE_TUNE = False
+    INIT_WEIGHT_PATH = ''
+    TEST_WEIGHT_PATH = ''
 
     DEPTH = 6
     NUM_CONV_LAYERS = [2, 2, 3, 3, 3, 3]
@@ -354,10 +358,11 @@ class UNet2_5DConfig(UNetConfig):
     INITIAL_LEARNING_RATE = 1e-2
 
     DROP_RATE = 1.0
-    DROP_FACTOR = 0.8 ** (1/5)
+    DROP_FACTOR = 0.8 ** (1 / 5)
 
     def num_neighboring_slices(self):
         return self.IMG_SIZE[2]
+
 
 class DeeplabV3_2_5DConfig(DeeplabV3Config):
     IMG_SIZE = (288, 288, 3)
@@ -365,6 +370,6 @@ class DeeplabV3_2_5DConfig(DeeplabV3Config):
     CP_SAVE_TAG = 'deeplabv3_2_5d'
     N_EPOCHS = 100
     AUGMENT_DATA = False
+
     def num_neighboring_slices(self):
         return self.IMG_SIZE[2]
-

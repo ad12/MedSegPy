@@ -1,9 +1,7 @@
 from keras import backend as K
 from keras.layers.convolutional import UpSampling2D
-from keras.layers.pooling import MaxPooling2D
 from keras.layers.core import Layer
-from keras.layers.merge import Multiply, Concatenate
-import numpy as np
+from keras.layers.pooling import MaxPooling2D
 
 
 class MaxPoolingMask2D(Layer):
@@ -21,6 +19,7 @@ class MaxPoolingMask2D(Layer):
 
     def compute_output_shape(self, input_shape):
         return input_shape
+
 
 # future implement
 """

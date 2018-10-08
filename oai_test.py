@@ -5,22 +5,20 @@
 from __future__ import print_function, division
 
 import argparse
-import numpy as np
-import h5py
-import time
 import os
+import time
+from time import strptime
 
+import h5py
+import numpy as np
+import scipy.io as sio
 from keras import backend as K
 
+import utils
+from config import DeeplabV3Config, SegnetConfig, UNetConfig
 from im_generator import img_generator_test, calc_generator_info, img_generator_oai_test
 from losses import dice_loss_test, vo_error
 from models import get_model
-
-import config as MCONFIG
-from config import DeeplabV3Config, SegnetConfig, EnsembleUDSConfig, UNetConfig
-import utils
-import scipy.io as sio
-from time import strptime
 
 DATE_THRESHOLD = strptime('2018-09-01-22-39-39', '%Y-%m-%d-%H-%M-%S')
 
@@ -33,7 +31,7 @@ def find_start_and_end_slice(y_true):
         start = i
         break
 
-    for i in range(y_true.shape[0]-1, -1, -1):
+    for i in range(y_true.shape[0] - 1, -1, -1):
         sum_pixels = np.sum(y_true[i, ...])
         if sum_pixels == 0:
             continue
@@ -60,8 +58,8 @@ def interp_slice(y_true, y_pred):
     yt = dice_losses
 
     # interpolate only between 0 and 100%
-    xp = (np.asarray(list(range(start, stop+1))) - start) / (stop - start) * 100.0
-    yp = dice_losses[start:stop+1]
+    xp = (np.asarray(list(range(start, stop + 1))) - start) / (stop - start) * 100.0
+    yp = dice_losses[start:stop + 1]
 
     xs = np.linspace(0, 100, 1001)
     ys = np.interp(xs, xp, yp)
@@ -95,7 +93,6 @@ def test_model(config, save_file=0):
     voes = np.array([])
     cv_values = np.array([])
 
-
     start = time.time()
     skipped_count = 0
 
@@ -107,7 +104,8 @@ def test_model(config, save_file=0):
     if (config.VERSION > 1):
         test_gen = img_generator_oai_test(test_path, test_batch_size, config)
     else:
-        test_gen = img_generator_test(test_path, test_batch_size, img_size, config.TAG, config.TISSUES, shuffle_epoch=False)
+        test_gen = img_generator_test(test_path, test_batch_size, img_size, config.TAG, config.TISSUES,
+                                      shuffle_epoch=False)
 
     pids_str = ''
 
@@ -121,7 +119,7 @@ def test_model(config, save_file=0):
 
         # Perform the actual segmentation using pre-loaded model
         # Threshold at 0.5
-        recon = model.predict(x_test, batch_size = test_batch_size)
+        recon = model.predict(x_test, batch_size=test_batch_size)
         if (config.INCLUDE_BACKGROUND):
             y_test = y_test[..., 1]
             recon = recon[..., 1]
@@ -139,11 +137,12 @@ def test_model(config, save_file=0):
         voes = np.append(voes, voe)
         cv_values = np.append(cv_values, cv)
 
-        print_str = 'DSC, VOE, CV for image #%d (name = %s, %d slices) = %0.3f, %0.3f, %0.3f' % (img_cnt, fname, num_slices, dl, voe, cv)
+        print_str = 'DSC, VOE, CV for image #%d (name = %s, %d slices) = %0.3f, %0.3f, %0.3f' % (
+        img_cnt, fname, num_slices, dl, voe, cv)
         pids_str = pids_str + print_str + '\n'
         print(print_str)
 
-        #interpolate region of interest
+        # interpolate region of interest
         xs, ys, xt, yt = interp_slice(y_test, labels)
         x_interp.append(xs)
         y_interp.append(ys)
@@ -151,35 +150,35 @@ def test_model(config, save_file=0):
         y_total.append(yt)
 
         if save_file == 1:
-            save_name = '%s/%s_recon.pred' %(test_result_path,fname)
-            with h5py.File(save_name,'w') as h5f:
-                h5f.create_dataset('recon',data=recon)
-            
+            save_name = '%s/%s_recon.pred' % (test_result_path, fname)
+            with h5py.File(save_name, 'w') as h5f:
+                h5f.create_dataset('recon', data=recon)
+
             # Save mask overlap
             ovlps = utils.write_ovlp_masks(os.path.join(test_result_path, 'ovlp', fname), y_test, labels)
             utils.write_mask(os.path.join(test_result_path, 'gt', fname), y_test)
             utils.write_prob_map(os.path.join(test_result_path, 'prob_map', fname), recon)
             utils.write_im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_test, ovlps)
-        
+
         img_cnt += 1
-        
+
         if img_cnt == ntest:
             break
 
     end = time.time()
 
-    stats_string = get_stats_string(dice_losses, voes, cv_values, skipped_count, end-start)
+    stats_string = get_stats_string(dice_losses, voes, cv_values, skipped_count, end - start)
     # Print some summary statistics
-    print('--'*20)
+    print('--' * 20)
     print(stats_string)
-    print('--'*20)
+    print('--' * 20)
 
     # Write details to test file
     with open(os.path.join(test_result_path, 'results.txt'), 'w+') as f:
-        f.write('--'*20)
+        f.write('--' * 20)
         f.write('\n')
         f.write(pids_str)
-        f.write('--'*20)
+        f.write('--' * 20)
         f.write('\n')
         f.write(stats_string)
 
@@ -193,11 +192,12 @@ def test_model(config, save_file=0):
                                                                           'xt': x_total,
                                                                           'yt': y_total})
 
+
 #    plt.clf()
- #   plt.plot(xs, ys)
-  #  plt.xlabel('FOV (%)')
-  #  plt.ylabel('Dice')
-   # plt.savefig(os.path.join(test_result_path, 'interp_slices.png'))
+#   plt.plot(xs, ys)
+#  plt.xlabel('FOV (%)')
+#  plt.ylabel('Dice')
+# plt.savefig(os.path.join(test_result_path, 'interp_slices.png'))
 
 def get_stats_string(dice_losses, voes, cv_values, skipped_count, testing_time):
     """
@@ -216,9 +216,9 @@ def get_stats_string(dice_losses, voes, cv_values, skipped_count, testing_time):
                                                                     np.std(voes),
                                                                     np.median(voes))
     s += 'CV - Mean +/- Std, Median = %0.4f +/- %0.3f, %0.4f\n' % (np.mean(cv_values),
-                                                                    np.std(cv_values),
-                                                                    np.median(cv_values))
-    s += 'Time required = %0.1f seconds.\n'% testing_time
+                                                                   np.std(cv_values),
+                                                                   np.median(cv_values))
+    s += 'Time required = %0.1f seconds.\n' % testing_time
     return s
 
 
@@ -288,7 +288,7 @@ def batch_test(base_folder, config_name, vals_dicts=[None], overwrite=False):
 
     for subdir in subdirs:
         print(subdir)
-    
+
     print('')
     for subdir in subdirs:
         for vals_dict in vals_dicts:
@@ -310,7 +310,7 @@ def find_best_test_dir(base_folder):
     for subdir in subdirs:
         base_results = os.path.join(subdir, 'test_results')
         results_files = check_results_file(base_results)
-        assert not((results_files is None) or (len(results_files) == 0)), "Checking results file failed - %s" % subdir
+        assert not ((results_files is None) or (len(results_files) == 0)), "Checking results file failed - %s" % subdir
         for results_file in results_files:
             mean = utils.parse_results_file(results_file)
             potential_data = (mean, results_file)
@@ -359,14 +359,14 @@ ARCHITECTURE_PATHS_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/oai_data/%s'
 DATA_LIMIT_PATHS_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_seg_networks/data_limit', '%03d', '%s')
 AUGMENTATION_PATH_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_seg_networks/augment_limited', '%s')
 
-EXP_KEY='exp'
+EXP_KEY = 'exp'
 BATCH_TEST_KEY = 'batch'
 SUPPORTED_ARCHITECTURES = ['unet_2d', 'deeplabv3_2d', 'segnet_2d']
 ARCHITECTURE_KEY = 'architecture'
 OVERWRITE_KEY = 'ov'
 
 OS_KEY = 'OS'
-DIL_RATES_KEY='DIL_RATES'
+DIL_RATES_KEY = 'DIL_RATES'
 
 
 def get_config(name):
@@ -404,7 +404,7 @@ def add_base_architecture_parser(architecture_parser):
         parser = architecture_parser.add_parser(architecture, help='use %s' % architecture)
         parser.add_argument('-%s' % BATCH_TEST_KEY, action='store_const', default=False, const=True,
                             help='batch test directory')
-        parser.add_argument('-%s' % OVERWRITE_KEY, action='store_const',default=False, const=True,
+        parser.add_argument('-%s' % OVERWRITE_KEY, action='store_const', default=False, const=True,
                             help='overwrite current data')
 
         parser.add_argument('-g', '--gpu', metavar='G', type=str, nargs='?', default='0',
@@ -540,11 +540,9 @@ if __name__ == '__main__':
     cpu = args.cpu
 
     if not cpu:
-        os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
-        os.environ['CUDA_VISIBLE_DEVICES']=gpu
+        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+        os.environ['CUDA_VISIBLE_DEVICES'] = gpu
 
     vargin = vars(args)
 
     args.func(vargin)
-
-

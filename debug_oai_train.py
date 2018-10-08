@@ -1,10 +1,6 @@
-from oai_train import train
 import config as MCONFIG
-from config import SegnetConfig, DeeplabV3Config
+from config import DeeplabV3Config
 from models import get_model
-import argparse
-import os
-from keras import backend as K
 
 if __name__ == '__main__':
     MCONFIG.SAVE_PATH_PREFIX = './sample_data'

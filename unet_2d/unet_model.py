@@ -1,14 +1,13 @@
 from __future__ import print_function, division
 
-import numpy as np
 import os
-import warnings
-from keras.models import Model
-from keras.layers import Input, Conv2D, MaxPooling2D, Conv2DTranspose, concatenate, Dropout, Concatenate
-from keras.layers import BatchNormalization as BN
-import keras.backend as K
+
+import numpy as np
 from keras.engine.topology import get_source_inputs
 from keras.initializers import glorot_uniform, he_normal
+from keras.layers import BatchNormalization as BN
+from keras.layers import Input, Conv2D, MaxPooling2D, Conv2DTranspose, Dropout, Concatenate
+from keras.models import Model
 
 # List of tissues that can be segmented
 FEMORAL_CARTILAGE_STR = 'fc'
@@ -97,7 +96,7 @@ def unet_2d_model(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, output_mode=
         up = Concatenate(axis=3)([Conv2DTranspose(nfeatures[depth_cnt], (3, 3),
                                                   padding='same',
                                                   strides=unpooling_size)(conv),
-                                 conv_ptr[depth_cnt]])
+                                  conv_ptr[depth_cnt]])
 
         conv = Conv2D(nfeatures[depth_cnt], (3, 3),
                       padding='same',

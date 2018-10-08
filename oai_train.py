@@ -3,31 +3,25 @@
 from __future__ import print_function, division
 
 import argparse
-import pickle
 import os
-import random
-import numpy as np
+import pickle
 
-from keras.optimizers import Adam
-from keras import backend as K
-
-from keras.callbacks import ModelCheckpoint
-from keras.callbacks import LearningRateScheduler as lrs
-from keras.callbacks import ReduceLROnPlateau as rlrp
-from keras.callbacks import TensorBoard as tfb
 import keras.callbacks as kc
-import glob_constants
+import numpy as np
+from keras import backend as K
+from keras.callbacks import LearningRateScheduler as lrs
+from keras.callbacks import ModelCheckpoint
+from keras.callbacks import TensorBoard as tfb
+from keras.optimizers import Adam
 
 import config as MCONFIG
-from config import DeeplabV3Config, SegnetConfig, EnsembleUDSConfig, UNetConfig, UNetMultiContrastConfig, UNet2_5DConfig, DeeplabV3_2_5DConfig
-from im_generator import calc_generator_info, img_generator, img_generator_oai, get_class_freq
-from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS, BINARY_CROSS_ENTROPY_LOSS
-
-from weight_classes import CLASS_FREQ_DAT_PATH
-
-from models import get_model
-
+import glob_constants
 import utils
+from config import DeeplabV3Config, UNetMultiContrastConfig
+from im_generator import calc_generator_info, img_generator, img_generator_oai
+from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS
+from models import get_model
+from weight_classes import CLASS_FREQ_DAT_PATH
 
 
 def train_model(config, optimizer=None):
@@ -52,7 +46,6 @@ def train_model(config, optimizer=None):
     loss = config.LOSS
     layers_to_freeze = []
 
-
     # Get model based on config
     img_size = config.IMG_SIZE
     model = get_model(config)
@@ -64,7 +57,8 @@ def train_model(config, optimizer=None):
 
     # If no optimizer is provided, default to Adam
     if optimizer is None:
-        optimizer = Adam(lr=config.INITIAL_LEARNING_RATE, beta_1=0.99, beta_2=0.995, epsilon=1e-8, decay=config.ADAM_DECAY, amsgrad=config.USE_AMSGRAD)
+        optimizer = Adam(lr=config.INITIAL_LEARNING_RATE, beta_1=0.99, beta_2=0.995, epsilon=1e-8,
+                         decay=config.ADAM_DECAY, amsgrad=config.USE_AMSGRAD)
 
     # Load loss function
     class_weights = None
@@ -73,7 +67,7 @@ def train_model(config, optimizer=None):
         print('calculating freq')
         class_freqs = utils.load_pik(CLASS_FREQ_DAT_PATH)
         class_weights = get_class_weights(class_freqs)
-        class_weights = np.reshape(class_weights, (1,2))
+        class_weights = np.reshape(class_weights, (1, 2))
         print(class_weights)
 
     loss_func = get_training_loss(loss, weights=class_weights)
@@ -83,7 +77,8 @@ def train_model(config, optimizer=None):
 
     # set image format to be (N, dim1, dim2, dim3, ch)
     K.set_image_data_format('channels_last')
-    train_files, train_nbatches = calc_generator_info(train_path, train_batch_size, learn_files=learn_files, pids=config.PIDS, augment_data=config.AUGMENT_DATA)
+    train_files, train_nbatches = calc_generator_info(train_path, train_batch_size, learn_files=learn_files,
+                                                      pids=config.PIDS, augment_data=config.AUGMENT_DATA)
     valid_files, valid_nbatches = calc_generator_info(valid_path, valid_batch_size)
 
     print('INFO: Train size: %d, batch size: %d' % (len(train_files), train_batch_size))
@@ -125,7 +120,6 @@ def train_model(config, optimizer=None):
         train_gen = img_generator(train_path, train_batch_size, img_size, tag, config.TISSUES, pids=config.PIDS)
         val_gen = img_generator(valid_path, valid_batch_size, img_size, tag, config.TISSUES)
 
-
     # Start training
     model.fit_generator(
         train_gen,
@@ -147,6 +141,7 @@ def train_model(config, optimizer=None):
     # Save model
     model.save(filepath=os.path.join(config.CP_SAVE_PATH, 'model.h5'), overwrite=True)
 
+
 def get_class_weights(freqs):
     # weight by median and scale to 1
     weights = np.median(freqs) / freqs
@@ -161,8 +156,10 @@ def get_lr_metric(optimizer):
     :param optimizer: a Keras optimizer
     :return: a Tensorflow callback
     """
+
     def lr(y_true, y_pred):
         return optimizer.lr
+
     return lr
 
 
@@ -183,7 +180,7 @@ def step_decay_wrapper(initial_lr=1e-4, min_lr=1e-8, drop_factor=0.8, drop_rate=
     def step_decay(epoch):
         import math
         lrate = initial_lr * math.pow(drop_factor, math.floor((1 + epoch) / drop_rate))
-        
+
         if (lrate < min_lr):
             lrate = min_lr
 
@@ -196,16 +193,17 @@ class LossHistory(kc.Callback):
     """
     A Keras callback to log training history
     """
+
     def on_train_begin(self, logs={}):
         self.val_losses = []
         self.losses = []
-        #self.lr = []
+        # self.lr = []
         self.epoch = []
 
     def on_epoch_end(self, batch, logs={}):
         self.val_losses.append(logs.get('val_loss'))
         self.losses.append(logs.get('loss'))
-       # self.lr.append(step_decay(len(self.losses)))
+        # self.lr.append(step_decay(len(self.losses)))
         self.epoch.append(len(self.losses))
 
 
@@ -262,7 +260,7 @@ def unet_2d_multi_contrast_train():
 
     # By default, loads weights from original 2D unet
     # To not load these weights by default, uncomment line below
-    #config.INIT_UNET_2D = False
+    # config.INIT_UNET_2D = False
 
     # Adjust hyperparameters
     config.N_EPOCHS = 25
@@ -290,23 +288,24 @@ def train(config, vals_dict=None):
 
     config.save_config()
     config.summary()
-    
+
     train_model(config)
 
     K.clear_session()
 
+
 # Use these for fine tuning
 DEEPLAB_TEST_PATHS_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d'
-DEEPLAB_TEST_PATHS = ['2018-08-26-20-01-32', # OS=16, DIL_RATES=(6, 12, 18)
-        '2018-08-27-02-49-06', # OS=16, DIL_RATES=(1, 9, 18)
-                      '2018-08-27-15-48-56', # OS=16, DIL_RATES=(3, 6, 9)
-                     ]
+DEEPLAB_TEST_PATHS = ['2018-08-26-20-01-32',  # OS=16, DIL_RATES=(6, 12, 18)
+                      '2018-08-27-02-49-06',  # OS=16, DIL_RATES=(1, 9, 18)
+                      '2018-08-27-15-48-56',  # OS=16, DIL_RATES=(3, 6, 9)
+                      ]
 
 DATA_LIMIT_PATHS_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_data_limit/oai_data', '%03d', 'unet_2d')
-DATA_LIMIT_NUM_DATE_DICT = {5:'2018-08-26-20-19-31',
-                            15:'2018-08-27-03-43-46',
-                            30:'2018-08-27-11-18-07',
-                            60:'2018-08-27-18-29-19'}
+DATA_LIMIT_NUM_DATE_DICT = {5: '2018-08-26-20-19-31',
+                            15: '2018-08-27-03-43-46',
+                            30: '2018-08-27-11-18-07',
+                            60: '2018-08-27-18-29-19'}
 
 if __name__ == '__main__':
     MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/architecture_limit'
@@ -319,37 +318,36 @@ if __name__ == '__main__':
     print(args)
     gpu = args.gpu
     glob_constants.SEED = args.seed
-    
+
     print(glob_constants.SEED)
 
     print('Using GPU %s' % gpu)
-    os.environ["CUDA_VISIBLE_DEVICES"]=args.gpu
-    os.environ["TF_CPP_MIN_LOG_LEVEL"]="2"
+    os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
+    os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
     # train with weighted cross entropy
     # train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (2,4,6), 'DROPOUT_RATE': 0.0})
-    
-    #data_limitation_train(pid_counts=[60])
-    #fine tune
-    #fine_tune('/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d/2018-09-27-07-52-25/', DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE': 1e-6, 'USE_STEP_DECAY': False, 'N_EPOCHS': 20})
-    #train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (2, 4, 6)})
 
-    #train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'FINE_TUNE': False, 'TRAIN_BATCH_SIZE': 15})
-    #train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'CONV_ACT_BN': True, 'TRAIN_BATCH_SIZE': 15})
+    # data_limitation_train(pid_counts=[60])
+    # fine tune
+    # fine_tune('/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d/2018-09-27-07-52-25/', DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE': 1e-6, 'USE_STEP_DECAY': False, 'N_EPOCHS': 20})
+    # train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (2, 4, 6)})
 
-    #train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'DEPTH': 7, 'NUM_CONV_LAYERS': [3, 3, 3, 3, 3, 3, 3], 'NUM_FILTERS': [16, 32, 64, 128, 256, 512, 1024], 'TRAIN_BATCH_SIZE': 35})
-    #fine_tune('/bmrNAS/people/arjun/msk_seg_networks/oai_data/segnet_2d/2018-09-26-19-08-34', SegnetConfig(), vals_dict = {'INITIAL_LEARNING_RATE': 1e-5, 'USE_STEP_DECAY': True, 'DROP_FACTOR': 0.7, 'DROP_RATE': 8.0, 'N_EPOCHS': 20})
+    # train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'FINE_TUNE': False, 'TRAIN_BATCH_SIZE': 15})
+    # train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'CONV_ACT_BN': True, 'TRAIN_BATCH_SIZE': 15})
+
+    # train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'DEPTH': 7, 'NUM_CONV_LAYERS': [3, 3, 3, 3, 3, 3, 3], 'NUM_FILTERS': [16, 32, 64, 128, 256, 512, 1024], 'TRAIN_BATCH_SIZE': 35})
+    # fine_tune('/bmrNAS/people/arjun/msk_seg_networks/oai_data/segnet_2d/2018-09-26-19-08-34', SegnetConfig(), vals_dict = {'INITIAL_LEARNING_RATE': 1e-5, 'USE_STEP_DECAY': True, 'DROP_FACTOR': 0.7, 'DROP_RATE': 8.0, 'N_EPOCHS': 20})
 
     # train with binary cross entropy loss
     # train(SegnetConfig(), {'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS, 'INCLUDE_BACKGROUND': True})
     # train(DeeplabV3Config(), {'DIL_RATES': (1, 9 ,18), 'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS,  'INCLUDE_BACKGROUND': True})
 
-
     # Train 2.5D
-    #train(UNet2_5DConfig(), {'IMG_SIZE': (288, 288, 5)})
+    # train(UNet2_5DConfig(), {'IMG_SIZE': (288, 288, 5)})
 
     # Architecture experiment: Train deeplab, segnet end-to-end
-    #train(DeeplabV3Config(), {'OS':16, 'DIL_RATES': (2, 4, 6), 'DROPOUT_RATE':0.0})
-    #fine_tune(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-09-26-19-07-53'), DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE':1e-6})
-    #print('\n\n')
-   # train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'FINE_TUNE': False, 'TRAIN_BATCH_SIZE': 15})
+    # train(DeeplabV3Config(), {'OS':16, 'DIL_RATES': (2, 4, 6), 'DROPOUT_RATE':0.0})
+    # fine_tune(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-09-26-19-07-53'), DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE':1e-6})
+    # print('\n\n')
+# train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'FINE_TUNE': False, 'TRAIN_BATCH_SIZE': 15})

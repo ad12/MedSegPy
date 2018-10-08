@@ -26,30 +26,28 @@ from __future__ import division
 from __future__ import print_function
 
 import numpy as np
-
-from keras.models import Model
+from keras import backend as K
 from keras import layers
-from keras.layers import Input
+from keras.applications import imagenet_utils
+from keras.engine import InputSpec
+from keras.engine import Layer
+from keras.engine.topology import get_source_inputs
+from keras.initializers import he_normal
 from keras.layers import Activation
-from keras.layers import Concatenate
 from keras.layers import Add
-from keras.layers import Dropout
+from keras.layers import AveragePooling2D
 from keras.layers import BatchNormalization
+from keras.layers import Concatenate
 from keras.layers import Conv2D
 from keras.layers import DepthwiseConv2D
+from keras.layers import Dropout
+from keras.layers import Input
 from keras.layers import ZeroPadding2D
-from keras.layers import AveragePooling2D
-from keras.engine import Layer
-from keras.engine import InputSpec
-from keras.engine.topology import get_source_inputs
-from keras import backend as K
-from keras.applications import imagenet_utils
+from keras.models import Model
 from keras.utils import conv_utils
 from keras.utils.data_utils import get_file
-from keras.initializers import he_normal
 
 import glob_constants as glc
-
 
 WEIGHTS_PATH_X = "https://github.com/bonlime/keras-deeplab-v3-plus/releases/download/1.1/deeplabv3_xception_tf_dim_ordering_tf_kernels.h5"
 WEIGHTS_PATH_MOBILE = "https://github.com/bonlime/keras-deeplab-v3-plus/releases/download/1.1/deeplabv3_mobilenetv2_tf_dim_ordering_tf_kernels.h5"
@@ -80,9 +78,9 @@ class BilinearUpsampling(Layer):
     def compute_output_shape(self, input_shape):
         if self.upsampling:
             height = self.upsampling[0] * \
-                input_shape[1] if input_shape[1] is not None else None
+                     input_shape[1] if input_shape[1] is not None else None
             width = self.upsampling[1] * \
-                input_shape[2] if input_shape[2] is not None else None
+                    input_shape[2] if input_shape[2] is not None else None
         else:
             height = self.output_size[0]
             width = self.output_size[1]
@@ -288,7 +286,8 @@ def _inverted_res_block(inputs, expansion, stride, alpha, filters, block_id, ski
     return x
 
 
-def Deeplabv3(weights='pascal_voc', input_tensor=None, input_shape=(512, 512, 3), classes=21, backbone='mobilenetv2', OS=16, alpha=1., dilation_divisor=1, dil_rate_input=None, dropout_rate=0.1):
+def Deeplabv3(weights='pascal_voc', input_tensor=None, input_shape=(512, 512, 3), classes=21, backbone='mobilenetv2',
+              OS=16, alpha=1., dilation_divisor=1, dil_rate_input=None, dropout_rate=0.1):
     """ Instantiates the Deeplabv3+ architecture
 
     Optionally loads weights pre-trained
@@ -456,7 +455,7 @@ def Deeplabv3(weights='pascal_voc', input_tensor=None, input_shape=(512, 512, 3)
     # branching for Atrous Spatial Pyramid Pooling
 
     # Image Feature branch
-    #out_shape = int(np.ceil(input_shape[0] / OS))
+    # out_shape = int(np.ceil(input_shape[0] / OS))
     b4 = AveragePooling2D(pool_size=(int(np.ceil(input_shape[0] / OS)), int(np.ceil(input_shape[1] / OS))))(x)
     b4 = Conv2D(256, (1, 1), padding='same',
                 use_bias=False,

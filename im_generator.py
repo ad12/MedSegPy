@@ -3,24 +3,24 @@
 #           Arjun Desai, arjundd@stanford.edu, 2018 June
 
 from __future__ import print_function, division
-from deprecated import deprecated
 
-import numpy as np
+import os
 from os import listdir
 from os.path import splitext
 from random import shuffle
 from re import split
+
 import h5py
-import os
+import numpy as np
 
 
 def preprocess_input_scale(im):
     p_min = np.amin(im)
-    im -= p_min # minimum is 0
+    im -= p_min  # minimum is 0
     p_max = np.amax(im)
     im = im / p_max * 255.0
-    assert(np.amin(im) == 0)
-    assert(np.amax(im) <= 255)
+    assert (np.amin(im) == 0)
+    assert (np.amax(im) <= 255)
 
     return im
 
@@ -56,12 +56,10 @@ def get_class_freq(data_path, class_ids=[0, 1], pids=None, augment_data=True):
     return freqs
 
 
-
-
 # find unique data regardless of the file prefix
 def calc_generator_info(data_path, batch_size, learn_files=[], pids=None, augment_data=True):
     if pids is not None:
-        learn_files=[]
+        learn_files = []
 
     files = listdir(data_path)
     unique_filename = {}
@@ -78,9 +76,9 @@ def calc_generator_info(data_path, batch_size, learn_files=[], pids=None, augmen
         nfiles = learn_files
     else:
         nfiles = len(files)
-    
+
     batches_per_epoch = nfiles // batch_size
-    
+
     return (files, batches_per_epoch)
 
 
@@ -89,9 +87,9 @@ def add_file(file, unique_filename, pids, augment_data):
 
     if (pids is not None):
         contains_pid = [str(x) in file for x in pids]
-     
+
         # if any pid is included, only 1 can be included
-        assert(sum(contains_pid) in {0, 1})
+        assert (sum(contains_pid) in {0, 1})
         contains_pid = any(contains_pid)
 
         should_add_file &= contains_pid
@@ -216,20 +214,22 @@ def img_generator_dess(data_path, batch_size, img_size, shuffle_epoch=True):
                 y[file_cnt, ..., 0] = seg
             yield (x, y)
 
+
 def add_background_layer(seg):
     sum_seg = np.sum(seg, axis=-1)
     background = sum_seg == 0
-    background = np.multiply(background, sum_seg+1)
+    background = np.multiply(background, sum_seg + 1)
 
     temp_seg = seg.squeeze(axis=2)
     a = np.concatenate([background, temp_seg], axis=-1)
     return a
 
+
 def img_generator(data_path, batch_size, img_size, tag, tissue_inds, shuffle_epoch=True, pids=None):
     files, batches_per_epoch = calc_generator_info(data_path, batch_size, pids=pids)
 
     # img_size must be 3D
-    assert(len(img_size) == 3)
+    assert (len(img_size) == 3)
     total_classes = len(tissue_inds)
     mask_size = (img_size[0], img_size[1], total_classes)
 
@@ -254,19 +254,20 @@ def img_generator(data_path, batch_size, img_size, tag, tissue_inds, shuffle_epo
                 with h5py.File(seg_path, 'r') as f:
                     seg = f['data'][:].astype(np.float32)
 
-                #x[file_cnt, ..., 0] = preprocess_input_scale(im)
+                # x[file_cnt, ..., 0] = preprocess_input_scale(im)
                 x[file_cnt, ..., 0] = im
                 y[file_cnt, ...] = seg[..., np.newaxis]
-                
-            #yield (preprocess_input(x), y)
+
+            # yield (preprocess_input(x), y)
             yield (x, y)
+
 
 def img_generator_test(data_path, batch_size, img_size, tag, tissue_inds, shuffle_epoch=False):
     files, batches_per_epoch = calc_generator_info(data_path, batch_size)
     files = sort_files(files, tag)
 
     # img_size must be 3D
-    assert(len(img_size) == 3)
+    assert (len(img_size) == 3)
     total_classes = len(tissue_inds)
     mask_size = (img_size[0], img_size[1], total_classes)
 
@@ -296,7 +297,7 @@ def img_generator_test(data_path, batch_size, img_size, tag, tissue_inds, shuffl
             fname = files[ind]
 
             # Make sure that this pid is actually in the filename
-            assert(pid in fname)
+            assert (pid in fname)
 
             im_path = '%s/%s.im' % (data_path, fname)
             with h5py.File(im_path, 'r') as f:
@@ -310,12 +311,12 @@ def img_generator_test(data_path, batch_size, img_size, tag, tissue_inds, shuffl
             x[file_cnt, ..., 0] = im
             y[file_cnt, ...] = seg[..., np.newaxis]
 
-
         yield (x, y, pid, num_slices)
 
 
 def inspect_vals(x):
-    print('0: %0.2f, 1: %0.2f' %(np.sum(x==0), np.sum(x==1)))
+    print('0: %0.2f, 1: %0.2f' % (np.sum(x == 0), np.sum(x == 1)))
+
 
 def img_generator_oai(data_path, batch_size, config, state='training', shuffle_epoch=True):
     if (state not in ['training', 'validation']):
@@ -334,7 +335,7 @@ def img_generator_oai(data_path, batch_size, config, state='training', shuffle_e
         augment_data = config.AUGMENT_DATA
 
     files, batches_per_epoch = calc_generator_info(data_path, batch_size, pids=pids, augment_data=augment_data)
-    
+
     # img_size must be 3D
     if len(img_size) != 3:
         raise ValueError('Image size must be 3D')
@@ -373,7 +374,6 @@ def img_generator_oai(data_path, batch_size, config, state='training', shuffle_e
                 x[file_cnt, ...] = im
                 y[file_cnt, ...] = seg_total
 
-
             yield (x, y)
 
 
@@ -387,7 +387,7 @@ def get_neighboring_ims(num_slices, data_path, filename):
     ims = []
     inds = []
     r_seg = None
-    d_slice_range = list(range(-num_slices, num_slices+1))
+    d_slice_range = list(range(-num_slices, num_slices + 1))
     for i in range(len(d_slice_range)):
         d_slice = d_slice_range[i]
         slice_filepath = base_filename % (slice_no + d_slice)
@@ -417,7 +417,7 @@ def get_neighboring_ims(num_slices, data_path, filename):
         ims[i] = ims[inds[-1]]
 
     assert r_seg is not None
-    
+
     try:
         ims = np.stack(ims)
     except ValueError:
@@ -431,6 +431,7 @@ def get_file_pid(fname):
     f_pid = fname.split('-')
     return f_pid[0]
 
+
 def add_background_labels(segs):
     all_tissues = np.sum(segs, axis=-1, dtype=np.bool)
     background = np.asarray(~all_tissues, dtype=np.float)
@@ -438,6 +439,7 @@ def add_background_labels(segs):
     seg_total = np.concatenate([background, segs], axis=-1)
 
     return seg_total
+
 
 def load_inputs(data_path, file):
     im_path = '%s/%s.im' % (data_path, file)
@@ -449,6 +451,7 @@ def load_inputs(data_path, file):
         seg = f['data'][:].astype('float32')
 
     return (im, seg)
+
 
 def img_generator_oai_test(data_path, batch_size, config):
     img_size = config.IMG_SIZE
@@ -489,7 +492,7 @@ def img_generator_oai_test(data_path, batch_size, config):
             fname = files[ind]
 
             # Make sure that this pid is actually in the filename
-            assert(pid in fname)
+            assert (pid in fname)
 
             if num_neighboring is not None:
                 im, seg = get_neighboring_ims(num_slices=num_slices, data_path=data_path, filename=fname)
@@ -497,7 +500,7 @@ def img_generator_oai_test(data_path, batch_size, config):
                 im, seg = load_inputs(data_path, fname)
                 if (len(im.shape) == 2):
                     im = im[..., np.newaxis]
-            
+
             seg_tissues = seg[..., 0, tissue]
             seg_total = seg_tissues
 
@@ -510,6 +513,7 @@ def img_generator_oai_test(data_path, batch_size, config):
             y[file_cnt, ...] = seg_total
 
         yield (x, y, pid, num_slices)
+
 
 def sort_files(files, tag):
     def argsort(seq):
@@ -544,6 +548,6 @@ if __name__ == '__main__':
     tmp = split('_', filename)
     print(tmp)
 
-    #tmp = int(tmp[0] + tmp[1][2:3])
+    # tmp = int(tmp[0] + tmp[1][2:3])
 
     print(tmp[1][2:3])

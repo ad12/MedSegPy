@@ -1,8 +1,7 @@
 import numpy as np
-from enum import Enum
+import tensorflow as tf
 from keras import backend as K
 from keras.losses import binary_crossentropy
-import tensorflow as tf
 
 # Losses
 DICE_LOSS = ('dice', 'sigmoid')
@@ -25,17 +24,16 @@ def get_training_loss(loss, weights=None):
 
 # Dice function loss optimizer
 def dice_loss(y_true, y_pred):
-
     szp = K.get_variable_shape(y_pred)
-    img_len = szp[1]*szp[2]*szp[3]
+    img_len = szp[1] * szp[2] * szp[3]
 
-    y_true = K.reshape(y_true,(-1,img_len))
-    y_pred = K.reshape(y_pred,(-1,img_len))
+    y_true = K.reshape(y_true, (-1, img_len))
+    y_pred = K.reshape(y_pred, (-1, img_len))
 
-    ovlp = K.sum(y_true*y_pred,axis=-1)
+    ovlp = K.sum(y_true * y_pred, axis=-1)
 
     mu = K.epsilon()
-    dice = (2.0 * ovlp + mu) / (K.sum(y_true,axis=-1) + K.sum(y_pred,axis=-1) + mu)
+    dice = (2.0 * ovlp + mu) / (K.sum(y_true, axis=-1) + K.sum(y_pred, axis=-1) + mu)
     loss = 1 - dice
 
     return loss
@@ -44,16 +42,15 @@ def dice_loss(y_true, y_pred):
 # Dice function loss optimizer
 # During test time since it includes a discontinuity
 def dice_loss_test(y_true, y_pred):
-
-    y_pred = (y_pred > 0.05)*y_pred
+    y_pred = (y_pred > 0.05) * y_pred
 
     y_true = y_true.flatten()
     y_pred = y_pred.flatten()
 
-    ovlp = np.sum(y_true*y_pred,axis=-1)
+    ovlp = np.sum(y_true * y_pred, axis=-1)
 
     mu = 1e-07
-    dice = (2.0 * ovlp + mu) / (np.sum(y_true,axis=-1) + np.sum(y_pred,axis=-1) + mu)
+    dice = (2.0 * ovlp + mu) / (np.sum(y_true, axis=-1) + np.sum(y_pred, axis=-1) + mu)
 
     return dice
 
@@ -128,20 +125,18 @@ def wasserstein_disagreement_map(prediction, ground_truth, M):
     for i in range(n_classes):
         for j in range(n_classes):
             pairwise_correlations.append(
-                M[i, j] * tf.multiply(prediction[:,i], ground_truth[:,j]))
+                M[i, j] * tf.multiply(prediction[:, i], ground_truth[:, j]))
     wass_dis_map = tf.add_n(pairwise_correlations)
     return wass_dis_map
 
 
-M_tree_4 = np.array([[0., 1., 1., 1.,],
+M_tree_4 = np.array([[0., 1., 1., 1., ],
                      [1., 0., 0.6, 0.5],
                      [1., 0.6, 0., 0.7],
                      [1., 0.5, 0.7, 0.]], dtype=np.float64)
 
 
-def generalised_wasserstein_dice_loss(y_true, y_predicted ):
-
-
+def generalised_wasserstein_dice_loss(y_true, y_predicted):
     """
     Function to calculate the Generalised Wasserstein Dice Loss defined in
     Fidon, L. et. al. (2017) Generalised Wasserstein Dice Score for Imbalanced
@@ -155,9 +150,8 @@ def generalised_wasserstein_dice_loss(y_true, y_predicted ):
     # apply softmax to pred scores
     n_classes = K.int_shape(y_predicted)[-1]
 
-
-    ground_truth = tf.cast(tf.reshape(y_true,(-1,n_classes)), dtype=tf.int64)
-    pred_proba = tf.cast(tf.reshape(y_predicted,(-1,n_classes)), dtype=tf.float64)
+    ground_truth = tf.cast(tf.reshape(y_true, (-1, n_classes)), dtype=tf.int64)
+    pred_proba = tf.cast(tf.reshape(y_predicted, (-1, n_classes)), dtype=tf.float64)
 
     # M = tf.cast(M, dtype=tf.float64)
     # compute disagreement map (delta)

@@ -1,16 +1,17 @@
-from keras.utils import plot_model
-from keras.layers import Input, Conv2D, Concatenate
+import os
+
 from keras import Model
-from keras.initializers import Zeros, Ones, Constant
+from keras.initializers import Constant
+from keras.initializers import glorot_uniform
+from keras.layers import Input, Conv2D, Concatenate
+from keras.utils import plot_model
 
 from config import DeeplabV3Config, SegnetConfig, UNetConfig, \
-                    EnsembleUDSConfig, UNetMultiContrastConfig, UNet2_5DConfig, DeeplabV3_2_5DConfig
+    EnsembleUDSConfig, UNetMultiContrastConfig, UNet2_5DConfig, DeeplabV3_2_5DConfig
 from deeplab_2d.deeplab_model import Deeplabv3
+from glob_constants import SEED
 from segnet_2d.segnet import Segnet, Segnet_v2
 from unet_2d.unet_model import unet_2d_model
-from keras.initializers import glorot_uniform
-from glob_constants import SEED
-import os
 
 
 def get_model(config):
@@ -39,6 +40,7 @@ def get_model(config):
     # if weighted cross entropy, use softmax
     return model
 
+
 def unet_2d(config):
     """
      Returns Unet2D model
@@ -52,6 +54,7 @@ def unet_2d(config):
     model = unet_2d_model(input_size=input_shape, output_mode=output_mode)
 
     return model
+
 
 def deeplabv3_2d(config):
     """
@@ -120,7 +123,7 @@ def segnet_2d(config):
         bn_str = '1bn'
 
     if config.CONV_ACT_BN:
-        conv_act_bn_str='cab'
+        conv_act_bn_str = 'cab'
 
     model_name = model_name % (config.DEPTH, bn_str, conv_act_bn_str)
 
@@ -142,7 +145,7 @@ def unet_2d_multi_contrast(config):
     print('Initializing multi contrast 2d unet: input size - ' + str(config.IMG_SIZE))
     input_shape = config.IMG_SIZE
     x = Input(input_shape)
-    x = Conv2D(1, (1,1), name='conv_mc_comp')(x)
+    x = Conv2D(1, (1, 1), name='conv_mc_comp')(x)
     model = unet_2d_model(input_tensor=x)
 
     # only load weights for layers that share the same name
@@ -150,6 +153,7 @@ def unet_2d_multi_contrast(config):
         model.load_weights(config.INIT_UNET_2D_WEIGHTS, by_name=True)
 
     return model
+
 
 def unet_2_5d(config):
     """
@@ -171,6 +175,7 @@ def unet_2_5d(config):
         model.load_weights(config.INIT_UNET_2D_WEIGHTS, by_name=True)
 
     return model
+
 
 def deeplabv3_2_5d(config):
     """
@@ -209,6 +214,7 @@ def deeplabv3_2_5d(config):
 
     return model
 
+
 def ensemble_uds(config):
     """
     Returns model corresponding to ensemble of unet, deeplab, and segnet
@@ -223,7 +229,8 @@ def ensemble_uds(config):
     input_shape = config.IMG_SIZE
 
     num_classes = config.get_num_classes()
-    deeplab_model = Deeplabv3(weights=None, input_shape=input_shape, classes=num_classes, backbone='xception', OS=config.OS, dil_rate_input=config.DIL_RATES)
+    deeplab_model = Deeplabv3(weights=None, input_shape=input_shape, classes=num_classes, backbone='xception',
+                              OS=config.OS, dil_rate_input=config.DIL_RATES)
     deeplab_model.load_weights(config.DEEPLAB_INIT_WEIGHTS, by_name=True)
     deeplab_model.trainable = False
     x = deeplab_model.input
@@ -240,7 +247,7 @@ def ensemble_uds(config):
     segnet_model.trainable = False
 
     model = combine_models(x, [unet_model, deeplab_model, segnet_model], ensemble_name='ensemble_uds')
-    plot_model(model, os.path.join(config.PLOT_MODEL_PATH, config.CP_SAVE_TAG + '.png'), show_shapes = True)
+    plot_model(model, os.path.join(config.PLOT_MODEL_PATH, config.CP_SAVE_TAG + '.png'), show_shapes=True)
 
     return model
 
@@ -257,16 +264,18 @@ def combine_models(x_input, models, ensemble_name='ensemble', num_classes=1):
     outputs = []
     for model in models:
         outputs.append(model.layers[-1].output)
-    
+
     x = Concatenate(name='%s_conc' % ensemble_name)(outputs)
-    x = Conv2D(num_classes, (1,1), name = '%s_conv' % ensemble_name, activation='sigmoid', kernel_initializer=Constant(value=1.0/len(models)))(x)
+    x = Conv2D(num_classes, (1, 1), name='%s_conv' % ensemble_name, activation='sigmoid',
+               kernel_initializer=Constant(value=1.0 / len(models)))(x)
 
     model = Model(inputs=x_input, outputs=x)
     for layer in model.layers[:-1]:
         layer.trainable = False
-    
+
     model.summary()
     return model
+
 
 def __softmax_activation_layer(output, num_classes):
     """
@@ -277,6 +286,7 @@ def __softmax_activation_layer(output, num_classes):
     """
     return
 
+
 def __add_activation_layer(output, num_classes, activation='sigmoid'):
     """
     Return sigmoid activation layer
@@ -285,7 +295,7 @@ def __add_activation_layer(output, num_classes, activation='sigmoid'):
 
     # Initializing kernel weights to 1 and bias to 0.
     # i.e. without training, the output would be a sigmoid activation on each pixel of the input
-    return Conv2D(num_classes, (1,1), activation=activation,
+    return Conv2D(num_classes, (1, 1), activation=activation,
                   kernel_initializer=glorot_uniform(seed=SEED),
                   name='output_activation')(output)
 

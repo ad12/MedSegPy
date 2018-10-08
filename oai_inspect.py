@@ -4,19 +4,18 @@
 
 from __future__ import print_function, division
 
-import numpy as np
-import h5py
-import time
 import os
+import time
 
+import h5py
+import numpy as np
 from keras import backend as K
 
+import utils
+from config import SegnetConfig
 from im_generator import img_generator_test, calc_generator_info
 from losses import dice_loss_test
 from models import get_model
-
-from config import DeeplabV3Config, SegnetConfig
-import utils
 
 
 def test_model(config, save_file=1):
@@ -45,54 +44,52 @@ def test_model(config, save_file=1):
 
     # # Iterature through the files to be segmented
     for x_test, y_test, fname in img_generator_test(test_path, test_batch_size,
-                                                img_size, dlc.TAG, dlc.TISSUES, shuffle_epoch=False):
+                                                    img_size, dlc.TAG, dlc.TISSUES, shuffle_epoch=False):
 
         # Perform the actual segmentation using pre-loaded model
-        recon = model.predict(x_test, batch_size = test_batch_size)
+        recon = model.predict(x_test, batch_size=test_batch_size)
         labels = (recon > 0.5).astype(np.float32)
-       
-        
+
         # Calculate real time dice coeff for analysis
         # TODO: Define multi-class dice loss during testing
-        dl = dice_loss_test(labels,y_test)
-        dice_losses = np.append(dice_losses,dl)
+        dl = dice_loss_test(labels, y_test)
+        dice_losses = np.append(dice_losses, dl)
         # print(dl)
 
-        print('Dice score for image #%d (name = %s) = %0.3f'%(img_cnt, fname, np.mean(dl)))
+        print('Dice score for image #%d (name = %s) = %0.3f' % (img_cnt, fname, np.mean(dl)))
 
         if (save_file == 1):
-            save_name = '%s/%s_recon.pred' %(test_result_path,fname)
-            with h5py.File(save_name,'w') as h5f:
-                h5f.create_dataset('recon',data=recon)
-            
+            save_name = '%s/%s_recon.pred' % (test_result_path, fname)
+            with h5py.File(save_name, 'w') as h5f:
+                h5f.create_dataset('recon', data=recon)
+
             # Save mask overlap
             save_mask_dir = os.path.join(test_result_path, 'ovlp', fname)
             utils.write_ovlp_masks(save_mask_dir, y_test, labels)
             utils.write_mask(os.path.join(test_result_path, 'gt', fname), y_test)
-        
+
         img_cnt += 1
-        
+
         if img_cnt == ntest:
             break
 
     end = time.time()
 
     # Print some summary statistics
-    print('--'*20)
+    print('--' * 20)
     print('Overall Summary:')
-    print('Mean= %0.4f Std = %0.3f' % (np.mean(dice_losses),np.std(dice_losses)))
+    print('Mean= %0.4f Std = %0.3f' % (np.mean(dice_losses), np.std(dice_losses)))
     print('Median = %0.4f' % np.median(dice_losses))
-    print('Time required = %0.1f seconds.'%(end-start))
-    print('--'*20)
-
+    print('Time required = %0.1f seconds.' % (end - start))
+    print('--' * 20)
 
 
 local_testing_test_path = '../sample_data/test_data'
 local_test_results_path = '../sample_data/results'
 
 if __name__ == '__main__':
-    os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
-    os.environ['CUDA_VISIBLE_DEVICES']="0"
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+    os.environ['CUDA_VISIBLE_DEVICES'] = "0"
 
     # set config based on what you want to train
     config = SegnetConfig(state='testing')
