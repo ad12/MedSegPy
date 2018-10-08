@@ -30,7 +30,7 @@ def calc_generator_info(data_path, batch_size, learn_files=[]):
         nfiles = len(files)
 
     batches_per_epoch = nfiles // batch_size
-
+    print('calc_generator: ' + str(type(files)))
     return (files, batches_per_epoch)
 
 

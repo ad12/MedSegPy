@@ -461,6 +461,7 @@ def img_generator_oai_test(data_path, batch_size, config):
     files, batches_per_epoch = calc_generator_info(data_path, batch_size)
     files = sort_files(files, tag)
     num_neighboring = config.num_neighboring_slices()
+    print(num_neighboring)
     # img_size must be 3D
     assert (len(img_size) == 3)
     total_classes = config.get_num_classes()
