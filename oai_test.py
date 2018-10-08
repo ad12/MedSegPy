@@ -101,7 +101,7 @@ def test_model(config, save_file=0):
     print('INFO: Test size: %d, batch size: %d, # subjects: %d' % (len(test_files), test_batch_size, ntest))
     print('Save path: %s' % (test_result_path))
     print('Test path: %s' % test_path)
-    test_path = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/tmp_test'
+
     if (config.VERSION > 1):
         test_gen = img_generator_oai_test(test_path, test_batch_size, config)
     else:
