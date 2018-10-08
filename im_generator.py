@@ -466,9 +466,6 @@ def img_generator_oai_test(data_path, batch_size, config):
     total_classes = config.get_num_classes()
     mask_size = (img_size[0], img_size[1], total_classes)
 
-    x = np.zeros((batch_size,) + img_size)
-    y = np.zeros((batch_size,) + mask_size)
-
     pids = []
     for fname in files:
         pid = get_file_pid(fname)
@@ -479,8 +476,6 @@ def img_generator_oai_test(data_path, batch_size, config):
 
     pids_dict = dict()
     for pid in pids_unique:
-        import pdb
-        pdb.set_trace()
         indices = [i for i, x in enumerate(pids) if x == pid]
         pids_dict[pid] = indices
 
