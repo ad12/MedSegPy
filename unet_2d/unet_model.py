@@ -111,7 +111,9 @@ def unet_2d_model(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, output_mode=
         conv = Dropout(rate=0.00)(conv)
 
     # combine features
-    recon = Conv2D(1, (1, 1), padding='same', activation=output_mode, kernel_initializer=he_normal(seed=SEED))(conv)
+    #recon = Conv2D(1, (1, 1), padding='same', activation=output_mode, kernel_initializer=he_normal(seed=SEED))(conv)
+
+    recon = conv
 
     if (input_tensor is not None):
         inputs = get_source_inputs(input_tensor)

@@ -50,8 +50,14 @@ def unet_2d(config):
      :raises ValueError: if config not of type UNetConfig
      """
     input_shape = config.IMG_SIZE
-    output_mode = config.LOSS[1]
-    model = unet_2d_model(input_size=input_shape, output_mode=output_mode)
+    activation = config.LOSS[1]
+    num_classes = config.get_num_classes()
+
+    model = unet_2d_model(input_size=input_shape)
+
+    # Add activation
+    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation)
+    model = Model(inputs=model.input, outputs=x)
 
     return model
 
@@ -142,11 +148,21 @@ def unet_2d_multi_contrast(config):
     """
     if (type(config) is not UNetMultiContrastConfig):
         raise ValueError('config must be instance of UNetMultiContrastConfig')
-    print('Initializing multi contrast 2d unet: input size - ' + str(config.IMG_SIZE))
+
+    activation = config.LOSS[1]
+    num_classes = config.get_num_classes()
     input_shape = config.IMG_SIZE
+
+    print('Initializing multi contrast 2d unet: input size - ' + str(input_shape))
+
     x = Input(input_shape)
     x = Conv2D(1, (1, 1), name='conv_mc_comp')(x)
+
     model = unet_2d_model(input_tensor=x)
+
+    # Add activation
+    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation)
+    model = Model(inputs=model.input, outputs=x)
 
     # only load weights for layers that share the same name
     if (config.INIT_UNET_2D):
@@ -165,10 +181,20 @@ def unet_2_5d(config):
     """
     if (type(config) is not UNet2_5DConfig):
         raise ValueError('config must be instance of UNet2_5DConfig')
-    print('Initializing 2.5d unet: input size - ' + str(config.IMG_SIZE))
+
+    activation = config.LOSS[1]
+    num_classes = config.get_num_classes()
     input_shape = config.IMG_SIZE
+
+    print('Initializing 2.5d unet: input size - ' + str(input_shape))
+
     x = Input(input_shape)
+
     model = unet_2d_model(input_tensor=x)
+
+    # Add activation
+    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation)
+    model = Model(inputs=model.input, outputs=x)
 
     # only load weights for layers that share the same name
     if (config.INIT_UNET_2D):
