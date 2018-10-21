@@ -5,7 +5,7 @@ import config as MCONFIG
 import glob_constants
 import oai_train
 from config import DeeplabV3Config, SegnetConfig, UNetConfig
-from losses import WEIGHTED_CROSS_ENTROPY_LOSS
+from losses import WEIGHTED_CROSS_ENTROPY_LOSS, BINARY_CROSS_ENTROPY_LOSS
 
 SUPPORTED_MODELS = ['unet', 'segnet', 'deeplab']
 
@@ -18,6 +18,7 @@ if __name__ == '__main__':
     parser.add_argument('-g', '--gpu', metavar='G', type=str, nargs='?', default='0', help='gpu id to use')
     parser.add_argument('-s', '--seed', metavar='S', type=int, nargs='?', default=None)
     parser.add_argument('-m', '--model', metavar='M', nargs=1, choices=SUPPORTED_MODELS)
+    parser.add_argument('-bce', action='store_const', default=False, const=True)
     parser.add_argument('-a', action='store_const', default=False, const=True)
 
     args = parser.parse_args()
@@ -36,19 +37,21 @@ if __name__ == '__main__':
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
+    loss_func = BINARY_CROSS_ENTROPY_LOSS if args.bce else WEIGHTED_CROSS_ENTROPY_LOSS
+
     for model in models:
         # Data limitation experiment: Train Unet, Deeplab, and Segnet with limited data
         if model == 'unet':
             config = UNetConfig()
-            oai_train.train(config, vals_dict={'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS,
+            oai_train.train(config, vals_dict={'LOSS': loss_func,
                                                'INCLUDE_BACKGROUND': True})
         elif model == 'deeplab':
             config = DeeplabV3Config()
-            oai_train.train(config, vals_dict={'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS,
+            oai_train.train(config, vals_dict={'LOSS': loss_func,
                                                'INCLUDE_BACKGROUND': True})
         elif model == 'segnet_2d':
             config = SegnetConfig()
-            oai_train.train(config, vals_dict={'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS,
+            oai_train.train(config, vals_dict={'LOSS': loss_func,
                                                'INCLUDE_BACKGROUND': True})
         else:
             raise ValueError('model %s not supported' % model)
