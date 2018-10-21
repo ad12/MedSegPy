@@ -544,7 +544,7 @@ def handle_loss_limit_exp(vargin):
     overwrite_data = vargin[OVERWRITE_KEY]
     date = vargin['date']
     test_batch_size = vargin['batch_size']
-    import pdb; pdb.set_trace()
+
     loss_folder_path = LOSS_PATH_PREFIX % config_name
     vals_dict = {'TEST_BATCH_SIZE': test_batch_size}
 
