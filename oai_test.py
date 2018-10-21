@@ -359,6 +359,7 @@ def test_dir(dirpath, config, vals_dict=None, best_weight_path=None):
 ARCHITECTURE_PATHS_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/oai_data/%s'
 DATA_LIMIT_PATHS_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_seg_networks/data_limit', '%03d', '%s')
 AUGMENTATION_PATH_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_seg_networks/augment_limited', '%s')
+LOSS_PATH_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_seg_networks/loss_limited', '%s')
 
 EXP_KEY = 'exp'
 BATCH_TEST_KEY = 'batch'
@@ -526,6 +527,42 @@ def init_augment_limit_parser(input_subparser):
     add_base_architecture_parser(architecture_parser)
 
     subparser.set_defaults(func=handle_augment_limit_exp)
+
+
+def init_loss_limit_parser(input_subparser):
+    subparser = input_subparser.add_parser('loss', help='test loss experiment (DSC vs weighted CE)')
+    architecture_parser = subparser.add_subparsers(help='architecture to use', dest=ARCHITECTURE_KEY)
+
+    add_base_architecture_parser(architecture_parser)
+
+    subparser.set_defaults(func=handle_loss_limit_exp)
+
+
+def handle_loss_limit_exp(vargin):
+    config_name = vargin[ARCHITECTURE_KEY]
+    do_batch_test = vargin[BATCH_TEST_KEY]
+    overwrite_data = vargin[OVERWRITE_KEY]
+    date = vargin['date']
+    test_batch_size = vargin['batch_size']
+
+    loss_folder_path = LOSS_PATH_PREFIX % config_name
+    vals_dict = {'TEST_BATCH_SIZE': test_batch_size}
+
+    if config_name == 'deeplabv3_2d':
+        vals_dict.update(handle_deeplab(vargin))
+
+    if do_batch_test:
+        batch_test(loss_folder_path, config_name, [vals_dict], overwrite=overwrite_data)
+        return
+
+    if date is None:
+        raise ValueError('Must specify either \'date\' or \'%s\'' % (BATCH_TEST_KEY))
+
+    fullpath = os.path.join(loss_folder_path, date)
+    if not os.path.isdir(fullpath):
+        raise NotADirectoryError('%s does not exist. Make sure date is correct' % fullpath)
+
+    test_dir(fullpath, get_config(config_name), vals_dict=vals_dict)
 
 
 if __name__ == '__main__':
