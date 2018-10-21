@@ -23,8 +23,6 @@ if __name__ == '__main__':
     gpu = args.gpu
 
     models = args.model
-    if args.a:
-        models = SUPPORTED_MODELS
 
     glob_constants.SEED = args.seed
 

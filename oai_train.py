@@ -17,7 +17,7 @@ from keras.optimizers import Adam
 import config as MCONFIG
 import glob_constants
 import utils
-from config import DeeplabV3Config, UNetMultiContrastConfig
+from config import DeeplabV3Config, UNetMultiContrastConfig, UNetConfig
 from im_generator import calc_generator_info, img_generator, img_generator_oai
 from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS
 from models import get_model
@@ -350,4 +350,6 @@ if __name__ == '__main__':
     # train(DeeplabV3Config(), {'OS':16, 'DIL_RATES': (2, 4, 6), 'DROPOUT_RATE':0.0})
     # fine_tune(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-09-26-19-07-53'), DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE':1e-6})
     # print('\n\n')
+
+    train(UNetConfig(), vals_dict={'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS, 'INCLUDE_BACKGROUND': True})
 # train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'FINE_TUNE': False, 'TRAIN_BATCH_SIZE': 15})

@@ -350,7 +350,7 @@ class UNetMultiContrastConfig(UNetConfig):
 
 
 class UNet2_5DConfig(UNetConfig):
-    IMG_SIZE = (288, 288, 3)
+    IMG_SIZE = (288, 288, 5)
 
     CP_SAVE_TAG = 'unet_2_5d'
     N_EPOCHS = 100
