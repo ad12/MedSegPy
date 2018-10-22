@@ -117,10 +117,9 @@ def test_model(config, save_file=0):
     y_interp = []
     x_total = []
     y_total = []
-
+    
     # # Iterature through the files to be segmented
     for x_test, y_test, fname, num_slices in test_gen:
-
         # Perform the actual segmentation using pre-loaded model
         # Threshold at 0.5
         recon = model.predict(x_test, batch_size=test_batch_size)
@@ -195,13 +194,17 @@ def test_model(config, save_file=0):
                                                                           'ys': y_interp,
                                                                           'xt': x_total,
                                                                           'yt': y_total})
+    
+    x_interp_mean = np.mean(x_interp, 0)
+    y_interp_mean = np.mean(y_interp, 0)
+    y_interp_sem = np.std(y_interp, 0) / np.sqrt(y_interp.shape[0])
 
-
-#    plt.clf()
-#   plt.plot(xs, ys)
-#  plt.xlabel('FOV (%)')
-#  plt.ylabel('Dice')
-# plt.savefig(os.path.join(test_result_path, 'interp_slices.png'))
+    plt.clf()
+    plt.plot(x_interp_mean, y_interp_mean, 'b-')
+    plt.fill_between(x_interp_mean, y_interp_mean - y_interp_sem, y_interp_mean + y_interp_sem, alpha=0.35)
+    plt.xlabel('FOV (%)')
+    plt.ylabel('Dice')
+    plt.savefig(os.path.join(test_result_path, 'interp_slices.png'))
 
 def get_stats_string(dice_losses, voes, cv_values, skipped_count, testing_time):
     """
