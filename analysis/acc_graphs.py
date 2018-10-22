@@ -14,9 +14,9 @@ import utils
 
 
 # Architecture result paths
-ARCH_UNET = '/bmrNAS/people/arjun/msk_seg_networks/oai_data/unet_2d/original_akshaysc'
-ARCH_SEGNET = '/bmrNAS/people/arjun/msk_seg_networks/oai_data/segnet_2d/2018-09-26-19-08-34' #VERIFY
-ARCH_DEEPLAB = '/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d/2018-09-27-07-52-25' # VERIFY
+ARCH_UNET = '/bmrNAS/people/arjun/msk_seg_networks/oai_data/unet_2d/original_akshaysc/test_results'
+ARCH_SEGNET = '/bmrNAS/people/arjun/msk_seg_networks/oai_data/segnet_2d/2018-09-26-19-08-34/test_results' #VERIFY
+ARCH_DEEPLAB = '/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d/2018-09-27-07-52-25/test_results/16_2-4-6' # VERIFY
 
 ARCHS = {'filename': 'architecture.png',
          'keys': ['unet', 'segnet', 'deeplabv3+'],
@@ -24,7 +24,7 @@ ARCHS = {'filename': 'architecture.png',
 
 # Loss function result paths
 LOSS_DSC = ARCH_UNET
-LOSS_WCE = ''
+LOSS_WCE = '/bmrNAS/people/arjun/msk_seg_networks/loss_limit/unet_2d/2018-10-21-00-49-34/test_results'
 LOSS_BCE = ''
 
 LOSSES = {'filename': 'losses.png',
@@ -51,7 +51,7 @@ VOLUMES = {'filename': 'volume.png',
 SAVE_PATH = '/bmrNAS/people/arjun/msk_seg_networks/analysis/exp_graphs'
 utils.check_dir(SAVE_PATH)
 
-EXP_DICTS = [ARCHS]
+EXP_DICTS = [ARCHS, LOSSES]
 COLORS = ['#0000FF', '#00FF00', '#FF0000', '#CC4F1B', '#6600CC']
 
 
@@ -63,7 +63,11 @@ def graph_acc(exp_dict):
 
     c = 0
     for data_key in data_keys:
-        mat_filepath = os.path.join(exp_dict[data_key], 'test_results', 'total_interp_data.mat')
+        data_dirpath = exp_dict[data_key]
+        if len(data_dirpath) == 0:
+            continue
+
+        mat_filepath = os.path.join(data_dirpath, 'total_interp_data.mat')
         mat_data = sio.loadmat(mat_filepath)
         xs = mat_data['xs']
         ys = mat_data['ys']
@@ -73,7 +77,7 @@ def graph_acc(exp_dict):
         y_interp_sem = np.std(ys, 0) / np.sqrt(ys.shape[0])
 
         plt.plot(x_interp_mean, y_interp_mean, 'k', color=COLORS[c])
-        plt.fill_between(x_interp_mean, y_interp_mean - y_interp_sem, y_interp_mean + y_interp_sem, alpha=0.35)
+        plt.fill_between(x_interp_mean, y_interp_mean - y_interp_sem, y_interp_mean + y_interp_sem, alpha=0.35, edgecolor=COLORS[c], facecolor=COLORS[c])
 
         c += 1
 
