@@ -82,7 +82,6 @@ def test_model(config, save_file=0):
     K.set_image_data_format('channels_last')
 
     img_size = config.IMG_SIZE
-
     # Load weights into Deeplabv3 model
     model = get_model(config)
     model.load_weights(config.TEST_WEIGHT_PATH, by_name=True)
@@ -337,11 +336,8 @@ def test_dir(dirpath, config, vals_dict=None, best_weight_path=None):
     if best_weight_path is None:
         best_weight_path = utils.get_weights(dirpath)
     print('Best weight path: %s' % best_weight_path)
-    if (type(config) is not UNetConfig):
-        config.load_config(os.path.join(dirpath, 'config.ini'))
-    else:
-        config.CP_SAVE_PATH = dirpath
-
+    
+    config.load_config(os.path.join(dirpath, 'config.ini'))
     config.TEST_WEIGHT_PATH = best_weight_path
 
     if vals_dict is not None:
