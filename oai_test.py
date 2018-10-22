@@ -569,7 +569,7 @@ def handle_loss_limit_exp(vargin):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Train OAI dataset')
+    parser = argparse.ArgumentParser(description='Run inference on OAI dataset')
 
     subparsers = parser.add_subparsers(help='experiment to run', dest=EXP_KEY)
     init_architecture_parser(subparsers)
