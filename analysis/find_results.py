@@ -3,6 +3,7 @@ sys.path.insert(0, '../')
 
 
 import os
+import argparse
 
 import utils
 import oai_test as tst
@@ -25,3 +26,10 @@ def find_best_test_dir(base_folder):
                 max_dsc_details = potential_data
     print('\nMAX')
     print(max_dsc_details)
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Find best results')
+    parser.add_argument('-d', nargs=1, type=str, help='base directory to start search')
+
+    args = parser.parse_args()
+    find_best_test_dir(args.d[0])

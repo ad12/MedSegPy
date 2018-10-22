@@ -20,8 +20,8 @@ ARCH_SEGNET = '/bmrNAS/people/arjun/msk_seg_networks/oai_data/segnet_2d/2018-09-
 ARCH_DEEPLAB = '/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d/2018-09-27-07-52-25/test_results/16_2-4-6' # VERIFY
 
 ARCHS = {'filename': 'architecture.png',
-         'keys': ['unet', 'segnet', 'deeplabv3+'],
-         'unet': ARCH_UNET, 'segnet': ARCH_SEGNET, 'deeplabv3+': ARCH_DEEPLAB}
+         'keys': ['U-Net', 'SegNet', 'DLV3+'],
+         'U-Net': ARCH_UNET, 'SegNet': ARCH_SEGNET, 'DLV3+': ARCH_DEEPLAB}
 
 # Loss function result paths
 LOSS_DSC = ARCH_UNET
@@ -29,8 +29,8 @@ LOSS_WCE = '/bmrNAS/people/arjun/msk_seg_networks/loss_limit/unet_2d/2018-10-21-
 LOSS_BCE = ''
 
 LOSSES = {'filename': 'losses.png',
-          'keys': ['dsc', 'wce', 'bce'],
-          'dsc': LOSS_DSC, 'wce': LOSS_WCE, 'bce': LOSS_BCE}
+          'keys': ['DSC', 'WCE', 'BCE'],
+          'DSC': LOSS_DSC, 'WCE': LOSS_WCE, 'BCE': LOSS_BCE}
 
 # Augmentation result paths
 AUG_YES = ARCH_UNET
@@ -62,7 +62,8 @@ def graph_acc(exp_dict):
     filename = exp_dict['filename']
 
     plt.clf()
-
+    
+    legend_keys = []
     c = 0
     for data_key in data_keys:
         data_dirpath = exp_dict[data_key]
@@ -79,14 +80,15 @@ def graph_acc(exp_dict):
         y_interp_sem = np.std(ys, 0) / np.sqrt(ys.shape[0])
 
         plt.plot(x_interp_mean, y_interp_mean, 'k', color=cpal[c])
-        plt.fill_between(x_interp_mean, y_interp_mean - y_interp_sem, y_interp_mean + y_interp_sem, alpha=0.35, edgecolor=COLORS[c], facecolor=COLORS[c])
-
+        plt.fill_between(x_interp_mean, y_interp_mean - y_interp_sem, y_interp_mean + y_interp_sem, alpha=0.35, edgecolor=cpal[c], facecolor=cpal[c])
+        
+        legend_keys.append(data_key)
         c += 1
 
     plt.ylim([0.6, 1])
     plt.xlabel('FOV (%)')
     plt.ylabel('Dice')
-    plt.legend(data_keys)
+    plt.legend(legend_keys)
     plt.savefig(os.path.join(SAVE_PATH, filename))
 
 
