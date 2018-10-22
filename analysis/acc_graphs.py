@@ -9,6 +9,7 @@ import os
 import numpy as np
 import scipy.io as sio
 
+import seaborn as sns
 
 import utils
 
@@ -52,7 +53,8 @@ SAVE_PATH = '/bmrNAS/people/arjun/msk_seg_networks/analysis/exp_graphs'
 utils.check_dir(SAVE_PATH)
 
 EXP_DICTS = [ARCHS, LOSSES]
-COLORS = ['#0000FF', '#00FF00', '#FF0000', '#CC4F1B', '#6600CC']
+
+cpal = sns.color_palette("pastel", 8)
 
 
 def graph_acc(exp_dict):
@@ -76,11 +78,12 @@ def graph_acc(exp_dict):
         y_interp_mean = np.mean(ys, 0)
         y_interp_sem = np.std(ys, 0) / np.sqrt(ys.shape[0])
 
-        plt.plot(x_interp_mean, y_interp_mean, 'k', color=COLORS[c])
+        plt.plot(x_interp_mean, y_interp_mean, 'k', color=cpal[c])
         plt.fill_between(x_interp_mean, y_interp_mean - y_interp_sem, y_interp_mean + y_interp_sem, alpha=0.35, edgecolor=COLORS[c], facecolor=COLORS[c])
 
         c += 1
 
+    plt.ylim([0.6, 1])
     plt.xlabel('FOV (%)')
     plt.ylabel('Dice')
     plt.legend(data_keys)
