@@ -58,6 +58,9 @@ COLORS = ['#0000FF', '#00FF00', '#FF0000', '#CC4F1B', '#6600CC']
 def graph_acc(exp_dict):
     data_keys = exp_dict['keys']
     filename = exp_dict['filename']
+
+    plt.clf()
+
     c = 0
     for data_key in data_keys:
         mat_filepath = os.path.join(exp_dict[data_key], 'test_results', 'total_interp_data.mat')
@@ -69,14 +72,15 @@ def graph_acc(exp_dict):
         y_interp_mean = np.mean(ys, 0)
         y_interp_sem = np.std(ys, 0) / np.sqrt(ys.shape[0])
 
-        plt.clf()
         plt.plot(x_interp_mean, y_interp_mean, 'k', color=COLORS[c])
         plt.fill_between(x_interp_mean, y_interp_mean - y_interp_sem, y_interp_mean + y_interp_sem, alpha=0.35)
-        plt.xlabel('FOV (%)')
-        plt.ylabel('Dice')
-        plt.savefig(os.path.join(SAVE_PATH, filename))
 
         c += 1
+
+    plt.xlabel('FOV (%)')
+    plt.ylabel('Dice')
+    plt.legend(data_keys)
+    plt.savefig(os.path.join(SAVE_PATH, filename))
 
 
 if __name__ == '__main__':
