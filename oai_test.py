@@ -19,7 +19,7 @@ import scipy.io as sio
 from keras import backend as K
 
 import utils
-from config import DeeplabV3Config, SegnetConfig, UNetConfig
+from config import DeeplabV3Config, SegnetConfig, UNetConfig, UNet2_5DConfig
 from im_generator import img_generator_test, calc_generator_info, img_generator_oai_test
 from losses import dice_loss_test, vo_error
 from models import get_model
@@ -363,6 +363,7 @@ ARCHITECTURE_PATHS_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/oai_data/%s'
 DATA_LIMIT_PATHS_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_seg_networks/data_limit', '%03d', '%s')
 AUGMENTATION_PATH_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_seg_networks/augment_limited', '%s')
 LOSS_PATH_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_seg_networks/loss_limit', '%s')
+VOLUME_PATH_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_seg_networks/volume_limited', '%s')
 
 EXP_KEY = 'exp'
 BATCH_TEST_KEY = 'batch'
@@ -375,7 +376,8 @@ DIL_RATES_KEY = 'DIL_RATES'
 
 
 def get_config(name):
-    configs = [DeeplabV3Config(create_dirs=False), UNetConfig(create_dirs=False), SegnetConfig(create_dirs=False)]
+    configs = [DeeplabV3Config(create_dirs=False), UNetConfig(create_dirs=False), SegnetConfig(create_dirs=False),
+               UNet2_5DConfig(create_dirs=False)]
 
     for config in configs:
         if config.CP_SAVE_TAG == name:
@@ -404,8 +406,8 @@ def handle_deeplab(vargin):
     return vals_dict
 
 
-def add_base_architecture_parser(architecture_parser):
-    for architecture in SUPPORTED_ARCHITECTURES:
+def add_base_architecture_parser(architecture_parser, supported_architectures=SUPPORTED_ARCHITECTURES):
+    for architecture in supported_architectures:
         parser = architecture_parser.add_parser(architecture, help='use %s' % architecture)
         parser.add_argument('-%s' % BATCH_TEST_KEY, action='store_const', default=False, const=True,
                             help='batch test directory')
@@ -568,6 +570,39 @@ def handle_loss_limit_exp(vargin):
     test_dir(fullpath, get_config(config_name), vals_dict=vals_dict)
 
 
+def init_volume_limit_parser(input_subparser):
+    subparser = input_subparser.add_parser('loss', help='test loss experiment (DSC vs weighted CE)')
+    architecture_parser = subparser.add_subparsers(help='architecture to use', dest=ARCHITECTURE_KEY)
+
+    add_base_architecture_parser(architecture_parser,['unet_2_5d'])
+
+    subparser.set_defaults(func=handle_volume_limit_exp)
+
+
+def handle_volume_limit_exp(vargin):
+    config_name = vargin[ARCHITECTURE_KEY]
+    do_batch_test = vargin[BATCH_TEST_KEY]
+    overwrite_data = vargin[OVERWRITE_KEY]
+    date = vargin['date']
+    test_batch_size = vargin['batch_size']
+
+    loss_folder_path = VOLUME_PATH_PREFIX % config_name
+    vals_dict = {'TEST_BATCH_SIZE': test_batch_size}
+
+    if do_batch_test:
+        batch_test(loss_folder_path, config_name, [vals_dict], overwrite=overwrite_data)
+        return
+
+    if date is None:
+        raise ValueError('Must specify either \'date\' or \'%s\'' % (BATCH_TEST_KEY))
+
+    fullpath = os.path.join(loss_folder_path, date)
+    if not os.path.isdir(fullpath):
+        raise NotADirectoryError('%s does not exist. Make sure date is correct' % fullpath)
+
+    test_dir(fullpath, get_config(config_name), vals_dict=vals_dict)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run inference on OAI dataset')
 
@@ -576,6 +611,7 @@ if __name__ == '__main__':
     init_data_limit_parser(subparsers)
     init_augment_limit_parser(subparsers)
     init_loss_limit_parser(subparsers)
+    init_volume_limit_parser(subparsers)
 
     args = parser.parse_args()
     gpu = args.gpu

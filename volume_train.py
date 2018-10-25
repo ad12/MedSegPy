@@ -10,7 +10,7 @@ SUPPORTED_MODELS = ['unet']
 
 if __name__ == '__main__':
 
-    MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/augment_limited'
+    MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/volume_limited'
 
     parser = argparse.ArgumentParser(description='Train OAI dataset')
 
