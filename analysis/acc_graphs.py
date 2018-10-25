@@ -56,7 +56,7 @@ EXP_DICTS = [ARCHS, LOSSES]
 cpal = sns.color_palette("pastel", 8)
 
 
-def graph_acc(exp_dict):
+def graph_acc(exp_dict, show_plot=False):
     data_keys = exp_dict['keys']
     filename = exp_dict['filename']
 
@@ -89,6 +89,9 @@ def graph_acc(exp_dict):
     plt.ylabel('Dice')
     plt.legend(legend_keys)
     plt.savefig(os.path.join(SAVE_PATH, filename))
+    
+    if show_plot:
+        plt.show()
 
 
 if __name__ == '__main__':

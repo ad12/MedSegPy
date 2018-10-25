@@ -181,7 +181,7 @@ def test_model(config, save_file=0):
 
     # Write details to test file
     with open(os.path.join(test_result_path, 'results.txt'), 'w+') as f:
-        f.write('Results generated on %s G' % strftime('%X %x %Z'))
+        f.write('Results generated on %s \n' % strftime('%X %x %Z'))
         f.write('--' * 20)
         f.write('\n')
         f.write(pids_str)
@@ -575,7 +575,7 @@ def handle_loss_limit_exp(vargin):
 
 
 def init_volume_limit_parser(input_subparser):
-    subparser = input_subparser.add_parser('loss', help='test loss experiment (DSC vs weighted CE)')
+    subparser = input_subparser.add_parser('vol', help='test volume experiment (2.5D/3D)')
     architecture_parser = subparser.add_subparsers(help='architecture to use', dest=ARCHITECTURE_KEY)
 
     add_base_architecture_parser(architecture_parser,['unet_2_5d'])

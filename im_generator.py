@@ -493,7 +493,7 @@ def img_generator_oai_test(data_path, batch_size, config):
             assert (pid in fname)
 
             if num_neighboring is not None:
-                im, seg = get_neighboring_ims(num_slices=num_slices, data_path=data_path, filename=fname)
+                im, seg = get_neighboring_ims(num_slices=num_neighboring, data_path=data_path, filename=fname)
             else:
                 im, seg = load_inputs(data_path, fname)
                 if (len(im.shape) == 2):
