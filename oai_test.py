@@ -23,6 +23,7 @@ from config import DeeplabV3Config, SegnetConfig, UNetConfig, UNet2_5DConfig
 from im_generator import img_generator_test, calc_generator_info, img_generator_oai_test
 from losses import dice_loss_test, vo_error
 from models import get_model
+from keras.utils import plot_model
 
 DATE_THRESHOLD = strptime('2018-09-01-22-39-39', '%Y-%m-%d-%H-%M-%S')
 
@@ -86,8 +87,10 @@ def test_model(config, save_file=0):
     K.set_image_data_format('channels_last')
 
     img_size = config.IMG_SIZE
+
     # Load weights into Deeplabv3 model
     model = get_model(config)
+    plot_model(model, os.path.join(config.TEST_RESULT_PATH, 'model.png'), show_shapes=True)    
     model.load_weights(config.TEST_WEIGHT_PATH, by_name=True)
 
     img_cnt = 0
