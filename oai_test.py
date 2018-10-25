@@ -261,7 +261,7 @@ def get_valid_subdirs(base_path, no_results=True):
 
     dir_base_name = os.path.basename(base_path)
     try:
-        d = strptime(dir_base_name)
+        d = strptime(dir_base_name, '%Y-%m-%d-%H-%M-%S')
         if d < DATE_THRESHOLD:
             return []
     except ValueError:
