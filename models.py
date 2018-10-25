@@ -53,11 +53,17 @@ def unet_2d(config):
     activation = config.LOSS[1]
     num_classes = config.get_num_classes()
 
-    model = unet_2d_model(input_size=input_shape)
+    # Legacy: some weights were trained on different structure (conv and activation were combined) making loading
+    #           weights difficult.
+    #           We check to see if we are testing and if we are in a case where we need to account for this issue
+    if config.STATE == 'testing' and config.TEST_WEIGHT_PATH.contains('original_akshaysc'):
+        model = unet_2d_model(input_size=input_shape, output_mode='sigmoid')
+    else:
+        model = unet_2d_model(input_size=input_shape)
 
-    # Add activation
-    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation)
-    model = Model(inputs=model.input, outputs=x)
+        # Add activation
+        x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation)
+        model = Model(inputs=model.input, outputs=x)
 
     return model
 

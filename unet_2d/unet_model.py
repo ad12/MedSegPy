@@ -28,7 +28,7 @@ WEIGHTS_DICT = {FEMORAL_CARTILAGE_STR: os.path.join(__ABS_DIR__, 'weights/unet_2
 DEFAULT_INPUT_SIZE = (288, 288, 1)
 
 
-def unet_2d_model(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, output_mode="sigmoid"):
+def unet_2d_model(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, output_mode=None):
     """Generate Unet 2D model compatible with Keras 2
 
     :param input_size: tuple of input size - format: (height, width, 1)
@@ -111,9 +111,12 @@ def unet_2d_model(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, output_mode=
         conv = Dropout(rate=0.00)(conv)
 
     # combine features
-    #recon = Conv2D(1, (1, 1), padding='same', activation=output_mode, kernel_initializer=he_normal(seed=SEED))(conv)
-
-    recon = conv
+    # this if statement is required for legacy purposes
+    # some weights were trained with a joint activation, which makes it difficult to load weights effectively
+    if output_mode is not None:
+        recon = Conv2D(1, (1, 1), padding='same', activation=output_mode, kernel_initializer=he_normal(seed=SEED))(conv)
+    else:
+        recon = conv
 
     if (input_tensor is not None):
         inputs = get_source_inputs(input_tensor)
