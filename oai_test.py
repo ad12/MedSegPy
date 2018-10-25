@@ -160,6 +160,9 @@ def test_model(config, save_file=0):
             with h5py.File(save_name, 'w') as h5f:
                 h5f.create_dataset('recon', data=recon)
 
+            # in case of 2.5D, we want to only select center slice
+            x_write = x_test[..., x_test.shape[-1] // 2]
+
             # Save mask overlap
             ovlps = utils.write_ovlp_masks(os.path.join(test_result_path, 'ovlp', fname), y_test, labels)
             utils.write_mask(os.path.join(test_result_path, 'gt', fname), y_test)
