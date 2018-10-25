@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import argparse
 import os
 import time
-from time import strptime
+from time import strptime, strftime
 
 import h5py
 import numpy as np
@@ -181,6 +181,7 @@ def test_model(config, save_file=0):
 
     # Write details to test file
     with open(os.path.join(test_result_path, 'results.txt'), 'w+') as f:
+        f.write('Results generated on %s G' % strftime('%X %x %Z'))
         f.write('--' * 20)
         f.write('\n')
         f.write(pids_str)
