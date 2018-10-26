@@ -384,8 +384,8 @@ def get_neighboring_ims(num_slices, data_path, filename):
     num_slices = num_slices // 2
     filename_split = filename.split('_')
     slice_no = int(filename_split[-1])
+    import pdb;pdb.set_trace()
     base_filename = '_'.join(filename_split[:-1]) + '_%03d'
-
     ims = []
     inds = []
     r_seg = None

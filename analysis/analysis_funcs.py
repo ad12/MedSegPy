@@ -11,6 +11,7 @@ import matplotlib
 #matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
+
 import os
 import numpy as np
 import scipy.io as sio
@@ -23,8 +24,6 @@ from scipy import optimize as sop
 
 cpal = sns.color_palette("pastel", 8)
 SAVE_PATH = utils.check_dir('/bmrNAS/people/arjun/msk_seg_networks/analysis/exp_graphs')
-
-
 
 def graph_slice_exp(exp_dict, show_plot=False):
     """
@@ -83,17 +82,48 @@ def graph_slice_exp(exp_dict, show_plot=False):
     if show_plot:
         plt.show()
 
-
-def graph_data_limitation(multi_data, metric_id, ylabel=None):
-    if ylabel is None:
-        ylabel = metric_id.upper()
+def graph_data_limitation(data, filename):
+                
+    fig, ax_array = plt.subplots(1, len(list(data.keys())), figsize=(len(list(data.keys()))*5.2, 3))
     
+    i = 0
+    for k in data.keys():
+        ylabel = k.upper()
+        
+        if ylabel.endswith('S'):
+            ylabel = ylabel[:-1]
+        
+        ax = ax_array[i]
+                                 
+        print('=====================')  
+        print('        %s          ' % ylabel)
+        print('=====================')                         
+        results = get_data_limitation(data[k], k)
+        c = 0
+        for model in results.keys():
+            xs, ys, SEs, x_sim, y_sim, r2 = results[model]
+            ax.plot(xs, ys, 'o', color=cpal[c], label='%s' % model)
+            ax.errorbar(xs, ys, yerr=SEs, ecolor=cpal[c], fmt='none')
+
+            print('r2, r - %s : %0.4f, %0.4f' % (model, r2, np.sqrt(r2)))
+
+            ax.plot(x_sim, y_sim, 'k--', color=cpal[c], label='%s - fit' % model)
+
+            c += 1
+        ax.set_ylabel(ylabel, fontsize=13)
+        i += 1
+    
+    fig.text(0.5, -0.04, '#Patients', ha='center', fontsize=13)
+    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+                                 
+    plt.savefig(os.path.join(SAVE_PATH, filename))
+    
+def get_data_limitation(multi_data, metric_id):
     data_keys = multi_data['keys']
     num_patients = [5, 15, 30, 60]
     c = 0
     
-    legend_keys = []
-    plt.figure()
+    results_dict = {}
     for k in data_keys:
         data = multi_data[k]
 
@@ -117,23 +147,12 @@ def graph_data_limitation(multi_data, metric_id, ylabel=None):
             xs.append(num_p)
             ys.append(np.mean(num_patients_data[num_p]))
             SEs.append(np.std(num_patients_data[num_p]) / np.sqrt(num_patients_data[num_p].shape[0]))
-            
-        #plt.plot(xs, ys, 'o', color=cpal[c], label='%s' % k)
-        plt.plot(xs, ys, 'o', color=cpal[c], label='%s' % k)
-        plt.errorbar(xs, ys, yerr=SEs, ecolor=cpal[c], fmt='none')
-                       
-        # Fit and r2
+        
         x_sim, y_sim, r2 = fit_power_law(xs, ys)
-        print('r2, r - %s : %0.4f, %0.4f' % (k, r2, np.sqrt(r2)))
         
-        plt.plot(x_sim, y_sim, 'k--', color=cpal[c], label='%s - fit' % k)
-        
-        c += 1
-
-    plt.xlabel('# Patients')
-    plt.ylabel(ylabel)
-    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-    plt.savefig(os.path.join(SAVE_PATH, multi_data['filename']))
+        results_dict[k] = (xs, ys, SEs, x_sim, y_sim, r2)
+     
+    return results_dict
 
     
 __EPSILON__ = 1e-8
