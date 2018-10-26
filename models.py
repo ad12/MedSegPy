@@ -56,7 +56,7 @@ def unet_2d(config):
     # Legacy: some weights were trained on different structure (conv and activation were combined) making loading
     #           weights difficult.
     #           We check to see if we are testing and if we are in a case where we need to account for this issue
-    if config.STATE == 'testing' and 'original_akshaysc' in config.TEST_WEIGHT_PATH:
+    if config.STATE == 'testing' and config.VERSION <= 2:
         model = unet_2d_model(input_size=input_shape, output_mode='sigmoid')
     else:
         model = unet_2d_model(input_size=input_shape)

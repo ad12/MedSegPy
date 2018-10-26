@@ -19,6 +19,7 @@ import seaborn as sns
 
 import utils
 
+from scipy import optimize as sop
 
 cpal = sns.color_palette("pastel", 8)
 SAVE_PATH = '/bmrNAS/people/arjun/msk_seg_networks/analysis/exp_graphs'
@@ -74,9 +75,83 @@ def graph_slice_exp(exp_dict, show_plot=False):
 
     plt.ylim([0.6, 1])
     plt.xlabel('FOV (%)')
-    plt.ylabel('Dice')
+    plt.ylabel('DSC')
     plt.legend(legend_keys)
     plt.savefig(os.path.join(SAVE_PATH, filename))# Architecture experiment
     
     if show_plot:
         plt.show()
+
+
+def graph_data_limitation(multi_data, metric_id, ylabel=None):
+    if ylabel is None:
+        ylabel = metric_id.upper()
+    
+    data_keys = multi_data['keys']
+    num_patients = [5, 15, 30, 60]
+    c = 0
+    
+    legend_keys = []
+    
+    plt.clf()
+    for k in data_keys:
+        data = multi_data[k]
+
+        num_patients_data = {}
+        for num_p in num_patients:
+            num_patients_data[num_p] = np.asarray([])
+        
+        for i in range(len(data[0])):
+            num_p = num_patients[i]
+            for j in range(len(data)):
+                test_results_folder = data[j][i]
+                metrics_filepath = os.path.join(test_results_folder, 'metrics.dat')
+                metrics = utils.load_pik(metrics_filepath)
+                
+                num_patients_data[num_p] = np.append(num_patients_data[num_p], metrics[metric_id].flatten())
+        
+        xs = []
+        ys = []
+        for num_p in num_patients:
+            xs.append(num_p)
+            ys.append(np.mean(num_patients_data[num_p]))
+            
+        plt.plot(xs, ys, 'o', color=cpal[c], label='%s' % k)
+        
+        # Fit and r2
+        x_sim, y_sim, r2 = fit_power_law(xs, ys)
+        print('r2, r - %s : %0.4f, %0.4f' % (k, r2, np.sqrt(r2)))
+        
+        plt.plot(x_sim, y_sim, 'k--', color=cpal[c], label='%s - fit' % k)
+        
+        c += 1
+
+    plt.xlabel('# Patients')
+    plt.ylabel(ylabel)
+    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+    plt.savefig(os.path.join(SAVE_PATH, multi_data['filename']))
+
+    
+__EPSILON__ = 1e-8
+def fit_power_law(xs, ys):
+    def func(x, a, b):
+        exp = x ** b
+        return a * exp
+
+    x = np.asarray(xs)
+    y = np.asarray(ys)
+
+    popt, _ = sop.curve_fit(func, x, y, p0=[1,1], maxfev=1000)
+
+    residuals = y - func(x, popt[0], popt[1])
+    ss_res = np.sum(residuals ** 2)
+    ss_tot = np.sum((y - np.mean(y)) ** 2)
+
+    r_squared = 1 - (ss_res / (ss_tot + __EPSILON__))
+    
+    # Simulate on data
+    x_sim = np.linspace(np.min(x), np.max(x), 100)
+    y_sim = func(x_sim, popt[0], popt[1])
+    
+    return x_sim, y_sim, r_squared
+    

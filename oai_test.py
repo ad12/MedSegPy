@@ -197,7 +197,7 @@ def test_model(config, save_file=0):
     metrics = {'dsc': dice_losses,
                'voe': voes,
                'cvs':cv_values}
-    utils.save_pik(results_dat, metrics)
+    utils.save_pik(metrics, results_dat)
 
     x_interp = np.asarray(x_interp)
     y_interp = np.asarray(y_interp)
