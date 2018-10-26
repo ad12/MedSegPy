@@ -167,7 +167,7 @@ def test_model(config, save_file=0):
             ovlps = utils.write_ovlp_masks(os.path.join(test_result_path, 'ovlp', fname), y_test, labels)
             utils.write_mask(os.path.join(test_result_path, 'gt', fname), y_test)
             utils.write_prob_map(os.path.join(test_result_path, 'prob_map', fname), recon)
-            utils.write_im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_test, ovlps)
+            utils.write_im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write, ovlps)
 
         img_cnt += 1
 
