@@ -192,6 +192,13 @@ def test_model(config, save_file=0):
         f.write('\n')
         f.write(stats_string)
 
+    # Save metrics in dat format using pickle
+    results_dat = os.path.join(test_result_path, 'metrics.dat')
+    metrics = {'dsc': dice_losses,
+               'voe': voes,
+               'cvs':cv_values}
+    utils.save_pik(results_dat, metrics)
+
     x_interp = np.asarray(x_interp)
     y_interp = np.asarray(y_interp)
     x_total = np.asarray(x_total)
