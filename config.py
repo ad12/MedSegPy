@@ -19,7 +19,7 @@ SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/oai_data'
 
 
 class Config():
-    VERSION = 2
+    VERSION = 3
 
     # Loss function in form (id, output_mode)
     LOSS = DICE_LOSS
