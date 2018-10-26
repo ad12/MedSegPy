@@ -378,55 +378,44 @@ def img_generator_oai(data_path, batch_size, config, state='training', shuffle_e
 
 
 def get_neighboring_ims(num_slices, data_path, filename):
+    """
+    Assumes that there are at most slices go from 1-72
+    :param num_slices:
+    :param data_path:
+    :param filename:
+    :return:
+    """
     assert 'Aug00' in filename
 
-    num_slices_orig = num_slices
-    num_slices = num_slices // 2
+    d_slice = num_slices // 2
     filename_split = filename.split('_')
-    slice_no = int(filename_split[-1])
-    import pdb;pdb.set_trace()
+    central_slice_no = int(filename_split[-1])
+
+    slice_nos = np.asarray(list(range(central_slice_no - d_slice, central_slice_no + d_slice + 1)))
+    slice_nos[slice_nos < 1] = 1
+    slice_nos[slice_nos > 72] = 72
+    assert len(slice_nos) == num_slices
+
+
     base_filename = '_'.join(filename_split[:-1]) + '_%03d'
+
     ims = []
-    inds = []
-    r_seg = None
-    d_slice_range = list(range(-num_slices, num_slices + 1))
-    for i in range(len(d_slice_range)):
-        d_slice = d_slice_range[i]
-        slice_filepath = base_filename % (slice_no + d_slice)
-        if os.path.isfile('%s/%s.im' % (data_path, slice_filepath)):
-            im, seg = load_inputs(data_path, slice_filepath)
-            if d_slice == 0:
-                r_seg = seg
-        else:
-            im = None
+    segs = []
+    for i in range(num_slices):
+        slice_no = slice_nos[i]
+        slice_filename = base_filename % slice_no
 
-        if im is not None:
-            inds.append(i)
+        im, seg = load_inputs(data_path, slice_filename)
         ims.append(im)
+        segs.append(seg)
 
-    # replace None in first 1/2
-    for i in range(0, inds[0]):
-        im = ims[i]
-        if im is not None:
-            break
-        ims[i] = ims[inds[0]]
+    # segmentation is central slice segmentation
+    im = np.stack(ims)
+    seg = segs[len(segs) // 2]
 
-    # replace None in second 1/2
-    for i in range(inds[-1] + 1, num_slices_orig):
-        im = ims[i]
-        if im is not None:
-            break
-        ims[i] = ims[inds[-1]]
+    import pdb; pdb.set_trace()
 
-    assert r_seg is not None
-
-    try:
-        ims = np.stack(ims)
-    except ValueError:
-        for i in ims:
-            print(i)
-    ims = np.transpose(ims, (1, 2, 0))
-    return np.stack(ims), r_seg
+    return im, seg
 
 
 def get_file_pid(fname):
@@ -495,7 +484,7 @@ def img_generator_oai_test(data_path, batch_size, config):
             assert (pid in fname)
 
             if num_neighboring is not None:
-                im, seg = get_neighboring_ims(num_slices=num_neighboring, data_path=data_path, filename=fname)
+                im, seg = get_neighboring_ims(d_slices=num_neighboring, data_path=data_path, filename=fname)
             else:
                 im, seg = load_inputs(data_path, fname)
                 if (len(im.shape) == 2):
