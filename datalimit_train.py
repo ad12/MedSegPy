@@ -24,7 +24,7 @@ def get_config(name):
         raise ValueError('config %s not supported' % name)
 
 
-def data_limitation_train(config_name, vals_dict=None):
+def data_limitation_train(config_name, vals_dict=None, pc=None):
     """
     Train data limited networks
     :return:
@@ -47,6 +47,9 @@ def data_limitation_train(config_name, vals_dict=None):
     num_pids = len(pids)
 
     pid_counts = natsorted(list(pids_dict.keys()))
+
+    if pc is not None:
+        pid_counts = [pc]
 
     for pid_count in pid_counts:
 
@@ -82,6 +85,7 @@ def data_limitation_train(config_name, vals_dict=None):
 
 
 SUPPORTED_MODELS = ['unet', 'segnet', 'deeplab']
+SUPPORTED_PATIENT_COUNTS = [5, 15, 30, 60]
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train OAI dataset')
@@ -91,6 +95,11 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--seed', metavar='S', type=int, nargs='?', default=None)
     parser.add_argument('-m', '--model', metavar='M', nargs=1, choices=SUPPORTED_MODELS)
     parser.add_argument('-a', action='store_const', default=False, const=True)
+
+    parser.add_argument('-r', '--repeat', metavar='R', nargs='?', type=int, default=1,
+                        help='number of times to repeat specified experiments')
+    parser.add_argument('-pc', nargs='?', type=int, default=None, choices=SUPPORTED_PATIENT_COUNTS,
+                        help='specific number of patients to do experiment')
 
     args = parser.parse_args()
     print(args)
@@ -102,23 +111,31 @@ if __name__ == '__main__':
 
     glob_constants.SEED = args.seed
 
+    repeat_count = args.repeat
+    if repeat_count < 1:
+        raise ValueError('\'-r\', \'--repeat\' must be at least 1')
+
+    patient_count = args.pc
+
     print(glob_constants.SEED)
 
     print('Using GPU %s' % gpu)
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
     print(models)
-    for model in models:
-        print(model)
-        # Data limitation experiment: Train Unet, Deeplab, and Segnet with limited data
-        if model == 'unet':
-            data_limitation_train(model, None)
-        elif model == 'deeplab':
-            data_limitation_train(model, None)
-        elif model == 'segnet':
-            data_limitation_train(model, None)
-        else:
-            raise ValueError('model %s not supported' % model)
+
+    for c in range(repeat_count):
+        for model in models:
+            print(model)
+            # Data limitation experiment: Train Unet, Deeplab, and Segnet with limited data
+            if model == 'unet':
+                data_limitation_train(model, vals_dict=None, pc=patient_count)
+            elif model == 'deeplab':
+                data_limitation_train(model, vals_dict=None, pc=patient_count)
+            elif model == 'segnet':
+                data_limitation_train(model, vals_dict=None, pc=patient_count)
+            else:
+                raise ValueError('model %s not supported' % model)
 
     # data_limitation_train('unet_2d',
     #                       vals_dict={'INITIAL_LEARNING_RATE': 0.02, 'DROP_RATE': 1, 'TRAIN_BATCH_SIZE': 12})  # unet
