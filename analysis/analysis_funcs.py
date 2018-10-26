@@ -22,7 +22,8 @@ import utils
 from scipy import optimize as sop
 
 cpal = sns.color_palette("pastel", 8)
-SAVE_PATH = '/bmrNAS/people/arjun/msk_seg_networks/analysis/exp_graphs'
+SAVE_PATH = utils.check_dir('/bmrNAS/people/arjun/msk_seg_networks/analysis/exp_graphs')
+
 
 
 def graph_slice_exp(exp_dict, show_plot=False):
@@ -39,7 +40,7 @@ def graph_slice_exp(exp_dict, show_plot=False):
     data_keys = exp_dict['keys']
     filename = exp_dict['filename']
 
-    plt.clf()
+    plt.figure()
     
     legend_keys = []
     c = 0
@@ -92,8 +93,7 @@ def graph_data_limitation(multi_data, metric_id, ylabel=None):
     c = 0
     
     legend_keys = []
-    
-    plt.clf()
+    plt.figure()
     for k in data_keys:
         data = multi_data[k]
 
@@ -112,12 +112,16 @@ def graph_data_limitation(multi_data, metric_id, ylabel=None):
         
         xs = []
         ys = []
+        SEs = []
         for num_p in num_patients:
             xs.append(num_p)
             ys.append(np.mean(num_patients_data[num_p]))
+            SEs.append(np.std(num_patients_data[num_p]) / np.sqrt(num_patients_data[num_p].shape[0]))
             
+        #plt.plot(xs, ys, 'o', color=cpal[c], label='%s' % k)
         plt.plot(xs, ys, 'o', color=cpal[c], label='%s' % k)
-        
+        plt.errorbar(xs, ys, yerr=SEs, ecolor=cpal[c], fmt='none')
+                       
         # Fit and r2
         x_sim, y_sim, r2 = fit_power_law(xs, ys)
         print('r2, r - %s : %0.4f, %0.4f' % (k, r2, np.sqrt(r2)))
