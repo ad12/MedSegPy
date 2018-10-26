@@ -319,7 +319,7 @@ def inspect_vals(x):
 
 
 def img_generator_oai(data_path, batch_size, config, state='training', shuffle_epoch=True):
-    if (state not in ['training', 'validation']):
+    if state not in ['training', 'validation']:
         raise ValueError('state must be in [\'training\', \'validation\']')
 
     img_size = config.IMG_SIZE
@@ -378,6 +378,8 @@ def img_generator_oai(data_path, batch_size, config, state='training', shuffle_e
 
 
 def get_neighboring_ims(num_slices, data_path, filename):
+    assert 'Aug00' in filename
+
     num_slices_orig = num_slices
     num_slices = num_slices // 2
     filename_split = filename.split('_')
