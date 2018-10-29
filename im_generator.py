@@ -411,9 +411,8 @@ def get_neighboring_ims(num_slices, data_path, filename):
 
     # segmentation is central slice segmentation
     im = np.stack(ims)
+    im = np.transpose(im, (1, 2, 0))
     seg = segs[len(segs) // 2]
-
-    import pdb; pdb.set_trace()
 
     return im, seg
 
@@ -484,7 +483,7 @@ def img_generator_oai_test(data_path, batch_size, config):
             assert (pid in fname)
 
             if num_neighboring is not None:
-                im, seg = get_neighboring_ims(d_slices=num_neighboring, data_path=data_path, filename=fname)
+                im, seg = get_neighboring_ims(num_slices=num_neighboring, data_path=data_path, filename=fname)
             else:
                 im, seg = load_inputs(data_path, fname)
                 if (len(im.shape) == 2):

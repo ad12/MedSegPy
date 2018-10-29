@@ -84,7 +84,7 @@ def graph_slice_exp(exp_dict, show_plot=False):
 
 def graph_data_limitation(data, filename):
                 
-    fig, ax_array = plt.subplots(1, len(list(data.keys())), figsize=(len(list(data.keys()))*5.2, 3))
+    fig, ax_array = plt.subplots(1, len(list(data.keys())), figsize=(len(list(data.keys()))*6, 3))
     
     i = 0
     for k in data.keys():
@@ -102,21 +102,23 @@ def graph_data_limitation(data, filename):
         c = 0
         for model in results.keys():
             xs, ys, SEs, x_sim, y_sim, r2 = results[model]
-            ax.plot(xs, ys, 'o', color=cpal[c], label='%s' % model)
+            ax.semilogx(xs, ys, 'o', color=cpal[c], label='%s' % model)
             ax.errorbar(xs, ys, yerr=SEs, ecolor=cpal[c], fmt='none')
 
             print('r2, r - %s : %0.4f, %0.4f' % (model, r2, np.sqrt(r2)))
 
-            ax.plot(x_sim, y_sim, 'k--', color=cpal[c], label='%s - fit' % model)
+            ax.semilogx(x_sim, y_sim, 'k--', color=cpal[c])
 
             c += 1
         ax.set_ylabel(ylabel, fontsize=13)
         i += 1
     
-    fig.text(0.5, -0.04, '#Patients', ha='center', fontsize=13)
-    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-                                 
-    plt.savefig(os.path.join(SAVE_PATH, filename))
+    ax_center = ax_array[len(ax_array) // 2]
+    txt = fig.text(0.49, -0.04, '#Patients', fontsize=13)
+    lgd = ax_center.legend(loc='upper center', bbox_to_anchor=(0.5, -0.25),
+          fancybox=True, shadow=True, ncol=3)
+    plt.subplots_adjust(hspace = 0.3, wspace = 0.3)
+    plt.savefig(os.path.join(SAVE_PATH, filename), bbox_extra_artists=(txt, lgd), bbox_inches='tight')
     
 def get_data_limitation(multi_data, metric_id):
     data_keys = multi_data['keys']
