@@ -24,8 +24,24 @@ from im_generator import img_generator_test, calc_generator_info, img_generator_
 from losses import dice_loss_test, vo_error
 from models import get_model
 from keras.utils import plot_model
+import pandas as pd
+from scan_metadata import ScanMetadata
 
 DATE_THRESHOLD = strptime('2018-09-01-22-39-39', '%Y-%m-%d-%H-%M-%S')
+TEST_SET_METADATA = '/bmrNAS/arjun/msk_seg_networks/oai_data_test/oai_test_data.xlsx'
+
+
+def parse_test_set_metadata(filepath=TEST_SET_METADATA):
+    df = pd.read_excel(pd.ExcelFile(filepath))
+    test_set_metadata_dict = dict()
+
+    for test_scan_data in df.values:
+        scan_id = test_scan_data[0]
+        slice_direction = test_scan_data[1]
+        kl_grade = test_scan_data[2]
+        test_set_metadata_dict[scan_id] = ScanMetadata(scan_id=scan_id, slice_dir=slice_direction, kl_grade=kl_grade)
+
+    return test_set_metadata_dict
 
 
 def find_start_and_end_slice(y_true):
@@ -46,7 +62,11 @@ def find_start_and_end_slice(y_true):
     return start, stop
 
 
-def interp_slice(y_true, y_pred):
+def interp_slice(y_true, y_pred, orientation='M'):
+
+    if orientation not in ['M', 'L']:
+        raise ValueError('Orientation must either be \'M\'(medial) or \'L\'(lateral)')
+
     dice_losses = []
     start, stop = find_start_and_end_slice(y_true)
 
@@ -58,6 +78,10 @@ def interp_slice(y_true, y_pred):
         dice_losses.append(dice_loss_test(y_true_curr, y_pred_curr))
 
     dice_losses = np.asarray(dice_losses)
+
+    # if orientation is lateral, flip to make it medial
+    if orientation is 'L':
+        dice_losses = np.flip(dice_losses)
 
     xt = (np.asarray(list(range(num_slices))) - start) / (stop - start) * 100.0
     yt = dice_losses
@@ -87,6 +111,9 @@ def test_model(config, save_file=0):
     K.set_image_data_format('channels_last')
 
     img_size = config.IMG_SIZE
+
+    # get metadata for test scans
+    test_set_md = parse_test_set_metadata()
 
     # Load weights into Deeplabv3 model
     model = get_model(config)
@@ -148,8 +175,12 @@ def test_model(config, save_file=0):
         pids_str = pids_str + print_str + '\n'
         print(print_str)
 
+        test_set_md[fname].cv = cv
+        test_set_md[fname].dsc = dl
+        test_set_md[fname].voe = voe
+
         # interpolate region of interest
-        xs, ys, xt, yt = interp_slice(y_test, labels)
+        xs, ys, xt, yt = interp_slice(y_test, labels, test_set_md[fname].slice_dir)
         x_interp.append(xs)
         y_interp.append(ys)
         x_total.append(xt)
@@ -196,8 +227,12 @@ def test_model(config, save_file=0):
     results_dat = os.path.join(test_result_path, 'metrics.dat')
     metrics = {'dsc': dice_losses,
                'voe': voes,
-               'cvs':cv_values}
+               'cv': cv_values}
     utils.save_pik(metrics, results_dat)
+
+    # Save metrics by kl grade
+    results_dat = os.path.join(test_result_path, 'test_md.dat')
+    utils.save_pik(test_set_md, results_dat)
 
     x_interp = np.asarray(x_interp)
     y_interp = np.asarray(y_interp)
