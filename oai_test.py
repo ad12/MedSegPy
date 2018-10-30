@@ -67,6 +67,10 @@ def interp_slice(y_true, y_pred, orientation='M'):
     if orientation not in ['M', 'L']:
         raise ValueError('Orientation must either be \'M\'(medial) or \'L\'(lateral)')
 
+    # if orientation is lateral, flip to make it medial
+    if orientation is 'L':
+        y_true = y_true[::-1, ...]
+        y_pred = y_pred[::-1, ...]
     dice_losses = []
     start, stop = find_start_and_end_slice(y_true)
 
@@ -78,10 +82,6 @@ def interp_slice(y_true, y_pred, orientation='M'):
         dice_losses.append(dice_loss_test(y_true_curr, y_pred_curr))
 
     dice_losses = np.asarray(dice_losses)
-
-    # if orientation is lateral, flip to make it medial
-    if orientation is 'L':
-        dice_losses = np.flip(dice_losses)
 
     xt = (np.asarray(list(range(num_slices))) - start) / (stop - start) * 100.0
     yt = dice_losses
