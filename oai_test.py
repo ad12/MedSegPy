@@ -28,20 +28,7 @@ import pandas as pd
 from scan_metadata import ScanMetadata
 
 DATE_THRESHOLD = strptime('2018-09-01-22-39-39', '%Y-%m-%d-%H-%M-%S')
-TEST_SET_METADATA = '/bmrNAS/people/arjun/msk_seg_networks/oai_data_test/oai_test_data.xlsx'
-
-
-def parse_test_set_metadata(filepath=TEST_SET_METADATA):
-    df = pd.read_excel(pd.ExcelFile(filepath))
-    test_set_metadata_dict = dict()
-
-    for test_scan_data in df.values:
-        scan_id = test_scan_data[0]
-        slice_direction = test_scan_data[1]
-        kl_grade = test_scan_data[2]
-        test_set_metadata_dict[scan_id] = ScanMetadata(scan_id=scan_id, slice_dir=slice_direction, kl_grade=kl_grade)
-
-    return test_set_metadata_dict
+TEST_SET_METADATA_PIK = '/bmrNAS/people/arjun/msk_seg_networks/oai_data_test/oai_test_data.dat'
 
 
 def find_start_and_end_slice(y_true):
@@ -95,7 +82,8 @@ def test_model(config, save_file=0):
     :param save_file: save data (default = 0)
     """
 
-    test_set_md = parse_test_set_metadata()
+    test_set_md = utils.load_pik(TEST_SET_METADATA_PIK)
+
     # Load config data
     test_path = config.TEST_PATH
     test_result_path = config.TEST_RESULT_PATH
