@@ -31,6 +31,7 @@ DATE_THRESHOLD = strptime('2018-09-01-22-39-39', '%Y-%m-%d-%H-%M-%S')
 TEST_SET_METADATA_PIK = '/bmrNAS/people/arjun/msk_seg_networks/oai_data_test/oai_test_data.dat'
 TEST_SET_MD = utils.load_pik(TEST_SET_METADATA_PIK)
 
+
 def find_start_and_end_slice(y_true):
     for i in range(y_true.shape[0]):
         sum_pixels = np.sum(y_true[i, ...])
@@ -49,12 +50,23 @@ def find_start_and_end_slice(y_true):
     return start, stop
 
 
-def interp_slice(y_true, y_pred):
+def interp_slice(y_true, y_pred, orientation='M'):
     dice_losses = []
     start, stop = find_start_and_end_slice(y_true)
 
+    y_true = np.copy(y_true)
+    y_pred = np.copy(y_pred)
+
     assert y_true.shape == y_pred.shape
     num_slices = y_true.shape[0]
+
+    if orientation not in ['M', 'L']:
+        raise ValueError('orientation must be \'M\' or \'L\'')
+
+    if orientation is 'L':
+        y_true = y_true[::-1, ...]
+        y_pred = y_pred[::-1, ...]
+
     for i in range(num_slices):
         y_true_curr = y_true[i, ...]
         y_pred_curr = y_pred[i, ...]
@@ -155,8 +167,10 @@ def test_model(config, save_file=0):
         pids_str = pids_str + print_str + '\n'
         print(print_str)
 
+        slice_dir = test_set_md[fname].slice_dir
+
         # interpolate region of interest
-        xs, ys, xt, yt = interp_slice(y_test, labels)
+        xs, ys, xt, yt = interp_slice(y_test, labels, orientation=slice_dir)
         x_interp.append(xs)
         y_interp.append(ys)
         x_total.append(xt)
