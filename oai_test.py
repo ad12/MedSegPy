@@ -62,15 +62,7 @@ def find_start_and_end_slice(y_true):
     return start, stop
 
 
-def interp_slice(y_true, y_pred, orientation='M'):
-
-    if orientation not in ['M', 'L']:
-        raise ValueError('Orientation must either be \'M\'(medial) or \'L\'(lateral)')
-
-    # if orientation is lateral, flip to make it medial
-    if orientation is 'L':
-        y_true = y_true[::-1, ...]
-        y_pred = y_pred[::-1, ...]
+def interp_slice(y_true, y_pred):
     dice_losses = []
     start, stop = find_start_and_end_slice(y_true)
 
@@ -103,6 +95,7 @@ def test_model(config, save_file=0):
     :param save_file: save data (default = 0)
     """
 
+    test_set_md = parse_test_set_metadata()
     # Load config data
     test_path = config.TEST_PATH
     test_result_path = config.TEST_RESULT_PATH
@@ -111,9 +104,6 @@ def test_model(config, save_file=0):
     K.set_image_data_format('channels_last')
 
     img_size = config.IMG_SIZE
-
-    # get metadata for test scans
-    test_set_md = parse_test_set_metadata()
 
     # Load weights into Deeplabv3 model
     model = get_model(config)
@@ -175,12 +165,8 @@ def test_model(config, save_file=0):
         pids_str = pids_str + print_str + '\n'
         print(print_str)
 
-        test_set_md[fname].cv = cv
-        test_set_md[fname].dsc = dl
-        test_set_md[fname].voe = voe
-
         # interpolate region of interest
-        xs, ys, xt, yt = interp_slice(y_test, labels, test_set_md[fname].slice_dir)
+        xs, ys, xt, yt = interp_slice(y_test, labels)
         x_interp.append(xs)
         y_interp.append(ys)
         x_total.append(xt)
@@ -227,12 +213,8 @@ def test_model(config, save_file=0):
     results_dat = os.path.join(test_result_path, 'metrics.dat')
     metrics = {'dsc': dice_losses,
                'voe': voes,
-               'cv': cv_values}
+               'cvs':cv_values}
     utils.save_pik(metrics, results_dat)
-
-    # Save metrics by kl grade
-    results_dat = os.path.join(test_result_path, 'test_md.dat')
-    utils.save_pik(test_set_md, results_dat)
 
     x_interp = np.asarray(x_interp)
     y_interp = np.asarray(y_interp)
@@ -254,6 +236,7 @@ def test_model(config, save_file=0):
     plt.xlabel('FOV (%)')
     plt.ylabel('Dice')
     plt.savefig(os.path.join(test_result_path, 'interp_slices.png'))
+
 
 def get_stats_string(dice_losses, voes, cv_values, skipped_count, testing_time):
     """
