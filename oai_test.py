@@ -28,7 +28,7 @@ import pandas as pd
 from scan_metadata import ScanMetadata
 
 DATE_THRESHOLD = strptime('2018-09-01-22-39-39', '%Y-%m-%d-%H-%M-%S')
-TEST_SET_METADATA = '/bmrNAS/arjun/msk_seg_networks/oai_data_test/oai_test_data.xlsx'
+TEST_SET_METADATA = '/bmrNAS/people/arjun/msk_seg_networks/oai_data_test/oai_test_data.xlsx'
 
 
 def parse_test_set_metadata(filepath=TEST_SET_METADATA):
