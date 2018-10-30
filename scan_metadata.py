@@ -4,10 +4,8 @@ import numpy as np
 
 
 class ScanMetadata():
-    def __init__(self, scan_id, slice_dir=None, kl_grade=None):
-        self.scan_id = scan_id
-        self.slice_dir = slice_dir
-        self.kl_grade = kl_grade
+    def __init__(self, data):
+        self.scan_id, self.slice_dir, self.kl_grade = data
 
         self.cv = None
         self.dsc = None

@@ -29,7 +29,7 @@ from scan_metadata import ScanMetadata
 
 DATE_THRESHOLD = strptime('2018-09-01-22-39-39', '%Y-%m-%d-%H-%M-%S')
 TEST_SET_METADATA_PIK = '/bmrNAS/people/arjun/msk_seg_networks/oai_data_test/oai_test_data.dat'
-
+TEST_SET_MD = utils.load_pik(TEST_SET_METADATA_PIK)
 
 def find_start_and_end_slice(y_true):
     for i in range(y_true.shape[0]):
@@ -82,7 +82,9 @@ def test_model(config, save_file=0):
     :param save_file: save data (default = 0)
     """
 
-    test_set_md = utils.load_pik(TEST_SET_METADATA_PIK)
+    test_set_md = dict()
+    for k in TEST_SET_MD.keys():
+        test_set_md[k] = ScanMetadata(TEST_SET_MD[k])
 
     # Load config data
     test_path = config.TEST_PATH
