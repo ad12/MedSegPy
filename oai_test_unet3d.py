@@ -13,8 +13,8 @@ import oai_test
 from losses import dice_loss_test, vo_error
 from scan_metadata import ScanMetadata
 
-UNET_3D_TEST_PATH = '/bmrNAS/arjun/msk_seg_networks/volume_limited/unet_3d_asc/test'
-UNET_3D_TEST_RESULT_PATH = '/bmrNAS/arjun/msk_seg_networks/volume_limited/unet_3d_asc/test_results'
+UNET_3D_TEST_PATH = '/bmrNAS/people/arjun/msk_seg_networks/volume_limited/unet_3d_asc/test'
+UNET_3D_TEST_RESULT_PATH = '/bmrNAS/people/arjun/msk_seg_networks/volume_limited/unet_3d_asc/test_results'
 TEST_BATCH_SIZE = 64
 NUM_SLICES = 64
 
