@@ -288,6 +288,22 @@ def save_ims(filepath):
     cv2.imwrite(os.path.join(filepath, 'seg.png'), scale_img(seg))
 
 
+def load_h5(filepath):
+    """Load data in H5DF format
+    :param filepath: path to h5 file
+    :return: dictionary of data values stored using save_h5
+    """
+    if not os.path.isfile(filepath):
+        raise FileNotFoundError('%s does not exist' % filepath)
+
+    data = dict()
+    with h5py.File(filepath, 'r') as f:
+        for key in f.keys():
+            data[key] = f.get(key).value
+
+    return data
+
+
 def parse_results_file(filepath):
     # returns mean
     with open(filepath) as search:
