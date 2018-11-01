@@ -25,12 +25,12 @@ from scipy import optimize as sop
 cpal = sns.color_palette("pastel", 8)
 SAVE_PATH = utils.check_dir('/bmrNAS/people/arjun/msk_seg_networks/analysis/exp_graphs')
 
-def graph_slice_exp(exp_dict, show_plot=False):
+def graph_slice_exp(exp_dict, show_plot=False, ax=None, title=''):
     """
     Compute %FOV vs Dice Accuracy using data saved in 'total_interp_data.mat'" for multiple test result files
     
     @param exp_dict: A dictionary with the following fields
-                        - 'filename': image filename to save graph (e.g. "architecture.png")
+                        - 'filename': image filename to save graph (e.g. "architecture")
                         - 'keys': list of strings corresponding to keys to process in dictionary
                                     These keys should be keys in exp_dict where values are path to the test_results folder
                                     e.g. 'U-Net': ['/unet/test_results/'], 
@@ -39,7 +39,9 @@ def graph_slice_exp(exp_dict, show_plot=False):
     data_keys = exp_dict['keys']
     filename = exp_dict['filename']
 
-    plt.figure()
+    if ax is None:
+        plt.figure()
+        ax=plt.gca()
     
     legend_keys = []
     c = 0
@@ -67,17 +69,21 @@ def graph_slice_exp(exp_dict, show_plot=False):
         y_interp_mean = np.mean(ys, 0)
         y_interp_sem = np.std(ys, 0) / np.sqrt(ys.shape[0])
 
-        plt.plot(x_interp_mean, y_interp_mean, 'k', color=cpal[c])
-        plt.fill_between(x_interp_mean, y_interp_mean - y_interp_sem, y_interp_mean + y_interp_sem, alpha=0.35, edgecolor=cpal[c], facecolor=cpal[c])
+        ax.plot(x_interp_mean, y_interp_mean, 'k', color=cpal[c])
+        ax.fill_between(x_interp_mean, y_interp_mean - y_interp_sem, y_interp_mean + y_interp_sem, alpha=0.35, edgecolor=cpal[c], facecolor=cpal[c])
         
         legend_keys.append(data_key)
         c += 1
 
-    plt.ylim([0.6, 1])
-    plt.xlabel('FOV (%)')
-    plt.ylabel('DSC')
-    plt.legend(legend_keys)
-    plt.savefig(os.path.join(SAVE_PATH, filename))# Architecture experiment
+    ax.set_ylim([0.6, 1])
+    ax.set_xlabel('FOV (%)', labelpad=0)
+    ax.set_ylabel('DSC')
+    ax.set_title(title)
+    #plt.legend(legend_keys)
+    #txt = fig.text(0.49, -0.04, 'FOV (%)', fontsize=13)
+    lgd = ax.legend(legend_keys, loc='upper center', bbox_to_anchor=(0.5, -0.15),
+          fancybox=True, shadow=True, ncol=3)
+    plt.savefig(os.path.join(SAVE_PATH, '%s.png' % filename), format='png', dpi=1000, bbox_inches='tight')
     
     if show_plot:
         plt.show()
@@ -118,7 +124,7 @@ def graph_data_limitation(data, filename):
     lgd = ax_center.legend(loc='upper center', bbox_to_anchor=(0.5, -0.25),
           fancybox=True, shadow=True, ncol=3)
     plt.subplots_adjust(hspace = 0.3, wspace = 0.3)
-    plt.savefig(os.path.join(SAVE_PATH, filename), bbox_extra_artists=(txt, lgd), bbox_inches='tight')
+    plt.savefig(os.path.join(SAVE_PATH, '%s.png' % filename), format='png', dpi=1000, bbox_extra_artists=(txt, lgd), bbox_inches='tight')
     
 def get_data_limitation(multi_data, metric_id):
     data_keys = multi_data['keys']

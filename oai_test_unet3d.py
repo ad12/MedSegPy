@@ -43,10 +43,10 @@ def load_pid_data(dirpath=UNET_3D_TEST_PATH):
         seg1 = utils.load_h5(os.path.join(dirpath, '%s_1.seg' % scan_id))['data'][:]
         seg2 = utils.load_h5(os.path.join(dirpath, '%s_2.seg' % scan_id))['data'][:]
         seg_ind = 0
-        if scan_id is '9908796_V01':
+        if scan_id == '9908796_V01':
             seg_ind = 4
-        seg1 = seg1[..., 0]
-        seg2 = seg2[..., 0]
+        seg1 = seg1[..., seg_ind]
+        seg2 = seg2[..., seg_ind]
 
         pred1 = utils.load_h5(os.path.join(dirpath, '%s_1.pred' % scan_id))['pred'][:]
         pred2 = utils.load_h5(os.path.join(dirpath, '%s_2.pred' % scan_id))['pred'][:]
