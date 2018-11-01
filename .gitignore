@@ -23,5 +23,7 @@
 # Ignore data visualization scripts/images
 **/data_visualization
 
+# temp files
+._*
 # ignore checkpoint files
 **/.ipynb_checkpoints/

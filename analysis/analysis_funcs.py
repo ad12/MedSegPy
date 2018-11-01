@@ -21,6 +21,7 @@ import seaborn as sns
 import utils
 
 from scipy import optimize as sop
+from matplotlib.ticker import ScalarFormatter
 
 cpal = sns.color_palette("pastel", 8)
 SAVE_PATH = utils.check_dir('/bmrNAS/people/arjun/msk_seg_networks/analysis/exp_graphs')
@@ -114,7 +115,7 @@ def graph_data_limitation(data, filename):
             print('r2, r - %s : %0.4f, %0.4f' % (model, r2, np.sqrt(r2)))
 
             ax.semilogx(x_sim, y_sim, 'k--', color=cpal[c])
-
+            ax.xaxis.set_major_formatter(ScalarFormatter())
             c += 1
         ax.set_ylabel(ylabel, fontsize=13)
         i += 1
