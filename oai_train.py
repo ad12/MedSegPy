@@ -208,9 +208,9 @@ class LossHistory(kc.Callback):
 
 
 def fine_tune(dirpath, config, vals_dict=None):
-    # If a fine-tune directory already exits, skip this directory
-    if (os.path.isdir(os.path.join(dirpath, 'fine_tune'))):
-        print('Skipping %s - fine_tune folder exists' % dirpath)
+    # # If a fine-tune directory already exits, skip this directory
+    # if (os.path.isdir(os.path.join(dirpath, 'fine_tune'))):
+    #     print('Skipping %s - fine_tune folder exists' % dirpath)
 
     # Initialize for fine tuning
     config.load_config(os.path.join(dirpath, 'config.ini'))
