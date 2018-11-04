@@ -115,6 +115,7 @@ def graph_data_limitation(data, filename):
             print('r2, r - %s : %0.4f, %0.4f' % (model, r2, np.sqrt(r2)))
 
             ax.semilogx(x_sim, y_sim, 'k--', color=cpal[c])
+            ax.set_xticks([5, 10, 20, 40, 60])
             ax.xaxis.set_major_formatter(ScalarFormatter())
             c += 1
         ax.set_ylabel(ylabel, fontsize=13)
