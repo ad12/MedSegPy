@@ -18,10 +18,13 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--seed', metavar='S', type=int, nargs='?', default=None)
     parser.add_argument('-m', '--model', metavar='M', nargs=1, choices=SUPPORTED_MODELS)
     parser.add_argument('-a', action='store_const', default=False, const=True)
+    parser.add_argument('-ft', nargs='?', metavar='PATH', type=str, default=None, help='fine tune model from path')
 
     args = parser.parse_args()
     print(args)
     gpu = args.gpu
+
+    fine_tune_path = args.ft
 
     models = args.model
     if args.a:
@@ -39,7 +42,12 @@ if __name__ == '__main__':
         # Data limitation experiment: Train Unet, Deeplab, and Segnet with limited data
         if model == 'unet':
             config = UNetConfig()
-            oai_train.train(config, vals_dict={'AUGMENT_DATA': False, 'N_EPOCHS': 100, 'DROP_FACTOR': (0.8) ** (1 / 5)})
+            if fine_tune_path is not None:
+                oai_train.fine_tune(fine_tune_path, config, {'AUGMENT_DATA': False, 'N_EPOCHS': 100,
+                                                             'USE_STEP_DECAY': False, 'INITIAL_LEARNING_RATE': 1e-5,
+                                                             'DROP_FACTOR': (0.8) ** (1 / 5)})
+            else:
+                oai_train.train(config, vals_dict={'AUGMENT_DATA': False, 'N_EPOCHS': 100, 'DROP_FACTOR': (0.8) ** (1 / 5)})
 
         # elif model == 'deeplab':
         #     config = DeeplabV3Config()
