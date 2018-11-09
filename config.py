@@ -17,7 +17,6 @@ ENSEMBLE_UDS_NAME = 'ensemble_uds'
 # This is the default save path prefix - please change if you desire something else
 SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/oai_data'
 
-
 class Config():
     VERSION = 3
 
@@ -70,6 +69,9 @@ class Config():
     VALID_PATH = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/valid/'
     TEST_PATH = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/test'
 
+    # test result folder name
+    TEST_RESULTS_FOLDER_NAME = 'test_results'
+
     # Training Model Paths
     CP_SAVE_TAG = ''
     CP_SAVE_PATH = ''
@@ -107,7 +109,7 @@ class Config():
             else:
                 # Testing
                 self.TEST_RESULT_PATH = utils.check_dir(
-                    os.path.join('./test_results', self.CP_SAVE_TAG, self.TAG, self.DATE_TIME_STR))
+                    os.path.join('./' + self.TEST_RESULTS_FOLDER_NAME, self.CP_SAVE_TAG, self.TAG, self.DATE_TIME_STR))
 
     def init_training_paths(self, prefix):
         """
@@ -214,7 +216,7 @@ class Config():
         Initialize testing state
         """
         self.STATE = 'testing'
-        self.TEST_RESULT_PATH = utils.check_dir(os.path.join(self.CP_SAVE_PATH, 'test_results'))
+        self.TEST_RESULT_PATH = utils.check_dir(os.path.join(self.CP_SAVE_PATH, self.TEST_RESULTS_FOLDER_NAME))
 
     def summary(self, additional_vars=[]):
         """
@@ -278,7 +280,7 @@ class DeeplabV3Config(Config):
         self.state = 'testing'
         config_tuple = (self.OS,) + self.DIL_RATES
         config_str = '%d_%d-%d-%d' % config_tuple
-        self.TEST_RESULT_PATH = utils.check_dir(os.path.join(self.CP_SAVE_PATH, 'test_results', config_str))
+        self.TEST_RESULT_PATH = utils.check_dir(os.path.join(self.CP_SAVE_PATH, self.TEST_RESULTS_FOLDER_NAME, config_str))
 
     def summary(self, additional_vars=[]):
         summary_attrs = ['OS', 'DIL_RATES', 'DROPOUT_RATE']

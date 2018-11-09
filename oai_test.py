@@ -442,7 +442,7 @@ def handle_deeplab(vargin):
     return vals_dict
 
 
-def add_base_architecture_parser(architecture_parser, supported_architectures=SUPPORTED_ARCHITECTURES):
+def add_base_architecture_parser(architecture_parser, supported_architectures=SUPPORTED_ARCHITECTURES, add_vals=[]):
     for architecture in supported_architectures:
         parser = architecture_parser.add_parser(architecture, help='use %s' % architecture)
         parser.add_argument('-%s' % BATCH_TEST_KEY, action='store_const', default=False, const=True,
@@ -455,6 +455,9 @@ def add_base_architecture_parser(architecture_parser, supported_architectures=SU
         parser.add_argument('-c', '--cpu', metavar='c', action='store_const', default=False, const=True)
         parser.add_argument('-date', nargs='?')
         parser.add_argument('-batch_size', default=72, type=int, nargs='?')
+
+        for v in add_vals:
+            parser.add_argument('-%s' % v, nargs='?', type=str, default=None)
 
         if architecture == 'deeplabv3_2d':
             init_deeplab_parser(parser)
@@ -638,6 +641,52 @@ def handle_volume_limit_exp(vargin):
 
     test_dir(fullpath, get_config(config_name), vals_dict=vals_dict)
 
+def init_fcn_test_parser(input_subparser):
+    subparser = input_subparser.add_parser('vol', help='test volume experiment (2.5D/3D)')
+    architecture_parser = subparser.add_subparsers(help='architecture to use', dest=ARCHITECTURE_KEY)
+
+    add_base_architecture_parser(architecture_parser, add_vals=['fp'])
+
+    subparser.set_defaults(func=handle_fcn_test_parser)
+
+def handle_fcn_test_parser(vargin):
+    config_name = vargin[ARCHITECTURE_KEY]
+    do_batch_test = vargin[BATCH_TEST_KEY]
+    overwrite_data = vargin[OVERWRITE_KEY]
+    date = vargin['date']
+    test_batch_size = 80
+
+    folder_path = vargin['fp']
+    if folder_path is None or not os.path.isdir(folder_path):
+        raise ValueError('fp must be specified')
+
+    base_path = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/test_2d_%s'
+    test_folders = ['midcrop', 'midcrop1', 'midcrop2', 'nocrop']
+
+    for test_folder in test_folders:
+        test_path = base_path % test_folder
+        test_results_folder_name = 'test_results_%s' % test_folder
+
+        vals_dict = {'TEST_BATCH_SIZE': test_batch_size,
+                     'TEST_PATH': test_path,
+                     'TEST_RESULTS_FOLDER_NAME': test_results_folder_name}
+
+        if config_name == 'deeplabv3_2d':
+            vals_dict.update(handle_deeplab(vargin))
+
+        if do_batch_test:
+            batch_test(folder_path, config_name, [vals_dict], overwrite=overwrite_data)
+            continue
+
+        if date is None:
+            raise ValueError('Must specify either \'date\' or \'%s\'' % (BATCH_TEST_KEY))
+
+        fullpath = os.path.join(folder_path, date)
+        if not os.path.isdir(fullpath):
+            raise NotADirectoryError('%s does not exist. Make sure date is correct' % fullpath)
+
+        test_dir(fullpath, get_config(config_name), vals_dict=vals_dict)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run inference on OAI dataset')
@@ -648,6 +697,7 @@ if __name__ == '__main__':
     init_augment_limit_parser(subparsers)
     init_loss_limit_parser(subparsers)
     init_volume_limit_parser(subparsers)
+    init_fcn_test_parser(subparsers)
 
     args = parser.parse_args()
     gpu = args.gpu
