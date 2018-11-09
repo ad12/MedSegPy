@@ -70,6 +70,7 @@ def train_model(config, optimizer=None):
         class_weights = np.reshape(class_weights, (1, 2))
         print(class_weights)
 
+
     loss_func = get_training_loss(loss, weights=class_weights)
     lr_metric = get_lr_metric(optimizer)
     model.compile(optimizer=optimizer,
