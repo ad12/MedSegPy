@@ -8,6 +8,7 @@ import cv2
 import h5py
 import numpy as np
 
+OPACITY = 0.7
 
 def check_dir(dir_path):
     """
@@ -36,7 +37,7 @@ def write_im_overlay(dir_path, xs, im_overlay):
 
         slice_name = '%03d.png' % i
 
-        overlap_img = cv2.addWeighted(x, 1, im, 0.3, 0)
+        overlap_img = cv2.addWeighted(x, 1, im, OPACITY, 0)
         cv2.imwrite(os.path.join(dir_path, slice_name), overlap_img)
 
 

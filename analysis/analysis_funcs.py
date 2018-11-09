@@ -119,14 +119,15 @@ def graph_data_limitation(data, filename):
             ax.xaxis.set_major_formatter(ScalarFormatter())
             c += 1
         ax.set_ylabel(ylabel, fontsize=13)
+        ax.set_xlabel('# Patients', fontsize=13)
         i += 1
     
     ax_center = ax_array[len(ax_array) // 2]
-    txt = fig.text(0.49, -0.04, '#Patients', fontsize=13)
-    lgd = ax_center.legend(loc='upper center', bbox_to_anchor=(0.5, -0.25),
+    #txt = fig.text(0.49, -0.04, '#Patients', fontsize=13)
+    lgd = ax_center.legend(loc='upper center', bbox_to_anchor=(-0.1, -0.25),
           fancybox=True, shadow=True, ncol=3)
     plt.subplots_adjust(hspace = 0.3, wspace = 0.3)
-    plt.savefig(os.path.join(SAVE_PATH, '%s.png' % filename), format='png', dpi=1000, bbox_extra_artists=(txt, lgd), bbox_inches='tight')
+    plt.savefig(os.path.join(SAVE_PATH, '%s.png' % filename), format='png', dpi=1000, bbox_extra_artists=(lgd,), bbox_inches='tight')
     
 def get_data_limitation(multi_data, metric_id):
     data_keys = multi_data['keys']
