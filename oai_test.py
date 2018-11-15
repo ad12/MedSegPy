@@ -643,7 +643,7 @@ def handle_volume_limit_exp(vargin):
 
 
 def init_fcn_test_parser(input_subparser):
-    subparser = input_subparser.add_parser('vol', help='test volume experiment (2.5D/3D)')
+    subparser = input_subparser.add_parser('fcn', help='test fcn experiment - how well does the network generalize to non-preprocessed data')
     architecture_parser = subparser.add_subparsers(help='architecture to use', dest=ARCHITECTURE_KEY)
 
     add_base_architecture_parser(architecture_parser, add_vals=['fp'])
@@ -663,15 +663,16 @@ def handle_fcn_test_parser(vargin):
         raise ValueError('fp must be specified')
 
     base_path = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/test_2d_%s'
-    test_folders = ['midcrop', 'midcrop1', 'midcrop2', 'nocrop']
+    test_folders = [('midcrop1', (320, 320, 1)), ('midcrop2', (352, 352, 1)), ('nocrop', (384, 384, 1))]
 
-    for test_folder in test_folders:
+    for test_folder, img_size in test_folders:
         test_path = base_path % test_folder
         test_results_folder_name = 'test_results_%s' % test_folder
 
         vals_dict = {'TEST_BATCH_SIZE': test_batch_size,
                      'TEST_PATH': test_path,
-                     'TEST_RESULTS_FOLDER_NAME': test_results_folder_name}
+                     'TEST_RESULTS_FOLDER_NAME': test_results_folder_name,
+                     'IMG_SIZE': img_size}
 
         if config_name == 'deeplabv3_2d':
             vals_dict.update(handle_deeplab(vargin))
@@ -683,7 +684,7 @@ def handle_fcn_test_parser(vargin):
         if date is None:
             raise ValueError('Must specify either \'date\' or \'%s\'' % (BATCH_TEST_KEY))
 
-        fullpath = os.path.join(folder_path, date)
+        fullpath = os.path.join(folder_path, config_name, date)
         if not os.path.isdir(fullpath):
             raise NotADirectoryError('%s does not exist. Make sure date is correct' % fullpath)
 
