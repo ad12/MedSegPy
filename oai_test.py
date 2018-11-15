@@ -643,7 +643,8 @@ def handle_volume_limit_exp(vargin):
 
 
 def init_fcn_test_parser(input_subparser):
-    subparser = input_subparser.add_parser('fcn', help='test fcn experiment - how well does the network generalize to non-preprocessed data')
+    subparser = input_subparser.add_parser('fcn',
+                                           help='test fcn experiment - how well does the network generalize to non-preprocessed data')
     architecture_parser = subparser.add_subparsers(help='architecture to use', dest=ARCHITECTURE_KEY)
 
     add_base_architecture_parser(architecture_parser, add_vals=['fp'])
