@@ -1,24 +1,23 @@
 import sys
+
 sys.path.insert(0, '../')
 
-import matplotlib
-#%matplotlib inline
-#matplotlib.use('Agg')
+# %matplotlib inline
+# matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 import os
 import re
 import numpy as np
 import pandas as pd
-from statsmodels.stats import multicomp
 from scipy import stats
 import scikit_posthocs as sp
-import seaborn as sns
 
 import utils
 
 ALPHA = 0.05
 SAVE_PATH = utils.check_dir('/bmrNAS/people/arjun/msk_seg_networks/analysis/exp_graphs')
+
 
 def parse_results_file(dirpath):
     filepath = os.path.join(dirpath, 'results.txt')
@@ -54,7 +53,7 @@ def parse_results_file(dirpath):
 
 
 def kruskal_dunn_analysis(dirpaths, names, dirname):
-    #assert len(dirpaths) >= 3, "ANOVA should be used with 3 or more populations"
+    # assert len(dirpaths) >= 3, "ANOVA should be used with 3 or more populations"
     save_dirpath = os.path.join(SAVE_PATH, dirname)
     assert len(dirpaths) == len(names), '%d vs %d' % (len(dirpaths), len(names))
 
@@ -64,14 +63,14 @@ def kruskal_dunn_analysis(dirpaths, names, dirname):
         if type(dp) is list:
             c = 0
             for d_p in dp:
-                if c==0:
+                if c == 0:
                     dsc, voe, cv = parse_results_file(d_p)
                 else:
                     dsc1, voe1, cv1 = parse_results_file(d_p)
                     dsc = np.add(dsc, dsc1)
                     voe = np.add(voe, voe1)
                     cv = np.add(cv, cv1)
-                c+=1
+                c += 1
             print("asd: " + str(dsc.shape))
             dsc = dsc / 3
             voe = voe / 3
@@ -86,12 +85,12 @@ def kruskal_dunn_analysis(dirpaths, names, dirname):
     metrics_results = dict()
     for k in metrics.keys():
         vals = np.transpose(np.stack(metrics[k]))
-        df = pd.DataFrame(data=vals,columns=names)
+        df = pd.DataFrame(data=vals, columns=names)
         # print(df.values.shape)
         plt.figure()
         ax = plt.gca()
         bxplt = df.boxplot(column=names, ax=ax)
-        #sns.boxplot(column=names, ax=ax)
+        # sns.boxplot(column=names, ax=ax)
         ax.set_title(k)
         utils.check_dir(save_dirpath)
         plt.savefig(os.path.join(save_dirpath, '%s.png' % k), format='png', dpi=1000, bbox_inches='tight')
@@ -126,6 +125,7 @@ def kruskal_dunn(data, names):
 
     return results
 
+
 def print_results(data, metric):
     print('===================')
     print(metric)
@@ -148,4 +148,3 @@ if __name__ == '__main__':
     dirpaths = [ARCH_UNET, ARCH_SEGNET, ARCH_DEEPLAB]
 
     kruskal_dunn_analysis(dirpaths, names)
-    

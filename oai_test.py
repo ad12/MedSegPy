@@ -5,6 +5,7 @@
 from __future__ import print_function, division
 
 import matplotlib
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
@@ -24,7 +25,6 @@ from im_generator import img_generator_test, calc_generator_info, img_generator_
 from losses import dice_loss_test, vo_error
 from models import get_model
 from keras.utils import plot_model
-import pandas as pd
 from scan_metadata import ScanMetadata
 
 DATE_THRESHOLD = strptime('2018-09-01-22-39-39', '%Y-%m-%d-%H-%M-%S')
@@ -109,7 +109,7 @@ def test_model(config, save_file=0):
 
     # Load weights into Deeplabv3 model
     model = get_model(config)
-    plot_model(model, os.path.join(config.TEST_RESULT_PATH, 'model.png'), show_shapes=True)    
+    plot_model(model, os.path.join(config.TEST_RESULT_PATH, 'model.png'), show_shapes=True)
     model.load_weights(config.TEST_WEIGHT_PATH, by_name=True)
 
     img_cnt = 0
@@ -139,7 +139,7 @@ def test_model(config, save_file=0):
     y_interp = []
     x_total = []
     y_total = []
-    
+
     # # Iterature through the files to be segmented
     for x_test, y_test, fname, num_slices in test_gen:
         # Perform the actual segmentation using pre-loaded model
@@ -163,7 +163,7 @@ def test_model(config, save_file=0):
         cv_values = np.append(cv_values, cv)
 
         print_str = 'DSC, VOE, CV for image #%d (name = %s, %d slices) = %0.3f, %0.3f, %0.3f' % (
-        img_cnt, fname, num_slices, dl, voe, cv)
+            img_cnt, fname, num_slices, dl, voe, cv)
         pids_str = pids_str + print_str + '\n'
         print(print_str)
 
@@ -217,7 +217,7 @@ def test_model(config, save_file=0):
     results_dat = os.path.join(test_result_path, 'metrics.dat')
     metrics = {'dsc': dice_losses,
                'voe': voes,
-               'cvs':cv_values}
+               'cvs': cv_values}
     utils.save_pik(metrics, results_dat)
 
     x_interp = np.asarray(x_interp)
@@ -229,7 +229,7 @@ def test_model(config, save_file=0):
                                                                           'ys': y_interp,
                                                                           'xt': x_total,
                                                                           'yt': y_total})
-    
+
     x_interp_mean = np.mean(x_interp, 0)
     y_interp_mean = np.mean(y_interp, 0)
     y_interp_sem = np.std(y_interp, 0) / np.sqrt(y_interp.shape[0])
@@ -379,7 +379,7 @@ def test_dir(dirpath, config, vals_dict=None, best_weight_path=None):
     if best_weight_path is None:
         best_weight_path = utils.get_weights(dirpath)
     print('Best weight path: %s' % best_weight_path)
-    
+
     config.load_config(os.path.join(dirpath, 'config.ini'))
     config.TEST_WEIGHT_PATH = best_weight_path
 
@@ -613,7 +613,7 @@ def init_volume_limit_parser(input_subparser):
     subparser = input_subparser.add_parser('vol', help='test volume experiment (2.5D/3D)')
     architecture_parser = subparser.add_subparsers(help='architecture to use', dest=ARCHITECTURE_KEY)
 
-    add_base_architecture_parser(architecture_parser,['unet_2_5d'])
+    add_base_architecture_parser(architecture_parser, ['unet_2_5d'])
 
     subparser.set_defaults(func=handle_volume_limit_exp)
 
@@ -641,6 +641,7 @@ def handle_volume_limit_exp(vargin):
 
     test_dir(fullpath, get_config(config_name), vals_dict=vals_dict)
 
+
 def init_fcn_test_parser(input_subparser):
     subparser = input_subparser.add_parser('vol', help='test volume experiment (2.5D/3D)')
     architecture_parser = subparser.add_subparsers(help='architecture to use', dest=ARCHITECTURE_KEY)
@@ -648,6 +649,7 @@ def init_fcn_test_parser(input_subparser):
     add_base_architecture_parser(architecture_parser, add_vals=['fp'])
 
     subparser.set_defaults(func=handle_fcn_test_parser)
+
 
 def handle_fcn_test_parser(vargin):
     config_name = vargin[ARCHITECTURE_KEY]

@@ -17,7 +17,7 @@ from keras.optimizers import Adam
 import config as MCONFIG
 import glob_constants
 import utils
-from config import DeeplabV3Config, UNetMultiContrastConfig, UNetConfig, SegnetConfig
+from config import DeeplabV3Config, UNetMultiContrastConfig, SegnetConfig
 from im_generator import calc_generator_info, img_generator, img_generator_oai
 from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS
 from models import get_model
@@ -69,7 +69,6 @@ def train_model(config, optimizer=None):
         class_weights = get_class_weights(class_freqs)
         class_weights = np.reshape(class_weights, (1, 2))
         print(class_weights)
-
 
     loss_func = get_training_loss(loss, weights=class_weights)
     lr_metric = get_lr_metric(optimizer)

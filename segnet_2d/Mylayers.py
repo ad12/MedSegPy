@@ -48,7 +48,7 @@ class MaxUnpooling2D(Layer):
             #  calculation new shape
             if output_shape is None:
                 output_shape = (
-                input_shape[0], input_shape[1] * self.size[0], input_shape[2] * self.size[1], input_shape[3])
+                    input_shape[0], input_shape[1] * self.size[0], input_shape[2] * self.size[1], input_shape[3])
             self.output_shape1 = output_shape
 
             # calculation indices for batch, height, width and feature maps

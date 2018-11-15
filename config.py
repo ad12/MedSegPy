@@ -17,6 +17,7 @@ ENSEMBLE_UDS_NAME = 'ensemble_uds'
 # This is the default save path prefix - please change if you desire something else
 SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/oai_data'
 
+
 class Config():
     VERSION = 3
 
@@ -280,7 +281,8 @@ class DeeplabV3Config(Config):
         self.state = 'testing'
         config_tuple = (self.OS,) + self.DIL_RATES
         config_str = '%d_%d-%d-%d' % config_tuple
-        self.TEST_RESULT_PATH = utils.check_dir(os.path.join(self.CP_SAVE_PATH, self.TEST_RESULTS_FOLDER_NAME, config_str))
+        self.TEST_RESULT_PATH = utils.check_dir(
+            os.path.join(self.CP_SAVE_PATH, self.TEST_RESULTS_FOLDER_NAME, config_str))
 
     def summary(self, additional_vars=[]):
         summary_attrs = ['OS', 'DIL_RATES', 'DROPOUT_RATE']

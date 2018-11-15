@@ -1,4 +1,5 @@
 import sys
+
 sys.path.insert(0, '../')
 
 import os
@@ -10,8 +11,8 @@ from config import UNetConfig
 import utils
 import pandas as pd
 
-
 test_path = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/test'
+
 
 def write_tiff(x, filepath):
     print('Saving %s' % filepath)
@@ -21,8 +22,11 @@ def write_tiff(x, filepath):
 
     sitk.WriteImage(x_img, filepath)
 
+
 def normalize_im(x):
     return (x - np.min(x)) / np.max(x)
+
+
 SAVE_PATH = '/bmrNAS/people/arjun/msk_seg_networks/oai_data_test'
 utils.check_dir(SAVE_PATH)
 
@@ -33,8 +37,8 @@ if __name__ == '__main__':
         write_tiff(x, os.path.join(SAVE_PATH, pid + '.tiff'))
         pids.append(pid)
 
-    data = list(zip(*[iter(pids)]*1))
-    
+    data = list(zip(*[iter(pids)] * 1))
+
     df = pd.DataFrame(data)
     writer = pd.ExcelWriter(os.path.join(SAVE_PATH, 'oai_test_data.xlsx'))
     df.to_excel(writer)

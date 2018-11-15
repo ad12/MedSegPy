@@ -10,6 +10,7 @@ import numpy as np
 
 OPACITY = 0.7
 
+
 def check_dir(dir_path):
     """
     If directory does not exist, make directory

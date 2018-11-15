@@ -4,7 +4,6 @@
 
 from __future__ import print_function, division
 
-import os
 from os import listdir
 from os.path import splitext
 from random import shuffle
@@ -395,7 +394,6 @@ def get_neighboring_ims(num_slices, data_path, filename):
     slice_nos[slice_nos < 1] = 1
     slice_nos[slice_nos > 72] = 72
     assert len(slice_nos) == num_slices
-
 
     base_filename = '_'.join(filename_split[:-1]) + '_%03d'
 

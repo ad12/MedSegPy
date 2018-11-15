@@ -1,12 +1,14 @@
 import os
-import h5py
-import utils
-import numpy as np
-import scipy.io as sio
 import time
 from time import strftime
 
+import h5py
 import matplotlib
+import numpy as np
+import scipy.io as sio
+
+import utils
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import oai_test
@@ -22,6 +24,7 @@ TEST_SET_METADATA_PIK = '/bmrNAS/people/arjun/msk_seg_networks/oai_data_test/oai
 TEST_SET_MD = utils.load_pik(TEST_SET_METADATA_PIK)
 
 save_file = 1
+
 
 def load_pid_data(dirpath=UNET_3D_TEST_PATH):
     files = os.listdir(dirpath)
@@ -99,7 +102,7 @@ def test_model():
     skipped_count = 0
 
     # Read the files that will be segmented
-    #print('INFO: Test size: %d, batch size: %d, # subjects: %d' % (len(test_files), test_batch_size, len(scans_data)))
+    # print('INFO: Test size: %d, batch size: %d, # subjects: %d' % (len(test_files), test_batch_size, len(scans_data)))
     print('Save path: %s' % (test_result_path))
     print('Test path: %s' % test_path)
 
@@ -205,7 +208,6 @@ def test_model():
     plt.savefig(os.path.join(test_result_path, 'interp_slices.png'))
 
 
-
 if __name__ == '__main__':
     test_model()
     # A1 = utils.load_h5('data_visualization/9905863_V00_1.im')['data'][:]
@@ -217,4 +219,3 @@ if __name__ == '__main__':
     # B3 = utils.load_h5('data_visualization/9905863_V00_2.pred')['pred'][:]
     #
     # print('hello')
-

@@ -1,5 +1,5 @@
 import pandas as pd
-from scan_metadata import ScanMetadata
+
 import utils
 
 if __name__ == '__main__':

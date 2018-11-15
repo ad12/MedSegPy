@@ -47,7 +47,8 @@ if __name__ == '__main__':
                                                              'USE_STEP_DECAY': False, 'INITIAL_LEARNING_RATE': 1e-5,
                                                              'DROP_FACTOR': (0.8) ** (1 / 5)})
             else:
-                oai_train.train(config, vals_dict={'AUGMENT_DATA': False, 'N_EPOCHS': 100, 'DROP_FACTOR': (0.8) ** (1 / 5)})
+                oai_train.train(config,
+                                vals_dict={'AUGMENT_DATA': False, 'N_EPOCHS': 100, 'DROP_FACTOR': (0.8) ** (1 / 5)})
 
         # elif model == 'deeplab':
         #     config = DeeplabV3Config()

@@ -4,13 +4,12 @@ Functions used for analysis
 """
 
 import sys
+
 sys.path.insert(0, '../')
 
-import matplotlib
-#%matplotlib inline
-#matplotlib.use('Agg')
+# %matplotlib inline
+# matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-
 
 import os
 import numpy as np
@@ -25,6 +24,7 @@ from matplotlib.ticker import ScalarFormatter
 
 cpal = sns.color_palette("pastel", 8)
 SAVE_PATH = utils.check_dir('/bmrNAS/people/arjun/msk_seg_networks/analysis/exp_graphs')
+
 
 def graph_slice_exp(exp_dict, show_plot=False, ax=None, title=''):
     """
@@ -42,15 +42,15 @@ def graph_slice_exp(exp_dict, show_plot=False, ax=None, title=''):
 
     if ax is None:
         plt.figure()
-        ax=plt.gca()
-    
+        ax = plt.gca()
+
     legend_keys = []
     c = 0
     for data_key in data_keys:
         data_dirpaths = exp_dict[data_key]
         if type(data_dirpaths) is str:
             data_dirpaths = [data_dirpaths]
-            
+
         xs = []
         ys = []
 
@@ -62,17 +62,18 @@ def graph_slice_exp(exp_dict, show_plot=False, ax=None, title=''):
             mat_data = sio.loadmat(mat_filepath)
             xs.append(mat_data['xs'])
             ys.append(mat_data['ys'])
-        
+
         xs = np.concatenate(xs)
         ys = np.concatenate(ys)
-        
+
         x_interp_mean = np.mean(xs, 0)
         y_interp_mean = np.mean(ys, 0)
         y_interp_sem = np.std(ys, 0) / np.sqrt(ys.shape[0])
 
         ax.plot(x_interp_mean, y_interp_mean, 'k', color=cpal[c])
-        ax.fill_between(x_interp_mean, y_interp_mean - y_interp_sem, y_interp_mean + y_interp_sem, alpha=0.35, edgecolor=cpal[c], facecolor=cpal[c])
-        
+        ax.fill_between(x_interp_mean, y_interp_mean - y_interp_sem, y_interp_mean + y_interp_sem, alpha=0.35,
+                        edgecolor=cpal[c], facecolor=cpal[c])
+
         legend_keys.append(data_key)
         c += 1
 
@@ -80,31 +81,31 @@ def graph_slice_exp(exp_dict, show_plot=False, ax=None, title=''):
     ax.set_xlabel('FOV (%)', labelpad=0)
     ax.set_ylabel('DSC')
     ax.set_title(title)
-    #plt.legend(legend_keys)
-    #txt = fig.text(0.49, -0.04, 'FOV (%)', fontsize=13)
+    # plt.legend(legend_keys)
+    # txt = fig.text(0.49, -0.04, 'FOV (%)', fontsize=13)
     lgd = ax.legend(legend_keys, loc='upper center', bbox_to_anchor=(0.5, -0.15),
-          fancybox=True, shadow=True, ncol=3)
+                    fancybox=True, shadow=True, ncol=3)
     plt.savefig(os.path.join(SAVE_PATH, '%s.png' % filename), format='png', dpi=1000, bbox_inches='tight')
-    
+
     if show_plot:
         plt.show()
 
+
 def graph_data_limitation(data, filename):
-                
-    fig, ax_array = plt.subplots(1, len(list(data.keys())), figsize=(len(list(data.keys()))*6, 3))
-    
+    fig, ax_array = plt.subplots(1, len(list(data.keys())), figsize=(len(list(data.keys())) * 6, 3))
+
     i = 0
     for k in data.keys():
         ylabel = k.upper()
-        
+
         if ylabel.endswith('S'):
             ylabel = ylabel[:-1]
-        
+
         ax = ax_array[i]
-                                 
-        print('=====================')  
+
+        print('=====================')
         print('        %s          ' % ylabel)
-        print('=====================')                         
+        print('=====================')
         results = get_data_limitation(data[k], k)
         c = 0
         for model in results.keys():
@@ -121,19 +122,21 @@ def graph_data_limitation(data, filename):
         ax.set_ylabel(ylabel, fontsize=13)
         ax.set_xlabel('# Patients', fontsize=13)
         i += 1
-    
+
     ax_center = ax_array[len(ax_array) // 2]
-    #txt = fig.text(0.49, -0.04, '#Patients', fontsize=13)
+    # txt = fig.text(0.49, -0.04, '#Patients', fontsize=13)
     lgd = ax_center.legend(loc='upper center', bbox_to_anchor=(-0.1, -0.25),
-          fancybox=True, shadow=True, ncol=3)
-    plt.subplots_adjust(hspace = 0.3, wspace = 0.3)
-    plt.savefig(os.path.join(SAVE_PATH, '%s.png' % filename), format='png', dpi=1000, bbox_extra_artists=(lgd,), bbox_inches='tight')
-    
+                           fancybox=True, shadow=True, ncol=3)
+    plt.subplots_adjust(hspace=0.3, wspace=0.3)
+    plt.savefig(os.path.join(SAVE_PATH, '%s.png' % filename), format='png', dpi=1000, bbox_extra_artists=(lgd,),
+                bbox_inches='tight')
+
+
 def get_data_limitation(multi_data, metric_id):
     data_keys = multi_data['keys']
     num_patients = [5, 15, 30, 60]
     c = 0
-    
+
     results_dict = {}
     for k in data_keys:
         data = multi_data[k]
@@ -141,16 +144,16 @@ def get_data_limitation(multi_data, metric_id):
         num_patients_data = {}
         for num_p in num_patients:
             num_patients_data[num_p] = np.asarray([])
-        
+
         for i in range(len(data[0])):
             num_p = num_patients[i]
             for j in range(len(data)):
                 test_results_folder = data[j][i]
                 metrics_filepath = os.path.join(test_results_folder, 'metrics.dat')
                 metrics = utils.load_pik(metrics_filepath)
-                
+
                 num_patients_data[num_p] = np.append(num_patients_data[num_p], metrics[metric_id].flatten())
-        
+
         xs = []
         ys = []
         SEs = []
@@ -158,15 +161,17 @@ def get_data_limitation(multi_data, metric_id):
             xs.append(num_p)
             ys.append(np.mean(num_patients_data[num_p]))
             SEs.append(np.std(num_patients_data[num_p]) / np.sqrt(num_patients_data[num_p].shape[0]))
-        
+
         x_sim, y_sim, r2 = fit_power_law(xs, ys)
-        
+
         results_dict[k] = (xs, ys, SEs, x_sim, y_sim, r2)
-     
+
     return results_dict
 
-    
+
 __EPSILON__ = 1e-8
+
+
 def fit_power_law(xs, ys):
     def func(x, a, b):
         exp = x ** b
@@ -175,17 +180,16 @@ def fit_power_law(xs, ys):
     x = np.asarray(xs)
     y = np.asarray(ys)
 
-    popt, _ = sop.curve_fit(func, x, y, p0=[1,1], maxfev=1000)
+    popt, _ = sop.curve_fit(func, x, y, p0=[1, 1], maxfev=1000)
 
     residuals = y - func(x, popt[0], popt[1])
     ss_res = np.sum(residuals ** 2)
     ss_tot = np.sum((y - np.mean(y)) ** 2)
 
     r_squared = 1 - (ss_res / (ss_tot + __EPSILON__))
-    
+
     # Simulate on data
     x_sim = np.linspace(np.min(x), np.max(x), 100)
     y_sim = func(x_sim, popt[0], popt[1])
-    
+
     return x_sim, y_sim, r_squared
-    
