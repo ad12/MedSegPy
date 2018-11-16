@@ -212,7 +212,7 @@ def test_model(config, save_file=0):
 
     end = time.time()
 
-    stats_string = get_stats_string(dice_losses, voes, cv_values, TPS, FNS, FPs, skipped_count, end - start)
+    stats_string = get_stats_string(dice_losses, voes, cv_values, TPs, FNs, FPs, skipped_count, end - start)
     # Print some summary statistics
     print('--' * 20)
     print(stats_string)

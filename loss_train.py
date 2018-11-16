@@ -46,6 +46,7 @@ if __name__ == '__main__':
 
     if args.focal:
         loss_func = FOCAL_LOSS
+        include_background = False
 
     for model in models:
         # Data limitation experiment: Train Unet, Deeplab, and Segnet with limited data
