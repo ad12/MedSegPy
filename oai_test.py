@@ -169,9 +169,9 @@ def test_model(config, save_file=0):
         # calculate true positive, false positive, false negative
         y_test_bool = np.asarray(y_test, np.bool)
         labels_bool = np.asarray(labels, np.bool)
-        TP = y_test_bool * labels_bool
-        FN = y_test_bool * (~labels_bool)
-        FP = (~y_test_bool) * labels_bool
+        TP = np.sum(y_test_bool * labels_bool)
+        FN = np.sum(y_test_bool * (~labels_bool))
+        FP = np.sum((~y_test_bool) * labels_bool)
 
         TPs = np.append(TPs, TP)
         FNs = np.append(FNs, FN)
