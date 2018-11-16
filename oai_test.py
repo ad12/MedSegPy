@@ -118,6 +118,10 @@ def test_model(config, save_file=0):
     voes = np.array([])
     cv_values = np.array([])
 
+    TPs = np.array([])
+    FNs = np.array([])
+    FPs = np.array([])
+
     start = time.time()
     skipped_count = 0
 
@@ -162,6 +166,15 @@ def test_model(config, save_file=0):
         voes = np.append(voes, voe)
         cv_values = np.append(cv_values, cv)
 
+        # calculate true positive, false positive, false negative
+        TP = y_test * labels
+        FN = y_test * (~labels)
+        FP = (~y_test) * labels
+
+        TPs = np.append(TPs, TP)
+        FNs = np.append(FNs, FN)
+        FPs = np.append(FPs, FP)
+
         print_str = 'DSC, VOE, CV for image #%d (name = %s, %d slices) = %0.3f, %0.3f, %0.3f' % (
             img_cnt, fname, num_slices, dl, voe, cv)
         pids_str = pids_str + print_str + '\n'
@@ -197,7 +210,7 @@ def test_model(config, save_file=0):
 
     end = time.time()
 
-    stats_string = get_stats_string(dice_losses, voes, cv_values, skipped_count, end - start)
+    stats_string = get_stats_string(dice_losses, voes, cv_values, TPS, FNS, FPs, skipped_count, end - start)
     # Print some summary statistics
     print('--' * 20)
     print(stats_string)
@@ -242,7 +255,7 @@ def test_model(config, save_file=0):
     plt.savefig(os.path.join(test_result_path, 'interp_slices.png'))
 
 
-def get_stats_string(dice_losses, voes, cv_values, skipped_count, testing_time):
+def get_stats_string(dice_losses, voes, cv_values, TPs, FNs, FPs, skipped_count, testing_time):
     """
     Return string detailing statistics
     :param dice_losses: list of dice losses per exam
@@ -255,12 +268,26 @@ def get_stats_string(dice_losses, voes, cv_values, skipped_count, testing_time):
     s += 'DSC - Mean +/- Std, Median = %0.4f +/- %0.3f, %0.4f\n' % (np.mean(dice_losses),
                                                                     np.std(dice_losses),
                                                                     np.median(dice_losses))
+
     s += 'VOE - Mean +/- Std, Median = %0.4f +/- %0.3f, %0.4f\n' % (np.mean(voes),
                                                                     np.std(voes),
                                                                     np.median(voes))
+
     s += 'CV - Mean +/- Std, Median = %0.4f +/- %0.3f, %0.4f\n' % (np.mean(cv_values),
                                                                    np.std(cv_values),
                                                                    np.median(cv_values))
+
+    s += 'TP - Mean +/- Std, Median = %0.4f +/- %0.3f, %0.4f\n' % (np.mean(TPs),
+                                                                   np.std(TPs),
+                                                                   np.median(TPs))
+
+    s += 'FN - Mean +/- Std, Median = %0.4f +/- %0.3f, %0.4f\n' % (np.mean(FNs),
+                                                                   np.std(FNs),
+                                                                   np.median(FNs))
+
+    s += 'FP - Mean +/- Std, Median = %0.4f +/- %0.3f, %0.4f\n' % (np.mean(FPs),
+                                                                   np.std(FPs),
+                                                                   np.median(FPs))
     s += 'Time required = %0.1f seconds.\n' % testing_time
     return s
 
