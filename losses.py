@@ -128,12 +128,13 @@ def focal_loss(y_true, y_pred):
 
     y_pred = K.clip(y_pred, K.epsilon(), 1 - K.epsilon())
 
+    num_pixels = K.get_variable_shape(y_true)[0]
     # calculate pt
     # note that ~y_true = 1 - y_true
     pt = y_true * y_pred + (1 - y_true) * (1 - y_pred)
 
-    loss_val = -K.sum(K.pow((1 - pt), 3) * K.log(pt))
-
+    loss_val = -K.mean(K.pow((1 - pt), 3) * K.log(pt)) * 100
+    
     return loss_val
 
 
