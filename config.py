@@ -357,12 +357,15 @@ class UNet2_5DConfig(UNetConfig):
     IMG_SIZE = (288, 288, 7)
 
     CP_SAVE_TAG = 'unet_2_5d'
-    N_EPOCHS = 100
-    AUGMENT_DATA = False
+    N_EPOCHS = 20
+    AUGMENT_DATA = True
     INITIAL_LEARNING_RATE = 1e-2
 
     DROP_RATE = 1.0
-    DROP_FACTOR = 0.8 ** (1 / 5)
+    DROP_FACTOR = 0.8
+
+    # Train path - volumetric augmentation
+    TRAIN_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/vol_aug/train_sag/'
 
     def num_neighboring_slices(self):
         return self.IMG_SIZE[2]
@@ -372,8 +375,11 @@ class DeeplabV3_2_5DConfig(DeeplabV3Config):
     IMG_SIZE = (288, 288, 3)
 
     CP_SAVE_TAG = 'deeplabv3_2_5d'
-    N_EPOCHS = 100
-    AUGMENT_DATA = False
+    N_EPOCHS = 20
+    AUGMENT_DATA = True
+
+    # Train path - volumetric augmentation
+    TRAIN_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/vol_aug/train_sag/'
 
     def num_neighboring_slices(self):
         return self.IMG_SIZE[2]

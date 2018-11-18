@@ -17,7 +17,7 @@ if __name__ == '__main__':
     parser.add_argument('-g', '--gpu', metavar='G', type=str, nargs='?', default='0', help='gpu id to use')
     parser.add_argument('-s', '--seed', metavar='S', type=int, nargs='?', default=None)
     parser.add_argument('-m', '--model', metavar='M', nargs=1, choices=SUPPORTED_MODELS)
-    parser.add_argument('-ds', metavar='S', type=int, default=3, nargs='?')
+    parser.add_argument('-ds', metavar='S', type=int, default=3, nargs='?', help='stack depth of input (i.e. # slices)')
     parser.add_argument('-ft', nargs='?', metavar='PATH', type=str, default=None, help='fine tune model from path')
 
     args = parser.parse_args()

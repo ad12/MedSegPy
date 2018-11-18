@@ -384,7 +384,6 @@ def get_neighboring_ims(num_slices, data_path, filename):
     :param filename:
     :return:
     """
-    assert 'Aug00' in filename
 
     d_slice = num_slices // 2
     filename_split = filename.split('_')
