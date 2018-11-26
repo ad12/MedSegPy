@@ -69,9 +69,9 @@ def get_metrics(dirpaths):
                     voe = np.add(voe, voe1)
                     cv = np.add(cv, cv1)
                 c += 1
-            dsc = dsc / 3
-            voe = voe / 3
-            cv = cv / 3
+            dsc = dsc / len(dp)
+            voe = voe / len(dp)
+            cv = cv / len(dp)
         else:
             dsc, voe, cv = parse_results_file(dp)
 
