@@ -294,19 +294,6 @@ def train(config, vals_dict=None):
     K.clear_session()
 
 
-# Use these for fine tuning
-DEEPLAB_TEST_PATHS_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d'
-DEEPLAB_TEST_PATHS = ['2018-08-26-20-01-32',  # OS=16, DIL_RATES=(6, 12, 18)
-                      '2018-08-27-02-49-06',  # OS=16, DIL_RATES=(1, 9, 18)
-                      '2018-08-27-15-48-56',  # OS=16, DIL_RATES=(3, 6, 9)
-                      ]
-
-DATA_LIMIT_PATHS_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_data_limit/oai_data', '%03d', 'unet_2d')
-DATA_LIMIT_NUM_DATE_DICT = {5: '2018-08-26-20-19-31',
-                            15: '2018-08-27-03-43-46',
-                            30: '2018-08-27-11-18-07',
-                            60: '2018-08-27-18-29-19'}
-
 if __name__ == '__main__':
     MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/architecture_limit'
 
