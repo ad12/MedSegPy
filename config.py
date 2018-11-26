@@ -375,8 +375,8 @@ class DeeplabV3_2_5DConfig(DeeplabV3Config):
     IMG_SIZE = (288, 288, 3)
 
     CP_SAVE_TAG = 'deeplabv3_2_5d'
-    N_EPOCHS = 20
-    AUGMENT_DATA = True
+    N_EPOCHS = 100
+    AUGMENT_DATA = False
 
     # Train path - volumetric augmentation
     TRAIN_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/vol_aug/train_sag/'
