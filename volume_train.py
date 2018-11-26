@@ -47,9 +47,8 @@ if __name__ == '__main__':
             config = UNet2_5DConfig()
             config.IMG_SIZE = (config.IMG_SIZE[0], config.IMG_SIZE[1], num_slices)
             if fine_tune_path is not None:
-                oai_train.fine_tune(fine_tune_path, config, {'AUGMENT_DATA': False, 'N_EPOCHS': 100,
-                                                             'USE_STEP_DECAY': False, 'INITIAL_LEARNING_RATE': 1e-4})
+                oai_train.fine_tune(fine_tune_path, config, {'INITIAL_LEARNING_RATE': 1e-4})
             else:
-                oai_train.train(config, {'AUGMENT_DATA': False, 'N_EPOCHS': 100, 'DROP_FACTOR': (0.8) ** (1 / 5)})
+                oai_train.train(config, {})
         else:
             raise ValueError('model %s not supported' % model)

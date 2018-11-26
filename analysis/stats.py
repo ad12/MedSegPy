@@ -15,6 +15,8 @@ import scikit_posthocs as sp
 
 import utils
 
+from analysis.analysis_funcs import cpal
+
 ALPHA = 0.05
 SAVE_PATH = utils.check_dir('/bmrNAS/people/arjun/msk_seg_networks/analysis/exp_graphs')
 
@@ -52,11 +54,7 @@ def parse_results_file(dirpath):
     return np.asarray(dsc), np.asarray(voe), np.asarray(cv)
 
 
-def kruskal_dunn_analysis(dirpaths, names, dirname):
-    # assert len(dirpaths) >= 3, "ANOVA should be used with 3 or more populations"
-    save_dirpath = os.path.join(SAVE_PATH, dirname)
-    assert len(dirpaths) == len(names), '%d vs %d' % (len(dirpaths), len(names))
-
+def get_metrics(dirpaths):
     metrics = {'DSC': [], 'VOE': [], 'CV': []}
 
     for dp in dirpaths:
@@ -71,7 +69,6 @@ def kruskal_dunn_analysis(dirpaths, names, dirname):
                     voe = np.add(voe, voe1)
                     cv = np.add(cv, cv1)
                 c += 1
-            print("asd: " + str(dsc.shape))
             dsc = dsc / 3
             voe = voe / 3
             cv = cv / 3
@@ -81,19 +78,67 @@ def kruskal_dunn_analysis(dirpaths, names, dirname):
         metrics['DSC'].append(dsc)
         metrics['VOE'].append(voe)
         metrics['CV'].append(cv)
+        
+    return metrics
+
+
+def compare_metrics(dirpaths, names, dirname):
+    x_labels = ('DSC', 'VOE', 'CV')
+    n_groups = len(x_labels)
+    x_index = np.arange(0, n_groups*2, 2)
+    
+    exp_names = names
+    exp_filepath = os.path.join(SAVE_PATH, dirname, 'bar.png')
+    
+    metrics_dict = get_metrics(dirpaths)
+    
+    # Create figure
+    fig, ax = plt.subplots()
+    bar_width = 0.35
+    opacity = 0.8
+    
+    for ind in range(len(exp_names)):
+        sub_means = []
+        sub_stds = []
+        for metric in x_labels:
+            exp_vals = metrics_dict[metric]
+            vals = np.asarray(exp_vals[ind])
+            sub_means.append(np.mean(vals))
+            std = sub_stds, np.std(vals) / np.sqrt(len(vals)) if len(vals) > 1 else None
+            sub_stds.append(std)
+            
+        rects = plt.bar(x_index + (bar_width)*ind, sub_means, bar_width,
+                        alpha=opacity,
+                        color=cpal[ind],
+                        label=exp_names[ind])
+    
+    delta = (len(names) - 1)*bar_width/2
+    plt.xticks(x_index + delta, x_labels)
+    plt.legend()
+    
+    plt.savefig(exp_filepath, format='png',
+                dpi=1000)
+    
+
+
+def kruskal_dunn_analysis(dirpaths, names, dirname):
+    save_dirpath = os.path.join(SAVE_PATH, dirname)
+    assert len(dirpaths) == len(names), '%d vs %d' % (len(dirpaths), len(names))
+
+    metrics = get_metrics(dirpaths)
 
     metrics_results = dict()
     for k in metrics.keys():
         vals = np.transpose(np.stack(metrics[k]))
         df = pd.DataFrame(data=vals, columns=names)
         # print(df.values.shape)
-        plt.figure()
-        ax = plt.gca()
-        bxplt = df.boxplot(column=names, ax=ax)
-        # sns.boxplot(column=names, ax=ax)
-        ax.set_title(k)
-        utils.check_dir(save_dirpath)
-        plt.savefig(os.path.join(save_dirpath, '%s.png' % k), format='png', dpi=1000, bbox_inches='tight')
+#         plt.figure()
+#         ax = plt.gca()
+#         bxplt = df.boxplot(column=names, ax=ax)
+#         # sns.boxplot(column=names, ax=ax)
+#         ax.set_title(k)
+#         utils.check_dir(save_dirpath)
+#         plt.savefig(os.path.join(save_dirpath, '%s.png' % k), format='png', dpi=1000, bbox_inches='tight')
 
         metrics_results[k] = kruskal_dunn(metrics[k], names)
 

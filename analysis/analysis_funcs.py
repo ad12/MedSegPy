@@ -131,7 +131,7 @@ def graph_data_limitation(data, filename):
     plt.savefig(os.path.join(SAVE_PATH, '%s.png' % filename), format='png', dpi=1000, bbox_extra_artists=(lgd,),
                 bbox_inches='tight')
 
-
+    
 def get_data_limitation(multi_data, metric_id):
     data_keys = multi_data['keys']
     num_patients = [5, 15, 30, 60]
@@ -193,3 +193,4 @@ def fit_power_law(xs, ys):
     y_sim = func(x_sim, popt[0], popt[1])
 
     return x_sim, y_sim, r_squared
+    
