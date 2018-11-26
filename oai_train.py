@@ -338,5 +338,5 @@ if __name__ == '__main__':
     # fine_tune(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-09-26-19-07-53'), DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE':1e-6})
     # print('\n\n')
 
-    train(UNetConfig())
+    fine_tune(os.path.join('/bmrNAS/people/arjun/msk_seg_networks/architecture_limit/unet_2d','2018-11-26-00-56-55'), UNetConfig(), vals_dict={'INITIAL_LEARNING_RATE': 1e-4})
 # train(SegnetConfig(), {'INITIAL_LEARNING_RATE' 1e-3, 'FINE_TUNE': False, 'TRAIN_BATCH_SIZE': 15})

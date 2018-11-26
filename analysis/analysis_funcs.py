@@ -22,7 +22,14 @@ import utils
 from scipy import optimize as sop
 from matplotlib.ticker import ScalarFormatter
 
-cpal = sns.color_palette("pastel", 8)
+# Define some custom color palettes
+american_palette = ['#ffeaa7', '#00cec9', '#0984e3', '#6c5ce7', '#b2bec3'] # yellow too pale
+color_brewer_1 = ['#a6cee3', '#1f78b4', '#b2df8a', '#33a02c', '#fb9a99'] # not good
+color_brewer_2 = ['#8dd3c7', '#ffffb3', '#bebada', '#fb8072', '#80b1d3'] # not good
+
+cpal = sns.color_palette("muted", 8)
+#cpal = sns.color_palette(american_palette)
+
 SAVE_PATH = utils.check_dir('/bmrNAS/people/arjun/msk_seg_networks/analysis/exp_graphs')
 
 
