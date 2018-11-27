@@ -36,8 +36,8 @@ class Config():
     IMG_SIZE = (288, 288, 1)
 
     # Training parameters
-    N_EPOCHS = 20
-    AUGMENT_DATA = True
+    N_EPOCHS = 100
+    AUGMENT_DATA = False
     USE_STEP_DECAY = False
 
     # Step Decay params
