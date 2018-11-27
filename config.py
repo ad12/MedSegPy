@@ -321,7 +321,7 @@ class UNetConfig(Config):
 
     USE_STEP_DECAY = True
     INITIAL_LEARNING_RATE = 2e-2
-    DROP_FACTOR = 0.8
+    DROP_FACTOR = 0.8 ** (1/5)
     DROP_RATE = 1.0
     TRAIN_BATCH_SIZE = 35
 
