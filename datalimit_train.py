@@ -64,8 +64,8 @@ def data_limitation_train(config_name, vals_dict=None, pc=None):
 
         config = get_config(config_name)
 
-        config.N_EPOCHS = math.ceil(10 * num_pids / pid_count)
-        config.DROP_FACTOR = config.DROP_FACTOR ** (1 / s_ratio)
+        config.N_EPOCHS = math.ceil(30 * num_pids / pid_count)
+        #config.DROP_FACTOR = config.DROP_FACTOR ** (1 / s_ratio)
         config.PIDS = pids_sampled if pid_count != num_pids else None
 
         print('# Subjects: %d' % pid_count)
@@ -123,17 +123,19 @@ if __name__ == '__main__':
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
     print(models)
+    
+    vals_dict = {'AUGMENT_DATA': False, 'DROP_FACTOR': 0.8**(1/5)}
 
     for c in range(repeat_count):
         for model in models:
             print(model)
             # Data limitation experiment: Train Unet, Deeplab, and Segnet with limited data
             if model == 'unet':
-                data_limitation_train(model, vals_dict=None, pc=patient_count)
+                data_limitation_train(model, vals_dict=vals_dict, pc=patient_count)
             elif model == 'deeplab':
-                data_limitation_train(model, vals_dict=None, pc=patient_count)
+                data_limitation_train(model, vals_dict=vals_dict, pc=patient_count)
             elif model == 'segnet':
-                data_limitation_train(model, vals_dict=None, pc=patient_count)
+                data_limitation_train(model, vals_dict=vals_dict, pc=patient_count)
             else:
                 raise ValueError('model %s not supported' % model)
 

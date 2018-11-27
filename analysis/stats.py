@@ -104,20 +104,22 @@ def compare_metrics(dirpaths, names, dirname):
             exp_vals = metrics_dict[metric]
             vals = np.asarray(exp_vals[ind])
             sub_means.append(np.mean(vals))
-            std = sub_stds, np.std(vals) / np.sqrt(len(vals)) if len(vals) > 1 else None
+            std = np.std(vals) / np.sqrt(len(vals)) if len(vals) > 1 else None
             sub_stds.append(std)
-            
+
         rects = plt.bar(x_index + (bar_width)*ind, sub_means, bar_width,
                         alpha=opacity,
                         color=cpal[ind],
-                        label=exp_names[ind])
+                        label=exp_names[ind],
+                        yerr=sub_stds)
     
     delta = (len(names) - 1)*bar_width/2
     plt.xticks(x_index + delta, x_labels)
     plt.legend()
     
     plt.savefig(exp_filepath, format='png',
-                dpi=1000)
+                dpi=1000,
+                bbox_inches='tight')
     
 
 
