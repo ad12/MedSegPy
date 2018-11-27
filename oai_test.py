@@ -429,7 +429,7 @@ DATA_LIMIT_PATHS_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_seg_networks/da
 AUGMENTATION_PATH_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_seg_networks/augment_limited', '%s')
 LOSS_PATH_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_seg_networks/loss_limit', '%s')
 VOLUME_PATH_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_seg_networks/volume_limited', '%s')
-
+BEST_NETWORK_PATHS_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/best_network/%s'
 EXP_KEY = 'exp'
 BATCH_TEST_KEY = 'batch'
 SUPPORTED_ARCHITECTURES = ['unet_2d', 'deeplabv3_2d', 'segnet_2d']
@@ -720,6 +720,39 @@ def handle_fcn_test_parser(vargin):
 
         test_dir(fullpath, get_config(config_name), vals_dict=vals_dict)
 
+def init_best_network_test_parser(input_subparser):
+    subparser = input_subparser.add_parser('best', help='test best trained experiment')
+    architecture_parser = subparser.add_subparsers(help='architecture to use', dest=ARCHITECTURE_KEY)
+
+    add_base_architecture_parser(architecture_parser)
+
+    subparser.set_defaults(func=handle_best_network_test_exp)
+
+def handle_best_network_test_exp(vargin):
+    config_name = vargin[ARCHITECTURE_KEY]
+    do_batch_test = vargin[BATCH_TEST_KEY]
+    overwrite_data = vargin[OVERWRITE_KEY]
+    date = vargin['date']
+    test_batch_size = vargin['batch_size']
+
+    architecture_folder_path = BEST_NETWORK_PATHS_PREFIX % config_name
+    vals_dict = {'TEST_BATCH_SIZE': test_batch_size}
+
+    if config_name == 'deeplabv3_2d':
+        vals_dict.update(handle_deeplab(vargin))
+
+    if do_batch_test:
+        batch_test(architecture_folder_path, config_name, [vals_dict], overwrite=overwrite_data)
+        return
+
+    if date is None:
+        raise ValueError('Must specify either \'date\' or \'%s\'' % (BATCH_TEST_KEY))
+
+    fullpath = os.path.join(architecture_folder_path, date)
+    if not os.path.isdir(fullpath):
+        raise NotADirectoryError('%s does not exist. Make sure date is correct' % fullpath)
+
+    test_dir(fullpath, get_config(config_name), vals_dict=vals_dict)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run inference on OAI dataset')
@@ -731,6 +764,7 @@ if __name__ == '__main__':
     init_loss_limit_parser(subparsers)
     init_volume_limit_parser(subparsers)
     init_fcn_test_parser(subparsers)
+    init_best_network_test_parser(subparsers)
 
     args = parser.parse_args()
     gpu = args.gpu
