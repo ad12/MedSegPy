@@ -40,5 +40,7 @@ if __name__ == '__main__':
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
     
-    oai_train.fine_tune('/bmrNAS/people/arjun/msk_seg_networks/best_network/deeplabv3_2d/2018-11-27-00-40-24/', DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE':5e-7})
+    #oai_train.fine_tune('/bmrNAS/people/arjun/msk_seg_networks/best_network/deeplabv3_2d/2018-11-27-00-40-24/', DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE':8e-6})
     #oai_train.train(DeeplabV3Config(), vals_dict={'AUGMENT_DATA': False, 'N_EPOCHS': 100, 'LOSS': BINARY_CROSS_ENTROPY_SIG_LOSS})
+    oai_train.train(DeeplabV3Config(), vals_dict={'AUGMENT_DATA': True, 'N_EPOCHS': 20, 'LOSS': FOCAL_LOSS})
+
