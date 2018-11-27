@@ -15,7 +15,7 @@ import glob_constants
 import utils
 from config import UNetConfig, DeeplabV3Config, UNetMultiContrastConfig, SegnetConfig, DeeplabV3_2_5DConfig
 from im_generator import calc_generator_info, img_generator, img_generator_oai
-from losses import get_training_loss, BINARY_CROSS_ENTROPY_LOSS, WEIGHTED_CROSS_ENTROPY_LOSS, BINARY_CROSS_ENTROPY_SIG_LOSS, FOCAL_LOSS
+from losses import get_training_loss, BINARY_CROSS_ENTROPY_LOSS, WEIGHTED_CROSS_ENTROPY_LOSS, BINARY_CROSS_ENTROPY_SIG_LOSS, FOCAL_LOSS, UNNORMALIZED_FOCAL_LOSS
 from models import get_model
 from weight_classes import CLASS_FREQ_DAT_PATH
 
@@ -42,5 +42,5 @@ if __name__ == '__main__':
     
     #oai_train.fine_tune('/bmrNAS/people/arjun/msk_seg_networks/best_network/deeplabv3_2d/2018-11-27-00-40-24/', DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE':8e-6})
     #oai_train.train(DeeplabV3Config(), vals_dict={'AUGMENT_DATA': False, 'N_EPOCHS': 100, 'LOSS': BINARY_CROSS_ENTROPY_SIG_LOSS})
-    oai_train.train(DeeplabV3Config(), vals_dict={'AUGMENT_DATA': True, 'N_EPOCHS': 20, 'LOSS': FOCAL_LOSS})
+    oai_train.train(DeeplabV3Config(), vals_dict={'AUGMENT_DATA': True, 'N_EPOCHS': 20, 'LOSS': UNNORMALIZED_FOCAL_LOSS})
 

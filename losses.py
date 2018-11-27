@@ -9,6 +9,7 @@ WEIGHTED_CROSS_ENTROPY_LOSS = ('weighted_cross_entropy', 'softmax')
 BINARY_CROSS_ENTROPY_LOSS = ('binary_crossentropy', 'softmax')
 BINARY_CROSS_ENTROPY_SIG_LOSS = ('binary_crossentropy', 'sigmoid')
 FOCAL_LOSS = ('focal_loss', 'sigmoid')
+UNNORMALIZED_FOCAL_LOSS = ('unnormalized_focal_loss', 'sigmoid')
 
 
 def get_training_loss(loss, weights=None):
@@ -24,6 +25,8 @@ def get_training_loss(loss, weights=None):
         return binary_crossentropy
     elif loss == FOCAL_LOSS:
         return focal_loss
+    elif loss == UNNORMALIZED_FOCAL_LOSS:
+        return unnormalized_focal_loss
     else:
         raise ValueError("Loss type not supported")
 
@@ -114,6 +117,8 @@ def focal_loss(y_true, y_pred):
     formula is -(1 - pt)^gamma * log(pt),   pt = p if y=1
                                             pt = 1-p if y=0
 
+    gamma = 3
+
     y_true values must be 0s and 1s
 
     @:param: weights: numpy array of shape (C,) where C is the number of classes
@@ -135,6 +140,37 @@ def focal_loss(y_true, y_pred):
 
     loss_val = -K.mean(K.pow((1 - pt), 3) * K.log(pt)) * 100
     
+    return loss_val
+
+
+def unnormalized_focal_loss(y_true, y_pred):
+    """
+    Focal loss as implemented by facebook
+
+    formula is -(1 - pt)^gamma * log(pt),   pt = p if y=1
+                                            pt = 1-p if y=0
+
+    gamma=3
+
+    y_true values must be 0s and 1s
+
+    @:param: weights: numpy array of shape (C,) where C is the number of classes
+
+    Use Case:
+        weights = np.array([0.5, 2]) # Class one at 0.5, class 2 2x the normal weights
+        loss = weighted_categorical_crossentropy(weights)
+        model.compile(loss=loss,optimizer='adam')
+    """
+    y_true = K.flatten(y_true)
+    y_pred = K.flatten(y_pred)
+
+    y_pred = K.clip(y_pred, K.epsilon(), 1 - K.epsilon())
+
+    # calculate pt
+    # note that ~y_true = 1 - y_true
+    pt = y_true * y_pred + (1 - y_true) * (1 - y_pred)
+    loss_val = -K.sum(K.pow((1 - pt), 3) * K.log(pt))
+
     return loss_val
 
 
