@@ -64,7 +64,7 @@ def data_limitation_train(config_name, vals_dict=None, pc=None):
 
         config = get_config(config_name)
 
-        config.N_EPOCHS = math.ceil(30 * num_pids / pid_count)
+        config.N_EPOCHS = math.ceil(100 * num_pids / pid_count)
         #config.DROP_FACTOR = config.DROP_FACTOR ** (1 / s_ratio)
         config.PIDS = pids_sampled if pid_count != num_pids else None
 

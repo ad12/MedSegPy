@@ -21,6 +21,7 @@ import utils
 
 from scipy import optimize as sop
 from matplotlib.ticker import ScalarFormatter
+import pandas as pd
 
 # Define some custom color palettes
 american_palette = ['#ffeaa7', '#00cec9', '#0984e3', '#6c5ce7', '#b2bec3'] # yellow too pale
@@ -32,6 +33,7 @@ cpal = sns.color_palette("muted", 8)
 
 SAVE_PATH = utils.check_dir('/bmrNAS/people/arjun/msk_seg_networks/analysis/exp_graphs')
 
+import stats
 
 def graph_slice_exp(exp_dict, show_plot=False, ax=None, title=''):
     """
@@ -88,10 +90,11 @@ def graph_slice_exp(exp_dict, show_plot=False, ax=None, title=''):
     ax.set_xlabel('FOV (%)', labelpad=0)
     ax.set_ylabel('DSC')
     ax.set_title(title)
+    ax.autoscale_view()
     # plt.legend(legend_keys)
     # txt = fig.text(0.49, -0.04, 'FOV (%)', fontsize=13)
     lgd = ax.legend(legend_keys, loc='upper center', bbox_to_anchor=(0.5, -0.15),
-                    fancybox=True, shadow=True, ncol=3)
+                    fancybox=True, shadow=True, ncol=len(exp_dict['keys']))
     plt.savefig(os.path.join(SAVE_PATH, '%s.png' % filename), format='png', dpi=1000, bbox_inches='tight')
 
     if show_plot:
@@ -179,6 +182,97 @@ def get_data_limitation(multi_data, metric_id):
 __EPSILON__ = 1e-8
 
 
+def fcn_exp(base_paths, exp_names, dirname):
+    
+    if type(base_paths) is str:
+        base_paths = [base_paths]
+        
+    if type(exp_names) is str:
+        exp_names = [exp_names]
+    
+    test_set_name = ['original (V0)', 'midcrop1 (V1)', 'midcrop2 (V2)', 'nocrop (V3)']
+    test_folders = ['test_results', 'test_results_midcrop1', 'test_results_midcrop2', 'test_results_nocrop']
+    
+    exp_means = []
+    exp_stds = []
+    for i in range(len(base_paths)):
+        base_path = base_paths[i]
+        test_folder_paths = []
+        for tfolder in test_folders:
+            test_folder_paths.append(os.path.join(base_path, tfolder))
+        
+        # get dice accuracy metric
+        metrics = stats.get_metrics(test_folder_paths)
+        dsc = metrics['DSC']
+
+        bar_width = 0.35
+        opacity = 0.8
+        sub_means = []
+        sub_stds = []
+        for ind in range(len(test_set_name)):
+            vals = np.asarray(dsc[ind])
+            sub_means.append(np.mean(vals))
+            std = np.std(vals) / np.sqrt(len(vals)) if len(vals) > 1 else None
+            sub_stds.append(std)
+            
+        exp_means.append(sub_means)
+        exp_stds.append(sub_stds)
+        
+        # Do kruskal dunn analysis
+        print('=='*30)
+        print(exp_names[i])
+        print('=='*30)
+        stats.kruskal_dunn_analysis(test_folder_paths, test_set_name, dirname)
+        print('=='*30)
+    
+    exp_means = pd.DataFrame(exp_means, index=exp_names, columns=test_set_name)
+    exp_stds = pd.DataFrame(exp_stds, index=exp_names, columns=test_set_name)
+    
+    # Display bar graph
+    display_bar_graph(exp_means, exp_stds)
+    
+def display_bar_graph(df_mean, df_error, dirname=None, legend_loc='bottom'):
+    assert df_mean.shape == df_error.shape, "Both dataframes must be same shape"
+    
+    x_labels = df_mean.index.tolist()
+    n_groups = len(x_labels)
+    x_index = np.arange(0, n_groups*2, 2)
+    
+    columns = df_mean.columns.tolist()
+    
+    fig, ax = plt.subplots()
+    bar_width = 0.25
+    opacity = 0.8
+    
+    df_mean_arr = np.asarray(df_mean)
+    df_error_arr = np.asarray(df_error)
+    
+    for ind in range(len(columns)):
+        sub_means = df_mean_arr[..., ind]
+        sub_errors = df_error_arr[..., ind]
+        rects = plt.bar(x_index + (bar_width)*ind, sub_means, bar_width,
+                        alpha=opacity,
+                        color=cpal[ind],
+                        label=columns[ind],
+                        yerr=sub_errors)
+    
+    delta = (len(columns) - 1)*bar_width/2
+    plt.xticks(x_index + delta, x_labels)
+    
+    if legend_loc == 'bottom':
+        plt.legend(loc='lower center', bbox_to_anchor=(0.5, -0.25),
+                           fancybox=True, shadow=True, ncol=len(columns))
+    else:
+        plt.legend(bbox_to_anchor=(1, 1), loc='upper left', ncol=1, fancybox=True)
+        
+    if dirname is not None:
+        plt.savefig(exp_filepath, format='png',
+                    dpi=1000,
+                    bbox_inches='tight')
+    else:
+        plt.show()
+    
+    
 def fit_power_law(xs, ys):
     def func(x, a, b):
         exp = x ** b
