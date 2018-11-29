@@ -43,9 +43,12 @@ if __name__ == '__main__':
         if model == 'unet':
             config = UNetConfig()
             if fine_tune_path is not None:
-                oai_train.fine_tune(fine_tune_path, config, {'AUGMENT_DATA': False, 'N_EPOCHS': 100,
-                                                             'USE_STEP_DECAY': False, 'INITIAL_LEARNING_RATE': 1e-5,
-                                                             'DROP_FACTOR': (0.8) ** (1 / 5)})
+                oai_train.fine_tune(fine_tune_path, config, {'AUGMENT_DATA': False,
+                                                             'N_EPOCHS': 100,
+                                                             'INITIAL_LEARNING_RATE': 1e-6,
+                                                             'DROP_FACTOR': 0.8,
+                                                             'DROP_RATE': 5.0,
+                                                             'MIN_LEARNING_RATE': 1e-9})
             else:
                 oai_train.train(config,
                                 vals_dict={'AUGMENT_DATA': False, 'N_EPOCHS': 100, 'DROP_FACTOR': (0.8) ** (1 / 5)})
