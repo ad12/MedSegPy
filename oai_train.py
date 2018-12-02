@@ -337,6 +337,9 @@ if __name__ == '__main__':
     # train(DeeplabV3Config(), {'OS':16, 'DIL_RATES': (2, 4, 6), 'DROPOUT_RATE':0.0})
     # fine_tune(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-09-26-19-07-53'), DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE':1e-6})
     # print('\n\n')
+    #train(SegnetConfig())
+    #fine_tune(os.path.join('/bmrNAS/people/arjun/msk_seg_networks/architecture_limit/segnet_2d/2018-11-30-21-13-14'), SegnetConfig(), vals_dict={'INITIAL_LEARNING_RATE':1e-6})
+    fine_tune(os.path.join('/bmrNAS/people/arjun/msk_seg_networks/architecture_limit/deeplabv3_2d/2018-11-30-05-49-49'), DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE':1e-6})
 
-    fine_tune(os.path.join('/bmrNAS/people/arjun/msk_seg_networks/architecture_limit/unet_2d','2018-11-26-00-56-55'), UNetConfig(), vals_dict={'INITIAL_LEARNING_RATE': 1e-4})
+    #fine_tune(os.path.join('/bmrNAS/people/arjun/msk_seg_networks/architecture_limit/unet_2d','2018-11-26-00-56-55'), UNetConfig(), vals_dict={'INITIAL_LEARNING_RATE': 1e-4})
 # train(SegnetConfig(), {'INITIAL_LEARNING_RATE' 1e-3, 'FINE_TUNE': False, 'TRAIN_BATCH_SIZE': 15})

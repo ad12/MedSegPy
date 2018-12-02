@@ -232,6 +232,8 @@ def fcn_exp(base_paths, exp_names, dirname):
     display_bar_graph(exp_means, exp_stds)
     
 def display_bar_graph(df_mean, df_error, dirname=None, legend_loc='bottom'):
+    line_width = 1
+    
     assert df_mean.shape == df_error.shape, "Both dataframes must be same shape"
     
     x_labels = df_mean.index.tolist()
@@ -242,19 +244,35 @@ def display_bar_graph(df_mean, df_error, dirname=None, legend_loc='bottom'):
     
     fig, ax = plt.subplots()
     bar_width = 0.25
-    opacity = 0.8
+    opacity = 0.9
     
     df_mean_arr = np.asarray(df_mean)
     df_error_arr = np.asarray(df_error)
     
+    p = []
+    e = []
+    
     for ind in range(len(columns)):
         sub_means = df_mean_arr[..., ind]
         sub_errors = df_error_arr[..., ind]
-        rects = plt.bar(x_index + (bar_width)*ind, sub_means, bar_width,
+        
+        p.append(ax.bar(x_index + (bar_width)*ind, sub_means, bar_width,
                         alpha=opacity,
                         color=cpal[ind],
                         label=columns[ind],
-                        yerr=sub_errors)
+                        edgecolor='gray',
+                        linewidth=line_width,
+                        bottom=0))
+        
+        e.append(ax.errorbar(x_index + (bar_width)*ind, sub_means,
+                             yerr=[np.zeros(sub_errors.shape), sub_errors],
+                             ecolor='gray', 
+                             elinewidth=line_width, 
+                             capsize=5, 
+                             capthick=line_width, 
+                             linewidth=0))
+    for eb in e:
+        BarCapSizer(eb.lines[1], 0.1)
     
     delta = (len(columns) - 1)*bar_width/2
     plt.xticks(x_index + delta, x_labels)
@@ -271,7 +289,22 @@ def display_bar_graph(df_mean, df_error, dirname=None, legend_loc='bottom'):
                     bbox_inches='tight')
     else:
         plt.show()
-    
+
+        
+class BarCapSizer():
+    def __init__(self, caps, size=1):
+        self.size=size
+        self.caps = caps
+        self.ax = self.caps[0].axes
+        self.resize()
+
+    def resize(self):
+        ppd=72./self.ax.figure.dpi
+        trans = self.ax.transData.transform
+        s =  ((trans((self.size,1))-trans((0,0)))*ppd)[0]
+        for i,cap in enumerate(self.caps):
+            cap.set_markersize(s)
+            
     
 def fit_power_law(xs, ys):
     def func(x, a, b):

@@ -125,6 +125,7 @@ if __name__ == '__main__':
     print(models)
     
     vals_dict = {'AUGMENT_DATA': False, 'DROP_FACTOR': 0.8**(1/5)}
+    vals_dict = None
 
     for c in range(repeat_count):
         for model in models:

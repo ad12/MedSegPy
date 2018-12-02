@@ -195,6 +195,7 @@ def test_model(config, save_file=0):
             save_name = '%s/%s_recon.pred' % (test_result_path, fname)
             with h5py.File(save_name, 'w') as h5f:
                 h5f.create_dataset('recon', data=recon)
+                h5f.create_dataset('gt', data=y_test)
 
             # in case of 2.5D, we want to only select center slice
             x_write = x_test[..., x_test.shape[-1] // 2]
