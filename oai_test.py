@@ -233,7 +233,10 @@ def test_model(config, save_file=0):
     results_dat = os.path.join(test_result_path, 'metrics.dat')
     metrics = {'dsc': dice_losses,
                'voe': voes,
-               'cvs': cv_values}
+               'cvs': cv_values,
+               'true_positive': TPs,
+               'false_positive': FPs,
+               'false_negative': FNs}
     utils.save_pik(metrics, results_dat)
 
     x_interp = np.asarray(x_interp)
