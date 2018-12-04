@@ -35,7 +35,7 @@ SAVE_PATH = utils.check_dir('/bmrNAS/people/arjun/msk_seg_networks/analysis/exp_
 
 import stats
 
-def graph_slice_exp(exp_dict, show_plot=False, ax=None, title=''):
+def graph_slice_exp(exp_dict, show_plot=False, ax=None, title='', ylim=[0.6, 1]):
     """
     Compute %FOV vs Dice Accuracy using data saved in 'total_interp_data.mat'" for multiple test result files
     
@@ -77,7 +77,7 @@ def graph_slice_exp(exp_dict, show_plot=False, ax=None, title=''):
 
         x_interp_mean = np.mean(xs, 0)
         y_interp_mean = np.mean(ys, 0)
-        y_interp_sem = np.std(ys, 0) / np.sqrt(ys.shape[0])
+        y_interp_sem = np.std(ys, 0)
 
         ax.plot(x_interp_mean, y_interp_mean, 'k', color=cpal[c])
         ax.fill_between(x_interp_mean, y_interp_mean - y_interp_sem, y_interp_mean + y_interp_sem, alpha=0.35,
@@ -86,7 +86,7 @@ def graph_slice_exp(exp_dict, show_plot=False, ax=None, title=''):
         legend_keys.append(data_key)
         c += 1
 
-    ax.set_ylim([0.6, 1])
+    ax.set_ylim(ylim)
     ax.set_xlabel('FOV (%)', labelpad=0)
     ax.set_ylabel('DSC')
     ax.set_title(title)
@@ -170,7 +170,7 @@ def get_data_limitation(multi_data, metric_id):
         for num_p in num_patients:
             xs.append(num_p)
             ys.append(np.mean(num_patients_data[num_p]))
-            SEs.append(np.std(num_patients_data[num_p]) / np.sqrt(num_patients_data[num_p].shape[0]))
+            SEs.append(np.std(num_patients_data[num_p]))
 
         x_sim, y_sim, r2 = fit_power_law(xs, ys)
 
@@ -212,7 +212,7 @@ def fcn_exp(base_paths, exp_names, dirname):
         for ind in range(len(test_set_name)):
             vals = np.asarray(dsc[ind])
             sub_means.append(np.mean(vals))
-            std = np.std(vals) / np.sqrt(len(vals)) if len(vals) > 1 else None
+            std = np.std(vals) if len(vals) > 1 else None
             sub_stds.append(std)
             
         exp_means.append(sub_means)
@@ -231,7 +231,7 @@ def fcn_exp(base_paths, exp_names, dirname):
     # Display bar graph
     display_bar_graph(exp_means, exp_stds)
     
-def display_bar_graph(df_mean, df_error, dirname=None, legend_loc='bottom'):
+def display_bar_graph(df_mean, df_error, exp_filepath=None, legend_loc='bottom', sig_markers=[]):
     line_width = 1
     
     assert df_mean.shape == df_error.shape, "Both dataframes must be same shape"
@@ -251,7 +251,7 @@ def display_bar_graph(df_mean, df_error, dirname=None, legend_loc='bottom'):
     
     p = []
     e = []
-    
+    errs = []
     for ind in range(len(columns)):
         sub_means = df_mean_arr[..., ind]
         sub_errors = df_error_arr[..., ind]
@@ -271,6 +271,8 @@ def display_bar_graph(df_mean, df_error, dirname=None, legend_loc='bottom'):
                              capsize=5, 
                              capthick=line_width, 
                              linewidth=0))
+        errs.append(sub_errors)
+        
     for eb in e:
         BarCapSizer(eb.lines[1], 0.1)
     
@@ -282,8 +284,10 @@ def display_bar_graph(df_mean, df_error, dirname=None, legend_loc='bottom'):
                            fancybox=True, shadow=True, ncol=len(columns))
     else:
         plt.legend(bbox_to_anchor=(1, 1), loc='upper left', ncol=1, fancybox=True)
-        
-    if dirname is not None:
+    
+    #display_sig_markers(p, e, [(0,1,'*')], ax)
+    
+    if exp_filepath is not None:
         plt.savefig(exp_filepath, format='png',
                     dpi=1000,
                     bbox_inches='tight')
@@ -291,6 +295,30 @@ def display_bar_graph(df_mean, df_error, dirname=None, legend_loc='bottom'):
         plt.show()
 
         
+def display_sig_markers(p, errs, sig_markers, ax):
+    def draw_sig_marker(rect1, rect2, marker):
+        x1, y1, width1 = rect1.get_x(), rect1.get_height(), rect1.get_width()
+        x2, y2, width2 = rect2.get_x(), rect2.get_height(), rect2.get_width()
+        
+        print(rect1.get_xerr())
+        
+        cx1 = x1 + width1/2
+        cx2 = x2 + width2/2
+        
+        y = 1.1*max(y1, y2)
+        props = {'connectionstyle':'bar','arrowstyle':'-','shrinkA':20,'shrinkB':20,'linewidth':10}
+        plt.plot([cx1, cx2], [y, y], 'k-', lw=2)
+        
+    flat_list = tuple(item for sublist in p for item in sublist)
+
+    for i1, i2, marker in sig_markers:
+        rect1 = flat_list[i1]
+        rect2 = flat_list[i2]
+        draw_sig_marker(rect1, rect2, marker)
+        
+    if len(sig_markers) == 0:
+        return
+    
 class BarCapSizer():
     def __init__(self, caps, size=1):
         self.size=size

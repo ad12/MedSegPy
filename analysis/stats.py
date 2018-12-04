@@ -16,6 +16,9 @@ import scikit_posthocs as sp
 import utils
 
 from analysis.analysis_funcs import cpal
+from analysis import analysis_funcs as af
+
+from scipy import optimize as sop
 
 ALPHA = 0.05
 SAVE_PATH = utils.check_dir('/bmrNAS/people/arjun/msk_seg_networks/analysis/exp_graphs')
@@ -82,6 +85,38 @@ def get_metrics(dirpaths):
     return metrics
 
 
+def compare_metrics_v2(dirpaths, names, dirname):
+    x_labels = ('DSC', 'VOE', 'CV')
+    n_groups = len(x_labels)
+    x_index = np.arange(0, n_groups*2, 2)
+    
+    exp_names = names
+    exp_filepath = os.path.join(SAVE_PATH, dirname, 'bar.png')
+    
+    metrics_dict = get_metrics(dirpaths)
+
+    exp_means = []
+    exp_stds = []
+    for ind in range(len(exp_names)):
+        sub_means = []
+        sub_stds = []
+        for metric in x_labels:
+            exp_vals = metrics_dict[metric]
+            vals = np.asarray(exp_vals[ind])
+            sub_means.append(np.mean(vals))
+            std = np.std(vals) if len(vals) > 1 else None
+            sub_stds.append(std)
+            
+        exp_means.append(sub_means)
+        exp_stds.append(sub_stds)
+    
+    exp_means = pd.DataFrame(exp_means, index=names, columns=x_labels).T
+    exp_stds = pd.DataFrame(exp_stds, index=names, columns=x_labels).T
+    
+    # Display bar graph
+    af.display_bar_graph(exp_means, exp_stds, exp_filepath=exp_filepath, legend_loc='best')
+    
+    
 def compare_metrics(dirpaths, names, dirname):
     x_labels = ('DSC', 'VOE', 'CV')
     n_groups = len(x_labels)
@@ -104,7 +139,7 @@ def compare_metrics(dirpaths, names, dirname):
             exp_vals = metrics_dict[metric]
             vals = np.asarray(exp_vals[ind])
             sub_means.append(np.mean(vals))
-            std = np.std(vals) / np.sqrt(len(vals)) if len(vals) > 1 else None
+            std = np.std(vals) if len(vals) > 1 else None
             sub_stds.append(std)
 
         rects = plt.bar(x_index + (bar_width)*ind, sub_means, bar_width,
@@ -183,7 +218,20 @@ def print_results(data, metric):
     if data['dunn'] is not None:
         print('Dunn: ')
         print(data['dunn'])
+        
+def fit(x, y, func, p0):
+    popt, _ = sop.curve_fit(func, x, y, p0=p0, maxfev=3000)
+    
+    residuals = y - func(x, *popt)
+    ss_res = np.sum(residuals ** 2)
+    ss_tot = np.sum((y - np.mean(y)) ** 2)
 
+    print(ss_res)
+    print(ss_tot)
+    
+    r_squared = 1 - (ss_res / (ss_tot + 1e-8))
+    
+    return popt, r_squared
 
 if __name__ == '__main__':
     # Base unet - best performing network
