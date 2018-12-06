@@ -11,6 +11,13 @@ sys.path.insert(0, '../')
 # matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
+fsize = 12
+params = {'legend.fontsize': fsize*0.925,          
+          'axes.labelsize': fsize,
+          'axes.titlesize':fsize*1.25,
+          'xtick.labelsize':fsize*0.925,
+          'ytick.labelsize':fsize*0.925 }
+
 import os
 import numpy as np
 import scipy.io as sio
@@ -28,7 +35,7 @@ american_palette = ['#ffeaa7', '#00cec9', '#0984e3', '#6c5ce7', '#b2bec3'] # yel
 color_brewer_1 = ['#a6cee3', '#1f78b4', '#b2df8a', '#33a02c', '#fb9a99'] # not good
 color_brewer_2 = ['#8dd3c7', '#ffffb3', '#bebada', '#fb8072', '#80b1d3'] # not good
 
-cpal = sns.color_palette("muted", 8)
+cpal = sns.color_palette("pastel", 8)
 #cpal = sns.color_palette(american_palette)
 
 SAVE_PATH = utils.check_dir('/bmrNAS/people/arjun/msk_seg_networks/analysis/exp_graphs')
