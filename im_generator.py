@@ -24,7 +24,8 @@ def preprocess_input_scale(im):
     return im
 
 
-def get_class_freq(data_path, class_ids=[0, 1], pids=None, augment_data=True):
+# TODO: support weighting more than 1 class
+def get_class_freq(data_path, class_id=[0], pids=None, augment_data=True):
     if pids is not None:
         learn_files = []
 
@@ -39,16 +40,21 @@ def get_class_freq(data_path, class_ids=[0, 1], pids=None, augment_data=True):
     files = list(unique_filename.keys())
     import pdb; pdb.set_trace()
 
-    freqs = np.zeros([len(class_ids), 1])
+    # organized as freq = [background, class]
+    freqs = np.zeros([len(class_id)+1, 1])
+
     count = 0
     for file in files:
         seg_path = '%s/%s.seg' % (data_path, file)
         with h5py.File(seg_path, 'r') as f:
             seg = f['data'][:].astype('float32')
+            # select class of interest
+            seg = seg[..., class_id]
             seg = seg.flatten()
 
-            for i in range(len(class_ids)):
-                freqs[i] += np.sum(seg == class_ids[i])
+            freqs[0] += np.sum(seg == 0)
+            freqs[1] += np.sum(seg == 1)
+
         count += 1
 
         if count % 1000 == 0:
