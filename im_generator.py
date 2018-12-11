@@ -37,6 +37,7 @@ def get_class_freq(data_path, class_ids=[0, 1], pids=None, augment_data=True):
             unique_filename[file] = file
 
     files = list(unique_filename.keys())
+    import pdb; pdb.set_trace()
 
     freqs = np.zeros([len(class_ids), 1])
     count = 0

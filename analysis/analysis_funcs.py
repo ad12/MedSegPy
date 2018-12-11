@@ -42,7 +42,7 @@ SAVE_PATH = utils.check_dir('/bmrNAS/people/arjun/msk_seg_networks/analysis/exp_
 
 import stats
 
-def graph_slice_exp(exp_dict, show_plot=False, ax=None, title='', ylim=[0.6, 1]):
+def graph_slice_exp(exp_dict, show_plot=False, ax=None, title='', ylim=[0.6, 1], show_error=True):
     """
     Compute %FOV vs Dice Accuracy using data saved in 'total_interp_data.mat'" for multiple test result files
     
@@ -62,6 +62,7 @@ def graph_slice_exp(exp_dict, show_plot=False, ax=None, title='', ylim=[0.6, 1])
 
     legend_keys = []
     c = 0
+    cpal = sns.color_palette("muted", len(data_keys))
     for data_key in data_keys:
         data_dirpaths = exp_dict[data_key]
         if type(data_dirpaths) is str:
@@ -87,8 +88,9 @@ def graph_slice_exp(exp_dict, show_plot=False, ax=None, title='', ylim=[0.6, 1])
         y_interp_sem = np.std(ys, 0)
 
         ax.plot(x_interp_mean, y_interp_mean, 'k', color=cpal[c])
-        ax.fill_between(x_interp_mean, y_interp_mean - y_interp_sem, y_interp_mean + y_interp_sem, alpha=0.35,
-                        edgecolor=cpal[c], facecolor=cpal[c])
+        if show_error:
+            ax.fill_between(x_interp_mean, y_interp_mean - y_interp_sem, y_interp_mean + y_interp_sem, alpha=0.35,
+                            edgecolor=cpal[c], facecolor=cpal[c])
 
         legend_keys.append(data_key)
         c += 1
@@ -109,7 +111,7 @@ def graph_slice_exp(exp_dict, show_plot=False, ax=None, title='', ylim=[0.6, 1])
 
 
 def graph_data_limitation(data, filename):
-    fig, ax_array = plt.subplots(1, len(list(data.keys())), figsize=(len(list(data.keys())) * 6, 3))
+    fig, ax_array = plt.subplots(1, len(list(data.keys())), figsize=(len(list(data.keys())) * 6, 6))
 
     i = 0
     for k in data.keys():
@@ -236,7 +238,7 @@ def fcn_exp(base_paths, exp_names, dirname):
     exp_stds = pd.DataFrame(exp_stds, index=exp_names, columns=test_set_name)
     
     # Display bar graph
-    display_bar_graph(exp_means, exp_stds)
+    display_bar_graph(exp_means, exp_stds, os.path.join(SAVE_PATH, '%s.png' % dirname))
     
 def display_bar_graph(df_mean, df_error, exp_filepath=None, legend_loc='bottom', sig_markers=[]):
     line_width = 1
@@ -289,7 +291,7 @@ def display_bar_graph(df_mean, df_error, exp_filepath=None, legend_loc='bottom',
     if legend_loc == 'bottom':
         plt.legend(loc='lower center', bbox_to_anchor=(0.5, -0.25),
                            fancybox=True, shadow=True, ncol=len(columns))
-    else:
+    elif legend_loc == 'upper_left':
         plt.legend(bbox_to_anchor=(1, 1), loc='upper left', ncol=1, fancybox=True)
     
     #display_sig_markers(p, e, [(0,1,'*')], ax)
@@ -345,15 +347,20 @@ def fit_power_law(xs, ys):
     def func(x, a, b):
         exp = x ** b
         return a * exp
+    
+    def res_func(x, a, b):
+        # y = a*x^b ---> log(y) = b*log(x) + log(a)
+        return b*np.log(x) + np.log(a)
 
     x = np.asarray(xs)
     y = np.asarray(ys)
 
     popt, _ = sop.curve_fit(func, x, y, p0=[1, 1], maxfev=1000)
-
-    residuals = y - func(x, popt[0], popt[1])
+    
+    log_y = np.log(y)
+    residuals = log_y - res_func(x, popt[0], popt[1])
     ss_res = np.sum(residuals ** 2)
-    ss_tot = np.sum((y - np.mean(y)) ** 2)
+    ss_tot = np.sum((log_y - np.mean(log_y)) ** 2)
 
     r_squared = 1 - (ss_res / (ss_tot + __EPSILON__))
 
