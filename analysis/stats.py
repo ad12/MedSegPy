@@ -114,7 +114,7 @@ def compare_metrics_v2(dirpaths, names, dirname):
     exp_stds = pd.DataFrame(exp_stds, index=names, columns=x_labels).T
     
     # Display bar graph
-    af.display_bar_graph(exp_means, exp_stds, exp_filepath=exp_filepath, legend_loc='best')
+    af.display_bar_graph(exp_means, exp_stds, exp_filepath=exp_filepath, legend_loc='best', bar_width=0.35)
     
     
 def compare_metrics(dirpaths, names, dirname):
