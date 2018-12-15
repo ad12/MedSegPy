@@ -66,7 +66,7 @@ def train_model(config, optimizer=None):
     if loss == WEIGHTED_CROSS_ENTROPY_LOSS and class_weights is None:
         print('calculating freq')
         freq_file = CLASS_FREQ_DAT_WEIGHTS_AUG if config.AUGMENT_DATA else CLASS_FREQ_DAT_WEIGHTS_NO_AUG
-
+        print('Weighting with file: %s' % freq_file)
         class_freqs = utils.load_pik(freq_file)
         class_weights = get_class_weights(class_freqs)
         class_weights = np.reshape(class_weights, (1, 2))

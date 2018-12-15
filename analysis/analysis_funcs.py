@@ -110,8 +110,9 @@ def graph_slice_exp(exp_dict, show_plot=False, ax=None, title='', ylim=[0.6, 1],
         plt.show()
 
 
-def graph_data_limitation(data, filename):
-    fig, ax_array = plt.subplots(1, len(list(data.keys())), figsize=(len(list(data.keys())) * 6, 6))
+def graph_data_limitation(data, filename, decay_exp_fit = False):
+    cpal = sns.color_palette("muted", 3)
+    fig, ax_array = plt.subplots(1, len(list(data.keys())), figsize=(len(list(data.keys())) * 6, 3))
 
     i = 0
     for k in data.keys():
@@ -125,12 +126,14 @@ def graph_data_limitation(data, filename):
         print('=====================')
         print('        %s          ' % ylabel)
         print('=====================')
-        results = get_data_limitation(data[k], k)
+        asymtote = 1.0 if k=='dsc' else 0.0
+        
+        results = get_data_limitation(data[k], k, decay_exp_fit = decay_exp_fit, asymtote=asymtote)
         c = 0
         for model in results.keys():
-            xs, ys, SEs, x_sim, y_sim, r2 = results[model]
+            xs, ys, SEs, x_sim, y_sim, r2, a, b = results[model]
             ax.semilogx(xs, ys, 'o', color=cpal[c], label='%s' % model)
-            ax.errorbar(xs, ys, yerr=SEs, ecolor=cpal[c], fmt='none')
+            ax.errorbar(xs, ys, yerr=SEs, ecolor=cpal[c], fmt='none', capsize=5)
 
             print('r2, r - %s : %0.4f, %0.4f' % (model, r2, np.sqrt(r2)))
 
@@ -143,15 +146,15 @@ def graph_data_limitation(data, filename):
         i += 1
 
     ax_center = ax_array[len(ax_array) // 2]
-    # txt = fig.text(0.49, -0.04, '#Patients', fontsize=13)
-    lgd = ax_center.legend(loc='upper center', bbox_to_anchor=(-0.1, -0.25),
-                           fancybox=True, shadow=True, ncol=3)
     plt.subplots_adjust(hspace=0.3, wspace=0.3)
+    # txt = fig.text(0.49, -0.04, '#Patients', fontsize=13)
+    lgd = ax_center.legend(loc='lower center', bbox_to_anchor=(0.5, -0.4),
+                           fancybox=True, shadow=True, ncol=3)
     plt.savefig(os.path.join(SAVE_PATH, '%s.png' % filename), format='png', dpi=1000, bbox_extra_artists=(lgd,),
                 bbox_inches='tight')
 
     
-def get_data_limitation(multi_data, metric_id):
+def get_data_limitation(multi_data, metric_id, decay_exp_fit = False, asymtote=0):
     data_keys = multi_data['keys']
     num_patients = [5, 15, 30, 60]
     c = 0
@@ -180,10 +183,13 @@ def get_data_limitation(multi_data, metric_id):
             xs.append(num_p)
             ys.append(np.mean(num_patients_data[num_p]))
             SEs.append(np.std(num_patients_data[num_p]))
+        
+        if decay_exp_fit:
+            x_sim, y_sim, r2, a, b = fit_decay_exp(xs, ys, asymtote)
+        else:
+            x_sim, y_sim, r2, a, b = fit_power_law(xs, ys)
 
-        x_sim, y_sim, r2 = fit_power_law(xs, ys)
-
-        results_dict[k] = (xs, ys, SEs, x_sim, y_sim, r2)
+        results_dict[k] = (xs, ys, SEs, x_sim, y_sim, r2, a, b)
 
     return results_dict
 
@@ -240,7 +246,7 @@ def fcn_exp(base_paths, exp_names, dirname):
     # Display bar graph
     display_bar_graph(exp_means, exp_stds, os.path.join(SAVE_PATH, '%s.png' % dirname))
     
-def display_bar_graph(df_mean, df_error, exp_filepath=None, legend_loc='bottom', sig_markers=[]):
+def display_bar_graph(df_mean, df_error, exp_filepath=None, legend_loc='bottom', pvals=[], bar_width=0.25, opacity=0.9):
     line_width = 1
     
     assert df_mean.shape == df_error.shape, "Both dataframes must be same shape"
@@ -252,8 +258,6 @@ def display_bar_graph(df_mean, df_error, exp_filepath=None, legend_loc='bottom',
     columns = df_mean.columns.tolist()
     
     fig, ax = plt.subplots()
-    bar_width = 0.25
-    opacity = 0.9
     
     df_mean_arr = np.asarray(df_mean)
     df_error_arr = np.asarray(df_error)
@@ -304,29 +308,35 @@ def display_bar_graph(df_mean, df_error, exp_filepath=None, legend_loc='bottom',
         plt.show()
 
         
-def display_sig_markers(p, errs, sig_markers, ax):
-    def draw_sig_marker(rect1, rect2, marker):
-        x1, y1, width1 = rect1.get_x(), rect1.get_height(), rect1.get_width()
-        x2, y2, width2 = rect2.get_x(), rect2.get_height(), rect2.get_width()
+def display_sig_markers(p, errs, pvals, ax):
+    def pval_to_marker(pval):
+        if pval < 0.01:
+            return '**'
+        elif pval < 0.05:
+            return '*'
+        else:
+            return ''
         
-        print(rect1.get_xerr())
+    def draw_sig_marker(rect, err, pval):
+        marker = pval_to_marker(pval)
+        if marker == '':
+            return
         
-        cx1 = x1 + width1/2
-        cx2 = x2 + width2/2
+        x, height, width = rect.get_x(), rect.get_height(), rect.get_width()
         
-        y = 1.1*max(y1, y2)
-        props = {'connectionstyle':'bar','arrowstyle':'-','shrinkA':20,'shrinkB':20,'linewidth':10}
-        plt.plot([cx1, cx2], [y, y], 'k-', lw=2)
-        
-    flat_list = tuple(item for sublist in p for item in sublist)
+        y = height+errs[num]+0.05 if err is not None else height+0.05
+        x = x + width/2.0
 
-    for i1, i2, marker in sig_markers:
-        rect1 = flat_list[i1]
-        rect2 = flat_list[i2]
-        draw_sig_marker(rect1, rect2, marker)
-        
-    if len(sig_markers) == 0:
+        ax.text(x, y, pval_to_marker(pval), ha='center', va='bottom', fontsize = 50, color = 'black', alpha = 0.6)
+            
+    if len(pvals) == 0:
         return
+
+    for ind, marker in enumerate(flat_list):
+        rect = flat_list[ind]
+        err = errs[ind]
+        pval = pvals[ind]
+        draw_sig_marker(rect, err, pval)
     
 class BarCapSizer():
     def __init__(self, caps, size=1):
@@ -356,7 +366,7 @@ def fit_power_law(xs, ys):
     y = np.asarray(ys)
 
     popt, _ = sop.curve_fit(func, x, y, p0=[1, 1], maxfev=1000)
-    
+    print(popt)
     log_y = np.log(y)
     residuals = log_y - res_func(x, popt[0], popt[1])
     ss_res = np.sum(residuals ** 2)
@@ -368,5 +378,32 @@ def fit_power_law(xs, ys):
     x_sim = np.linspace(np.min(x), np.max(x), 100)
     y_sim = func(x_sim, popt[0], popt[1])
 
-    return x_sim, y_sim, r_squared
+    return x_sim, y_sim, r_squared, popt[0], popt[1]
+
+
+def fit_decay_exp(xs, ys, asymtote=1.0):
+    def func(x, a, b):
+        # y = asymtote + A*exp(bx)
+        exp = np.exp(b*x)
+        return asymtote + a * exp
     
+    def res_func(x, a, b):
+        # y = asymtote + A*exp(bx) --> log(y-asymtote) = log(A) + bx
+        return np.log(a) + b*x
+
+    x = np.asarray(xs)
+    y = np.asarray(ys)
+    p00 = 1 if asymtote == 0 else -1
+    popt, _ = sop.curve_fit(func, x, y, p0=[p00, -1], maxfev=1000)
+    log_y = np.log(y-asymtote)
+    residuals = log_y - (res_func(x, popt[0], popt[1]) - asymtote)
+    ss_res = np.sum(residuals ** 2)
+    ss_tot = np.sum((log_y - np.mean(log_y)) ** 2)
+
+    r_squared = 1 - (ss_res / (ss_tot + __EPSILON__))
+
+    # Simulate on data
+    x_sim = np.linspace(np.min(x), np.max(x), 100)
+    y_sim = func(x_sim, popt[0], popt[1])
+
+    return x_sim, y_sim, r_squared, popt[0], popt[1]
