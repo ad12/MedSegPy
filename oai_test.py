@@ -205,7 +205,7 @@ def test_model(config, save_file=0):
             utils.write_mask(os.path.join(test_result_path, 'gt', fname), y_test)
             utils.write_prob_map(os.path.join(test_result_path, 'prob_map', fname), recon)
             utils.write_im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write, ovlps)
-            utils.write_sep_im_overlay(os.path.join(test_result_path, 'im_ovlp_sep', fname), x_write, y_test, labels)
+            utils.write_sep_im_overlay(os.path.join(test_result_path, 'im_ovlp_sep', fname), x_write, np.squeeze(y_test), np.squeeze(labels))
 
         img_cnt += 1
 

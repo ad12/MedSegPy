@@ -58,7 +58,7 @@ if __name__ == '__main__':
             config = DeeplabV3Config()
             oai_train.train(config, vals_dict={'LOSS': loss_func,
                                                'INCLUDE_BACKGROUND': include_background})
-        elif model == 'segnet_2d':
+        elif model == 'segnet':
             config = SegnetConfig()
             oai_train.train(config, vals_dict={'LOSS': loss_func,
                                                'INCLUDE_BACKGROUND': include_background})

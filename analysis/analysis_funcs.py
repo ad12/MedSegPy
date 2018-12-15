@@ -407,3 +407,16 @@ def fit_decay_exp(xs, ys, asymtote=1.0):
     y_sim = func(x_sim, popt[0], popt[1])
 
     return x_sim, y_sim, r_squared, popt[0], popt[1]
+
+def print_metrics_summary(dir_paths):
+    print('')
+    for dp in dir_paths:
+        print(dp)
+        print('--'*40)
+        test_file = os.path.join(dp, 'results.txt')
+        with open(test_file) as search:
+            for line in search:
+                line = line.rstrip()  # remove '\n' at end of line
+                if 'MEAN +/- STD' in line.upper():
+                    print(line)
+        print('')
