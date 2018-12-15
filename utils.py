@@ -42,6 +42,54 @@ def write_im_overlay(dir_path, xs, im_overlay):
         cv2.imwrite(os.path.join(dir_path, slice_name), overlap_img)
 
 
+def write_sep_im_overlay(dir_path, xs, y_true, y_pred):
+    """
+    Overlap input (xs) with mask (im_overlap) and save to directory
+    :param dir_path: path to directory to save images
+    :param xs: inputs
+    :param im_overlay: overlay images
+    """
+    correct_dir_path = check_dir(os.path.join(dir_path, 'true_pos'))
+    error_dir_path = check_dir(os.path.join(dir_path, 'error'))
+    num_slices = xs.shape[0]
+    for i in range(num_slices):
+        x = scale_img(np.squeeze(xs[i, ...]))
+        x = np.stack([x, x, x], axis=-1).astype(np.uint8)
+        im_correct, im_error = generate_sep_ovlp_image(y_true[i, ...], y_pred[i, ...])
+
+        slice_name = '%03d.png' % i
+
+        overlap_img_correct = cv2.addWeighted(x, 1, im_correct, 1.0, 0)
+        cv2.imwrite(os.path.join(correct_dir_path, slice_name), overlap_img_correct)
+
+        overlap_img_error = cv2.addWeighted(x, 1, im_error, 1.0, 0)
+        cv2.imwrite(os.path.join(error_dir_path, slice_name), overlap_img_error)
+
+
+def generate_sep_ovlp_image(y_true, y_pred):
+    """
+    TODO: write comment
+    :param y_true: numpy array of ground truth labels
+    :param y_pred: numpy array of predicted labels
+    :return: a BGR image
+    """
+    assert (y_true.shape == y_pred.shape)
+    assert len(y_true.shape) == 2, "shape should be 2d, but is " + y_true.shape
+
+    y_true = y_true.astype(np.bool)
+    y_pred = y_pred.astype(np.bool)
+
+    TP = y_true * y_pred
+    FN = y_true * (~y_pred)
+    FP = (~y_true) * y_pred
+
+    # BGR format
+    img_corr = np.stack([np.zeros(TP.shape), TP, np.zeros(TP.shape)], axis=-1).astype(np.uint8) * 255
+    img_err = np.stack([[FP, np.zeros(TP.shape), FN]]).astype(np.uint8) * 255
+
+    return (img_corr, img_err)
+
+
 def write_ovlp_masks(dir_path, y_true, y_pred):
     """
     Overlap ground truth with prediction and save to directory
