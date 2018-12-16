@@ -6,6 +6,7 @@ import glob_constants
 import oai_train
 from config import DeeplabV3Config, SegnetConfig, UNetConfig
 from losses import WEIGHTED_CROSS_ENTROPY_LOSS, BINARY_CROSS_ENTROPY_LOSS, BINARY_CROSS_ENTROPY_SIG_LOSS, FOCAL_LOSS
+import losses
 
 SUPPORTED_MODELS = ['unet', 'segnet', 'deeplab']
 
@@ -20,7 +21,7 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--model', metavar='M', nargs=1, choices=SUPPORTED_MODELS)
     parser.add_argument('-bce', action='store_const', default=False, const=True)
     parser.add_argument('-bcse', action='store_const', default=False, const=True)
-    parser.add_argument('-focal', action='store_const', default=False, const=True)
+    parser.add_argument('-focal', nargs='?', default=3.0, type=float)
     parser.add_argument('-a', action='store_const', default=False, const=True)
 
     args = parser.parse_args()
@@ -47,6 +48,8 @@ if __name__ == '__main__':
     if args.focal:
         loss_func = FOCAL_LOSS
         include_background = False
+        losses.FOCAL_LOSS_GAMMA = args.focal
+        print(args.focal)
 
     for model in models:
         # Data limitation experiment: Train Unet, Deeplab, and Segnet with limited data

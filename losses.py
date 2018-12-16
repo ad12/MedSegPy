@@ -5,11 +5,15 @@ from keras.losses import binary_crossentropy
 
 # Losses
 DICE_LOSS = ('dice', 'sigmoid')
-WEIGHTED_CROSS_ENTROPY_LOSS = ('weighted_cross_entropy', 'softmax')
-BINARY_CROSS_ENTROPY_LOSS = ('binary_crossentropy', 'softmax')
-BINARY_CROSS_ENTROPY_SIG_LOSS = ('binary_crossentropy', 'sigmoid')
-FOCAL_LOSS = ('focal_loss', 'sigmoid')
 
+WEIGHTED_CROSS_ENTROPY_LOSS = ('weighted_cross_entropy', 'softmax')
+
+BINARY_CROSS_ENTROPY_LOSS = ('binary_crossentropy', 'softmax')
+
+BINARY_CROSS_ENTROPY_SIG_LOSS = ('binary_crossentropy', 'sigmoid')
+
+FOCAL_LOSS = ('focal_loss', 'sigmoid')
+FOCAL_LOSS_GAMMA = 3.0
 
 def get_training_loss(loss, weights=None):
     if loss == DICE_LOSS:
@@ -23,7 +27,7 @@ def get_training_loss(loss, weights=None):
     elif loss == BINARY_CROSS_ENTROPY_SIG_LOSS:
         return binary_crossentropy
     elif loss == FOCAL_LOSS:
-        return focal_loss
+        return focal_loss(FOCAL_LOSS_GAMMA)
     else:
         raise ValueError("Loss type not supported")
 
@@ -107,7 +111,7 @@ def weighted_categorical_crossentropy(weights):
     return loss
 
 
-def focal_loss(y_true, y_pred):
+def focal_loss(gamma=3.0):
     """
     Focal loss as implemented by facebook
 
@@ -119,24 +123,23 @@ def focal_loss(y_true, y_pred):
     y_true values must be 0s and 1s
 
     @:param: weights: numpy array of shape (C,) where C is the number of classes
-
-    Use Case:
-        weights = np.array([0.5, 2]) # Class one at 0.5, class 2 2x the normal weights
-        loss = weighted_categorical_crossentropy(weights)
-        model.compile(loss=loss,optimizer='adam')
     """
-    y_true = K.flatten(y_true)
-    y_pred = K.flatten(y_pred)
 
-    y_pred = K.clip(y_pred, K.epsilon(), 1 - K.epsilon())
+    def loss(y_true, y_pred):
+        y_true = K.flatten(y_true)
+        y_pred = K.flatten(y_pred)
 
-    # calculate pt
-    # note that ~y_true = 1 - y_true
-    pt = y_true * y_pred + (1 - y_true) * (1 - y_pred)
+        y_pred = K.clip(y_pred, K.epsilon(), 1 - K.epsilon())
 
-    loss_val = -K.mean(K.pow((1 - pt), 3) * K.log(pt)) * 100
-    
-    return loss_val
+        # calculate pt
+        # note that ~y_true = 1 - y_true
+        pt = y_true * y_pred + (1 - y_true) * (1 - y_pred)
+
+        loss_val = -K.mean(K.pow((1 - pt), gamma) * K.log(pt)) * 100
+
+        return loss_val
+
+    return loss
 
 
 def wasserstein_disagreement_map(prediction, ground_truth, M):
