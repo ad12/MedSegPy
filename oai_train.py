@@ -24,7 +24,7 @@ from models import get_model
 from weight_classes import CLASS_FREQ_DAT_WEIGHTS_AUG, CLASS_FREQ_DAT_WEIGHTS_NO_AUG
 
 
-def train_model(config, optimizer=None):
+def train_model(config, optimizer=None, model=None):
     """
     Train model
     :param config: a Config object
@@ -48,7 +48,9 @@ def train_model(config, optimizer=None):
 
     # Get model based on config
     img_size = config.IMG_SIZE
-    model = get_model(config)
+
+    if model is None:
+        model = get_model(config)
 
     # Fine tune - initialize with weights
     if (config.FINE_TUNE):
