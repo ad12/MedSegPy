@@ -7,6 +7,11 @@ NON_FT_UNET = '/bmrNAS/people/arjun/msk_seg_networks/architecture_limit/unet_2d/
 # non-fine-tuned unet - no -augmentation
 BASELINE_UNET = '/bmrNAS/people/arjun/msk_seg_networks/augment_limited/unet_2d/2018-11-07-16-05-15/test_results'
 
+# Arch No finetune
+ARCH_UNET_RAW = BASELINE_UNET
+ARCH_SEGNET_RAW = '/bmrNAS/people/arjun/msk_seg_networks/architecture_limit/segnet_2d/2018-11-30-21-13-14/test_results'
+ARCH_DEEPLAB_RAW = '/bmrNAS/people/arjun/msk_seg_networks/architecture_limit/deeplabv3_2d/2018-11-30-05-49-49/test_results/16_2-4-6'
+
 # Architecture experiments
 ARCH_UNET = '/bmrNAS/people/arjun/msk_seg_networks/augment_limited/unet_2d/2018-11-07-16-05-15/fine_tune/test_results'
 ARCH_SEGNET = '/bmrNAS/people/arjun/msk_seg_networks/architecture_limit/segnet_2d/2018-11-30-21-13-14/fine_tune/test_results'

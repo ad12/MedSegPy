@@ -21,7 +21,7 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--model', metavar='M', nargs=1, choices=SUPPORTED_MODELS)
     parser.add_argument('-bce', action='store_const', default=False, const=True)
     parser.add_argument('-bcse', action='store_const', default=False, const=True)
-    parser.add_argument('-focal', nargs='?', default=3.0, type=float)
+    parser.add_argument('-focal', nargs='?', default=None, const=3.0, type=float)
     parser.add_argument('-a', action='store_const', default=False, const=True)
 
     args = parser.parse_args()
@@ -49,7 +49,7 @@ if __name__ == '__main__':
         loss_func = FOCAL_LOSS
         include_background = False
         losses.FOCAL_LOSS_GAMMA = args.focal
-        print(args.focal)
+        print(losses.FOCAL_LOSS_GAMMA)
 
     for model in models:
         # Data limitation experiment: Train Unet, Deeplab, and Segnet with limited data
