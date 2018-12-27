@@ -331,10 +331,8 @@ class UNetConfig(Config):
 
 class EnsembleUDSConfig(Config):
     CP_SAVE_TAG = ENSEMBLE_UDS_NAME
-    DEEPLAB_INIT_WEIGHTS = '/bmrNAS/people/akshay/dl/oai_data/deeplab_2d_end-to-end/2018-08-15-06-46-12/deeplab_2d_end-to-end_weights.019-0.1253.h5'
-    UNET_INIT_WEIGHTS = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/select_weights/unet_2d_fc_weights.004--0.8968.h5'
-    SEGNET_INIT_WEIGHTS = '/bmrNAS/people/arjun/msk_seg_networks/oai_data/segnet_2d/2018-08-18-19-55-54/segnet_2d_weights.005-0.3353.h5'
-    N_EPOCHS = 40
+    AUGMENT_DATA = False
+    N_EPOCHS = 100
 
     def __init__(self, state='training', create_dirs=True):
         super().__init__(self.CP_SAVE_TAG, state, create_dirs=create_dirs)
