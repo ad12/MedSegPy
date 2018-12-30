@@ -1,17 +1,16 @@
 import os
 
 from keras import Model
-from keras.initializers import Constant
 from keras.initializers import glorot_uniform
-from keras.layers import Input, Conv2D, Concatenate
+from keras.layers import Input, Conv2D
 from keras.utils import plot_model
 
 from config import DeeplabV3Config, SegnetConfig, UNetConfig, \
     EnsembleUDSConfig, UNetMultiContrastConfig, UNet2_5DConfig, DeeplabV3_2_5DConfig
 from deeplab_2d.deeplab_model import Deeplabv3
 from glob_constants import SEED
-from segnet_2d.segnet import Segnet, Segnet_v2
-from unet_2d.unet_model import unet_2d_model
+from segnet_2d.segnet import Segnet_v2
+from unet_2d.unet_model import unet_2d_model, unet_2d_model_v2
 
 
 def get_model(config):
@@ -26,8 +25,6 @@ def get_model(config):
         model = segnet_2d(config)
     elif (type(config) is UNetConfig):
         model = unet_2d(config)
-    elif (type(config) is EnsembleUDSConfig):
-        model = ensemble_uds(config)
     elif (type(config) is UNetMultiContrastConfig):
         model = unet_2d_multi_contrast(config)
     elif (type(config) is UNet2_5DConfig):
@@ -59,7 +56,9 @@ def unet_2d(config):
     if config.STATE == 'testing' and config.VERSION <= 2:
         model = unet_2d_model(input_size=input_shape, output_mode='sigmoid')
     else:
-        model = unet_2d_model(input_size=input_shape)
+        DEPTH = config.DEPTH
+        NUM_FILTERS = config.NUM_FILTERS
+        model = unet_2d_model_v2(input_size=input_shape, depth=DEPTH, num_filters=NUM_FILTERS)
 
         # Add activation
         x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation)

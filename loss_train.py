@@ -3,10 +3,10 @@ import os
 
 import config as MCONFIG
 import glob_constants
+import losses
 import oai_train
 from config import DeeplabV3Config, SegnetConfig, UNetConfig
 from losses import WEIGHTED_CROSS_ENTROPY_LOSS, BINARY_CROSS_ENTROPY_LOSS, BINARY_CROSS_ENTROPY_SIG_LOSS, FOCAL_LOSS
-import losses
 
 SUPPORTED_MODELS = ['unet', 'segnet', 'deeplab']
 

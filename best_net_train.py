@@ -1,25 +1,11 @@
 import argparse
 import os
-import pickle
-
-import keras.callbacks as kc
-import numpy as np
-from keras import backend as K
-from keras.callbacks import LearningRateScheduler as lrs
-from keras.callbacks import ModelCheckpoint
-from keras.callbacks import TensorBoard as tfb
-from keras.optimizers import Adam
 
 import config as MCONFIG
 import glob_constants
-import utils
-from config import UNetConfig, DeeplabV3Config, UNetMultiContrastConfig, SegnetConfig, DeeplabV3_2_5DConfig
-from im_generator import calc_generator_info, img_generator, img_generator_oai
-from losses import get_training_loss, BINARY_CROSS_ENTROPY_LOSS, WEIGHTED_CROSS_ENTROPY_LOSS, BINARY_CROSS_ENTROPY_SIG_LOSS, FOCAL_LOSS
-from models import get_model
-
 import oai_train
-
+from config import DeeplabV3Config
+from losses import BINARY_CROSS_ENTROPY_SIG_LOSS
 
 if __name__ == '__main__':
     MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/best_network'

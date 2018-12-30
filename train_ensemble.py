@@ -5,14 +5,12 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = '2'
 
 from keras import Model
 from keras.initializers import Constant
-from keras.initializers import glorot_uniform
-from keras.layers import Input, Conv2D, Concatenate
+from keras.layers import Conv2D, Concatenate
 from keras.utils import plot_model
 
 from config import EnsembleUDSConfig
 from deeplab_2d.deeplab_model import Deeplabv3
-from glob_constants import SEED
-from segnet_2d.segnet import Segnet, Segnet_v2
+from segnet_2d.segnet import Segnet_v2
 from unet_2d.unet_model import unet_2d_model
 
 from oai_train import train_model
