@@ -17,9 +17,9 @@ from unet_2d.unet_model import unet_2d_model
 
 from oai_train import train_model
 
-DEEPLAB_WEIGHTS = ''
-SEGNET_WEIGHTS = ''
-UNET_WEIGHTS = ''
+DEEPLAB_WEIGHTS = '/bmrNAS/people/arjun/msk_seg_networks/architecture_limit/deeplabv3_2d/2018-11-30-05-49-49/fine_tune/deeplabv3_2d_weights.057-0.1163.h5'
+SEGNET_WEIGHTS = '/bmrNAS/people/arjun/msk_seg_networks/architecture_limit/segnet_2d/2018-11-30-21-13-14/fine_tune/segnet_2d_weights.051-0.1195.h5'
+UNET_WEIGHTS = '/bmrNAS/people/arjun/msk_seg_networks/augment_limited/unet_2d/2018-11-07-16-05-15/fine_tune/unet_2d_weights.035-0.1152.h5'
 
 
 def ensemble_uds(config):
@@ -47,8 +47,12 @@ def ensemble_uds(config):
     unet_model.load_weights(UNET_WEIGHTS, by_name=True)
     unet_model.trainable = False
 
+    DEPTH = 6
+    NUM_CONV_LAYERS = [2, 2, 3, 3, 3, 3]
+    NUM_FILTERS = [64, 128, 256, 256, 512, 512]
+
     # Segnet
-    segnet_model = Segnet(input_tensor=x, n_labels=num_classes)
+    segnet_model = Segnet_v2(input_tensor=x, n_labels=num_classes, depth=DEPTH, num_conv_layers=NUM_CONV_LAYERS, num_filters=NUM_FILTERS)
     print('Loaded Segnet')
     segnet_model.load_weights(SEGNET_WEIGHTS)
     segnet_model.trainable = False
@@ -87,5 +91,5 @@ def combine_models(x_input, models, ensemble_name='ensemble', num_classes=1):
 if __name__ == '__main__':
     config = EnsembleUDSConfig()
     model = ensemble_uds(config)
-
+    #model.summary()
     train_model(config, model=model)
