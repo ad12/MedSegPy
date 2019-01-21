@@ -42,7 +42,7 @@ SAVE_PATH = utils.check_dir('/bmrNAS/people/arjun/msk_seg_networks/analysis/exp_
 
 import stats
 
-def graph_slice_exp(exp_dict, show_plot=False, ax=None, title='', ylim=[0.6, 1], show_error=True):
+def graph_slice_exp(exp_dict, show_plot=False, ax=None, title='', ylim=[0.6, 1], show_error=True, legend_loc='side'):
     """
     Compute %FOV vs Dice Accuracy using data saved in 'total_interp_data.mat'" for multiple test result files
     
@@ -102,8 +102,12 @@ def graph_slice_exp(exp_dict, show_plot=False, ax=None, title='', ylim=[0.6, 1],
     ax.autoscale_view()
     # plt.legend(legend_keys)
     # txt = fig.text(0.49, -0.04, 'FOV (%)', fontsize=13)
-    lgd = ax.legend(legend_keys, loc='upper center', bbox_to_anchor=(0.5, -0.15),
-                    fancybox=True, shadow=True, ncol=len(exp_dict['keys']))
+    if legend_loc == 'side':
+        lgd = ax.legend(legend_keys, loc='center left', bbox_to_anchor=(1.0,0.5),
+                        fancybox=True, shadow=True, ncol=1)
+    else:
+        lgd = ax.legend(legend_keys, loc='upper center', bbox_to_anchor=(0.5, -0.15),
+                        fancybox=True, shadow=True, ncol=len(exp_dict['keys']))
     plt.savefig(os.path.join(SAVE_PATH, '%s.png' % filename), format='png', dpi=1000, bbox_inches='tight')
 
     if show_plot:
@@ -148,7 +152,7 @@ def graph_data_limitation(data, filename, decay_exp_fit = False):
     ax_center = ax_array[len(ax_array) // 2]
     plt.subplots_adjust(hspace=0.3, wspace=0.3)
     # txt = fig.text(0.49, -0.04, '#Patients', fontsize=13)
-    lgd = ax_center.legend(loc='lower center', bbox_to_anchor=(0.5, -0.4),
+    lgd = ax_center.legend(loc='lower center', bbox_to_anchor=(0.5, -0.5),
                            fancybox=True, shadow=True, ncol=3)
     plt.savefig(os.path.join(SAVE_PATH, '%s.png' % filename), format='png', dpi=1000, bbox_extra_artists=(lgd,),
                 bbox_inches='tight')
@@ -205,7 +209,7 @@ def fcn_exp(base_paths, exp_names, dirname):
     if type(exp_names) is str:
         exp_names = [exp_names]
     
-    test_set_name = ['original (V0)', 'midcrop1 (V1)', 'midcrop2 (V2)', 'nocrop (V3)']
+    test_set_name = ['V0 (288x288x72)', 'V1 (320x320x80)', 'V2 (352x352x80)', 'V3 (384x384x80)']
     test_folders = ['test_results', 'test_results_midcrop1', 'test_results_midcrop2', 'test_results_nocrop']
     
     exp_means = []
