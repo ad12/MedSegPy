@@ -92,7 +92,6 @@ class Config():
 
     def __init__(self, cp_save_tag, state='training', create_dirs=True):
         self.SEED = glc.SEED
-        print("config seed: %s" % str(self.SEED))
         if state not in ['testing', 'training']:
             raise ValueError('state must either be \'training\' or \'testing\'')
 
