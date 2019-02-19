@@ -154,7 +154,8 @@ def compare_metrics(dirpaths, names, dirname):
     
     plt.savefig(exp_filepath, format='png',
                 dpi=1000,
-                bbox_inches='tight')
+                bbox_inches='tight',
+                transparent=True)
     
 
 
@@ -168,15 +169,7 @@ def kruskal_dunn_analysis(dirpaths, names, dirname):
     for k in metrics.keys():
         vals = np.transpose(np.stack(metrics[k]))
         df = pd.DataFrame(data=vals, columns=names)
-        # print(df.values.shape)
-#         plt.figure()
-#         ax = plt.gca()
-#         bxplt = df.boxplot(column=names, ax=ax)
-#         # sns.boxplot(column=names, ax=ax)
-#         ax.set_title(k)
-#         utils.check_dir(save_dirpath)
-#         plt.savefig(os.path.join(save_dirpath, '%s.png' % k), format='png', dpi=1000, bbox_inches='tight')
-
+        
         metrics_results[k] = kruskal_dunn(metrics[k], names)
 
     for k in ['DSC', 'VOE', 'CV']:
