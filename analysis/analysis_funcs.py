@@ -248,9 +248,9 @@ def fcn_exp(base_paths, exp_names, dirname):
     exp_stds = pd.DataFrame(exp_stds, index=exp_names, columns=test_set_name)
     
     # Display bar graph
-    display_bar_graph(exp_means, exp_stds, os.path.join(SAVE_PATH, '%s.png' % dirname))
+    display_bar_graph(exp_means, exp_stds, os.path.join(SAVE_PATH, '%s.png' % dirname), ylabel='DSC', legend_loc='best', ncol=2)
     
-def display_bar_graph(df_mean, df_error, exp_filepath=None, legend_loc='bottom', pvals=[], bar_width=0.25, opacity=0.9):
+def display_bar_graph(df_mean, df_error, exp_filepath=None, legend_loc='bottom', pvals=[], bar_width=0.25, opacity=0.9, ylabel='', ncol=None):
     line_width = 1
     
     assert df_mean.shape == df_error.shape, "Both dataframes must be same shape"
@@ -295,12 +295,17 @@ def display_bar_graph(df_mean, df_error, exp_filepath=None, legend_loc='bottom',
     
     delta = (len(columns) - 1)*bar_width/2
     plt.xticks(x_index + delta, x_labels)
+    ax.set_ylabel(ylabel)
     
     if legend_loc == 'bottom':
+        if ncol is None:
+            ncol=len(columns)
         plt.legend(loc='lower center', bbox_to_anchor=(0.5, -0.25),
                            fancybox=True, shadow=True, ncol=len(columns))
     elif legend_loc == 'upper_left':
         plt.legend(bbox_to_anchor=(1, 1), loc='upper left', ncol=1, fancybox=True)
+    elif legend_loc == 'best':
+        plt.legend(loc='best')
     
     #display_sig_markers(p, e, [(0,1,'*')], ax)
     
