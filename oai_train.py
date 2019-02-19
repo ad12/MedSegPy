@@ -23,8 +23,9 @@ from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS
 from models import get_model
 from weight_classes import CLASS_FREQ_DAT_WEIGHTS_AUG, CLASS_FREQ_DAT_WEIGHTS_NO_AUG
 
+CLASS_WEIGHTS = np.asarray([100, 1])
 
-def train_model(config, optimizer=None, model=None):
+def train_model(config, optimizer=None, model=None, class_weights=CLASS_WEIGHTS):
     """
     Train model
     :param config: a Config object
@@ -63,15 +64,14 @@ def train_model(config, optimizer=None, model=None):
                          decay=config.ADAM_DECAY, amsgrad=config.USE_AMSGRAD)
 
     # Load loss function
-    class_weights = None
     # if weighted cross entropy, load weights
     if loss == WEIGHTED_CROSS_ENTROPY_LOSS and class_weights is None:
-        print('calculating freq')
-        freq_file = CLASS_FREQ_DAT_WEIGHTS_AUG if config.AUGMENT_DATA else CLASS_FREQ_DAT_WEIGHTS_NO_AUG
-        print('Weighting with file: %s' % freq_file)
-        class_freqs = utils.load_pik(freq_file)
-        class_weights = get_class_weights(class_freqs)
-        class_weights = np.reshape(class_weights, (1, 2))
+        # print('calculating freq')
+        # freq_file = CLASS_FREQ_DAT_WEIGHTS_AUG if config.AUGMENT_DATA else CLASS_FREQ_DAT_WEIGHTS_NO_AUG
+        # print('Weighting with file: %s' % freq_file)
+        # class_freqs = utils.load_pik(freq_file)
+        # class_weights = get_class_weights(class_freqs)
+        # class_weights = np.reshape(class_weights, (1, 2))
         print(class_weights)
 
     loss_func = get_training_loss(loss, weights=class_weights)
@@ -277,7 +277,7 @@ def unet_2d_multi_contrast_train():
     exit()
 
 
-def train(config, vals_dict=None):
+def train(config, vals_dict=None, class_weights=CLASS_WEIGHTS):
     """
     Train config after applying vals_dict
     :param config: a Config object
@@ -293,7 +293,7 @@ def train(config, vals_dict=None):
     config.save_config()
     config.summary()
 
-    train_model(config)
+    train_model(config, class_weights=class_weights)
 
     K.clear_session()
 
@@ -345,6 +345,7 @@ if __name__ == '__main__':
     #fine_tune(os.path.join('/bmrNAS/people/arjun/msk_seg_networks/architecture_limit/segnet_2d/2018-11-30-21-13-14'), SegnetConfig(), vals_dict={'INITIAL_LEARNING_RATE':1e-6})
     #fine_tune(os.path.join('/bmrNAS/people/arjun/msk_seg_networks/architecture_limit/deeplabv3_2d/2018-11-30-05-49-49'), DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE':1e-6})
     
-    train(UNetConfig(), {'N_EPOCHS': 50, 'TRAIN_BATCH_SIZE': 35, 'DROP_FACTOR': 0.85, 'USE_STEP_DECAY': True, 'AUGMENT_DATA': False})
+    train(DeeplabV3Config(), {'N_EPOCHS': 100, 'TRAIN_BATCH_SIZE': 12, 'USE_STEP_DECAY': False, 'AUGMENT_DATA': False,
+                              'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS, 'INCLUDE_BACKGROUND': True})
     #fine_tune(os.path.join('/bmrNAS/people/arjun/msk_seg_networks/architecture_limit/unet_2d','2018-11-26-00-56-55'), UNetConfig(), vals_dict={'INITIAL_LEARNING_RATE': 1e-4})
 # train(SegnetConfig(), {'INITIAL_LEARNING_RATE' 1e-3, 'FINE_TUNE': False, 'TRAIN_BATCH_SIZE': 15})
