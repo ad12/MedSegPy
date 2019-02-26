@@ -19,7 +19,7 @@ import glob_constants
 import utils
 from config import UNetConfig, DeeplabV3Config, UNetMultiContrastConfig
 from im_generator import calc_generator_info, img_generator, img_generator_oai
-from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS
+from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS, dice_loss
 from models import get_model
 from weight_classes import CLASS_FREQ_DAT_WEIGHTS_AUG, CLASS_FREQ_DAT_WEIGHTS_NO_AUG
 
@@ -77,7 +77,7 @@ def train_model(config, optimizer=None, model=None, class_weights=CLASS_WEIGHTS)
     loss_func = get_training_loss(loss, weights=class_weights)
     lr_metric = get_lr_metric(optimizer)
     model.compile(optimizer=optimizer,
-                  loss=loss_func, metrics=[lr_metric])
+                  loss=loss_func, metrics=[lr_metric, dice_loss])
 
     # set image format to be (N, dim1, dim2, dim3, ch)
     K.set_image_data_format('channels_last')
