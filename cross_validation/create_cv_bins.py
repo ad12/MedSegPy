@@ -58,7 +58,7 @@ def get_bins_list(num_pids, k):
 
 
 if __name__ == '__main__':
-    k = sys.argv[1]
+    k = int(sys.argv[1])
     save_path = K_BIN_SAVE_PATH % k
     if os.path.isfile(save_path):
         raise FileExistsError('Cross-validation with %d bins already exists. To overwrite, manually delete previous file' % k)
