@@ -132,16 +132,18 @@ def weighted_categorical_crossentropy_sigmoid(weights):
 
     def loss(y_true, y_pred):
         # scale predictions so that the class probas of each sample sum to 1
-        y_pred /= K.sum(y_pred, axis=-1, keepdims=True)
+        # y_pred /= K.sum(y_pred, axis=-1, keepdims=True)
         # clip to prevent NaN's and Inf's
+        szp = K.get_variable_shape(y_pred)
+        img_len = szp[1] * szp[2] * szp[3]
+
+        y_true = K.reshape(y_true, (-1, img_len))
+        y_pred = K.reshape(y_pred, (-1, img_len))
         y_pred = K.clip(y_pred, K.epsilon(), 1 - K.epsilon())
-
-        y_trues = K.concatenate([1-y_true, y_true], axis=-1)
-        y_preds = K.concatenate([1-y_pred, y_pred], axis=-1)
-
+        
         # calc
-        loss = y_trues * K.log(y_preds) * weights
-        loss = -K.sum(loss, -1)
+        loss = (1-y_true) * K.log(1-y_pred) * weights[0] + y_true * K.log(y_pred) * weights[1]
+        loss = -K.mean(loss)
         return loss
 
     return loss
