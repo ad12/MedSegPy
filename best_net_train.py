@@ -8,7 +8,7 @@ from config import DeeplabV3Config
 from losses import BINARY_CROSS_ENTROPY_SIG_LOSS, WEIGHTED_CROSS_ENTROPY_LOSS
 import numpy as np
 
-CLASS_WEIGHTS = np.asarray([100, 1])
+CLASS_WEIGHTS = np.asarray([5, 1])
 
 
 if __name__ == '__main__':
