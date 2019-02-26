@@ -25,7 +25,7 @@ from weight_classes import CLASS_FREQ_DAT_WEIGHTS_AUG, CLASS_FREQ_DAT_WEIGHTS_NO
 
 CLASS_WEIGHTS = np.asarray([100, 1])
 
-def train_model(config, optimizer=None, model=None, class_weights=CLASS_WEIGHTS):
+def train_model(config, optimizer=None, model=None, class_weights=None):
     """
     Train model
     :param config: a Config object
@@ -211,7 +211,7 @@ class LossHistory(kc.Callback):
         self.epoch.append(len(self.losses))
 
 
-def fine_tune(dirpath, config, vals_dict=None):
+def fine_tune(dirpath, config, vals_dict=None, class_weights=None):
     # # If a fine-tune directory already exits, skip this directory
     # if (os.path.isdir(os.path.join(dirpath, 'fine_tune'))):
     #     print('Skipping %s - fine_tune folder exists' % dirpath)
@@ -232,7 +232,7 @@ def fine_tune(dirpath, config, vals_dict=None):
     config.summary()
     config.save_config()
 
-    train_model(config)
+    train_model(config, class_weights=class_weights)
 
     K.clear_session()
 

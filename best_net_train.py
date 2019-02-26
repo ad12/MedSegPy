@@ -5,7 +5,7 @@ import config as MCONFIG
 import glob_constants
 import oai_train
 from config import DeeplabV3Config
-from losses import BINARY_CROSS_ENTROPY_SIG_LOSS, WEIGHTED_CROSS_ENTROPY_LOSS, FOCAL_LOSS
+from losses import BINARY_CROSS_ENTROPY_SIG_LOSS, WEIGHTED_CROSS_ENTROPY_LOSS, FOCAL_LOSS, WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS
 import numpy as np
 
 CLASS_WEIGHTS = np.asarray([100, 1])
@@ -38,6 +38,7 @@ if __name__ == '__main__':
     oai_train.fine_tune(dirpath='/bmrNAS/people/arjun/msk_seg_networks/best_network/deeplabv3_2d/2018-11-27-00-40-24/',
                         config=DeeplabV3Config(create_dirs=False),
                         vals_dict={'N_EPOCHS': 100, 'TRAIN_BATCH_SIZE': 12, 'USE_STEP_DECAY': False,
-                                   'AUGMENT_DATA': False, 'LOSS': FOCAL_LOSS,
-                                   'INITIAL_LEARNING_RATE': 8e-6}
+                                   'AUGMENT_DATA': False, 'LOSS': WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS,
+                                   'INITIAL_LEARNING_RATE': 8e-6},
+                        class_weights=CLASS_WEIGHTS
                         )

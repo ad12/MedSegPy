@@ -7,6 +7,7 @@ from keras.losses import binary_crossentropy
 DICE_LOSS = ('dice', 'sigmoid')
 
 WEIGHTED_CROSS_ENTROPY_LOSS = ('weighted_cross_entropy', 'softmax')
+WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS = ('weighted_cross_entropy_sigmoid', 'sigmoid')
 
 BINARY_CROSS_ENTROPY_LOSS = ('binary_crossentropy', 'softmax')
 
@@ -28,6 +29,10 @@ def get_training_loss(loss, weights=None):
         return binary_crossentropy
     elif loss == FOCAL_LOSS:
         return focal_loss(FOCAL_LOSS_GAMMA)
+    elif loss == WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS:
+        if weights is None:
+            raise ValueError("Weights must be specified to initialize weighted_cross_entropy")
+        return weighted_categorical_crossentropy_sigmoid(weights)
     else:
         raise ValueError("Loss type not supported")
 
@@ -109,6 +114,38 @@ def weighted_categorical_crossentropy(weights):
         return loss
 
     return loss
+
+
+def weighted_categorical_crossentropy_sigmoid(weights):
+    """
+    A weighted version of Keras categorical_crossentropy
+
+    @:param: weights: numpy array of shape (C,) where C is the number of classes
+
+    Use Case:
+        weights = np.array([0.5, 2]) # Class one at 0.5, class 2 2x the normal weights
+        loss = weighted_categorical_crossentropy(weights)
+        model.compile(loss=loss,optimizer='adam')
+    """
+
+    weights = K.variable(weights)
+
+    def loss(y_true, y_pred):
+        # scale predictions so that the class probas of each sample sum to 1
+        y_pred /= K.sum(y_pred, axis=-1, keepdims=True)
+        # clip to prevent NaN's and Inf's
+        y_pred = K.clip(y_pred, K.epsilon(), 1 - K.epsilon())
+
+        y_trues = K.concatenate([1-y_true, y_true], axis=-1)
+        y_preds = K.concatenate([1-y_pred, y_pred], axis=-1)
+
+        # calc
+        loss = y_trues * K.log(y_preds) * weights
+        loss = -K.sum(loss, -1)
+        return loss
+
+    return loss
+
 
 
 def focal_loss(gamma=3.0):
