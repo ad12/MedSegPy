@@ -35,7 +35,7 @@ if __name__ == '__main__':
     # oai_train.train(DeeplabV3Config(), {'N_EPOCHS': 100, 'TRAIN_BATCH_SIZE': 12, 'USE_STEP_DECAY': False,
     #                                     'AUGMENT_DATA': False, 'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS,
     #                                     'INCLUDE_BACKGROUND': True}, class_weights=CLASS_WEIGHTS)
-    oai_train.fine_tune(dirpath='/bmrNAS/people/arjun/msk_seg_networks/best_network/deeplabv3_2d/2018-11-27-00-40-24/',
+    oai_train.fine_tune(dirpath='/bmrNAS/people/arjun/msk_seg_networks/best_network/deeplabv3_2d/pretrained/',
                         config=DeeplabV3Config(create_dirs=False),
                         vals_dict={'N_EPOCHS': 100, 'TRAIN_BATCH_SIZE': 12, 'USE_STEP_DECAY': False,
                                    'AUGMENT_DATA': False, 'LOSS': FOCAL_LOSS,
