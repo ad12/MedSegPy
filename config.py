@@ -183,6 +183,7 @@ class Config():
     TEST_WEIGHT_PATH = ''
 
     # Dataset tag - What dataset are we training on? 'dess' or 'oai'
+    # choose from oai_aug, oai_aug_3d
     TAG = 'oai_aug'
 
     # Restrict number of files learned. Default is all []

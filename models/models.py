@@ -8,9 +8,9 @@ from keras.utils import plot_model
 from config import DeeplabV3Config, SegnetConfig, UNetConfig, \
     UNetMultiContrastConfig, UNet2_5DConfig, DeeplabV3_2_5DConfig
 from glob_constants import SEED
-from models.deeplab_2d import Deeplabv3
+from models.deeplab_2d.deeplab_model import Deeplabv3
 from models.segnet_2d.segnet import Segnet_v2
-from models.unet_2d import unet_2d_model, unet_2d_model_v2
+from models.unet_2d.unet_model import unet_2d_model, unet_2d_model_v2
 
 
 def get_model(config):

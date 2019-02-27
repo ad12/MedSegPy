@@ -8,7 +8,7 @@ from keras.models import Model
 from keras.utils import plot_model
 
 import glob_constants as glc
-from models.segnet_2d import MaxPoolingWithArgmax2D, MaxUnpooling2D
+from models.segnet_2d.Mylayers import MaxPoolingWithArgmax2D, MaxUnpooling2D
 
 
 def _encoder_block(x, level, num_conv_layers=2, num_filters=64, kernel=3, pool_size=(2, 2), single_bn=False):
