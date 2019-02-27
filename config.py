@@ -5,7 +5,7 @@ from time import gmtime, strftime
 
 import glob_constants as glc
 import mri_utils
-import utils
+from utils import io_utils
 from losses import DICE_LOSS, CMD_LINE_SUPPORTED_LOSSES, get_training_loss_from_str
 
 DEPRECATED_KEYS = ['NUM_CLASSES']
@@ -104,7 +104,7 @@ def parse_cmd_line(vargin):
 
 
 class Config():
-    VERSION = 3
+    VERSION = 4
 
     # Loss function in form (id, output_mode)
     LOSS = DICE_LOSS
@@ -115,7 +115,7 @@ class Config():
     DEBUG = False
 
     # Model architecture path
-    PLOT_MODEL_PATH = utils.check_dir('./model_imgs')
+    PLOT_MODEL_PATH = io_utils.check_dir('./model_imgs')
 
     # Training and validation image size
     IMG_SIZE = (288, 288, 1)
@@ -207,7 +207,7 @@ class Config():
                 self.init_training_paths(prefix)
             else:
                 # Testing
-                self.TEST_RESULT_PATH = utils.check_dir(
+                self.TEST_RESULT_PATH = io_utils.check_dir(
                     os.path.join('./' + self.TEST_RESULTS_FOLDER_NAME, self.CP_SAVE_TAG, self.TAG, self.DATE_TIME_STR))
 
     def init_training_paths(self, prefix):
@@ -215,10 +215,10 @@ class Config():
         Intitialize training paths
         :param prefix: a string to uniquely identify this experiment
         """
-        self.CP_SAVE_PATH = utils.check_dir(os.path.join(SAVE_PATH_PREFIX, self.CP_SAVE_TAG, prefix))
+        self.CP_SAVE_PATH = io_utils.check_dir(os.path.join(SAVE_PATH_PREFIX, self.CP_SAVE_TAG, prefix))
         self.PIK_SAVE_PATH = os.path.join(self.CP_SAVE_PATH, 'pik_data.dat')
-        self.PIK_SAVE_PATH_DIR = utils.check_dir(os.path.dirname(self.PIK_SAVE_PATH))
-        self.TF_LOG_DIR = utils.check_dir(os.path.join(self.CP_SAVE_PATH, 'tf_log'))
+        self.PIK_SAVE_PATH_DIR = io_utils.check_dir(os.path.dirname(self.PIK_SAVE_PATH))
+        self.TF_LOG_DIR = io_utils.check_dir(os.path.join(self.CP_SAVE_PATH, 'tf_log'))
 
     def init_cross_validation(self, train_files, valid_files, test_files, cv_tag):
         assert self.STATE == 'training', "To initialize cross-validation, must be in training state"
@@ -230,10 +230,10 @@ class Config():
 
         assert self.CP_SAVE_PATH, "CP_SAVE_PATH must be defined - call init_training_paths prior to calling this function"
 
-        self.CP_SAVE_PATH = utils.check_dir(os.path.join(self.CP_SAVE_PATH, cv_tag))
+        self.CP_SAVE_PATH = io_utils.check_dir(os.path.join(self.CP_SAVE_PATH, cv_tag))
         self.PIK_SAVE_PATH = os.path.join(self.CP_SAVE_PATH, 'pik_data.dat')
-        self.PIK_SAVE_PATH_DIR = utils.check_dir(os.path.dirname(self.PIK_SAVE_PATH))
-        self.TF_LOG_DIR = utils.check_dir(os.path.join(self.CP_SAVE_PATH, 'tf_log'))
+        self.PIK_SAVE_PATH_DIR = io_utils.check_dir(os.path.dirname(self.PIK_SAVE_PATH))
+        self.TF_LOG_DIR = io_utils.check_dir(os.path.join(self.CP_SAVE_PATH, 'tf_log'))
 
     def save_config(self):
         """
@@ -241,25 +241,31 @@ class Config():
         """
 
         members = [attr for attr in dir(self) if not callable(getattr(self, attr)) and not attr.startswith("__")]
-        filename = os.path.join(self.CP_SAVE_PATH, 'config.ini')
+        filepath = os.path.join(self.CP_SAVE_PATH, 'config.ini')
 
         config_vars = dict()
         for m_var in members:
             config_vars[m_var] = getattr(self, m_var)
-        utils.save_config(config_vars, filename)
+
+        # Save config
+        config = configparser.ConfigParser(config_vars)
+        with open(filepath, 'w+') as configfile:
+            config.write(configfile)
 
         # Save as object to make it easy to load
-        filename = os.path.join(self.CP_SAVE_PATH, 'config_obj.dat')
-        utils.save_pik(self, filename)
+        filepath = os.path.join(self.CP_SAVE_PATH, 'config_obj.dat')
+        io_utils.save_pik(self, filepath)
 
     def load_config(self, ini_filepath):
         """
         Load params of config from ini file
         :param ini_filepath: path to ini file
         """
-        vars_dict = utils.load_config(ini_filepath)
+        config = configparser.ConfigParser()
+        config.read(ini_filepath)
+        vars_dict = config['DEFAULT']
 
-        if (vars_dict['CP_SAVE_TAG'] != self.CP_SAVE_TAG):
+        if vars_dict['CP_SAVE_TAG'] != self.CP_SAVE_TAG:
             raise ValueError('Wrong config. Expected %s' % str(vars_dict['CP_SAVE_TAG']))
 
         for key in vars_dict.keys():
