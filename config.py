@@ -6,6 +6,7 @@ from time import gmtime, strftime
 import glob_constants as glc
 import mri_utils
 from utils import io_utils
+from utils import utils
 from losses import DICE_LOSS, CMD_LINE_SUPPORTED_LOSSES, get_training_loss_from_str
 
 DEPRECATED_KEYS = ['NUM_CLASSES']
