@@ -359,3 +359,5 @@ if __name__ == '__main__':
             cv_exp_id += 1
 
             train(c, config_dict)
+    else:
+        train(c, config_dict)
