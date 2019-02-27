@@ -58,6 +58,5 @@ def convert_data_type(var_string, data_type):
         return ast.literal_eval(var_string)
 
 
-
 if __name__ == '__main__':
     save_ims('./test_data/9968924_V01-Aug00_056')

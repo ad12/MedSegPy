@@ -1,6 +1,7 @@
 import numpy as np
 from medpy.metric import dc, assd, recall, precision
 
+
 def cv(y_true, y_pred):
     """
     Coefficient of Variation
@@ -57,6 +58,7 @@ def volumetric_overlap_error(y_true, y_pred):
 
     return voe
 
+
 class MetricWrapper():
 
     def __init__(self):
@@ -65,7 +67,8 @@ class MetricWrapper():
     def compute_metrics(self, y_true: np.ndarray, y_pred: np.ndarray, voxel_spacing: tuple):
         assert type(y_true) is np.ndarray and type(y_pred) is np.ndarray, "y_true and y_pred must be numpy arrays"
         assert y_true.shape == y_pred.shape, "Shape mismatch: y_true and y_pred must have the same shape"
-        assert len(y_true.shape) == len(voxel_spacing), "Shape mismatch: voxel spacing must be specified for each dimension"
+        assert len(y_true.shape) == len(
+            voxel_spacing), "Shape mismatch: voxel spacing must be specified for each dimension"
 
         self.metrics['dsc'].append(dc(y_pred, y_true))
         self.metrics['voe'].append(volumetric_overlap_error(y_true, y_pred))
@@ -101,20 +104,18 @@ class MetricWrapper():
                                                                         self.median('voe'))
 
         s += 'CV - RMS +/- Std, Median = %0.4f +/- %0.3f, %0.4f\n' % (self.rms('cv'),
-                                                                      np.std('cv'),
-                                                                      np.median('cv'))
+                                                                      self.std('cv'),
+                                                                      self.median('cv'))
 
-        s += 'ASSD - Mean +/- Std, Median = %0.4f +/- %0.3f, %0.4f\n' % (self.mean('assd'),
-                                                                        self.std('assd'),
-                                                                        self.median('assd'))
+        s += 'ASSD (mm) - Mean +/- Std, Median = %0.4f +/- %0.3f, %0.4f\n' % (self.mean('assd'),
+                                                                              self.std('assd'),
+                                                                              self.median('assd'))
 
         s += 'Precision - Mean +/- Std, Median = %0.4f +/- %0.3f, %0.4f\n' % (self.mean('precision'),
-                                                                        self.std('precision'),
-                                                                        self.median('precision'))
+                                                                              self.std('precision'),
+                                                                              self.median('precision'))
 
         s += 'Recall - Mean +/- Std, Median = %0.4f +/- %0.3f, %0.4f\n' % (self.mean('recall'),
-                                                                        self.std('recall'),
-                                                                        self.median('recall'))
+                                                                           self.std('recall'),
+                                                                           self.median('recall'))
         return s
-
-
