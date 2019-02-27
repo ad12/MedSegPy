@@ -1,0 +1,49 @@
+#!/bin/bash
+
+# Test experiments for Draft 1 of MRM paper
+# update: this draft was rejected, but writing script for ease of reproducibility
+# paper: Technical Considerations for Semantic Segmentation in MRI using Convolutional Neural Networks
+# @author: Arjun Desai, Stanford University
+#          (c) Stanford University, 2019
+
+if [ $# -lt 1 ]; then
+	echo "Please provide gpus to run inference on in format `0` for single gpu or `0,1,2` for multiple gpus"
+	exit 125
+fi
+
+GPU=$1
+
+# Navigate to project directory
+cd ..
+
+
+
+# Architecture experiments
+python -m oai_test arch unet_2d -g $GPU -date original_akshaysc
+python -m oai_test aug unet_2d -g $GPU -date 2018-11-07-16-05-15/fine_tune
+python -m oai_test arch segnet_2d -g $GPU -date 2018-11-30-21-13-14/fine_tune
+python -m oai_test arch deeplabv3_2d -g $GPU -date 2018-11-30-05-49-49/fine_tune
+
+
+
+# Volumetric architecture experiments
+python -m oai_test aug unet_2d -g $GPU -date 2018-11-07-16-05-15
+python -m oai_test vol unet_2_5d -g $GPU -date 2018-10-26-20-57-21
+python -m oai_test vol unet_2_5d -g $GPU -date 2018-10-21-02-31-40
+python -m oai_test vol unet_2_5d -g $GPU -date 2018-10-26-21-00-40
+python -m oai_test vol unet_2_5d -g $GPU -date 2018-10-26-20-57-21
+
+# 3d not implemented
+#python -m oai_test_unet3d
+
+
+
+# Loss function experiments
+python -m oai_test loss unet_2d -g $GPU -date 2018-12-11-21-59-16
+python -m oai_test loss unet_2d -g $GPU -date 2018-11-28-08-07-03
+python -m oai_test loss unet_2d -g $GPU -date 2018-11-28-19-33-22
+
+
+
+# Augmentation experiments
+python -m oai_test arch unet_2d -g $GPU -date 2018-11-26-00-56-55

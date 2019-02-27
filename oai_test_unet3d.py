@@ -7,8 +7,8 @@ import matplotlib
 import numpy as np
 import scipy.io as sio
 
-import utils
-
+from utils import io_utils
+from utils import im_utils
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import oai_test
@@ -21,7 +21,7 @@ TEST_BATCH_SIZE = 64
 NUM_SLICES = 64
 
 TEST_SET_METADATA_PIK = '/bmrNAS/people/arjun/msk_seg_networks/oai_data_test/oai_test_data.dat'
-TEST_SET_MD = utils.load_pik(TEST_SET_METADATA_PIK)
+TEST_SET_MD = io_utils.load_pik(TEST_SET_METADATA_PIK)
 
 save_file = 1
 
@@ -40,19 +40,19 @@ def load_pid_data(dirpath=UNET_3D_TEST_PATH):
         if scan_id in scans.keys():
             continue
 
-        im1 = utils.load_h5(os.path.join(dirpath, '%s_1.im' % scan_id))['data'][:]
-        im2 = utils.load_h5(os.path.join(dirpath, '%s_2.im' % scan_id))['data'][:]
+        im1 = io_utils.load_h5(os.path.join(dirpath, '%s_1.im' % scan_id))['data'][:]
+        im2 = io_utils.load_h5(os.path.join(dirpath, '%s_2.im' % scan_id))['data'][:]
 
-        seg1 = utils.load_h5(os.path.join(dirpath, '%s_1.seg' % scan_id))['data'][:]
-        seg2 = utils.load_h5(os.path.join(dirpath, '%s_2.seg' % scan_id))['data'][:]
+        seg1 = io_utils.load_h5(os.path.join(dirpath, '%s_1.seg' % scan_id))['data'][:]
+        seg2 = io_utils.load_h5(os.path.join(dirpath, '%s_2.seg' % scan_id))['data'][:]
         seg_ind = 0
         if scan_id == '9908796_V01':
             seg_ind = 4
         seg1 = seg1[..., seg_ind]
         seg2 = seg2[..., seg_ind]
 
-        pred1 = utils.load_h5(os.path.join(dirpath, '%s_1.pred' % scan_id))['pred'][:]
-        pred2 = utils.load_h5(os.path.join(dirpath, '%s_2.pred' % scan_id))['pred'][:]
+        pred1 = io_utils.load_h5(os.path.join(dirpath, '%s_1.pred' % scan_id))['pred'][:]
+        pred2 = io_utils.load_h5(os.path.join(dirpath, '%s_2.pred' % scan_id))['pred'][:]
 
         im = np.concatenate((im1, im2), axis=-1)
         seg = np.concatenate((seg1, seg2), axis=-1)
@@ -85,7 +85,7 @@ def test_model():
 
     # Load config data
     test_path = UNET_3D_TEST_PATH
-    test_result_path = utils.check_dir(UNET_3D_TEST_RESULT_PATH)
+    test_result_path = io_utils.check_dir(UNET_3D_TEST_RESULT_PATH)
     test_batch_size = TEST_BATCH_SIZE
 
     scans_data = load_pid_data(test_path)
@@ -125,7 +125,7 @@ def test_model():
         # Calculate real time dice coeff for analysis
         dl = dice_score_coefficient(y_test, labels)
         voe = volumetric_overlap_error(y_test, labels)
-        cv = utils.calc_cv(y_test, labels)
+        cv = io_utils.calc_cv(y_test, labels)
 
         dice_losses = np.append(dice_losses, dl)
         voes = np.append(voes, voe)
@@ -154,10 +154,10 @@ def test_model():
             x_write = x_test[..., x_test.shape[-1] // 2]
 
             # Save mask overlap
-            ovlps = utils.write_ovlp_masks(os.path.join(test_result_path, 'ovlp', fname), y_test, labels)
-            utils.write_mask(os.path.join(test_result_path, 'gt', fname), y_test)
-            utils.write_prob_map(os.path.join(test_result_path, 'prob_map', fname), labels)
-            utils.write_im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write, ovlps)
+            ovlps = im_utils.write_ovlp_masks(os.path.join(test_result_path, 'ovlp', fname), y_test, labels)
+            im_utils.write_mask(os.path.join(test_result_path, 'gt', fname), y_test)
+            im_utils.write_prob_map(os.path.join(test_result_path, 'prob_map', fname), labels)
+            im_utils.write_im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write, ovlps)
 
         img_cnt += 1
 
@@ -184,7 +184,7 @@ def test_model():
     metrics = {'dsc': dice_losses,
                'voe': voes,
                'cvs': cv_values}
-    utils.save_pik(metrics, results_dat)
+    io_utils.save_pik(metrics, results_dat)
 
     x_interp = np.asarray(x_interp)
     y_interp = np.asarray(y_interp)
