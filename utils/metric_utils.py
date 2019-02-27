@@ -101,8 +101,8 @@ class MetricWrapper():
                                                                         self.median('voe'))
 
         s += 'CV - RMS +/- Std, Median = %0.4f +/- %0.3f, %0.4f\n' % (self.rms('cv'),
-                                                                      np.std('cv'),
-                                                                      np.median('cv'))
+                                                                      self.std('cv'),
+                                                                      self.median('cv'))
 
         s += 'ASSD - Mean +/- Std, Median = %0.4f +/- %0.3f, %0.4f\n' % (self.mean('assd'),
                                                                         self.std('assd'),
