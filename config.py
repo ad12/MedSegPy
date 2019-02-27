@@ -20,7 +20,8 @@ SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/oai_data'
 CMD_LINE_VARS = ['n_epochs', 'augment_data',
                  'use_step_decay', 'initial_learning_rate', 'min_learning_rate', 'drop_factor', 'drop_rate',
                  'train_batch_size', 'valid_batch_size', 'test_batch_size',
-                 'loss', 'include_background']
+                 'loss', 'include_background',
+                 'img_size']
 
 SUPPORTED_CONFIGS = [DEEPLABV3_NAME, SEGNET_NAME, UNET_NAME]
 
@@ -29,10 +30,10 @@ def init_cmd_line_parser(parser):
     parser.add_argument('--n_epochs', metavar='E', type=int, default=None, nargs='?',
                         help='Number of training epochs')
 
-    parser.add_argument('--augment_data', metavar='AD', type=bool, default=False, action='store_const', const=True,
+    parser.add_argument('--augment_data', type=bool, default=False, action='store_const', const=True,
                         help='Use augmented data for training')
 
-    parser.add_argument('--use_step_decay', metavar='SD', type=bool, default=False, action='store_const', const=True,
+    parser.add_argument('--use_step_decay', type=bool, default=False, action='store_const', const=True,
                         help='use learning rate step decay')
     parser.add_argument('--initial_learning_rate', metavar='LR', type=float, default=1e-4, nargs='?',
                         help='initial learning rate')
@@ -57,6 +58,9 @@ def init_cmd_line_parser(parser):
     parser.add_argument('--include_background', type=bool, default=False, action='store_const', const=True,
                         help='loss function')
 
+    parser.add_argument('--img_size', type=tuple, default=(288, 288, 1), nargs='?',
+                        help='loss function')
+
 
 def parse_cmd_line(vargin):
     config_dict = dict()
@@ -69,6 +73,9 @@ def parse_cmd_line(vargin):
 
         if skey == 'loss':
             val = get_training_loss_from_str(vargin[skey])
+
+        if skey == 'img_size':
+            assert type(val) is tuple and len(val) == 3
 
         config_dict[c_skey] = val
 
