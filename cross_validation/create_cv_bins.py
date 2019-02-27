@@ -30,6 +30,7 @@ def get_file_info(fname, dirpath):
             'impath': os.path.join(dirpath, '%s.%s' % (fname, 'im')),
             'segpath': os.path.join(dirpath, '%s.%s' % (fname, 'seg')),
             'scanid': scan_id}
+    assert data['pid'] == fname[:7], str(data)
 
     return data
 
@@ -73,7 +74,7 @@ if __name__ == '__main__':
     pids = list(set(pids))
 
     # Shuffle pids in random order
-    pids = random.shuffle(pids)
+    random.shuffle(pids)
 
     # Allocate each pid to a bin
     bins_list = get_bins_list(len(pids), k)
@@ -81,8 +82,9 @@ if __name__ == '__main__':
     for i in range(len(pids)):
         pid_bin_map[pids[i]] = bins_list[i]
 
-    bins = [[]] * k  # stores filepaths for scans/scan slices from patients with pid corresponding to this bin
-
+    bins = []  # stores filepaths for scans/scan slices from patients with pid corresponding to this bin
+    for i in range(k):
+        bins.append([])
     for dp in DATA_PATHS:
         for fname in os.listdir(dp):
             if fname.endswith('.im'):
@@ -90,15 +92,20 @@ if __name__ == '__main__':
 
                 # Get bin that this pid should be in
                 bin_id = pid_bin_map[im_info['pid']]
-
                 filepath = os.path.join(dp, im_info['fname'])
 
                 bins[bin_id].append(filepath)
 
     # Check that bins are mutually exclusive
-    for i in range(bins):
-        for j in range(i+1, bins):
-            assert len(set(bins[i]) & set(bins[j])) == 0
+    for i in range(len(bins)):
+        for j in range(i+1, len(bins)):
+            if len(set(bins[i]) & set(bins[j])) != 0: 
+                overlap = list(set(bins[i]) & set(bins[j]))
+                overlap.sort()
+                for fp in overlap:
+                    print(fp)
+                print(pid_bin_map)
+                raise ValueError('Bins %d and %d not exclusive' % (i,j))
 
     # save data to filepath
     utils.save_pik(bins, save_path)
