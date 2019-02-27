@@ -16,6 +16,26 @@ BINARY_CROSS_ENTROPY_SIG_LOSS = ('binary_crossentropy', 'sigmoid')
 FOCAL_LOSS = ('focal_loss', 'sigmoid')
 FOCAL_LOSS_GAMMA = 3.0
 
+CMD_LINE_SUPPORTED_LOSSES = ['DICE_LOSS', 'WEIGHTED_CROSS_ENTROPY_LOSS', 'WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS',
+                             'BINARY_CROSS_ENTROPY_LOSS', 'BINARY_CROSS_ENTROPY_SIG_LOSS', 'FOCAL_LOSS']
+
+def get_training_loss_from_str(loss_str: str):
+    loss_str = loss_str.upper()
+    if loss_str == 'DICE_LOSS':
+        return DICE_LOSS
+    elif loss_str == 'WEIGHTED_CROSS_ENTROPY_LOSS':
+        return WEIGHTED_CROSS_ENTROPY_LOSS
+    elif loss_str == 'WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS':
+        return WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS
+    elif loss_str == 'BINARY_CROSS_ENTROPY_LOSS':
+        return BINARY_CROSS_ENTROPY_LOSS
+    elif loss_str == 'BINARY_CROSS_ENTROPY_SIG_LOSS':
+        return BINARY_CROSS_ENTROPY_SIG_LOSS
+    elif loss_str == 'FOCAL_LOSS':
+        return FOCAL_LOSS
+    else:
+        raise ValueError('%s not supported' % loss_str)
+
 
 def get_training_loss(loss, weights=None):
     if loss == DICE_LOSS:

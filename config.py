@@ -5,7 +5,7 @@ from time import gmtime, strftime
 import glob_constants as glc
 import mri_utils
 import utils
-from losses import DICE_LOSS
+from losses import DICE_LOSS, CMD_LINE_SUPPORTED_LOSSES, get_training_loss_from_str
 
 DEPRECATED_KEYS = ['NUM_CLASSES']
 
@@ -16,6 +16,63 @@ ENSEMBLE_UDS_NAME = 'ensemble_uds'
 
 # This is the default save path prefix - please change if you desire something else
 SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/oai_data'
+
+CMD_LINE_VARS = ['n_epochs', 'augment_data',
+                 'use_step_decay', 'initial_learning_rate', 'min_learning_rate', 'drop_factor', 'drop_rate',
+                 'train_batch_size', 'valid_batch_size', 'test_batch_size',
+                 'loss', 'include_background']
+
+SUPPORTED_CONFIGS = [DEEPLABV3_NAME, SEGNET_NAME, UNET_NAME]
+
+
+def init_cmd_line_parser(parser):
+    parser.add_argument('--n_epochs', metavar='E', type=int, default=None, nargs='?',
+                        help='Number of training epochs')
+
+    parser.add_argument('--augment_data', metavar='AD', type=bool, default=False, action='store_const', const=True,
+                        help='Use augmented data for training')
+
+    parser.add_argument('--use_step_decay', metavar='SD', type=bool, default=False, action='store_const', const=True,
+                        help='use learning rate step decay')
+    parser.add_argument('--initial_learning_rate', metavar='LR', type=float, default=1e-4, nargs='?',
+                        help='initial learning rate')
+    parser.add_argument('--min_learning_rate', metavar='mLR', type=float, default=1e-8, nargs='?',
+                        help='minimum learning rate during decay')
+    parser.add_argument('--drop_factor', metavar='DF', type=float, default=0.7, nargs='?',
+                        help='drop factor for learning rate decay')
+    parser.add_argument('--drop_rate', metavar='DR', type=int, default=1.0, nargs='?',
+                        help='drop rate for learning rate decay')
+
+    parser.add_argument('--train_batch_size', metavar='trBS', type=int, default=12, nargs='?',
+                        help='training batch size')
+    parser.add_argument('--valid_batch_size', metavar='vBS', type=int, default=35, nargs='?',
+                        help='drop rate for learning rate decay')
+    parser.add_argument('--test_batch_size', metavar='tBS', type=int, default=72, nargs='?',
+                        help='drop rate for learning rate decay')
+
+    parser.add_argument('--loss', metavar='L', type=str, default='DICE_LOSS', nargs='?',
+                        choices=CMD_LINE_SUPPORTED_LOSSES,
+                        help='loss function')
+
+    parser.add_argument('--include_background', type=bool, default=False, action='store_const', const=True,
+                        help='loss function')
+
+
+def parse_cmd_line(vargin):
+    config_dict = dict()
+    for skey in CMD_LINE_VARS:
+        if skey not in vargin.keys():
+            continue
+
+        c_skey = skey.upper()
+        val = vargin[skey]
+
+        if skey == 'loss':
+            val = get_training_loss_from_str(vargin[skey])
+
+        config_dict[c_skey] = val
+
+    return config_dict
 
 
 class Config():
@@ -70,6 +127,12 @@ class Config():
     VALID_PATH = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/valid/'
     TEST_PATH = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/test'
 
+    # Cross-Validation-Parameters
+    USE_CROSS_VALIDATION = False
+    TRAIN_FILES_CV = None
+    VALID_FILES_CV = None
+    TEST_FILES_CV = None
+
     # test result folder name
     TEST_RESULTS_FOLDER_NAME = 'test_results'
 
@@ -117,6 +180,21 @@ class Config():
         :param prefix: a string to uniquely identify this experiment
         """
         self.CP_SAVE_PATH = utils.check_dir(os.path.join(SAVE_PATH_PREFIX, self.CP_SAVE_TAG, prefix))
+        self.PIK_SAVE_PATH = os.path.join(self.CP_SAVE_PATH, 'pik_data.dat')
+        self.PIK_SAVE_PATH_DIR = utils.check_dir(os.path.dirname(self.PIK_SAVE_PATH))
+        self.TF_LOG_DIR = utils.check_dir(os.path.join(self.CP_SAVE_PATH, 'tf_log'))
+
+    def init_cross_validation(self, train_files, valid_files, test_files, cv_tag):
+        assert self.STATE == 'training', "To initialize cross-validation, must be in training state"
+
+        self.USE_CROSS_VALIDATION = True
+        self.TRAIN_FILES_CV = train_files
+        self.VALID_FILES_CV = valid_files
+        self.TEST_FILES_CV = test_files
+
+        assert self.CP_SAVE_PATH, "CP_SAVE_PATH must be defined - call init_training_paths prior to calling this function"
+
+        self.CP_SAVE_PATH = utils.check_dir(os.path.join(self.CP_SAVE_PATH, cv_tag))
         self.PIK_SAVE_PATH = os.path.join(self.CP_SAVE_PATH, 'pik_data.dat')
         self.PIK_SAVE_PATH_DIR = utils.check_dir(os.path.dirname(self.PIK_SAVE_PATH))
         self.TF_LOG_DIR = utils.check_dir(os.path.join(self.CP_SAVE_PATH, 'tf_log'))

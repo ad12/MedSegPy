@@ -17,10 +17,11 @@ from keras.optimizers import Adam
 import config as MCONFIG
 import glob_constants
 import utils
-from config import DeeplabV3Config, UNetMultiContrastConfig
+from config import DeeplabV3Config, UNetConfig, SegnetConfig, init_cmd_line_parser, parse_cmd_line, SUPPORTED_CONFIGS
 from im_generator import calc_generator_info, img_generator, img_generator_oai
 from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS, dice_loss
 from models import get_model
+from cross_validation import cv_utils
 
 CLASS_WEIGHTS = np.asarray([100, 1])
 
@@ -298,17 +299,43 @@ def train(config, vals_dict=None, class_weights=CLASS_WEIGHTS):
     K.clear_session()
 
 
+def get_config(name):
+    configs = [DeeplabV3Config(create_dirs=False), UNetConfig(create_dirs=False), SegnetConfig(create_dirs=False)]
+
+    for config in configs:
+        if config.CP_SAVE_TAG == name:
+            c = config
+            c.init_training_paths(c.DATE_TIME_STR)
+            return c
+
+    raise ValueError('config %s not found' % name)
+
+
 if __name__ == '__main__':
     MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/architecture_limit'
 
     parser = argparse.ArgumentParser(description='Train OAI dataset')
     parser.add_argument('-g', '--gpu', metavar='G', type=str, nargs='?', default='0',
-                        help='gpu id to use')
-    parser.add_argument('-s', '--seed', metavar='S', type=int, nargs='?', default=None)
+                        help='gpu id to use. default=0')
+    parser.add_argument('-s', '--seed', metavar='S', type=int, nargs='?', default=None,
+                        help='python seed to initialize filter weights. default=None')
+    parser.add_argument('-k', '--k_cross_validation', metavar='K', type=int, default=None, nargs='?',
+                        help='Use k-fold cross-validation for training. Argument specifies k')
+    parser.add_argument('-ho_test', metavar='T', type=int, default=1, nargs='?',
+                        help='Number of hold-out test bins')
+    parser.add_argument('-ho_valid', metavar='V', type=int, default=1, nargs='?',
+                        help='Number of hold-out validation bins')
+    parser.add_argument('--model', type=str, nargs=1, choices=SUPPORTED_CONFIGS,
+                        help='model to use')
+
+    init_cmd_line_parser(parser)
+
     args = parser.parse_args()
-    print(args)
+    vargin = vars(args)
+
     gpu = args.gpu
     glob_constants.SEED = args.seed
+    k_cross_validation = args.k_cross_validation
 
     print(glob_constants.SEED)
 
@@ -316,36 +343,19 @@ if __name__ == '__main__':
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
-    # train with weighted cross entropy
-    # train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (2,4,6), 'DROPOUT_RATE': 0.0})
+    config_dict = parse_cmd_line(vargin)
+    c = get_config(args.model)
 
-    # data_limitation_train(pid_counts=[60])
-    # fine tune
-    # fine_tune('/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d/2018-09-27-07-52-25/', DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE': 1e-6, 'USE_STEP_DECAY': False, 'N_EPOCHS': 20})
-    # train(DeeplabV3Config(), {'OS': 16, 'DIL_RATES': (2, 4, 6)})
+    if k_cross_validation:
+        ho_test = args.ho_test
+        ho_valid = args.ho_valid
 
-    # train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'FINE_TUNE': False, 'TRAIN_BATCH_SIZE': 15})
-    # train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'CONV_ACT_BN': True, 'TRAIN_BATCH_SIZE': 15})
+        bins_files = cv_utils.load_cross_validation(k_cross_validation)
+        bins_split = cv_utils.get_cv_experiments(k_cross_validation, num_valid_bins=ho_valid, num_test_bins=ho_test)
+        cv_exp_id = 1
+        for bin_inds in bins_split:
+            train_files, valid_files, test_files = cv_utils.get_fnames(bins_files, bin_inds)
+            c.init_cross_validation(train_files, valid_files, test_files, 'cv-exp-%03d' % cv_exp_id)
+            cv_exp_id += 1
 
-    # train(SegnetConfig(), {'INITIAL_LEARNING_RATE': 1e-3, 'DEPTH': 7, 'NUM_CONV_LAYERS': [3, 3, 3, 3, 3, 3, 3], 'NUM_FILTERS': [16, 32, 64, 128, 256, 512, 1024], 'TRAIN_BATCH_SIZE': 35})
-    # fine_tune('/bmrNAS/people/arjun/msk_seg_networks/oai_data/segnet_2d/2018-09-26-19-08-34', SegnetConfig(), vals_dict = {'INITIAL_LEARNING_RATE': 1e-5, 'USE_STEP_DECAY': True, 'DROP_FACTOR': 0.7, 'DROP_RATE': 8.0, 'N_EPOCHS': 20})
-
-    # train with binary cross entropy loss
-    # train(SegnetConfig(), {'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS, 'INCLUDE_BACKGROUND': True})
-    # train(DeeplabV3Config(), {'DIL_RATES': (1, 9 ,18), 'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS,  'INCLUDE_BACKGROUND': True})
-
-    # Train 2.5D
-    # train(UNet2_5DConfig(), {'IMG_SIZE': (288, 288, 5)})
-
-    # Architecture experiment: Train deeplab, segnet end-to-end
-    # train(DeeplabV3Config(), {'OS':16, 'DIL_RATES': (2, 4, 6), 'DROPOUT_RATE':0.0})
-    # fine_tune(os.path.join(DEEPLAB_TEST_PATHS_PREFIX, '2018-09-26-19-07-53'), DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE':1e-6})
-    # print('\n\n')
-    # train(SegnetConfig())
-    # fine_tune(os.path.join('/bmrNAS/people/arjun/msk_seg_networks/architecture_limit/segnet_2d/2018-11-30-21-13-14'), SegnetConfig(), vals_dict={'INITIAL_LEARNING_RATE':1e-6})
-    # fine_tune(os.path.join('/bmrNAS/people/arjun/msk_seg_networks/architecture_limit/deeplabv3_2d/2018-11-30-05-49-49'), DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE':1e-6})
-
-    train(DeeplabV3Config(), {'N_EPOCHS': 100, 'TRAIN_BATCH_SIZE': 12, 'USE_STEP_DECAY': False, 'AUGMENT_DATA': False,
-                              'LOSS': WEIGHTED_CROSS_ENTROPY_LOSS, 'INCLUDE_BACKGROUND': True})
-    # fine_tune(os.path.join('/bmrNAS/people/arjun/msk_seg_networks/architecture_limit/unet_2d','2018-11-26-00-56-55'), UNetConfig(), vals_dict={'INITIAL_LEARNING_RATE': 1e-4})
-# train(SegnetConfig(), {'INITIAL_LEARNING_RATE' 1e-3, 'FINE_TUNE': False, 'TRAIN_BATCH_SIZE': 15})
+            train(c, config_dict)
