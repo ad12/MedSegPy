@@ -107,9 +107,9 @@ class MetricWrapper():
                                                                       self.std('cv'),
                                                                       self.median('cv'))
 
-        s += 'ASSD - Mean +/- Std, Median = %0.4f +/- %0.3f, %0.4f\n' % (self.mean('assd'),
-                                                                         self.std('assd'),
-                                                                         self.median('assd'))
+        s += 'ASSD (mm) - Mean +/- Std, Median = %0.4f +/- %0.3f, %0.4f\n' % (self.mean('assd'),
+                                                                              self.std('assd'),
+                                                                              self.median('assd'))
 
         s += 'Precision - Mean +/- Std, Median = %0.4f +/- %0.3f, %0.4f\n' % (self.mean('precision'),
                                                                               self.std('precision'),
