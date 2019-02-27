@@ -3,7 +3,6 @@ import tensorflow as tf
 from keras import backend as K
 from keras.losses import binary_crossentropy
 
-
 DICE_LOSS = ('dice', 'sigmoid')
 
 WEIGHTED_CROSS_ENTROPY_LOSS = ('weighted_cross_entropy', 'softmax')
