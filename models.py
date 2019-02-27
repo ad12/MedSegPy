@@ -6,7 +6,7 @@ from keras.layers import Input, Conv2D
 from keras.utils import plot_model
 
 from config import DeeplabV3Config, SegnetConfig, UNetConfig, \
-    EnsembleUDSConfig, UNetMultiContrastConfig, UNet2_5DConfig, DeeplabV3_2_5DConfig
+    UNetMultiContrastConfig, UNet2_5DConfig, DeeplabV3_2_5DConfig
 from deeplab_2d.deeplab_model import Deeplabv3
 from glob_constants import SEED
 from segnet_2d.segnet import Segnet_v2

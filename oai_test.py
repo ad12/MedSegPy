@@ -205,7 +205,8 @@ def test_model(config, save_file=0):
             utils.write_mask(os.path.join(test_result_path, 'gt', fname), y_test)
             utils.write_prob_map(os.path.join(test_result_path, 'prob_map', fname), recon)
             utils.write_im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write, ovlps)
-            utils.write_sep_im_overlay(os.path.join(test_result_path, 'im_ovlp_sep', fname), x_write, np.squeeze(y_test), np.squeeze(labels))
+            utils.write_sep_im_overlay(os.path.join(test_result_path, 'im_ovlp_sep', fname), x_write,
+                                       np.squeeze(y_test), np.squeeze(labels))
 
         img_cnt += 1
 
@@ -725,6 +726,7 @@ def handle_fcn_test_parser(vargin):
 
         test_dir(fullpath, get_config(config_name), vals_dict=vals_dict)
 
+
 def init_best_network_test_parser(input_subparser):
     subparser = input_subparser.add_parser('best', help='test best trained experiment')
     architecture_parser = subparser.add_subparsers(help='architecture to use', dest=ARCHITECTURE_KEY)
@@ -732,6 +734,7 @@ def init_best_network_test_parser(input_subparser):
     add_base_architecture_parser(architecture_parser)
 
     subparser.set_defaults(func=handle_best_network_test_exp)
+
 
 def handle_best_network_test_exp(vargin):
     config_name = vargin[ARCHITECTURE_KEY]
@@ -758,6 +761,7 @@ def handle_best_network_test_exp(vargin):
         raise NotADirectoryError('%s does not exist. Make sure date is correct' % fullpath)
 
     test_dir(fullpath, get_config(config_name), vals_dict=vals_dict)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run inference on OAI dataset')

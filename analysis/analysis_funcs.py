@@ -12,11 +12,11 @@ sys.path.insert(0, '../')
 import matplotlib.pyplot as plt
 
 fsize = 12
-params = {'legend.fontsize': fsize*0.925,          
+params = {'legend.fontsize': fsize * 0.925,
           'axes.labelsize': fsize,
-          'axes.titlesize':fsize*1.25,
-          'xtick.labelsize':fsize*0.925,
-          'ytick.labelsize':fsize*0.925 }
+          'axes.titlesize': fsize * 1.25,
+          'xtick.labelsize': fsize * 0.925,
+          'ytick.labelsize': fsize * 0.925}
 
 import os
 import numpy as np
@@ -31,16 +31,17 @@ from matplotlib.ticker import ScalarFormatter
 import pandas as pd
 
 # Define some custom color palettes
-american_palette = ['#ffeaa7', '#00cec9', '#0984e3', '#6c5ce7', '#b2bec3'] # yellow too pale
-color_brewer_1 = ['#a6cee3', '#1f78b4', '#b2df8a', '#33a02c', '#fb9a99'] # not good
-color_brewer_2 = ['#8dd3c7', '#ffffb3', '#bebada', '#fb8072', '#80b1d3'] # not good
+american_palette = ['#ffeaa7', '#00cec9', '#0984e3', '#6c5ce7', '#b2bec3']  # yellow too pale
+color_brewer_1 = ['#a6cee3', '#1f78b4', '#b2df8a', '#33a02c', '#fb9a99']  # not good
+color_brewer_2 = ['#8dd3c7', '#ffffb3', '#bebada', '#fb8072', '#80b1d3']  # not good
 
 cpal = sns.color_palette("pastel", 8)
-#cpal = sns.color_palette(american_palette)
+# cpal = sns.color_palette(american_palette)
 
 SAVE_PATH = utils.check_dir('/bmrNAS/people/arjun/msk_seg_networks/analysis/exp_graphs')
 
 import stats
+
 
 def graph_slice_exp(exp_dict, show_plot=False, ax=None, title='', ylim=[0.6, 1], show_error=True, legend_loc='side'):
     """
@@ -103,7 +104,7 @@ def graph_slice_exp(exp_dict, show_plot=False, ax=None, title='', ylim=[0.6, 1],
     # plt.legend(legend_keys)
     # txt = fig.text(0.49, -0.04, 'FOV (%)', fontsize=13)
     if legend_loc == 'side':
-        lgd = ax.legend(legend_keys, loc='center left', bbox_to_anchor=(1.0,0.5),
+        lgd = ax.legend(legend_keys, loc='center left', bbox_to_anchor=(1.0, 0.5),
                         fancybox=True, shadow=True, ncol=1)
     else:
         lgd = ax.legend(legend_keys, loc='upper center', bbox_to_anchor=(0.5, -0.15),
@@ -114,7 +115,7 @@ def graph_slice_exp(exp_dict, show_plot=False, ax=None, title='', ylim=[0.6, 1],
         plt.show()
 
 
-def graph_data_limitation(data, filename, decay_exp_fit = False):
+def graph_data_limitation(data, filename, decay_exp_fit=False):
     cpal = sns.color_palette("muted", 3)
     fig, ax_array = plt.subplots(1, len(list(data.keys())), figsize=(len(list(data.keys())) * 6, 3))
 
@@ -130,9 +131,9 @@ def graph_data_limitation(data, filename, decay_exp_fit = False):
         print('=====================')
         print('        %s          ' % ylabel)
         print('=====================')
-        asymtote = 1.0 if k=='dsc' else 0.0
-        
-        results = get_data_limitation(data[k], k, decay_exp_fit = decay_exp_fit, asymtote=asymtote)
+        asymtote = 1.0 if k == 'dsc' else 0.0
+
+        results = get_data_limitation(data[k], k, decay_exp_fit=decay_exp_fit, asymtote=asymtote)
         c = 0
         for model in results.keys():
             xs, ys, SEs, x_sim, y_sim, r2, a, b = results[model]
@@ -157,8 +158,8 @@ def graph_data_limitation(data, filename, decay_exp_fit = False):
     plt.savefig(os.path.join(SAVE_PATH, '%s.png' % filename), format='png', dpi=1000, bbox_extra_artists=(lgd,),
                 bbox_inches='tight')
 
-    
-def get_data_limitation(multi_data, metric_id, decay_exp_fit = False, asymtote=0):
+
+def get_data_limitation(multi_data, metric_id, decay_exp_fit=False, asymtote=0):
     data_keys = multi_data['keys']
     num_patients = [5, 15, 30, 60]
     c = 0
@@ -187,7 +188,7 @@ def get_data_limitation(multi_data, metric_id, decay_exp_fit = False, asymtote=0
             xs.append(num_p)
             ys.append(np.mean(num_patients_data[num_p]))
             SEs.append(np.std(num_patients_data[num_p]))
-        
+
         if decay_exp_fit:
             x_sim, y_sim, r2, a, b = fit_decay_exp(xs, ys, asymtote)
         else:
@@ -202,16 +203,15 @@ __EPSILON__ = 1e-8
 
 
 def fcn_exp(base_paths, exp_names, dirname):
-    
     if type(base_paths) is str:
         base_paths = [base_paths]
-        
+
     if type(exp_names) is str:
         exp_names = [exp_names]
-    
+
     test_set_name = ['V0 (288x288x72)', 'V1 (320x320x80)', 'V2 (352x352x80)', 'V3 (384x384x80)']
     test_folders = ['test_results', 'test_results_midcrop1', 'test_results_midcrop2', 'test_results_nocrop']
-    
+
     exp_means = []
     exp_stds = []
     for i in range(len(base_paths)):
@@ -219,7 +219,7 @@ def fcn_exp(base_paths, exp_names, dirname):
         test_folder_paths = []
         for tfolder in test_folders:
             test_folder_paths.append(os.path.join(base_path, tfolder))
-        
+
         # get dice accuracy metric
         metrics = stats.get_metrics(test_folder_paths)
         dsc = metrics['DSC']
@@ -233,82 +233,85 @@ def fcn_exp(base_paths, exp_names, dirname):
             sub_means.append(np.mean(vals))
             std = np.std(vals) if len(vals) > 1 else None
             sub_stds.append(std)
-            
+
         exp_means.append(sub_means)
         exp_stds.append(sub_stds)
-        
+
         # Do kruskal dunn analysis
-        print('=='*30)
+        print('==' * 30)
         print(exp_names[i])
-        print('=='*30)
+        print('==' * 30)
         stats.kruskal_dunn_analysis(test_folder_paths, test_set_name, dirname)
-        print('=='*30)
-    
+        print('==' * 30)
+
     exp_means = pd.DataFrame(exp_means, index=exp_names, columns=test_set_name)
     exp_stds = pd.DataFrame(exp_stds, index=exp_names, columns=test_set_name)
-    
+
     # Display bar graph
-    display_bar_graph(exp_means, exp_stds, os.path.join(SAVE_PATH, '%s.png' % dirname), ylabel='DSC', legend_loc='best', ncol=2)
-    
-def display_bar_graph(df_mean, df_error, exp_filepath=None, legend_loc='bottom', pvals=[], bar_width=0.25, opacity=0.9, ylabel='', ncol=None):
+    display_bar_graph(exp_means, exp_stds, os.path.join(SAVE_PATH, '%s.png' % dirname), ylabel='DSC', legend_loc='best',
+                      ncol=2)
+
+
+def display_bar_graph(df_mean, df_error, exp_filepath=None, legend_loc='bottom', pvals=[], bar_width=0.25, opacity=0.9,
+                      ylabel='', ncol=None):
     line_width = 1
-    
+
     assert df_mean.shape == df_error.shape, "Both dataframes must be same shape"
-    
+
     x_labels = df_mean.index.tolist()
     n_groups = len(x_labels)
-    x_index = np.arange(0, n_groups*2, 2)
-    
+    x_index = np.arange(0, n_groups * 2, 2)
+
     columns = df_mean.columns.tolist()
-    
+
     fig, ax = plt.subplots()
-    
+
     df_mean_arr = np.asarray(df_mean)
     df_error_arr = np.asarray(df_error)
-    
+
     p = []
     e = []
     errs = []
     for ind in range(len(columns)):
         sub_means = df_mean_arr[..., ind]
         sub_errors = df_error_arr[..., ind]
-        
-        p.append(ax.bar(x_index + (bar_width)*ind, sub_means, bar_width,
+
+        p.append(ax.bar(x_index + (bar_width) * ind, sub_means, bar_width,
                         alpha=opacity,
                         color=cpal[ind],
                         label=columns[ind],
                         edgecolor='gray',
                         linewidth=line_width,
                         bottom=0))
-        
-        e.append(ax.errorbar(x_index + (bar_width)*ind, sub_means,
+
+        e.append(ax.errorbar(x_index + (bar_width) * ind, sub_means,
                              yerr=[np.zeros(sub_errors.shape), sub_errors],
-                             ecolor='gray', 
-                             elinewidth=line_width, 
-                             capsize=5, 
-                             capthick=line_width, 
+                             ecolor='gray',
+                             elinewidth=line_width,
+                             capsize=5,
+                             capthick=line_width,
                              linewidth=0))
         errs.append(sub_errors)
-        
+
     for eb in e:
         BarCapSizer(eb.lines[1], 0.1)
-    
-    delta = (len(columns) - 1)*bar_width/2
+
+    delta = (len(columns) - 1) * bar_width / 2
     plt.xticks(x_index + delta, x_labels)
     ax.set_ylabel(ylabel)
-    
+
     if legend_loc == 'bottom':
         if ncol is None:
-            ncol=len(columns)
+            ncol = len(columns)
         plt.legend(loc='lower center', bbox_to_anchor=(0.5, -0.25),
-                           fancybox=True, shadow=True, ncol=len(columns))
+                   fancybox=True, shadow=True, ncol=len(columns))
     elif legend_loc == 'upper_left':
         plt.legend(bbox_to_anchor=(1, 1), loc='upper left', ncol=1, fancybox=True)
     elif legend_loc == 'best':
         plt.legend(loc='best')
-    
-    #display_sig_markers(p, e, [(0,1,'*')], ax)
-    
+
+    # display_sig_markers(p, e, [(0,1,'*')], ax)
+
     if exp_filepath is not None:
         plt.savefig(exp_filepath, format='png',
                     dpi=1000,
@@ -316,7 +319,7 @@ def display_bar_graph(df_mean, df_error, exp_filepath=None, legend_loc='bottom',
     else:
         plt.show()
 
-        
+
 def display_sig_markers(p, errs, pvals, ax):
     def pval_to_marker(pval):
         if pval < 0.01:
@@ -325,19 +328,19 @@ def display_sig_markers(p, errs, pvals, ax):
             return '*'
         else:
             return ''
-        
+
     def draw_sig_marker(rect, err, pval):
         marker = pval_to_marker(pval)
         if marker == '':
             return
-        
-        x, height, width = rect.get_x(), rect.get_height(), rect.get_width()
-        
-        y = height+errs[num]+0.05 if err is not None else height+0.05
-        x = x + width/2.0
 
-        ax.text(x, y, pval_to_marker(pval), ha='center', va='bottom', fontsize = 50, color = 'black', alpha = 0.6)
-            
+        x, height, width = rect.get_x(), rect.get_height(), rect.get_width()
+
+        y = height + errs[num] + 0.05 if err is not None else height + 0.05
+        x = x + width / 2.0
+
+        ax.text(x, y, pval_to_marker(pval), ha='center', va='bottom', fontsize=50, color='black', alpha=0.6)
+
     if len(pvals) == 0:
         return
 
@@ -346,30 +349,31 @@ def display_sig_markers(p, errs, pvals, ax):
         err = errs[ind]
         pval = pvals[ind]
         draw_sig_marker(rect, err, pval)
-    
+
+
 class BarCapSizer():
     def __init__(self, caps, size=1):
-        self.size=size
+        self.size = size
         self.caps = caps
         self.ax = self.caps[0].axes
         self.resize()
 
     def resize(self):
-        ppd=72./self.ax.figure.dpi
+        ppd = 72. / self.ax.figure.dpi
         trans = self.ax.transData.transform
-        s =  ((trans((self.size,1))-trans((0,0)))*ppd)[0]
-        for i,cap in enumerate(self.caps):
+        s = ((trans((self.size, 1)) - trans((0, 0))) * ppd)[0]
+        for i, cap in enumerate(self.caps):
             cap.set_markersize(s)
-            
-    
+
+
 def fit_power_law(xs, ys):
     def func(x, a, b):
         exp = x ** b
         return a * exp
-    
+
     def res_func(x, a, b):
         # y = a*x^b ---> log(y) = b*log(x) + log(a)
-        return b*np.log(x) + np.log(a)
+        return b * np.log(x) + np.log(a)
 
     x = np.asarray(xs)
     y = np.asarray(ys)
@@ -393,18 +397,18 @@ def fit_power_law(xs, ys):
 def fit_decay_exp(xs, ys, asymtote=1.0):
     def func(x, a, b):
         # y = asymtote + A*exp(bx)
-        exp = np.exp(b*x)
+        exp = np.exp(b * x)
         return asymtote + a * exp
-    
+
     def res_func(x, a, b):
         # y = asymtote + A*exp(bx) --> log(y-asymtote) = log(A) + bx
-        return np.log(a) + b*x
+        return np.log(a) + b * x
 
     x = np.asarray(xs)
     y = np.asarray(ys)
     p00 = 1 if asymtote == 0 else -1
     popt, _ = sop.curve_fit(func, x, y, p0=[p00, -1], maxfev=1000)
-    log_y = np.log(y-asymtote)
+    log_y = np.log(y - asymtote)
     residuals = log_y - (res_func(x, popt[0], popt[1]) - asymtote)
     ss_res = np.sum(residuals ** 2)
     ss_tot = np.sum((log_y - np.mean(log_y)) ** 2)
@@ -417,11 +421,12 @@ def fit_decay_exp(xs, ys, asymtote=1.0):
 
     return x_sim, y_sim, r_squared, popt[0], popt[1]
 
+
 def print_metrics_summary(dir_paths):
     print('')
     for dp in dir_paths:
         print(dp)
-        print('--'*40)
+        print('--' * 40)
         test_file = os.path.join(dp, 'results.txt')
         with open(test_file) as search:
             for line in search:

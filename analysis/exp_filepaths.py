@@ -29,7 +29,7 @@ AUG_NO = BASELINE_UNET
 
 # volumetric architecture experiments
 VOLUME_2D = AUG_NO
-VOLUME_2_5D_3 = '/bmrNAS/people/arjun/msk_seg_networks/volume_limited/unet_2_5d/2018-10-26-20-57-21/test_results' # 2.5D network with 3 slices (+/-1)
-VOLUME_2_5D_5 = '/bmrNAS/people/arjun/msk_seg_networks/volume_limited/unet_2_5d/2018-10-21-02-31-40/test_results' # 2.5D network with 5 slices (+/-2)
-VOLUME_2_5D_7 = '/bmrNAS/people/arjun/msk_seg_networks/volume_limited/unet_2_5d/2018-10-26-21-00-40/test_results' # 2.5D network with 7 slices (+/-3)
-VOLUME_3D = '/bmrNAS/people/arjun/msk_seg_networks/volume_limited/unet_3d_asc/test_results' # 3D network with 4 slice inputs
+VOLUME_2_5D_3 = '/bmrNAS/people/arjun/msk_seg_networks/volume_limited/unet_2_5d/2018-10-26-20-57-21/test_results'  # 2.5D network with 3 slices (+/-1)
+VOLUME_2_5D_5 = '/bmrNAS/people/arjun/msk_seg_networks/volume_limited/unet_2_5d/2018-10-21-02-31-40/test_results'  # 2.5D network with 5 slices (+/-2)
+VOLUME_2_5D_7 = '/bmrNAS/people/arjun/msk_seg_networks/volume_limited/unet_2_5d/2018-10-26-21-00-40/test_results'  # 2.5D network with 7 slices (+/-3)
+VOLUME_3D = '/bmrNAS/people/arjun/msk_seg_networks/volume_limited/unet_3d_asc/test_results'  # 3D network with 4 slice inputs

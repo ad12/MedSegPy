@@ -40,7 +40,7 @@ def get_class_freq(data_path, class_id=[0], pids=None, augment_data=True):
     files = list(unique_filename.keys())
 
     # organized as freq = [background, class]
-    freqs = np.zeros([len(class_id)+1, 1])
+    freqs = np.zeros([len(class_id) + 1, 1])
 
     count = 0
     for file in files:

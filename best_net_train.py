@@ -1,15 +1,15 @@
 import argparse
 import os
 
+import numpy as np
+
 import config as MCONFIG
 import glob_constants
 import oai_train
 from config import DeeplabV3Config
-from losses import BINARY_CROSS_ENTROPY_SIG_LOSS, WEIGHTED_CROSS_ENTROPY_LOSS, FOCAL_LOSS, WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS
-import numpy as np
+from losses import WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS
 
-CLASS_WEIGHTS = np.asarray([1, 1/5])
-
+CLASS_WEIGHTS = np.asarray([1, 1 / 5])
 
 if __name__ == '__main__':
     MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/best_network'
@@ -28,10 +28,10 @@ if __name__ == '__main__':
     print('Using GPU %s' % gpu)
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
-    
-    #oai_train.fine_tune('/bmrNAS/people/arjun/msk_seg_networks/best_network/deeplabv3_2d/2018-11-27-00-40-24/', DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE':8e-6})
-    #oai_train.train(DeeplabV3Config(), vals_dict={'AUGMENT_DATA': False, 'N_EPOCHS': 100, 'LOSS': BINARY_CROSS_ENTROPY_SIG_LOSS})
-    #oai_train.train(DeeplabV3Config(), vals_dict={'AUGMENT_DATA': True, 'N_EPOCHS': 50, 'LOSS': BINARY_CROSS_ENTROPY_SIG_LOSS})
+
+    # oai_train.fine_tune('/bmrNAS/people/arjun/msk_seg_networks/best_network/deeplabv3_2d/2018-11-27-00-40-24/', DeeplabV3Config(), vals_dict={'INITIAL_LEARNING_RATE':8e-6})
+    # oai_train.train(DeeplabV3Config(), vals_dict={'AUGMENT_DATA': False, 'N_EPOCHS': 100, 'LOSS': BINARY_CROSS_ENTROPY_SIG_LOSS})
+    # oai_train.train(DeeplabV3Config(), vals_dict={'AUGMENT_DATA': True, 'N_EPOCHS': 50, 'LOSS': BINARY_CROSS_ENTROPY_SIG_LOSS})
     oai_train.train(DeeplabV3Config(),
                     {'N_EPOCHS': 100, 'TRAIN_BATCH_SIZE': 12, 'USE_STEP_DECAY': False,
                      'AUGMENT_DATA': False, 'LOSS': WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS},

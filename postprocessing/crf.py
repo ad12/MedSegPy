@@ -1,4 +1,5 @@
 import numpy as np
+
 try:
     import cPickle as pickle
 except ImportError:
@@ -7,7 +8,6 @@ except ImportError:
 from pystruct import learners
 import pystruct.models as crfs
 from pystruct.utils import SaveLogger
-
 
 data_train = pickle.load(open("data_train_dict.pickle"))
 C = 0.01

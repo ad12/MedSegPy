@@ -16,6 +16,7 @@ BINARY_CROSS_ENTROPY_SIG_LOSS = ('binary_crossentropy', 'sigmoid')
 FOCAL_LOSS = ('focal_loss', 'sigmoid')
 FOCAL_LOSS_GAMMA = 3.0
 
+
 def get_training_loss(loss, weights=None):
     if loss == DICE_LOSS:
         return dice_loss
@@ -140,14 +141,13 @@ def weighted_categorical_crossentropy_sigmoid(weights):
         y_true = K.reshape(y_true, (-1, img_len))
         y_pred = K.reshape(y_pred, (-1, img_len))
         y_pred = K.clip(y_pred, K.epsilon(), 1 - K.epsilon())
-        
+
         # calc
-        loss = (1-y_true) * K.log(1-y_pred) * weights[0] + y_true * K.log(y_pred) * weights[1]
+        loss = (1 - y_true) * K.log(1 - y_pred) * weights[0] + y_true * K.log(y_pred) * weights[1]
         loss = -K.mean(loss)
         return loss
 
     return loss
-
 
 
 def focal_loss(gamma=3.0):

@@ -81,18 +81,18 @@ def get_metrics(dirpaths):
         metrics['DSC'].append(dsc)
         metrics['VOE'].append(voe)
         metrics['CV'].append(cv)
-        
+
     return metrics
 
 
 def compare_metrics_v2(dirpaths, names, dirname):
     x_labels = ('DSC', 'VOE', 'CV')
     n_groups = len(x_labels)
-    x_index = np.arange(0, n_groups*2, 2)
-    
+    x_index = np.arange(0, n_groups * 2, 2)
+
     exp_names = names
     exp_filepath = os.path.join(SAVE_PATH, dirname, 'bar.png')
-    
+
     metrics_dict = get_metrics(dirpaths)
 
     exp_means = []
@@ -106,32 +106,32 @@ def compare_metrics_v2(dirpaths, names, dirname):
             sub_means.append(np.mean(vals))
             std = np.std(vals) if len(vals) > 1 else None
             sub_stds.append(std)
-            
+
         exp_means.append(sub_means)
         exp_stds.append(sub_stds)
-    
+
     exp_means = pd.DataFrame(exp_means, index=names, columns=x_labels).T
     exp_stds = pd.DataFrame(exp_stds, index=names, columns=x_labels).T
-    
+
     # Display bar graph
     af.display_bar_graph(exp_means, exp_stds, exp_filepath=exp_filepath, legend_loc='best', bar_width=0.35)
-    
-    
+
+
 def compare_metrics(dirpaths, names, dirname):
     x_labels = ('DSC', 'VOE', 'CV')
     n_groups = len(x_labels)
-    x_index = np.arange(0, n_groups*2, 2)
-    
+    x_index = np.arange(0, n_groups * 2, 2)
+
     exp_names = names
     exp_filepath = os.path.join(SAVE_PATH, dirname, 'bar.png')
-    
+
     metrics_dict = get_metrics(dirpaths)
-    
+
     # Create figure
     fig, ax = plt.subplots()
     bar_width = 0.35
     opacity = 0.8
-    
+
     for ind in range(len(exp_names)):
         sub_means = []
         sub_stds = []
@@ -142,21 +142,20 @@ def compare_metrics(dirpaths, names, dirname):
             std = np.std(vals) if len(vals) > 1 else None
             sub_stds.append(std)
 
-        rects = plt.bar(x_index + (bar_width)*ind, sub_means, bar_width,
+        rects = plt.bar(x_index + (bar_width) * ind, sub_means, bar_width,
                         alpha=opacity,
                         color=cpal[ind],
                         label=exp_names[ind],
                         yerr=sub_stds)
-    
-    delta = (len(names) - 1)*bar_width/2
+
+    delta = (len(names) - 1) * bar_width / 2
     plt.xticks(x_index + delta, x_labels)
     plt.legend()
-    
+
     plt.savefig(exp_filepath, format='png',
                 dpi=1000,
                 bbox_inches='tight',
                 transparent=True)
-    
 
 
 def kruskal_dunn_analysis(dirpaths, names, dirname):
@@ -169,7 +168,7 @@ def kruskal_dunn_analysis(dirpaths, names, dirname):
     for k in metrics.keys():
         vals = np.transpose(np.stack(metrics[k]))
         df = pd.DataFrame(data=vals, columns=names)
-        
+
         metrics_results[k] = kruskal_dunn(metrics[k], names)
 
     for k in ['DSC', 'VOE', 'CV']:
@@ -211,20 +210,22 @@ def print_results(data, metric):
     if data['dunn'] is not None:
         print('Dunn: ')
         print(data['dunn'])
-        
+
+
 def fit(x, y, func, p0):
     popt, _ = sop.curve_fit(func, x, y, p0=p0, maxfev=3000)
-    
+
     residuals = y - func(x, *popt)
     ss_res = np.sum(residuals ** 2)
     ss_tot = np.sum((y - np.mean(y)) ** 2)
 
     print(ss_res)
     print(ss_tot)
-    
+
     r_squared = 1 - (ss_res / (ss_tot + 1e-8))
-    
+
     return popt, r_squared
+
 
 if __name__ == '__main__':
     # Base unet - best performing network

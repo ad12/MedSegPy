@@ -123,8 +123,8 @@ if __name__ == '__main__':
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
     print(models)
-    
-    vals_dict = {'AUGMENT_DATA': False, 'DROP_FACTOR': 0.8**(1/5)}
+
+    vals_dict = {'AUGMENT_DATA': False, 'DROP_FACTOR': 0.8 ** (1 / 5)}
     vals_dict = None
 
     for c in range(repeat_count):

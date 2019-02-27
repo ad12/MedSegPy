@@ -35,7 +35,7 @@ def ensemble_uds(config):
 
     num_classes = config.get_num_classes()
     deeplab_model = Deeplabv3(weights=None, input_shape=input_shape, classes=num_classes, backbone='xception',
-                              OS=16, dil_rate_input=(2,4,6))
+                              OS=16, dil_rate_input=(2, 4, 6))
     deeplab_model.load_weights(DEEPLAB_WEIGHTS, by_name=True)
     deeplab_model.trainable = False
     x = deeplab_model.input
@@ -50,7 +50,8 @@ def ensemble_uds(config):
     NUM_FILTERS = [64, 128, 256, 256, 512, 512]
 
     # Segnet
-    segnet_model = Segnet_v2(input_tensor=x, n_labels=num_classes, depth=DEPTH, num_conv_layers=NUM_CONV_LAYERS, num_filters=NUM_FILTERS)
+    segnet_model = Segnet_v2(input_tensor=x, n_labels=num_classes, depth=DEPTH, num_conv_layers=NUM_CONV_LAYERS,
+                             num_filters=NUM_FILTERS)
     print('Loaded Segnet')
     segnet_model.load_weights(SEGNET_WEIGHTS)
     segnet_model.trainable = False
@@ -89,5 +90,5 @@ def combine_models(x_input, models, ensemble_name='ensemble', num_classes=1):
 if __name__ == '__main__':
     config = EnsembleUDSConfig()
     model = ensemble_uds(config)
-    #model.summary()
+    # model.summary()
     train_model(config, model=model)

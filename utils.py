@@ -58,7 +58,7 @@ def write_sep_im_overlay(dir_path, xs, y_true, y_pred):
         im_correct, im_error = generate_sep_ovlp_image(y_true[i, ...], y_pred[i, ...])
 
         slice_name = '%03d.png' % i
-        
+
         overlap_img_correct = cv2.addWeighted(x, 1, im_correct, 1.0, 0)
         cv2.imwrite(os.path.join(correct_dir_path, slice_name), overlap_img_correct)
 

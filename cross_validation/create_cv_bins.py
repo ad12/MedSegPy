@@ -4,12 +4,12 @@ Create K bins for K-fold cross-validation
 Data is stored in Pickle format
 """
 
-import os, sys
+import os
 import random
+import sys
 
 sys.path.append('../')
 import utils
-
 
 DATA_PATHS = ['/bmrNAS/people/akshay/dl/oai_data/unet_2d/train_aug/',
               '/bmrNAS/people/akshay/dl/oai_data/unet_2d/valid/',
@@ -48,7 +48,7 @@ def get_bins_list(num_pids, k):
     assert len(num_bins) == k
 
     # Each pid should get a bin
-    bin_ids = [[bin_id]*num_bins[bin_id] for bin_id in range(k)]
+    bin_ids = [[bin_id] * num_bins[bin_id] for bin_id in range(k)]
 
     # flatten list
     bin_ids = [x for id_list in bin_ids for x in id_list]
@@ -62,7 +62,8 @@ if __name__ == '__main__':
     k = int(sys.argv[1])
     save_path = K_BIN_SAVE_PATH % k
     if os.path.isfile(save_path):
-        raise FileExistsError('Cross-validation with %d bins already exists. To overwrite, manually delete previous file' % k)
+        raise FileExistsError(
+            'Cross-validation with %d bins already exists. To overwrite, manually delete previous file' % k)
 
     # Get all patient ids (pids)
     pids = []
@@ -98,25 +99,14 @@ if __name__ == '__main__':
 
     # Check that bins are mutually exclusive
     for i in range(len(bins)):
-        for j in range(i+1, len(bins)):
-            if len(set(bins[i]) & set(bins[j])) != 0: 
+        for j in range(i + 1, len(bins)):
+            if len(set(bins[i]) & set(bins[j])) != 0:
                 overlap = list(set(bins[i]) & set(bins[j]))
                 overlap.sort()
                 for fp in overlap:
                     print(fp)
                 print(pid_bin_map)
-                raise ValueError('Bins %d and %d not exclusive' % (i,j))
+                raise ValueError('Bins %d and %d not exclusive' % (i, j))
 
     # save data to filepath
     utils.save_pik(bins, save_path)
-
-
-
-
-
-
-
-
-
-
-
