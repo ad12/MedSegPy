@@ -1,3 +1,4 @@
+import configparser
 import os
 import warnings
 from time import gmtime, strftime
@@ -19,7 +20,8 @@ SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/oai_data'
 
 CMD_LINE_VARS = ['n_epochs', 'augment_data',
                  'use_step_decay', 'initial_learning_rate', 'min_learning_rate', 'drop_factor', 'drop_rate',
-                 'use_early_stopping', 'early_stopping_min_delta', 'early_stopping_patience', 'early_stopping_criterion',
+                 'use_early_stopping', 'early_stopping_min_delta', 'early_stopping_patience',
+                 'early_stopping_criterion',
                  'train_batch_size', 'valid_batch_size', 'test_batch_size',
                  'loss', 'include_background',
                  'img_size']
@@ -494,3 +496,28 @@ class DeeplabV3_2_5DConfig(DeeplabV3Config):
 
     def num_neighboring_slices(self):
         return self.IMG_SIZE[2]
+
+
+def save_config(a_dict, filepath):
+    """
+    Save information in a dictionary
+    :param a_dict: a dictionary of information to save
+    :param filepath: a string
+    :return:
+    """
+    config = configparser.ConfigParser(a_dict)
+
+    with open(filepath, 'w+') as configfile:
+        config.write(configfile)
+
+
+def load_config(filepath):
+    """
+    Read in information saved using save_config
+    :param filepath: a string
+    :return: a dictionary of Config params
+    """
+    config = configparser.ConfigParser()
+    config.read(filepath)
+
+    return config['DEFAULT']

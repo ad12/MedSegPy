@@ -12,7 +12,7 @@ import utils
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import oai_test
-from losses import dice_loss_test, vo_error
+from utils.metric_utils import dice_score_coefficient, volumetric_overlap_error
 from scan_metadata import ScanMetadata
 
 UNET_3D_TEST_PATH = '/bmrNAS/people/arjun/msk_seg_networks/volume_limited/unet_3d_asc/test'
@@ -123,8 +123,8 @@ def test_model():
         labels = (y_pred > 0.5).astype(np.float32)
 
         # Calculate real time dice coeff for analysis
-        dl = dice_loss_test(y_test, labels)
-        voe = vo_error(y_test, labels)
+        dl = dice_score_coefficient(y_test, labels)
+        voe = volumetric_overlap_error(y_test, labels)
         cv = utils.calc_cv(y_test, labels)
 
         dice_losses = np.append(dice_losses, dl)

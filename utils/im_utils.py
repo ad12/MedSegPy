@@ -1,25 +1,10 @@
-import ast
-import configparser
 import os
-import pickle
-import re
 
 import cv2
 import h5py
 import numpy as np
 
-OPACITY = 0.7
-
-
-def check_dir(dir_path):
-    """
-    If directory does not exist, make directory
-    :param dir_path: path to directory
-    :return: path to directory
-    """
-    if not os.path.isdir(dir_path):
-        os.makedirs(dir_path)
-    return dir_path
+from utils.io_utils import check_dir
 
 
 def write_im_overlay(dir_path, xs, im_overlay):
@@ -188,137 +173,7 @@ def generate_ovlp_image(y_true, y_pred):
     return img
 
 
-def save_pik(data, filepath):
-    """
-    Save data using pickle
-    :param data: data to save
-    :param filepath: a string
-    :return:
-    """
-    with open(filepath, "wb") as f:
-        pickle.dump(data, f)
-
-
-def load_pik(filepath):
-    """
-    Load data using pickle
-    :param filepath: filepath to load from
-    :return: data saved using save_pik
-    """
-    with open(filepath, "rb") as f:
-        return pickle.load(f)
-
-
-def save_config(a_dict, filepath):
-    """
-    Save information in a dictionary
-    :param a_dict: a dictionary of information to save
-    :param filepath: a string
-    :return:
-    """
-    config = configparser.ConfigParser(a_dict)
-
-    with open(filepath, 'w+') as configfile:
-        config.write(configfile)
-
-
-def load_config(filepath):
-    """
-    Read in information saved using save_config
-    :param filepath: a string
-    :return: a dictionary of Config params
-    """
-    config = configparser.ConfigParser()
-    config.read(filepath)
-
-    return config['DEFAULT']
-
-
-def convert_data_type(var_string, data_type):
-    """
-    Convert string to relevant data type
-    :param var_string: variable as a string (e.g.: '[0]', '1', '2.0', 'hellow')
-    :param data_type: the type of the data
-    :return: string converted to data_type
-    """
-    if (data_type is str):
-        return var_string
-
-    if (data_type is float):
-        return float(var_string)
-
-    if (data_type is int):
-        return int(var_string)
-
-    if (data_type is bool):
-        return ast.literal_eval(var_string)
-
-    if (data_type is list):
-        return ast.literal_eval(var_string)
-
-    if (data_type is tuple):
-        return ast.literal_eval(var_string)
-
-
-def get_weights(base_folder):
-    """
-    Gets the best weights file inside the base_folder
-    :param base_folder: dirpath where weights are stored
-    :return: h5 file
-
-    Assumes that only the best weights are stored, so searching for the epoch should be enough
-    """
-    files = os.listdir(base_folder)
-    max_epoch = -1
-    best_file = ''
-    for file in files:
-        file_fullpath = os.path.join(base_folder, file)
-        # Ensure the file is an h5 file
-        if not (os.path.isfile(file_fullpath) and file_fullpath.endswith('.h5') and 'weights' in file):
-            continue
-
-        # Get file with max epochs
-        train_info = file.split('.')[1]
-        epoch = int(train_info.split('-')[0])
-
-        if (epoch > max_epoch):
-            max_epoch = epoch
-            best_file = file_fullpath
-
-    return best_file
-
-
-def save_optimizer(optimizer, dirpath):
-    """
-    Serialize a model and add the config of the optimizer
-    :param optimizer: a Keras optimizer
-    :param dirpath: path to directory
-    :return:
-    """
-    if optimizer is None:
-        return
-
-    config = dict()
-    config['optimizer'] = optimizer.get_config()
-
-    filepath = os.path.join(dirpath, 'optimizer.dat')
-    # Save optimizer state
-    save_pik(config, filepath)
-
-
-def load_optimizer(dirpath):
-    """
-    Return model and optimizer in previous state
-    :param dirpath: path to directory storing optimizer
-    :return: optimizer
-    """
-    from keras import optimizers
-    filepath = os.path.join(dirpath, 'optimizer.dat')
-    model_dict = load_pik(filepath)
-    optimizer_params = dict([(k, v) for k, v in model_dict.get('optimizer').items()])
-    optimizer = optimizers.get(optimizer_params)
-
-    return optimizer
+OPACITY = 0.7
 
 
 def save_ims(filepath):
@@ -336,43 +191,3 @@ def save_ims(filepath):
 
     # save segs
     cv2.imwrite(os.path.join(filepath, 'seg.png'), scale_img(seg))
-
-
-def load_h5(filepath):
-    """Load data in H5DF format
-    :param filepath: path to h5 file
-    :return: dictionary of data values stored using save_h5
-    """
-    if not os.path.isfile(filepath):
-        raise FileNotFoundError('%s does not exist' % filepath)
-
-    data = dict()
-    with h5py.File(filepath, 'r') as f:
-        for key in f.keys():
-            data[key] = f.get(key).value
-
-    return data
-
-
-def parse_results_file(filepath):
-    # returns mean
-    with open(filepath) as search:
-        for line in search:
-            line = line.rstrip()  # remove '\n' at end of line
-            if 'MEAN' not in line.upper() or 'DSC' not in line.upper():
-                continue
-
-            vals = re.findall("\d+\.\d+", line)
-            return float(vals[0])
-
-
-def calc_cv(y_true, y_pred):
-    y_true = np.squeeze(y_true)
-    y_pred = np.squeeze(y_pred)
-
-    cv = np.std([np.sum(y_true), np.sum(y_pred)]) / np.mean([np.sum(y_true), np.sum(y_pred)])
-    return cv
-
-
-if __name__ == '__main__':
-    save_ims('./test_data/9968924_V01-Aug00_056')

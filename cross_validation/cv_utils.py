@@ -1,5 +1,6 @@
 import os
 import warnings
+
 K_BIN_SAVE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'oai_data-k%d.cv')
 
 import utils
@@ -27,7 +28,7 @@ def get_cv_experiments(k, num_valid_bins=1, num_test_bins=1):
     test_bin_start_ind = 0
     exps_bin_division = []
     for i in range(k / num_test_bins):
-        test_bin_start_ind = test_bin_start_ind + i*num_test_bins
+        test_bin_start_ind = test_bin_start_ind + i * num_test_bins
         valid_bin_start_ind = test_bin_start_ind + num_test_bins
         train_bin_start_ind = valid_bin_start_ind + num_valid_bins
 
@@ -47,10 +48,11 @@ def get_cv_experiments(k, num_valid_bins=1, num_test_bins=1):
         temp.append(d[-1])
 
     for i in range(len(temp)):
-        for j in range(i+1, len(temp)):
+        for j in range(i + 1, len(temp)):
             assert len(set(temp[i]) & set(temp[j])) == 0, "Test bins %d and %d not mutually exclusive" % (i, j)
 
     return exps_bin_division
+
 
 def get_fnames(bins_files, bin_inds):
     train_inds, valid_inds, test_inds = bin_inds

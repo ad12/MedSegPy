@@ -14,8 +14,8 @@ from keras import backend as K
 import utils
 from config import SegnetConfig
 from im_generator import img_generator_test, calc_generator_info
-from losses import dice_loss_test
 from models import get_model
+from utils.metric_utils import dice_score_coefficient
 
 
 def test_model(config, save_file=1):
@@ -52,7 +52,7 @@ def test_model(config, save_file=1):
 
         # Calculate real time dice coeff for analysis
         # TODO: Define multi-class dice loss during testing
-        dl = dice_loss_test(labels, y_test)
+        dl = dice_score_coefficient(labels, y_test)
         dice_losses = np.append(dice_losses, dl)
         # print(dl)
 

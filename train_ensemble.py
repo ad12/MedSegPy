@@ -9,9 +9,9 @@ from keras.layers import Conv2D, Concatenate
 from keras.utils import plot_model
 
 from config import EnsembleUDSConfig
-from deeplab_2d.deeplab_model import Deeplabv3
-from segnet_2d.segnet import Segnet_v2
-from unet_2d.unet_model import unet_2d_model
+from models.deeplab_2d import Deeplabv3
+from models.segnet_2d.segnet import Segnet_v2
+from models.unet_2d import unet_2d_model
 
 from oai_train import train_model
 

@@ -19,18 +19,24 @@ import numpy as np
 import scipy.io as sio
 from keras import backend as K
 
-import utils
+import utils.utils as utils
+from utils import io_utils
+from utils import metric_utils
+from utils.metric_utils import MetricWrapper
+from utils import im_utils
+
 from config import DeeplabV3Config, SegnetConfig, UNetConfig, UNet2_5DConfig
 from im_generator import img_generator_test, calc_generator_info, img_generator_oai_test
-from losses import dice_loss_test, vo_error
-from models import get_model
+from utils.metric_utils import dice_score_coefficient, volumetric_overlap_error, cv
+from models.models import get_model
 from keras.utils import plot_model
 from scan_metadata import ScanMetadata
 
 DATE_THRESHOLD = strptime('2018-09-01-22-39-39', '%Y-%m-%d-%H-%M-%S')
 TEST_SET_METADATA_PIK = '/bmrNAS/people/arjun/msk_seg_networks/oai_data_test/oai_test_data.dat'
-TEST_SET_MD = utils.load_pik(TEST_SET_METADATA_PIK)
+TEST_SET_MD = io_utils.load_pik(TEST_SET_METADATA_PIK)
 
+VOXEL_SPACING = (0.3125, 0.3125, 1.5)
 
 def find_start_and_end_slice(y_true):
     for i in range(y_true.shape[0]):
@@ -70,7 +76,7 @@ def interp_slice(y_true, y_pred, orientation='M'):
     for i in range(num_slices):
         y_true_curr = y_true[i, ...]
         y_pred_curr = y_pred[i, ...]
-        dice_losses.append(dice_loss_test(y_true_curr, y_pred_curr))
+        dice_losses.append(dice_score_coefficient(y_true_curr, y_pred_curr))
 
     dice_losses = np.asarray(dice_losses)
 
@@ -114,14 +120,6 @@ def test_model(config, save_file=0):
 
     img_cnt = 0
 
-    dice_losses = np.array([])
-    voes = np.array([])
-    cv_values = np.array([])
-
-    TPs = np.array([])
-    FNs = np.array([])
-    FPs = np.array([])
-
     start = time.time()
     skipped_count = 0
 
@@ -144,12 +142,14 @@ def test_model(config, save_file=0):
     x_total = []
     y_total = []
 
+    mw = MetricWrapper()
+
     # # Iterature through the files to be segmented
     for x_test, y_test, fname, num_slices in test_gen:
         # Perform the actual segmentation using pre-loaded model
         # Threshold at 0.5
         recon = model.predict(x_test, batch_size=test_batch_size)
-        if (config.INCLUDE_BACKGROUND):
+        if config.INCLUDE_BACKGROUND:
             y_test = y_test[..., 1]
             recon = recon[..., 1]
             y_test = y_test[..., np.newaxis]
@@ -157,28 +157,17 @@ def test_model(config, save_file=0):
 
         labels = (recon > 0.5).astype(np.float32)
 
-        # Calculate real time dice coeff for analysis
-        dl = dice_loss_test(y_test, labels)
-        voe = vo_error(y_test, labels)
-        cv = utils.calc_cv(y_test, labels)
+        mw.compute_metrics(np.transpose(np.squeeze(y_test), axes=[1,2,0]),
+                           np.transpose(np.squeeze(labels), axes=[1, 2, 0]),
+                           voxel_spacing=VOXEL_SPACING)
 
-        dice_losses = np.append(dice_losses, dl)
-        voes = np.append(voes, voe)
-        cv_values = np.append(cv_values, cv)
-
-        # calculate true positive, false positive, false negative
-        y_test_bool = np.asarray(y_test, np.bool)
-        labels_bool = np.asarray(labels, np.bool)
-        TP = np.sum(y_test_bool * labels_bool)
-        FN = np.sum(y_test_bool * (~labels_bool))
-        FP = np.sum((~y_test_bool) * labels_bool)
-
-        TPs = np.append(TPs, TP)
-        FNs = np.append(FNs, FN)
-        FPs = np.append(FPs, FP)
-
-        print_str = 'DSC, VOE, CV for image #%d (name = %s, %d slices) = %0.3f, %0.3f, %0.3f' % (
-            img_cnt, fname, num_slices, dl, voe, cv)
+        print_str = '#%03d (name = %s, %d slices) = DSC: %0.3f, VOE: %0.3f, CV: %0.3f, ASSD: %0.3f' % (img_cnt,
+                                                                                                       fname,
+                                                                                                       num_slices,
+                                                                                                       mw.metrics['dsc'][-1],
+                                                                                                       mw.metrics['voe'][-1],
+                                                                                                       mw.metrics['cv'][-1],
+                                                                                                       mw.metrics['assd'][-1])
         pids_str = pids_str + print_str + '\n'
         print(print_str)
 
@@ -201,12 +190,12 @@ def test_model(config, save_file=0):
             x_write = x_test[..., x_test.shape[-1] // 2]
 
             # Save mask overlap
-            ovlps = utils.write_ovlp_masks(os.path.join(test_result_path, 'ovlp', fname), y_test, labels)
-            utils.write_mask(os.path.join(test_result_path, 'gt', fname), y_test)
-            utils.write_prob_map(os.path.join(test_result_path, 'prob_map', fname), recon)
-            utils.write_im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write, ovlps)
-            utils.write_sep_im_overlay(os.path.join(test_result_path, 'im_ovlp_sep', fname), x_write,
-                                       np.squeeze(y_test), np.squeeze(labels))
+            ovlps = im_utils.write_ovlp_masks(os.path.join(test_result_path, 'ovlp', fname), y_test, labels)
+            im_utils.write_mask(os.path.join(test_result_path, 'gt', fname), y_test)
+            im_utils.write_prob_map(os.path.join(test_result_path, 'prob_map', fname), recon)
+            im_utils.write_im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write, ovlps)
+            im_utils.write_sep_im_overlay(os.path.join(test_result_path, 'im_ovlp_sep', fname), x_write,
+                                          np.squeeze(y_test), np.squeeze(labels))
 
         img_cnt += 1
 
@@ -215,7 +204,7 @@ def test_model(config, save_file=0):
 
     end = time.time()
 
-    stats_string = get_stats_string(dice_losses, voes, cv_values, TPs, FNs, FPs, skipped_count, end - start)
+    stats_string = get_stats_string(mw, skipped_count, end - start)
     # Print some summary statistics
     print('--' * 20)
     print(stats_string)
@@ -233,13 +222,7 @@ def test_model(config, save_file=0):
 
     # Save metrics in dat format using pickle
     results_dat = os.path.join(test_result_path, 'metrics.dat')
-    metrics = {'dsc': dice_losses,
-               'voe': voes,
-               'cvs': cv_values,
-               'true_positive': TPs,
-               'false_positive': FPs,
-               'false_negative': FNs}
-    utils.save_pik(metrics, results_dat)
+    io_utils.save_pik(mw.metrics, results_dat)
 
     x_interp = np.asarray(x_interp)
     y_interp = np.asarray(y_interp)
@@ -263,39 +246,19 @@ def test_model(config, save_file=0):
     plt.savefig(os.path.join(test_result_path, 'interp_slices.png'))
 
 
-def get_stats_string(dice_losses, voes, cv_values, TPs, FNs, FPs, skipped_count, testing_time):
+def get_stats_string(mw: MetricWrapper, skipped_count, testing_time):
     """
     Return string detailing statistics
-    :param dice_losses: list of dice losses per exam
-    :param skipped_count: number of exams skipped
-    :param testing_time: time to run tests for all exams
-    :return: a string
+    :param mw:
+    :param skipped_count:
+    :param testing_time:
+    :return:
     """
     s = 'Overall Summary:\n'
     s += '%d Skipped\n' % skipped_count
-    s += 'DSC - Mean +/- Std, Median = %0.4f +/- %0.3f, %0.4f\n' % (np.mean(dice_losses),
-                                                                    np.std(dice_losses),
-                                                                    np.median(dice_losses))
 
-    s += 'VOE - Mean +/- Std, Median = %0.4f +/- %0.3f, %0.4f\n' % (np.mean(voes),
-                                                                    np.std(voes),
-                                                                    np.median(voes))
+    s += mw.summary()
 
-    s += 'CV - Mean +/- Std, Median = %0.4f +/- %0.3f, %0.4f\n' % (np.mean(cv_values),
-                                                                   np.std(cv_values),
-                                                                   np.median(cv_values))
-
-    s += 'TP - Mean +/- Std, Median = %0.4f +/- %0.3f, %0.4f\n' % (np.mean(TPs),
-                                                                   np.std(TPs),
-                                                                   np.median(TPs))
-
-    s += 'FN - Mean +/- Std, Median = %0.4f +/- %0.3f, %0.4f\n' % (np.mean(FNs),
-                                                                   np.std(FNs),
-                                                                   np.median(FNs))
-
-    s += 'FP - Mean +/- Std, Median = %0.4f +/- %0.3f, %0.4f\n' % (np.mean(FPs),
-                                                                   np.std(FPs),
-                                                                   np.median(FPs))
     s += 'Time required = %0.1f seconds.\n' % testing_time
     return s
 

@@ -16,13 +16,13 @@ from keras.optimizers import Adam
 
 import config as MCONFIG
 import glob_constants
+import parallel_utils as putils
 import utils
 from config import DeeplabV3Config, UNetConfig, SegnetConfig, parse_cmd_line, SUPPORTED_CONFIGS
+from cross_validation import cv_utils
 from im_generator import calc_generator_info, img_generator, img_generator_oai
 from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS, dice_loss
 from models import get_model
-from cross_validation import cv_utils
-import parallel_utils as putils
 
 CLASS_WEIGHTS = np.asarray([100, 1])
 

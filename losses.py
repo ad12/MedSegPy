@@ -3,7 +3,7 @@ import tensorflow as tf
 from keras import backend as K
 from keras.losses import binary_crossentropy
 
-# Losses
+
 DICE_LOSS = ('dice', 'sigmoid')
 
 WEIGHTED_CROSS_ENTROPY_LOSS = ('weighted_cross_entropy', 'softmax')
@@ -18,6 +18,7 @@ FOCAL_LOSS_GAMMA = 3.0
 
 CMD_LINE_SUPPORTED_LOSSES = ['DICE_LOSS', 'WEIGHTED_CROSS_ENTROPY_LOSS', 'WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS',
                              'BINARY_CROSS_ENTROPY_LOSS', 'BINARY_CROSS_ENTROPY_SIG_LOSS', 'FOCAL_LOSS']
+
 
 def get_training_loss_from_str(loss_str: str):
     loss_str = loss_str.upper()
@@ -82,43 +83,9 @@ def multi_class_dice_loss_softmax():
         y_true = y_true[..., 1:]
         y_pred = y_pred[..., 1:]
 
-        return dice_loss_test(y_true, y_pred)
+        return dice_loss(y_true, y_pred)
 
     return d_loss
-
-# Dice function loss optimizer
-# During test time since it includes a discontinuity
-def dice_loss_test(y_true, y_pred):
-    y_pred = (y_pred > 0.05) * y_pred
-
-    y_true = y_true.flatten()
-    y_pred = y_pred.flatten()
-
-    ovlp = np.sum(y_true * y_pred)
-
-    mu = 1e-07
-    dice = (2.0 * ovlp + mu) / (np.sum(y_true) + np.sum(y_pred) + mu)
-
-    return dice
-
-
-def vo_error(y_true, y_pred):
-    y_pred = (y_pred > 0.05) * y_pred
-
-    y_true = y_true.flatten()
-    y_pred = y_pred.flatten()
-
-    y_true_bool = np.asarray(y_true, dtype=np.bool)
-    y_pred_bool = np.asarray(y_pred, dtype=np.bool)
-    TP = np.sum(y_true_bool * y_pred_bool, axis=-1)
-    FP = np.sum(~y_true_bool * y_pred_bool, axis=-1)
-    FN = np.sum(y_true_bool * ~y_pred_bool, axis=-1)
-
-    mu = 1e-07
-
-    voe = 1 - (TP + mu) / (TP + FP + FN + mu)
-
-    return voe
 
 
 def weighted_categorical_crossentropy(weights):
