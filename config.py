@@ -19,6 +19,7 @@ SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/oai_data'
 
 CMD_LINE_VARS = ['n_epochs', 'augment_data',
                  'use_step_decay', 'initial_learning_rate', 'min_learning_rate', 'drop_factor', 'drop_rate',
+                 'use_early_stopping', 'early_stopping_min_delta', 'early_stopping_patience', 'early_stopping_criterion',
                  'train_batch_size', 'valid_batch_size', 'test_batch_size',
                  'loss', 'include_background',
                  'img_size']
@@ -27,12 +28,15 @@ SUPPORTED_CONFIGS = [DEEPLABV3_NAME, SEGNET_NAME, UNET_NAME]
 
 
 def init_cmd_line_parser(parser):
+    # Number of epochs
     parser.add_argument('--n_epochs', metavar='E', type=int, default=None, nargs='?',
                         help='Number of training epochs')
 
+    # Augment data
     parser.add_argument('--augment_data', type=bool, default=False, action='store_const', const=True,
                         help='Use augmented data for training')
 
+    # Learning rate step decay
     parser.add_argument('--use_step_decay', type=bool, default=False, action='store_const', const=True,
                         help='use learning rate step decay')
     parser.add_argument('--initial_learning_rate', metavar='LR', type=float, default=1e-4, nargs='?',
@@ -44,6 +48,18 @@ def init_cmd_line_parser(parser):
     parser.add_argument('--drop_rate', metavar='DR', type=int, default=1.0, nargs='?',
                         help='drop rate for learning rate decay')
 
+    # Early stopping
+    parser.add_argument('--use_early_stopping', type=bool, default=False, action='store_const', const=True,
+                        help='use learning rate step decay')
+    parser.add_argument('--early_stopping_min_delta', metavar='D', type=float, default=0.0, nargs='?',
+                        help='minimum change in the monitored quantity to qualify as an improvement, '
+                             'i.e. an absolute change of less than min_delta, will count as no improvement.')
+    parser.add_argument('--early_stopping_patience', metavar='P', type=int, default=0, nargs='?',
+                        help='number of epochs with no improvement after which training will be stopped')
+    parser.add_argument('--early_stopping_criterion', metavar='C', type=str, default='val_loss', nargs='?',
+                        help='criterion to monitor for early stopping')
+
+    # Batch size
     parser.add_argument('--train_batch_size', metavar='trBS', type=int, default=12, nargs='?',
                         help='training batch size')
     parser.add_argument('--valid_batch_size', metavar='vBS', type=int, default=35, nargs='?',
@@ -51,13 +67,16 @@ def init_cmd_line_parser(parser):
     parser.add_argument('--test_batch_size', metavar='tBS', type=int, default=72, nargs='?',
                         help='drop rate for learning rate decay')
 
+    # Loss function
     parser.add_argument('--loss', metavar='L', type=str, default='DICE_LOSS', nargs='?',
                         choices=CMD_LINE_SUPPORTED_LOSSES,
                         help='loss function')
 
+    # Include background
     parser.add_argument('--include_background', type=bool, default=False, action='store_const', const=True,
                         help='loss function')
 
+    # Image size
     parser.add_argument('--img_size', type=tuple, default=(288, 288, 1), nargs='?',
                         help='loss function')
 
@@ -72,7 +91,7 @@ def parse_cmd_line(vargin):
         val = vargin[skey]
 
         if skey == 'loss':
-            val = get_training_loss_from_str(vargin[skey])
+            val = get_training_loss_from_str(vargin[skey].upper())
 
         if skey == 'img_size':
             assert type(val) is tuple and len(val) == 3
@@ -114,6 +133,13 @@ class Config():
     ADAM_DECAY = 0.0
     USE_AMSGRAD = False
 
+    # Early stopping criterion
+    USE_EARLY_STOPPING = False
+    EARLY_STOPPING_MIN_DELTA = 0.0
+    EARLY_STOPPING_PATIENCE = 0
+    EARLY_STOPPING_CRITERION = 'val_loss'
+
+    # Batch sizes
     TRAIN_BATCH_SIZE = 12
     VALID_BATCH_SIZE = 35
     TEST_BATCH_SIZE = 72

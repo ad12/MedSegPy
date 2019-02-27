@@ -10,18 +10,19 @@ import keras.callbacks as kc
 import numpy as np
 from keras import backend as K
 from keras.callbacks import LearningRateScheduler as lrs
-from keras.callbacks import ModelCheckpoint
+from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.callbacks import TensorBoard as tfb
 from keras.optimizers import Adam
 
 import config as MCONFIG
 import glob_constants
 import utils
-from config import DeeplabV3Config, UNetConfig, SegnetConfig, init_cmd_line_parser, parse_cmd_line, SUPPORTED_CONFIGS
+from config import DeeplabV3Config, UNetConfig, SegnetConfig, parse_cmd_line, SUPPORTED_CONFIGS
 from im_generator import calc_generator_info, img_generator, img_generator_oai
 from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS, dice_loss
 from models import get_model
 from cross_validation import cv_utils
+import parallel_utils as putils
 
 CLASS_WEIGHTS = np.asarray([100, 1])
 
@@ -55,9 +56,15 @@ def train_model(config, optimizer=None, model=None, class_weights=None):
         model = get_model(config)
 
     # Fine tune - initialize with weights
-    if (config.FINE_TUNE):
+    if config.FINE_TUNE:
         print('loading weights')
         model.load_weights(config.INIT_WEIGHT_PATH, by_name=True)
+
+    # Replicate model on multiple gpus - note this does not solve issue of having too large of a model
+    num_gpus = len(os.environ["CUDA_VISIBLE_DEVICES"].split(','))
+    if num_gpus > 1:
+        print('Running multi gpu model')
+        model = putils.ModelMGPU(model, gpus=num_gpus)
 
     # If no optimizer is provided, default to Adam
     if optimizer is None:
@@ -104,13 +111,20 @@ def train_model(config, optimizer=None, model=None, class_weights=None):
     callbacks_list = [tfb_cb, cp_cb, hist_cb]
 
     # Step decay for learning rate
-    if (config.USE_STEP_DECAY):
+    if config.USE_STEP_DECAY:
         lr_cb = lrs(step_decay_wrapper(config.INITIAL_LEARNING_RATE, config.MIN_LEARNING_RATE, config.DROP_FACTOR,
                                        config.DROP_RATE))
         callbacks_list.append(lr_cb)
 
+    # use early stopping
+    if config.USE_EARLY_STOPPING:
+        es_cb = EarlyStopping(monitor=config.EARLY_STOPPING_CRITERION,
+                              min_delta=config.EARLY_STOPPING_MIN_DELTA,
+                              patience=config.EARLY_STOPPING_PATIENCE)
+        callbacks_list.append(es_cb)
+
     # Determine training generator based on version of config
-    if (config.VERSION > 1):
+    if config.VERSION > 1:
         train_gen = img_generator_oai(train_path,
                                       train_batch_size,
                                       config=config,
@@ -143,8 +157,8 @@ def train_model(config, optimizer=None, model=None, class_weights=None):
     with open(pik_save_path, "wb") as f:
         pickle.dump(data, f)
 
-    # Save model
-    model.save(filepath=os.path.join(config.CP_SAVE_PATH, 'model.h5'), overwrite=True)
+    # # Save model
+    # model.save(filepath=os.path.join(config.CP_SAVE_PATH, 'model.h5'), overwrite=True)
 
 
 def get_class_weights(freqs):
@@ -254,30 +268,6 @@ def train_debug():
     K.clear_session()
 
 
-def unet_2d_multi_contrast_train():
-    """
-    Train multi contrast network
-    """
-    MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/akshay/dl/oai_data/segnet_2d/'
-
-    # By default, loads weights from original 2D unet
-    config = UNetMultiContrastConfig()
-
-    # By default, loads weights from original 2D unet
-    # To not load these weights by default, uncomment line below
-    # config.INIT_UNET_2D = False
-
-    # Adjust hyperparameters
-    config.N_EPOCHS = 25
-    config.DROP_FACTOR = 0.8
-    config.DROP_RATE = 1.0
-
-    train_model(config)
-
-    # need to exit because overwritting config parameters
-    exit()
-
-
 def train(config, vals_dict=None, class_weights=CLASS_WEIGHTS):
     """
     Train config after applying vals_dict
@@ -327,9 +317,12 @@ if __name__ == '__main__':
                         help='Number of hold-out validation bins')
     parser.add_argument('--model', type=str, nargs=1, choices=SUPPORTED_CONFIGS,
                         help='model to use')
+    parser.add_argument('--class_weights', type=tuple, nargs='?', default=CLASS_WEIGHTS,
+                        help='weight classes in order')
 
-    init_cmd_line_parser(parser)
+    MCONFIG.init_cmd_line_parser(parser)
 
+    # Parse input arguments
     args = parser.parse_args()
     vargin = vars(args)
 

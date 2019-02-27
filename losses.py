@@ -75,6 +75,17 @@ def dice_loss(y_true, y_pred):
     return loss
 
 
+def multi_class_dice_loss_softmax():
+    def d_loss(y_true, y_pred):
+        # remove background pixels from dice_calculation
+        # background class is slice 0 in the true and pred
+        y_true = y_true[..., 1:]
+        y_pred = y_pred[..., 1:]
+
+        return dice_loss_test(y_true, y_pred)
+
+    return d_loss
+
 # Dice function loss optimizer
 # During test time since it includes a discontinuity
 def dice_loss_test(y_true, y_pred):
