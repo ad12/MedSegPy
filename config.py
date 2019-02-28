@@ -1,7 +1,7 @@
 import configparser
 import os
 import warnings
-from time import gmtime, strftime
+from time import localtime, strftime
 
 import glob_constants as glc
 import mri_utils
@@ -112,7 +112,7 @@ class Config():
         if state not in ['testing', 'training']:
             raise ValueError('state must either be \'training\' or \'testing\'')
 
-        self.DATE_TIME_STR = strftime("%Y-%m-%d-%H-%M-%S", gmtime())
+        self.DATE_TIME_STR = strftime("%Y-%m-%d-%H-%M-%S", localtime())
 
         inference = state == 'testing'
         self.CP_SAVE_TAG = cp_save_tag
