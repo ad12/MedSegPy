@@ -355,14 +355,18 @@ class OAIGenerator(Generator):
         pid_timepoint_split = scan_id.split('_')
         pid = pid_timepoint_split[0]
         f_aug_slice = f_data[1].split('_')
-        data = {'pid': pid,
-                'timepoint': int(pid_timepoint_split[1][1:]),
-                'aug': int(f_aug_slice[0][3:]),
-                'slice': int(f_aug_slice[1]),
-                'fname': fname,
-                'impath': os.path.join(dirpath, '%s.%s' % (fname, 'im')),
-                'segpath': os.path.join(dirpath, '%s.%s' % (fname, 'seg')),
-                'scanid': scan_id}
+        try:
+            data = {'pid': pid,
+                    'timepoint': int(pid_timepoint_split[1][1:]),
+                    'aug': int(f_aug_slice[0][3:]),
+                    'slice': int(f_aug_slice[1]),
+                    'fname': fname,
+                    'impath': os.path.join(dirpath, '%s.%s' % (fname, 'im')),
+                    'segpath': os.path.join(dirpath, '%s.%s' % (fname, 'seg')),
+                    'scanid': scan_id}
+        except Exception as e:
+            import pdb; pdb.set_trace()
+            raise e
         assert data['pid'] == fname[:7], str(data)
 
         return data
