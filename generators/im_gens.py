@@ -350,6 +350,9 @@ class OAIGenerator(Generator):
 
     def __get_file_info__(self, fname: str, dirpath: str=''):
         fname, ext = os.path.splitext(fname)
+        dirpath = os.path.dirname(fname)
+        fname = os.path.basename(fname)
+
         f_data = fname.split('-')
         scan_id = f_data[0]
         pid_timepoint_split = scan_id.split('_')
