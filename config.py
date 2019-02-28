@@ -592,5 +592,7 @@ def get_config(vargin):
     raise ValueError('config %s not found' % config_name)
 
 def init_cmd_line_parser(parser):
+    subparsers = []
     for config in SUPPORTED_CONFIGS:
-        config.init_cmd_line_parser(parser)
+        subparsers.append(config.init_cmd_line_parser(parser))
+    return subparsers
