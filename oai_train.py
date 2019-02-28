@@ -16,7 +16,7 @@ from keras.optimizers import Adam
 
 import config as MCONFIG
 import glob_constants
-from config import DeeplabV3Config, UNetConfig, SegnetConfig, parse_cmd_line, SUPPORTED_CONFIGS
+from config import DeeplabV3Config, UNetConfig, SegnetConfig, parse_cmd_line, SUPPORTED_CONFIGS_NAMES
 from cross_validation import cv_utils
 from generators.im_generator import calc_generator_info, img_generator, img_generator_oai
 from generators import im_gens
@@ -284,18 +284,6 @@ def train(config, vals_dict=None, class_weights=CLASS_WEIGHTS):
     K.clear_session()
 
 
-def get_config(name):
-    configs = [DeeplabV3Config(create_dirs=False), UNetConfig(create_dirs=False), SegnetConfig(create_dirs=False)]
-
-    for config in configs:
-        if config.CP_SAVE_TAG == name:
-            c = config
-            c.init_training_paths(c.DATE_TIME_STR)
-            return c
-
-    raise ValueError('config %s not found' % name)
-
-
 if __name__ == '__main__':
     MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/architecture_limit'
 
@@ -310,7 +298,7 @@ if __name__ == '__main__':
                         help='Number of hold-out test bins')
     parser.add_argument('-ho_valid', metavar='V', type=int, default=1, nargs='?',
                         help='Number of hold-out validation bins')
-    parser.add_argument('--model', type=str, nargs=1, choices=SUPPORTED_CONFIGS,
+    parser.add_argument('--model', type=str, nargs=1, choices=SUPPORTED_CONFIGS_NAMES,
                         help='model to use')
     parser.add_argument('--class_weights', type=tuple, nargs='?', default=CLASS_WEIGHTS,
                         help='weight classes in order')
@@ -332,7 +320,7 @@ if __name__ == '__main__':
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
     config_dict = parse_cmd_line(vargin)
-    c = get_config(args.model)
+    c = MCONFIG.get_config(vargin)
 
     if k_cross_validation:
         ho_test = args.ho_test
