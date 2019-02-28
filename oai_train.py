@@ -332,7 +332,7 @@ if __name__ == '__main__':
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
     config_dict = parse_cmd_line(vargin)
-    c = get_config(args.model)
+    c = get_config(args.model[0])
 
     if k_cross_validation:
         ho_test = args.ho_test

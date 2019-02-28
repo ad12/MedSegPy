@@ -36,11 +36,11 @@ def init_cmd_line_parser(parser):
                         help='Number of training epochs')
 
     # Augment data
-    parser.add_argument('--augment_data', type=bool, default=False, action='store_const', const=True,
+    parser.add_argument('--augment_data', default=False, action='store_const', const=True,
                         help='Use augmented data for training')
 
     # Learning rate step decay
-    parser.add_argument('--use_step_decay', type=bool, default=False, action='store_const', const=True,
+    parser.add_argument('--use_step_decay', default=False, action='store_const', const=True,
                         help='use learning rate step decay')
     parser.add_argument('--initial_learning_rate', metavar='LR', type=float, default=1e-4, nargs='?',
                         help='initial learning rate')
@@ -52,7 +52,7 @@ def init_cmd_line_parser(parser):
                         help='drop rate for learning rate decay')
 
     # Early stopping
-    parser.add_argument('--use_early_stopping', type=bool, default=False, action='store_const', const=True,
+    parser.add_argument('--use_early_stopping', default=False, action='store_const', const=True,
                         help='use learning rate step decay')
     parser.add_argument('--early_stopping_min_delta', metavar='D', type=float, default=0.0, nargs='?',
                         help='minimum change in the monitored quantity to qualify as an improvement, '
@@ -76,7 +76,7 @@ def init_cmd_line_parser(parser):
                         help='loss function')
 
     # Include background
-    parser.add_argument('--include_background', type=bool, default=False, action='store_const', const=True,
+    parser.add_argument('--include_background', default=False, action='store_const', const=True,
                         help='loss function')
 
     # Image size
