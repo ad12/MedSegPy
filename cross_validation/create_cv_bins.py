@@ -68,7 +68,7 @@ def check_duplicates(x_list: list):
 
 
 def verify_bins(k):
-    bins =    cv_utils.load_cross_validation(k)
+    bins = cv_utils.load_cross_validation(k)
     assert len(bins) == k
 
     bin_to_pid_dict = dict()
@@ -93,8 +93,6 @@ def verify_bins(k):
     max_num_scan_ids = max([len(bin_to_scanid_dict[bin_id]) for bin_id in range(k)])
     min_num_scan_ids = min([len(bin_to_scanid_dict[bin_id]) for bin_id in range(k)])
     assert max_num_scan_ids - min_num_scan_ids <= 2  # each pid has 2 scans
-
-
 
 
 if __name__ == '__main__':
