@@ -16,7 +16,7 @@ from keras.optimizers import Adam
 
 import config as MCONFIG
 import glob_constants
-from config import DeeplabV3Config, UNetConfig, SegnetConfig, parse_cmd_line, SUPPORTED_CONFIGS_NAMES
+from config import DeeplabV3Config, UNetConfig, SegnetConfig, SUPPORTED_CONFIGS_NAMES
 from cross_validation import cv_utils
 from generators.im_generator import calc_generator_info, img_generator, img_generator_oai
 from generators import im_gens
@@ -288,8 +288,8 @@ if __name__ == '__main__':
     MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/architecture_limit'
 
     parser = argparse.ArgumentParser(description='Train OAI dataset')
-
-    subparsers = MCONFIG.init_cmd_line_parser(parser)
+    arg_subparser = parser.add_subparsers(help='choose config')
+    subparsers = MCONFIG.init_cmd_line_parser(arg_subparser)
 
     for parser in subparsers:
         parser.add_argument('-g', '--gpu', metavar='G', type=str, nargs='?', default='0',

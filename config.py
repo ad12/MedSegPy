@@ -305,11 +305,11 @@ class Config():
                                        help='Number of training epochs')
 
         # Augment data
-        subcommand_parser.add_argument('--augment_data', type=bool, default=False, action='store_const', const=True,
+        subcommand_parser.add_argument('--augment_data',  default=False, action='store_const', const=True,
                                        help='Use augmented data for training')
 
         # Learning rate step decay
-        subcommand_parser.add_argument('--use_step_decay', type=bool, default=False, action='store_const', const=True,
+        subcommand_parser.add_argument('--use_step_decay', default=False, action='store_const', const=True,
                                        help='use learning rate step decay')
         subcommand_parser.add_argument('--initial_learning_rate', metavar='LR', type=float, default=1e-4, nargs='?',
                                        help='initial learning rate')
@@ -321,7 +321,7 @@ class Config():
                                        help='drop rate for learning rate decay')
 
         # Early stopping
-        subcommand_parser.add_argument('--use_early_stopping', type=bool, default=False, action='store_const', const=True,
+        subcommand_parser.add_argument('--use_early_stopping', default=False, action='store_const', const=True,
                                        help='use learning rate step decay')
         subcommand_parser.add_argument('--early_stopping_min_delta', metavar='D', type=float, default=0.0, nargs='?',
                                        help='minimum change in the monitored quantity to qualify as an improvement, '
@@ -345,7 +345,7 @@ class Config():
                                        help='loss function')
 
         # Include background
-        subcommand_parser.add_argument('--include_background', type=bool, default=False, action='store_const', const=True,
+        subcommand_parser.add_argument('--include_background', default=False, action='store_const', const=True,
                                        help='loss function')
 
         # Image size
