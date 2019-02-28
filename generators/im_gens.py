@@ -45,7 +45,7 @@ class Generator(ABC):
             raise ValueError('state must be in [\'training\', \'validation\']')
 
     @abstractmethod
-    def im_generator_test(self):
+    def img_generator_test(self):
         pass
 
     @abstractmethod
@@ -172,7 +172,7 @@ class OAIGenerator(Generator):
 
                 yield (x, y)
 
-    def im_generator_test(self):
+    def img_generator_test(self):
         config = self.config
 
         img_size = config.IMG_SIZE
