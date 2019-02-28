@@ -287,26 +287,26 @@ def train(config, vals_dict=None, class_weights=CLASS_WEIGHTS):
 if __name__ == '__main__':
     MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/architecture_limit'
 
-    parser = argparse.ArgumentParser(description='Train OAI dataset')
-    arg_subparser = parser.add_subparsers(help='choose config')
+    base_parser = argparse.ArgumentParser(description='Train OAI dataset')
+    arg_subparser = base_parser.add_subparsers(help='supported architectures', dest='config')
     subparsers = MCONFIG.init_cmd_line_parser(arg_subparser)
 
-    for parser in subparsers:
-        parser.add_argument('-g', '--gpu', metavar='G', type=str, nargs='?', default='0',
+    for s_parser in subparsers:
+        s_parser.add_argument('-g', '--gpu', metavar='G', type=str, nargs='?', default='0',
                             help='gpu id to use. default=0')
-        parser.add_argument('-s', '--seed', metavar='S', type=int, nargs='?', default=None,
+        s_parser.add_argument('-s', '--seed', metavar='S', type=int, nargs='?', default=None,
                             help='python seed to initialize filter weights. default=None')
-        parser.add_argument('-k', '--k_fold_cross_validation', metavar='K', type=int, default=None, nargs='?',
+        s_parser.add_argument('-k', '--k_fold_cross_validation', metavar='K', type=int, default=None, nargs='?',
                             help='Use k-fold cross-validation for training. Argument specifies k')
-        parser.add_argument('-ho_test', metavar='T', type=int, default=1, nargs='?',
+        s_parser.add_argument('-ho_test', metavar='T', type=int, default=1, nargs='?',
                             help='Number of hold-out test bins')
-        parser.add_argument('-ho_valid', metavar='V', type=int, default=1, nargs='?',
+        s_parser.add_argument('-ho_valid', metavar='V', type=int, default=1, nargs='?',
                             help='Number of hold-out validation bins')
-        parser.add_argument('--class_weights', type=tuple, nargs='?', default=CLASS_WEIGHTS,
+        s_parser.add_argument('--class_weights', type=tuple, nargs='?', default=CLASS_WEIGHTS,
                             help='weight classes in order')
 
     # Parse input arguments
-    args = parser.parse_args()
+    args = base_parser.parse_args()
     vargin = vars(args)
 
     gpu = args.gpu
@@ -319,8 +319,8 @@ if __name__ == '__main__':
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
-    config_dict = parse_cmd_line(vargin)
-    c = MCONFIG.get_config(vargin)
+    c = MCONFIG.get_config(config_name = vargin['config'])
+    config_dict = c.parse_cmd_line(vargin)
 
     if k_fold_cross_validation:
         ho_test = args.ho_test

@@ -298,46 +298,55 @@ class Config():
 
     @classmethod
     def init_cmd_line_parser(cls, parser):
-        subcommand_parser = parser.add_parser('%s' % cls.CP_SAVE_TAG)
+        subcommand_parser = parser.add_parser('%s' % cls.CP_SAVE_TAG, description='%s config parameters')
 
         # Number of epochs
-        subcommand_parser.add_argument('--n_epochs', metavar='E', type=int, default=None, nargs='?',
-                                       help='Number of training epochs')
+        subcommand_parser.add_argument('--n_epochs', metavar='E', type=int, default=cls.N_EPOCHS, nargs='?',
+                                       help='number of training epochs. Default: %d' % cls.N_EPOCHS)
 
         # Augment data
-        subcommand_parser.add_argument('--augment_data',  default=False, action='store_const', const=True,
-                                       help='Use augmented data for training')
+        subcommand_parser.add_argument('--augment_data',  default=cls.AUGMENT_DATA, action='store_const',
+                                       const=not cls.AUGMENT_DATA,
+                                       help='use augmented data for training. Default: %s' % cls.AUGMENT_DATA)
 
         # Learning rate step decay
-        subcommand_parser.add_argument('--use_step_decay', default=False, action='store_const', const=True,
-                                       help='use learning rate step decay')
-        subcommand_parser.add_argument('--initial_learning_rate', metavar='LR', type=float, default=1e-4, nargs='?',
-                                       help='initial learning rate')
-        subcommand_parser.add_argument('--min_learning_rate', metavar='mLR', type=float, default=1e-8, nargs='?',
-                                       help='minimum learning rate during decay')
-        subcommand_parser.add_argument('--drop_factor', metavar='DF', type=float, default=0.7, nargs='?',
-                                       help='drop factor for learning rate decay')
-        subcommand_parser.add_argument('--drop_rate', metavar='DR', type=int, default=1.0, nargs='?',
-                                       help='drop rate for learning rate decay')
+        subcommand_parser.add_argument('--use_step_decay', default=cls.USE_STEP_DECAY, action='store_const',
+                                       const=not cls.USE_STEP_DECAY,
+                                       help='use learning rate step decay. Default: %s' % cls.USE_STEP_DECAY)
+        subcommand_parser.add_argument('--initial_learning_rate', metavar='LR', type=float,
+                                       default=cls.INITIAL_LEARNING_RATE,
+                                       nargs='?',
+                                       help='initial learning rate. Default: %s' % cls.INITIAL_LEARNING_RATE)
+        subcommand_parser.add_argument('--min_learning_rate', metavar='mLR', type=float,
+                                       default=cls.MIN_LEARNING_RATE,
+                                       nargs='?',
+                                       help='minimum learning rate during decay. Default: %s' % cls.MIN_LEARNING_RATE)
+        subcommand_parser.add_argument('--drop_factor', metavar='DF', type=float, default=cls.DROP_FACTOR, nargs='?',
+                                       help='drop factor for learning rate decay. Default: %s' % cls.DROP_FACTOR)
+        subcommand_parser.add_argument('--drop_rate', metavar='DR', type=int, default=cls.DROP_RATE, nargs='?',
+                                       help='drop rate for learning rate decay. Default: %s' % cls.DROP_RATE)
 
         # Early stopping
-        subcommand_parser.add_argument('--use_early_stopping', default=False, action='store_const', const=True,
-                                       help='use learning rate step decay')
-        subcommand_parser.add_argument('--early_stopping_min_delta', metavar='D', type=float, default=0.0, nargs='?',
+        subcommand_parser.add_argument('--use_early_stopping', default=cls.USE_EARLY_STOPPING, action='store_const',
+                                       const=not cls.USE_EARLY_STOPPING,
+                                       help='use learning rate step decay. Default: %s' % cls.USE_EARLY_STOPPING)
+        subcommand_parser.add_argument('--early_stopping_min_delta', metavar='D', type=float, default=cls.EARLY_STOPPING_MIN_DELTA, nargs='?',
                                        help='minimum change in the monitored quantity to qualify as an improvement, '
-                                 'i.e. an absolute change of less than min_delta, will count as no improvement.')
+                                 'i.e. an absolute change of less than min_delta, will count as no improvement. Default: %s' % cls.EARLY_STOPPING_MIN_DELTA)
         subcommand_parser.add_argument('--early_stopping_patience', metavar='P', type=int, default=0, nargs='?',
-                                       help='number of epochs with no improvement after which training will be stopped')
+                                       help='number of epochs with no improvement after which training will be stopped. Default: %s' % cls.EARLY_STOPPING_PATIENCE)
         subcommand_parser.add_argument('--early_stopping_criterion', metavar='C', type=str, default='val_loss', nargs='?',
-                                       help='criterion to monitor for early stopping')
+                                       help='criterion to monitor for early stopping. Default: %s' % cls.EARLY_STOPPING_CRITERION)
 
         # Batch size
-        subcommand_parser.add_argument('--train_batch_size', metavar='trBS', type=int, default=12, nargs='?',
-                                       help='training batch size')
-        subcommand_parser.add_argument('--valid_batch_size', metavar='vBS', type=int, default=35, nargs='?',
-                                       help='drop rate for learning rate decay')
-        subcommand_parser.add_argument('--test_batch_size', metavar='tBS', type=int, default=72, nargs='?',
-                                       help='drop rate for learning rate decay')
+        subcommand_parser.add_argument('--train_batch_size', metavar='trBS', type=int, default=cls.TRAIN_BATCH_SIZE,
+                                       nargs='?',
+                                       help='training batch size. Default: %s' % cls.TRAIN_BATCH_SIZE)
+        subcommand_parser.add_argument('--valid_batch_size', metavar='vBS', type=int, default=cls.VALID_BATCH_SIZE,
+                                       nargs='?',
+                                       help='validation batch size. Default: %s' % cls.VALID_BATCH_SIZE)
+        subcommand_parser.add_argument('--test_batch_size', metavar='tBS', type=int, default=cls.TEST_BATCH_SIZE, nargs='?',
+                                       help='testing/inference batch size. Default %s' % cls.TEST_BATCH_SIZE)
 
         # Loss function
         subcommand_parser.add_argument('--loss', metavar='L', type=str, default='DICE_LOSS', nargs='?',
@@ -345,12 +354,13 @@ class Config():
                                        help='loss function')
 
         # Include background
-        subcommand_parser.add_argument('--include_background', default=False, action='store_const', const=True,
-                                       help='loss function')
+        subcommand_parser.add_argument('--include_background', default=cls.INCLUDE_BACKGROUND, action='store_const',
+                                       const=not cls.INCLUDE_BACKGROUND,
+                                       help='include background for loss function (i.e. softmax)')
 
         # Image size
-        subcommand_parser.add_argument('--img_size', type=tuple, default=(288, 288, 1), nargs='?',
-                                       help='loss function')
+        subcommand_parser.add_argument('--img_size', type=tuple, default=cls.IMG_SIZE, nargs='?',
+                                       help='image size. Default: %s' % str(cls.IMG_SIZE))
 
         return subcommand_parser
 
@@ -581,15 +591,17 @@ class DeeplabV3_2_5DConfig(DeeplabV3Config):
 
 
 SUPPORTED_CONFIGS = [UNetConfig, SegnetConfig, DeeplabV3Config]
-def get_config(vargin):
+
+
+def get_config(config_name):
     configs = SUPPORTED_CONFIGS
-    config_name = vargin['action']
     for config in configs:
         if config.CP_SAVE_TAG == config_name:
             c = config(create_dirs=True)
             return c
 
     raise ValueError('config %s not found' % config_name)
+
 
 def init_cmd_line_parser(parser):
     subparsers = []
