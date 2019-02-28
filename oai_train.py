@@ -16,9 +16,7 @@ from keras.optimizers import Adam
 
 import config as MCONFIG
 import glob_constants
-from config import DeeplabV3Config, UNetConfig, SegnetConfig, SUPPORTED_CONFIGS_NAMES
 from cross_validation import cv_utils
-from generators.im_generator import calc_generator_info, img_generator, img_generator_oai
 from generators import im_gens
 from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS, dice_loss
 from models.models import get_model
@@ -230,7 +228,7 @@ def fine_tune(dirpath, config, vals_dict=None, class_weights=None):
     config.load_config(os.path.join(dirpath, 'config.ini'))
 
     # Get best weight path
-    best_weight_path = utils.get_weights(dirpath)
+    best_weight_path = io_utils.get_weights(dirpath)
     print('Best weight path: %s' % best_weight_path)
 
     config.init_fine_tune(best_weight_path)
@@ -243,22 +241,6 @@ def fine_tune(dirpath, config, vals_dict=None, class_weights=None):
     config.save_config()
 
     train_model(config, class_weights=class_weights)
-
-    K.clear_session()
-
-
-def train_debug():
-    print('')
-    print('DEBUGGING.....')
-    config = DeeplabV3Config()
-    config.DEBUG = True
-    config.N_EPOCHS = 1
-    config.OS = 16
-    config.DIL_RATES = (1, 1, 1)
-
-    config.save_config()
-
-    train_model(config)
 
     K.clear_session()
 
@@ -284,11 +266,18 @@ def train(config, vals_dict=None, class_weights=CLASS_WEIGHTS):
     K.clear_session()
 
 
+EXP_DIR_MAP = {'arch': 'architecture_limited',
+               'aug': 'augment_limited',
+               'best': 'best_network',
+               'data': 'data_limit',
+               'loss': 'loss_limit',
+               'vol': 'volume_limited'
+               }
+
 if __name__ == '__main__':
-    MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/architecture_limit'
 
     base_parser = argparse.ArgumentParser(description='Train OAI dataset')
-    arg_subparser = base_parser.add_subparsers(help='supported architectures', dest='config')
+    arg_subparser = base_parser.add_subparsers(help='supported configs for different architectures', dest='config')
     subparsers = MCONFIG.init_cmd_line_parser(arg_subparser)
 
     for s_parser in subparsers:
@@ -304,10 +293,17 @@ if __name__ == '__main__':
                             help='Number of hold-out validation bins')
         s_parser.add_argument('--class_weights', type=tuple, nargs='?', default=CLASS_WEIGHTS,
                             help='weight classes in order')
+        s_parser.add_argument('--experiment', type=str, nargs=1,
+                              choices=sorted(list(EXP_DIR_MAP.keys())),
+                              help='experiment to run'
+                              )
 
     # Parse input arguments
     args = base_parser.parse_args()
     vargin = vars(args)
+
+    experiment_filepath = EXP_DIR_MAP[args.experiment][0]
+    MCONFIG.SAVE_PATH_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_seg_networks', experiment_filepath)
 
     gpu = args.gpu
     glob_constants.SEED = args.seed
