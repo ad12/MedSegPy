@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from os import listdir
 from random import shuffle
 from re import split
+from typing import Union
 
 import h5py
 import numpy as np
@@ -10,7 +11,6 @@ import numpy as np
 from config import Config
 
 
-# TODO: add support for cross validation
 def get_generator(config: Config):
     for generator in [OAIGenerator, OAI3DGenerator]:
         try:
@@ -72,9 +72,10 @@ class Generator(ABC):
 
         return [files[cnt1] for cnt1 in order]
 
-    def __add_file__(self, file: str, unique_filename, pids, augment_data: bool):
-        should_add_file = file not in unique_filename
+    def __add_file__(self, file: str, unique_filenames, pids, augment_data: bool):
+        should_add_file = file not in unique_filenames
         file_info = self.__get_file_info__(file, '')
+
         if pids is not None:
             contains_pid = [str(x) in file for x in pids]
 
@@ -118,13 +119,13 @@ class OAIGenerator(Generator):
         config = self.config
 
         if state == 'training':
-            data_path = config.TRAIN_PATH
+            data_path_or_files = config.TRAIN_FILES_CV if config.USE_CROSS_VALIDATION else config.TRAIN_PATH
             batch_size = config.TRAIN_BATCH_SIZE
             shuffle_epoch = True
             pids = config.PIDS
             augment_data = config.AUGMENT_DATA
         else:
-            data_path = config.VALID_PATH
+            data_path_or_files = config.VALID_FILES_CV if config.USE_CROSS_VALIDATION else config.VALID_PATH
             batch_size = config.VALID_BATCH_SIZE
             shuffle_epoch = False
             pids = None
@@ -135,7 +136,8 @@ class OAIGenerator(Generator):
         include_background = config.INCLUDE_BACKGROUND
         num_neighboring_slices = config.num_neighboring_slices()
 
-        files, batches_per_epoch, max_slice_num = self.__calc_generator_info__(data_path, batch_size,
+        files, batches_per_epoch, max_slice_num = self.__calc_generator_info__(data_path_or_files=data_path_or_files,
+                                                                               batch_size=batch_size,
                                                                                pids=pids,
                                                                                augment_data=augment_data)
 
@@ -158,23 +160,13 @@ class OAIGenerator(Generator):
             for batch_cnt in range(batches_per_epoch):
                 for file_cnt in range(batch_size):
                     file_ind = batch_cnt * batch_size + file_cnt
+                    filepath = files[file_ind]
 
-                    if num_neighboring_slices:
-                        im, seg = self.__get_neighboring_ims__(num_slices=num_neighboring_slices,
-                                                               data_path=data_path,
-                                                               filename=files[file_ind],
-                                                               max_slice=max_slice_num)
-                    else:
-                        im, seg = self.__load_inputs__(data_path, files[file_ind])
-
-                    seg_tissues = seg[..., 0, tissues]
-                    seg_total = seg_tissues
-
-                    # if considering background, add class
-                    # background should mark every other pixel that is not already accounted for in segmentation
-                    if include_background:
-                        seg_total = self.__add_background_labels__(seg_tissues)
-
+                    im, seg_total = self.__load_input_helper__(filepath=filepath,
+                                                               tissues=tissues,
+                                                               num_neighboring_slices=num_neighboring_slices,
+                                                               max_slice_num=max_slice_num,
+                                                               include_background=include_background)
                     x[file_cnt, ...] = im
                     y[file_cnt, ...] = seg_total
 
@@ -184,75 +176,97 @@ class OAIGenerator(Generator):
         config = self.config
 
         img_size = config.IMG_SIZE
-        tissue = config.TISSUES
+        tissues = config.TISSUES
         include_background = config.INCLUDE_BACKGROUND
-        data_path = config.TEST_PATH
+        data_path_or_files = config.TEST_FILES_CV if config.USE_CROSS_VALIDATION else config.TEST_PATH
+        num_neighboring_slices = config.num_neighboring_slices()
         batch_size = config.TEST_BATCH_SIZE
 
-        files, batches_per_epoch, _ = calc_generator_info(data_path, batch_size)
+        # img_size must be 3D
+        if len(img_size) != 3:
+            raise ValueError('Image size must be 3D')
+
+        files, batches_per_epoch, _ = self.__calc_generator_info__(data_path_or_files=data_path_or_files,
+                                                                   batch_size=batch_size,
+                                                                   pids=None,
+                                                                   augment_data=False)
 
         files = self.sort_files(files)
+        scan_id_to_files = self.__map_files_to_scan_id__(files)
+        scan_ids = sorted(scan_id_to_files.keys())
 
-        num_neighboring = config.num_neighboring_slices()
-        print(num_neighboring)
-        # img_size must be 3D
-        assert (len(img_size) == 3)
-        total_classes = config.get_num_classes()
-        mask_size = (img_size[0], img_size[1], total_classes)
+        mask_size = (img_size[0], img_size[1], config.get_num_classes())
 
-        pids = []
-        for fname in files:
-            pid = get_file_pid(fname)
-            pids.append(pid)
+        for scan_id in list(scan_ids):
+            scan_id_files = scan_id_to_files[scan_id]
+            num_slices = len(scan_id_files)
 
-        pids_unique = list(set(pids))
-        pids_unique.sort()
-
-        pids_dict = dict()
-        for pid in pids_unique:
-            indices = [i for i, x in enumerate(pids) if x == pid]
-            pids_dict[pid] = indices
-
-        for pid in list(pids_unique):
-            inds = pids_dict[pid]
-            num_slices = len(inds)
             x = np.zeros((num_slices,) + img_size)
             y = np.zeros((num_slices,) + mask_size)
-            for file_cnt in range(num_slices):
-                ind = inds[file_cnt]
-                fname = files[ind]
+
+            for fcount in range(num_slices):
+                filepath = scan_id_files[fcount]
 
                 # Make sure that this pid is actually in the filename
-                assert (pid in fname)
+                assert scan_id in filepath, "scan_id missing: id %s not in %s" % (scan_id, filepath)
 
-                if num_neighboring is not None:
-                    im, seg = get_neighboring_ims(num_slices=num_neighboring, data_path=data_path, filename=fname)
-                else:
-                    im, seg = load_inputs(data_path, fname)
-                    if (len(im.shape) == 2):
-                        im = im[..., np.newaxis]
+                im, seg_total = self.__load_input_helper__(filepath=filepath,
+                                                           tissues=tissues,
+                                                           num_neighboring_slices=num_neighboring_slices,
+                                                           max_slice_num=num_slices,
+                                                           include_background=include_background)
 
-                seg_tissues = seg[..., 0, tissue]
-                seg_total = seg_tissues
+                x[fcount, ...] = im
+                y[fcount, ...] = seg_total
 
-                # if considering background, add class
-                # background should mark every other pixel that is not already accounted for in segmentation
-                if include_background:
-                    seg_total = add_background_labels(seg_tissues)
+            yield (x, y, scan_id, num_slices)
 
-                x[file_cnt, ...] = im
-                y[file_cnt, ...] = seg_total
+    def __map_files_to_scan_id__(self, files):
+        scan_id_files = dict()
+        for f in files:
+            filename = os.path.basename(f)
+            file_info = self.__get_file_info__(filename, '')
+            scan_id = file_info['scanid']
 
-            yield (x, y, pid, num_slices)
+            if scan_id in scan_id_files.keys():
+                scan_id_files[scan_id].append(f)
+            else:
+                scan_id_files[scan_id] = [f]
 
-    def __get_neighboring_ims__(self, num_slices, data_path, filename, max_slice=72):
+        for k in scan_id_files.keys():
+            scan_id_files[k] = sorted(scan_id_files[k])
+
+        return scan_id_files
+
+    def __load_input_helper__(self, filepath, tissues, num_neighboring_slices, max_slice_num, include_background):
+        # check that fname contains a dirpath
+        assert os.path.dirname(filepath) is not ''
+
+        if num_neighboring_slices:
+            im, seg = self.__load_neighboring_slices__(num_slices=num_neighboring_slices,
+                                                       filepath=filepath,
+                                                       max_slice=max_slice_num)
+        else:
+            im, seg = self.__load_inputs__(os.path.dirname(filepath), os.path.basename(filepath))
+
+        seg_tissues = seg[..., 0, tissues]
+        seg_total = seg_tissues
+
+        # if considering background, add class
+        # background should mark every other pixel that is not already accounted for in segmentation
+        if include_background:
+            seg_total = self.__add_background_labels__(seg_tissues)
+
+        return im, seg_total
+
+    def __load_neighboring_slices__(self, num_slices, filepath, max_slice=72):
         """
         Assumes that there are at most slices go from 1-max_slice
         :param num_slices:
-        :param data_path:
-        :param filename:
+        :param filepath:
         :return:
         """
+        data_path, filename = os.path.dirname(filepath), os.path.basename(filepath)
 
         d_slice = num_slices // 2
         filename_split = filename.split('_')
@@ -283,32 +297,6 @@ class OAIGenerator(Generator):
 
         return im, seg
 
-    def __calc_generator_info__(self, data_path, batch_size, pids=None, augment_data=False):
-        files = listdir(data_path)
-        unique_filename = {}  # use dict to avoid having to reconstruct set every time
-
-        # track the largest slice number that we see - assume it is the same for all scans
-        max_slice_num = 0
-
-        for file in files:
-            file, _ = os.path.splitext(file)
-
-            if self.__add_file__(file, unique_filename, pids, augment_data):
-                file_info = self.__get_file_info__(file, data_path)
-                if max_slice_num < file_info['slice']:
-                    max_slice_num = file_info['slice']
-
-                unique_filename[file] = file
-
-        files = list(unique_filename.keys())
-
-        # Set total number of files based on argument for limiting trainign size
-        nfiles = len(files)
-
-        batches_per_epoch = nfiles // batch_size
-
-        return files, batches_per_epoch, max_slice_num
-
     def __load_inputs__(self, data_path: str, file: str):
         im_path = '%s/%s.im' % (data_path, file)
         with h5py.File(im_path, 'r') as f:
@@ -325,7 +313,42 @@ class OAIGenerator(Generator):
 
         return im, seg
 
-    def __get_file_info__(self, fname: str, dirpath: str):
+    def __calc_generator_info__(self, data_path_or_files: Union[str, list], batch_size, pids=None, augment_data=False):
+        if type(data_path_or_files) is str:
+            data_path = data_path_or_files
+            files = listdir(data_path)
+            filepaths = [os.path.join(data_path, f) for f in files]
+        elif type(data_path_or_files) is list:
+            filepaths = data_path_or_files
+        else:
+            raise ValueError('data_path_or_files must be type str or list')
+
+        unique_filepaths = {}  # use dict to avoid having to reconstruct set every time
+
+        # track the largest slice number that we see - assume it is the same for all scans
+        max_slice_num = 0
+
+        for fp in filepaths:
+            fp, _ = os.path.splitext(fp)
+            dirpath, filename = os.path.dirname(fp), os.path.basename(fp)
+
+            if self.__add_file__(fp, unique_filepaths, pids, augment_data):
+                file_info = self.__get_file_info__(filename, dirpath)
+                if max_slice_num < file_info['slice']:
+                    max_slice_num = file_info['slice']
+
+                unique_filepaths[fp] = fp
+
+        files = list(unique_filepaths.keys())
+
+        # Set total number of files based on argument for limiting training size
+        nfiles = len(files)
+
+        batches_per_epoch = nfiles // batch_size
+
+        return files, batches_per_epoch, max_slice_num
+
+    def __get_file_info__(self, fname: str, dirpath: str=''):
         fname, ext = os.path.splitext(fname)
         f_data = fname.split('-')
         scan_id = f_data[0].split('_')
@@ -343,30 +366,83 @@ class OAIGenerator(Generator):
         return data
 
     def summary(self):
-        train_files, train_batches_per_epoch, _ = self.__calc_generator_info__(data_path=self.config.TRAIN_PATH,
-                                                                               batch_size=self.config.TRAIN_BATCH_SIZE,
-                                                                               pids=self.config.PIDS,
-                                                                               augment_data=self.config.AUGMENT_DATA)
+        config = self.config
 
-        valid_files, valid_batches_per_epoch, _ = self.__calc_generator_info__(data_path=self.config.VALID_PATH,
-                                                                               batch_size=self.config.VALID_BATCH_SIZE)
+        if config.STATE == 'training':
+            train_data_path_or_files = config.TRAIN_FILES_CV if config.USE_CROSS_VALIDATION else config.TRAIN_PATH
+            valid_data_path_or_files = config.VALID_FILES_CV if config.USE_CROSS_VALIDATION else config.VALID_PATH
 
-        print('INFO: Train size: %d, batch size: %d' % (len(train_files), self.config.TRAIN_BATCH_SIZE))
-        print('INFO: Valid size: %d, batch size: %d' % (len(valid_files), self.config.VALID_BATCH_SIZE))
-        print('INFO: Image size: %s' % (self.config.IMG_SIZE,))
-        print('INFO: Image types included in training: %s' % (self.config.FILE_TYPES,))
+            train_files, train_batches_per_epoch, _ = self.__calc_generator_info__(
+                data_path_or_files=train_data_path_or_files,
+                batch_size=self.config.TRAIN_BATCH_SIZE,
+                pids=self.config.PIDS,
+                augment_data=self.config.AUGMENT_DATA)
+
+            valid_files, valid_batches_per_epoch, _ = self.__calc_generator_info__(
+                data_path_or_files=valid_data_path_or_files,
+                batch_size=self.config.VALID_BATCH_SIZE,
+                pids=None,
+                augment_data=False)
+
+            print('INFO: Train size: %d, batch size: %d' % (len(train_files), self.config.TRAIN_BATCH_SIZE))
+            print('INFO: Valid size: %d, batch size: %d' % (len(valid_files), self.config.VALID_BATCH_SIZE))
+            print('INFO: Image size: %s' % (self.config.IMG_SIZE,))
+            print('INFO: Image types included in training: %s' % (self.config.FILE_TYPES,))
+        else:  # config in Testing state
+            test_data_path_or_files = config.TEST_FILES_CV if config.USE_CROSS_VALIDATION else config.TEST_PATH
+
+            test_files, test_batches_per_epoch, _ = self.__calc_generator_info__(
+                data_path_or_files=test_data_path_or_files,
+                batch_size=self.config.TEST_BATCH_SIZE,
+                pids=None,
+                augment_data=False)
+
+            scanset_info = self.__get_scanset_data__(test_files)
+            print('INFO: Test size: %d, batch size: %d, # subjects: %d, # scans: %d' % (len(test_files),
+                                                                                        config.TEST_BATCH_SIZE,
+                                                                                        len(scanset_info['pid']),
+                                                                                        len(scanset_info['scanid'])))
+            if not config.USE_CROSS_VALIDATION:
+                print('Test path: %s' % (config.TEST_PATH))
 
         # not supported
         # print('INFO: Number of frozen layers: %s' % len(self.config.))
 
-    def num_steps(self):
-        train_files, train_batches_per_epoch, _ = self.__calc_generator_info__(data_path=self.config.TRAIN_PATH,
-                                                                               batch_size=self.config.TRAIN_BATCH_SIZE,
-                                                                               pids=self.config.PIDS,
-                                                                               augment_data=self.config.AUGMENT_DATA)
+    def __get_scanset_data__(self, files, keys=['pid', 'scanid']):
+        info_dict = dict()
+        for k in keys:
+            info_dict[k] = []
 
-        valid_files, valid_batches_per_epoch, _ = self.__calc_generator_info__(data_path=self.config.VALID_PATH,
-                                                                               batch_size=self.config.VALID_BATCH_SIZE)
+        for f in files:
+            file_info = self.__get_file_info__(os.path.basename(f))
+            for k in keys:
+                info_dict[k].append(file_info[k])
+
+        for k in keys:
+            info_dict[k] = list(set(info_dict[k]))
+
+        return info_dict
+
+    def num_steps(self):
+        config = self.config
+
+        if config.STATE is not 'training':
+            raise ValueError('Method is only active when config is in training state')
+
+        train_data_path_or_files = config.TRAIN_FILES_CV if config.USE_CROSS_VALIDATION else config.TRAIN_PATH
+        valid_data_path_or_files = config.VALID_FILES_CV if config.USE_CROSS_VALIDATION else config.VALID_PATH
+
+        train_files, train_batches_per_epoch, _ = self.__calc_generator_info__(
+            data_path_or_files=train_data_path_or_files,
+            batch_size=self.config.TRAIN_BATCH_SIZE,
+            pids=self.config.PIDS,
+            augment_data=self.config.AUGMENT_DATA)
+
+        valid_files, valid_batches_per_epoch, _ = self.__calc_generator_info__(
+            data_path_or_files=valid_data_path_or_files,
+            batch_size=self.config.VALID_BATCH_SIZE,
+            pids=None,
+            augment_data=False)
 
         return train_batches_per_epoch, valid_batches_per_epoch
 

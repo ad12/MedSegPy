@@ -30,6 +30,7 @@ from utils.metric_utils import dice_score_coefficient
 from models.models import get_model
 from keras.utils import plot_model
 from scan_metadata import ScanMetadata
+from generators.im_gens import get_generator
 
 DATE_THRESHOLD = strptime('2018-09-01-22-39-39', '%Y-%m-%d-%H-%M-%S')
 TEST_SET_METADATA_PIK = '/bmrNAS/people/arjun/msk_seg_networks/oai_data_test/oai_test_data.dat'
@@ -123,17 +124,13 @@ def test_model(config, save_file=0):
     start = time.time()
     skipped_count = 0
 
-    # Read the files that will be segmented
-    test_files, ntest = calc_generator_info(test_path, test_batch_size)
-    print('INFO: Test size: %d, batch size: %d, # subjects: %d' % (len(test_files), test_batch_size, ntest))
-    print('Save path: %s' % (test_result_path))
-    print('Test path: %s' % test_path)
+    test_gen = get_generator(config)
 
-    if (config.VERSION > 1):
-        test_gen = img_generator_oai_test(test_path, test_batch_size, config)
-    else:
-        test_gen = img_generator_test(test_path, test_batch_size, img_size, config.TAG, config.TISSUES,
-                                      shuffle_epoch=False)
+    # Read the files that will be segmented
+    test_gen.summary()
+    print('Save path: %s' % (test_result_path))
+
+    #test_gen = img_generator_oai_test(test_path, test_batch_size, config)
 
     pids_str = ''
 
@@ -185,10 +182,10 @@ def test_model(config, save_file=0):
         y_total.append(yt)
 
         if save_file == 1:
-            save_name = '%s/%s_recon.pred' % (test_result_path, fname)
-            with h5py.File(save_name, 'w') as h5f:
-                h5f.create_dataset('recon', data=recon)
-                h5f.create_dataset('gt', data=y_test)
+            # save_name = '%s/%s_recon.pred' % (test_result_path, fname)
+            # with h5py.File(save_name, 'w') as h5f:
+            #     h5f.create_dataset('recon', data=recon)
+            #     h5f.create_dataset('gt', data=y_test)
 
             # in case of 2.5D, we want to only select center slice
             x_write = x_test[..., x_test.shape[-1] // 2]
@@ -198,13 +195,13 @@ def test_model(config, save_file=0):
             im_utils.write_mask(os.path.join(test_result_path, 'gt', fname), y_test)
             im_utils.write_prob_map(os.path.join(test_result_path, 'prob_map', fname), recon)
             im_utils.write_im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write, ovlps)
-            im_utils.write_sep_im_overlay(os.path.join(test_result_path, 'im_ovlp_sep', fname), x_write,
-                                          np.squeeze(y_test), np.squeeze(labels))
+            # im_utils.write_sep_im_overlay(os.path.join(test_result_path, 'im_ovlp_sep', fname), x_write,
+            #                               np.squeeze(y_test), np.squeeze(labels))
 
         img_cnt += 1
-
-        if img_cnt == ntest:
-            break
+        #
+        # if img_cnt == ntest:
+        #     break
 
     end = time.time()
 
