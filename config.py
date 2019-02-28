@@ -19,90 +19,7 @@ ENSEMBLE_UDS_NAME = 'ensemble_uds'
 # This is the default save path prefix - please change if you desire something else
 SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/oai_data'
 
-CMD_LINE_VARS = ['n_epochs', 'augment_data',
-                 'use_step_decay', 'initial_learning_rate', 'min_learning_rate', 'drop_factor', 'drop_rate',
-                 'use_early_stopping', 'early_stopping_min_delta', 'early_stopping_patience',
-                 'early_stopping_criterion',
-                 'train_batch_size', 'valid_batch_size', 'test_batch_size',
-                 'loss', 'include_background',
-                 'img_size']
-
-SUPPORTED_CONFIGS = [DEEPLABV3_NAME, SEGNET_NAME, UNET_NAME]
-
-
-def init_cmd_line_parser(parser):
-    # Number of epochs
-    parser.add_argument('--n_epochs', metavar='E', type=int, default=None, nargs='?',
-                        help='Number of training epochs')
-
-    # Augment data
-    parser.add_argument('--augment_data', default=False, action='store_const', const=True,
-                        help='Use augmented data for training')
-
-    # Learning rate step decay
-    parser.add_argument('--use_step_decay', default=False, action='store_const', const=True,
-                        help='use learning rate step decay')
-    parser.add_argument('--initial_learning_rate', metavar='LR', type=float, default=1e-4, nargs='?',
-                        help='initial learning rate')
-    parser.add_argument('--min_learning_rate', metavar='mLR', type=float, default=1e-8, nargs='?',
-                        help='minimum learning rate during decay')
-    parser.add_argument('--drop_factor', metavar='DF', type=float, default=0.7, nargs='?',
-                        help='drop factor for learning rate decay')
-    parser.add_argument('--drop_rate', metavar='DR', type=int, default=1.0, nargs='?',
-                        help='drop rate for learning rate decay')
-
-    # Early stopping
-    parser.add_argument('--use_early_stopping', default=False, action='store_const', const=True,
-                        help='use learning rate step decay')
-    parser.add_argument('--early_stopping_min_delta', metavar='D', type=float, default=0.0, nargs='?',
-                        help='minimum change in the monitored quantity to qualify as an improvement, '
-                             'i.e. an absolute change of less than min_delta, will count as no improvement.')
-    parser.add_argument('--early_stopping_patience', metavar='P', type=int, default=0, nargs='?',
-                        help='number of epochs with no improvement after which training will be stopped')
-    parser.add_argument('--early_stopping_criterion', metavar='C', type=str, default='val_loss', nargs='?',
-                        help='criterion to monitor for early stopping')
-
-    # Batch size
-    parser.add_argument('--train_batch_size', metavar='trBS', type=int, default=12, nargs='?',
-                        help='training batch size')
-    parser.add_argument('--valid_batch_size', metavar='vBS', type=int, default=35, nargs='?',
-                        help='drop rate for learning rate decay')
-    parser.add_argument('--test_batch_size', metavar='tBS', type=int, default=72, nargs='?',
-                        help='drop rate for learning rate decay')
-
-    # Loss function
-    parser.add_argument('--loss', metavar='L', type=str, default='DICE_LOSS', nargs='?',
-                        choices=CMD_LINE_SUPPORTED_LOSSES,
-                        help='loss function')
-
-    # Include background
-    parser.add_argument('--include_background', default=False, action='store_const', const=True,
-                        help='loss function')
-
-    # Image size
-    parser.add_argument('--img_size', type=tuple, default=(288, 288, 1), nargs='?',
-                        help='loss function')
-
-
-def parse_cmd_line(vargin):
-    config_dict = dict()
-    for skey in CMD_LINE_VARS:
-        if skey not in vargin.keys():
-            continue
-
-        c_skey = skey.upper()
-        val = vargin[skey]
-
-        if skey == 'loss':
-            val = get_training_loss_from_str(vargin[skey].upper())
-
-        if skey == 'img_size':
-            assert type(val) is tuple and len(val) == 3
-
-        config_dict[c_skey] = val
-
-    return config_dict
-
+SUPPORTED_CONFIGS_NAMES = [DEEPLABV3_NAME, SEGNET_NAME, UNET_NAME]
 
 class Config():
     VERSION = 4
@@ -379,6 +296,94 @@ class Config():
     def num_neighboring_slices(self):
         return None
 
+    @classmethod
+    def init_cmd_line_parser(cls, parser):
+        subcommand_parser = parser.add_parser('%s' % cls.CP_SAVE_TAG)
+
+        # Number of epochs
+        subcommand_parser.add_argument('--n_epochs', metavar='E', type=int, default=None, nargs='?',
+                                       help='Number of training epochs')
+
+        # Augment data
+        subcommand_parser.add_argument('--augment_data', type=bool, default=False, action='store_const', const=True,
+                                       help='Use augmented data for training')
+
+        # Learning rate step decay
+        subcommand_parser.add_argument('--use_step_decay', type=bool, default=False, action='store_const', const=True,
+                                       help='use learning rate step decay')
+        subcommand_parser.add_argument('--initial_learning_rate', metavar='LR', type=float, default=1e-4, nargs='?',
+                                       help='initial learning rate')
+        subcommand_parser.add_argument('--min_learning_rate', metavar='mLR', type=float, default=1e-8, nargs='?',
+                                       help='minimum learning rate during decay')
+        subcommand_parser.add_argument('--drop_factor', metavar='DF', type=float, default=0.7, nargs='?',
+                                       help='drop factor for learning rate decay')
+        subcommand_parser.add_argument('--drop_rate', metavar='DR', type=int, default=1.0, nargs='?',
+                                       help='drop rate for learning rate decay')
+
+        # Early stopping
+        subcommand_parser.add_argument('--use_early_stopping', type=bool, default=False, action='store_const', const=True,
+                                       help='use learning rate step decay')
+        subcommand_parser.add_argument('--early_stopping_min_delta', metavar='D', type=float, default=0.0, nargs='?',
+                                       help='minimum change in the monitored quantity to qualify as an improvement, '
+                                 'i.e. an absolute change of less than min_delta, will count as no improvement.')
+        subcommand_parser.add_argument('--early_stopping_patience', metavar='P', type=int, default=0, nargs='?',
+                                       help='number of epochs with no improvement after which training will be stopped')
+        subcommand_parser.add_argument('--early_stopping_criterion', metavar='C', type=str, default='val_loss', nargs='?',
+                                       help='criterion to monitor for early stopping')
+
+        # Batch size
+        subcommand_parser.add_argument('--train_batch_size', metavar='trBS', type=int, default=12, nargs='?',
+                                       help='training batch size')
+        subcommand_parser.add_argument('--valid_batch_size', metavar='vBS', type=int, default=35, nargs='?',
+                                       help='drop rate for learning rate decay')
+        subcommand_parser.add_argument('--test_batch_size', metavar='tBS', type=int, default=72, nargs='?',
+                                       help='drop rate for learning rate decay')
+
+        # Loss function
+        subcommand_parser.add_argument('--loss', metavar='L', type=str, default='DICE_LOSS', nargs='?',
+                                       choices=CMD_LINE_SUPPORTED_LOSSES,
+                                       help='loss function')
+
+        # Include background
+        subcommand_parser.add_argument('--include_background', type=bool, default=False, action='store_const', const=True,
+                                       help='loss function')
+
+        # Image size
+        subcommand_parser.add_argument('--img_size', type=tuple, default=(288, 288, 1), nargs='?',
+                                       help='loss function')
+
+        return subcommand_parser
+
+    @classmethod
+    def __get_cmd_line_vars__(cls):
+        return ['n_epochs', 'augment_data',
+         'use_step_decay', 'initial_learning_rate', 'min_learning_rate', 'drop_factor', 'drop_rate',
+         'use_early_stopping', 'early_stopping_min_delta', 'early_stopping_patience',
+         'early_stopping_criterion',
+         'train_batch_size', 'valid_batch_size', 'test_batch_size',
+         'loss', 'include_background',
+         'img_size']
+
+    @classmethod
+    def parse_cmd_line(cls, vargin):
+        config_dict = dict()
+        for skey in cls.__get_cmd_line_vars__():
+            if skey not in vargin.keys():
+                continue
+
+            c_skey = skey.upper()
+            val = vargin[skey]
+
+            if skey == 'loss':
+                val = get_training_loss_from_str(vargin[skey].upper())
+
+            if skey == 'img_size':
+                assert type(val) is tuple and len(val) == 3
+
+            config_dict[c_skey] = val
+
+        return config_dict
+
 
 class DeeplabV3Config(Config):
     CP_SAVE_TAG = DEEPLABV3_NAME
@@ -401,12 +406,37 @@ class DeeplabV3Config(Config):
         self.state = 'testing'
         config_tuple = (self.OS,) + self.DIL_RATES
         config_str = '%d_%d-%d-%d' % config_tuple
-        self.TEST_RESULT_PATH = utils.check_dir(
-            os.path.join(self.CP_SAVE_PATH, self.TEST_RESULTS_FOLDER_NAME, config_str))
+        self.TEST_RESULT_PATH = io_utils.check_dir(os.path.join(self.CP_SAVE_PATH,
+                                                                self.TEST_RESULTS_FOLDER_NAME,
+                                                                config_str))
 
     def summary(self, additional_vars=[]):
         summary_attrs = ['OS', 'DIL_RATES', 'DROPOUT_RATE']
         super().summary(summary_attrs)
+
+    @classmethod
+    def init_cmd_line_parser(cls, parser):
+        subparser = super().init_cmd_line_parser(parser)
+
+        subparser.add_argument('--os', type=int, default=cls.OS, nargs='?',
+                               help='output stride. Default: %d' % cls.OS)
+        subparser.add_argument('--dil_rates', type=tuple, default=cls.DIL_RATES, nargs='?',
+                               help='dilation rates. Default: %s' % str(cls.DIL_RATES))
+        subparser.add_argument('--dropout_rate', type=float, default=cls.DROPOUT_RATE, nargs='?',
+                               help='dropout rate before classification layer')
+
+        return subparser
+
+    @classmethod
+    def __get_cmd_line_vars__(cls):
+        cmd_line_vars = super().__get_cmd_line_vars__()
+        cmd_line_vars.extend(['os', 'dil_rates', 'dropout_rate'])
+        return cmd_line_vars
+
+    @classmethod
+    def parse_cmd_line(cls, vargin):
+        config_dict = super().parse_cmd_line(vargin)
+        assert len(config_dict['DIL_RATES']) == 3
 
 
 class SegnetConfig(Config):
@@ -432,6 +462,35 @@ class SegnetConfig(Config):
         summary_attrs = ['DEPTH', 'NUM_CONV_LAYERS', 'NUM_FILTERS']
         super().summary(summary_attrs)
 
+    @classmethod
+    def init_cmd_line_parser(cls, parser):
+        subparser = super().init_cmd_line_parser(parser)
+
+        subparser.add_argument('--depth', type=int, default=cls.DEPTH, nargs='?',
+                               help='network depth. Default: %d' % cls.DEPTH)
+        subparser.add_argument('--num_conv_layers', type=list, default=cls.NUM_CONV_LAYERS, nargs='?',
+                               help='number of convolutional layers. Default: %s' % str(cls.NUM_CONV_LAYERS))
+        subparser.add_argument('--num_filters', type=list, default=cls.NUM_FILTERS, nargs='?',
+                               help='number of filters at each depth layer. Default: ' % cls.NUM_FILTERS)
+
+        return subparser
+
+    @classmethod
+    def __get_cmd_line_vars__(cls):
+        cmd_line_vars = super().__get_cmd_line_vars__()
+        cmd_line_vars.extend(['depth', 'num_conv_layers', 'num_filters'])
+        return cmd_line_vars
+
+    @classmethod
+    def parse_cmd_line(cls, vargin):
+        config_dict = super().parse_cmd_line(vargin)
+        depth = len(config_dict['DEPTH'])
+
+        assert len(config_dict['NUM_CONV_LAYERS']) == depth, "Number of conv layers must be specified for each depth"
+        assert len(config_dict['NUM_FILTERS']) == depth, "Number of filters must be specified for each depth"
+
+        return config_dict
+
 
 class UNetConfig(Config):
     CP_SAVE_TAG = UNET_NAME
@@ -450,6 +509,21 @@ class UNetConfig(Config):
 
     def __init__(self, state='training', create_dirs=True):
         super().__init__(self.CP_SAVE_TAG, state, create_dirs=create_dirs)
+
+    @classmethod
+    def init_cmd_line_parser(cls, parser):
+        subparser = super().init_cmd_line_parser(parser)
+
+        subparser.add_argument('--depth', type=int, default=cls.DEPTH, nargs='?',
+                               help='network depth. Default: %d' % cls.DEPTH)
+
+        return subparser
+
+    @classmethod
+    def __get_cmd_line_vars__(cls):
+        cmd_line_vars = super().__get_cmd_line_vars__()
+        cmd_line_vars.extend(['depth'])
+        return cmd_line_vars
 
 
 class EnsembleUDSConfig(Config):
@@ -506,26 +580,19 @@ class DeeplabV3_2_5DConfig(DeeplabV3Config):
         return self.IMG_SIZE[2]
 
 
-def save_config(a_dict, filepath):
-    """
-    Save information in a dictionary
-    :param a_dict: a dictionary of information to save
-    :param filepath: a string
-    :return:
-    """
-    config = configparser.ConfigParser(a_dict)
+SUPPORTED_CONFIGS = [UNetConfig, SegnetConfig, DeeplabV3Config]
+def get_config(vargin):
+    configs = SUPPORTED_CONFIGS
+    config_name = vargin['action']
+    for config in configs:
+        if config.CP_SAVE_TAG == config_name:
+            c = config(create_dirs=True)
+            return c
 
-    with open(filepath, 'w+') as configfile:
-        config.write(configfile)
+    raise ValueError('config %s not found' % config_name)
 
-
-def load_config(filepath):
-    """
-    Read in information saved using save_config
-    :param filepath: a string
-    :return: a dictionary of Config params
-    """
-    config = configparser.ConfigParser()
-    config.read(filepath)
-
-    return config['DEFAULT']
+def init_cmd_line_parser(parser):
+    subparsers = []
+    for config in SUPPORTED_CONFIGS:
+        subparsers.append(config.init_cmd_line_parser(parser))
+    return subparsers
