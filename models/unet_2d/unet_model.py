@@ -4,7 +4,7 @@ import os
 
 import numpy as np
 from keras.engine.topology import get_source_inputs
-from keras.initializers import glorot_uniform, he_normal
+from keras.initializers import he_normal
 from keras.layers import BatchNormalization as BN
 from keras.layers import Input, Conv2D, MaxPooling2D, Conv2DTranspose, Dropout, Concatenate
 from keras.models import Model
@@ -58,11 +58,11 @@ def unet_2d_model(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, output_mode=
         conv = Conv2D(nfeatures[depth_cnt], (3, 3),
                       padding='same',
                       activation='relu',
-                      kernel_initializer=glorot_uniform(seed=SEED))(pool)
+                      kernel_initializer=he_normal(seed=SEED))(pool)
         conv = Conv2D(nfeatures[depth_cnt], (3, 3),
                       padding='same',
                       activation='relu',
-                      kernel_initializer=glorot_uniform(seed=SEED))(conv)
+                      kernel_initializer=he_normal(seed=SEED))(conv)
 
         conv = BN(axis=-1, momentum=0.95, epsilon=0.001)(conv)
         conv = Dropout(rate=0.0)(conv)
@@ -101,11 +101,11 @@ def unet_2d_model(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, output_mode=
         conv = Conv2D(nfeatures[depth_cnt], (3, 3),
                       padding='same',
                       activation='relu',
-                      kernel_initializer=glorot_uniform(seed=SEED))(up)
+                      kernel_initializer=he_normal(seed=SEED))(up)
         conv = Conv2D(nfeatures[depth_cnt], (3, 3),
                       padding='same',
                       activation='relu',
-                      kernel_initializer=glorot_uniform(seed=SEED))(conv)
+                      kernel_initializer=he_normal(seed=SEED))(conv)
 
         conv = BN(axis=-1, momentum=0.95, epsilon=0.001)(conv)
         conv = Dropout(rate=0.00)(conv)
@@ -160,11 +160,11 @@ def unet_2d_model_v2(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, output_mo
         conv = Conv2D(nfeatures[depth_cnt], (3, 3),
                       padding='same',
                       activation='relu',
-                      kernel_initializer=glorot_uniform(seed=SEED))(pool)
+                      kernel_initializer=he_normal(seed=SEED))(pool)
         conv = Conv2D(nfeatures[depth_cnt], (3, 3),
                       padding='same',
                       activation='relu',
-                      kernel_initializer=glorot_uniform(seed=SEED))(conv)
+                      kernel_initializer=he_normal(seed=SEED))(conv)
 
         conv = BN(axis=-1, momentum=0.95, epsilon=0.001)(conv)
         conv = Dropout(rate=0.0)(conv)
@@ -197,17 +197,18 @@ def unet_2d_model_v2(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, output_mo
 
         up = Concatenate(axis=3)([Conv2DTranspose(nfeatures[depth_cnt], (3, 3),
                                                   padding='same',
-                                                  strides=unpooling_size)(conv),
+                                                  strides=unpooling_size,
+                                                  kernel_initializer=he_normal(seed=SEED))(conv),
                                   conv_ptr[depth_cnt]])
 
         conv = Conv2D(nfeatures[depth_cnt], (3, 3),
                       padding='same',
                       activation='relu',
-                      kernel_initializer=glorot_uniform(seed=SEED))(up)
+                      kernel_initializer=he_normal(seed=SEED))(up)
         conv = Conv2D(nfeatures[depth_cnt], (3, 3),
                       padding='same',
                       activation='relu',
-                      kernel_initializer=glorot_uniform(seed=SEED))(conv)
+                      kernel_initializer=he_normal(seed=SEED))(conv)
 
         conv = BN(axis=-1, momentum=0.95, epsilon=0.001)(conv)
         conv = Dropout(rate=0.00)(conv)
