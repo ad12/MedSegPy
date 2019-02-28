@@ -9,7 +9,7 @@ import random
 import sys
 
 sys.path.append('../')
-import utils
+from utils import io_utils
 
 DATA_PATHS = ['/bmrNAS/people/akshay/dl/oai_data/unet_2d/train_aug/',
               '/bmrNAS/people/akshay/dl/oai_data/unet_2d/valid/',
@@ -109,4 +109,4 @@ if __name__ == '__main__':
                 raise ValueError('Bins %d and %d not exclusive' % (i, j))
 
     # save data to filepath
-    utils.save_pik(bins, save_path)
+    io_utils.save_pik(bins, save_path)

@@ -13,17 +13,6 @@ import h5py
 import numpy as np
 
 
-def preprocess_input_scale(im):
-    p_min = np.amin(im)
-    im -= p_min  # minimum is 0
-    p_max = np.amax(im)
-    im = im / p_max * 255.0
-    assert (np.amin(im) == 0)
-    assert (np.amax(im) <= 255)
-
-    return im
-
-
 # TODO: support weighting more than 1 class
 def get_class_freq(data_path, class_id=[0], pids=None, augment_data=True):
     if pids is not None:
@@ -90,7 +79,7 @@ def calc_generator_info(data_path, batch_size, learn_files=[], pids=None, augmen
 def add_file(file, unique_filename, pids, augment_data):
     should_add_file = file not in unique_filename
 
-    if (pids is not None):
+    if pids is not None:
         contains_pid = [str(x) in file for x in pids]
 
         # if any pid is included, only 1 can be included
@@ -99,7 +88,7 @@ def add_file(file, unique_filename, pids, augment_data):
 
         should_add_file &= contains_pid
 
-    if (not augment_data):
+    if not augment_data:
         should_add_file &= ('Aug00' in file)
 
     return should_add_file
