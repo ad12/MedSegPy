@@ -302,7 +302,7 @@ if __name__ == '__main__':
     args = base_parser.parse_args()
     vargin = vars(args)
 
-    experiment_filepath = EXP_DIR_MAP[args.experiment][0]
+    experiment_filepath = EXP_DIR_MAP[args.experiment[0]]
     MCONFIG.SAVE_PATH_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_seg_networks', experiment_filepath)
 
     gpu = args.gpu
