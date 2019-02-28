@@ -158,17 +158,12 @@ def test_model(config, save_file=0):
                            np.transpose(np.squeeze(labels), axes=[1, 2, 0]),
                            voxel_spacing=VOXEL_SPACING)
 
-        print_str = '#%03d (name = %s, %d slices) = DSC: %0.3f, VOE: %0.3f, CV: %0.3f, ASSD: %0.3f' % (img_cnt,
-                                                                                                       fname,
+        print_str = 'Scan #%03d (name = %s, %d slices) = DSC: %0.3f, VOE: %0.3f, CV: %0.3f, ASSD (mm): %0.3f' % (img_cnt, fname,
                                                                                                        num_slices,
-                                                                                                       mw.metrics[
-                                                                                                           'dsc'][-1],
-                                                                                                       mw.metrics[
-                                                                                                           'voe'][-1],
-                                                                                                       mw.metrics['cv'][
-                                                                                                           -1],
-                                                                                                       mw.metrics[
-                                                                                                           'assd'][-1])
+                                                                                                       mw.metrics['dsc'][-1],
+                                                                                                       mw.metrics['voe'][-1],
+                                                                                                       mw.metrics['cv'][-1],
+                                                                                                       mw.metrics['assd'][-1])
         pids_str = pids_str + print_str + '\n'
         print(print_str)
 
