@@ -80,7 +80,9 @@ def verify_bins(k):
             file_info = get_file_info(os.path.basename(filepath), os.path.dirname(filepath))
             pids.append(file_info['pid'])
             scan_ids.append(file_info['scanid'])
-
+        
+        print(type(pids))
+        print(type(scan_ids))
         bin_to_pid_dict[bin_id] = list(set(pids))
         bin_to_scanid_dict[bin_id] = list(set(scan_ids))
 
