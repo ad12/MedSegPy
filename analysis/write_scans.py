@@ -6,7 +6,7 @@ import os
 import SimpleITK as sitk
 import numpy as np
 
-from im_generator import img_generator_oai_test
+from generators.im_generator import img_generator_oai_test
 from config import UNetConfig
 import utils
 import pandas as pd

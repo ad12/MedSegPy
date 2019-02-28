@@ -108,5 +108,10 @@ if __name__ == '__main__':
                 print(pid_bin_map)
                 raise ValueError('Bins %d and %d not exclusive' % (i, j))
 
+    # Check for duplicates
+    for i in range(len(bins)):
+        if len(bins[i]) != len(set(bins[i])):
+            raise ValueError('Duplicates in bin %d' % i)
+
     # save data to filepath
     io_utils.save_pik(bins, save_path)

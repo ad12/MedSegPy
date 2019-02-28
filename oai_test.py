@@ -25,7 +25,7 @@ from utils.metric_utils import MetricWrapper
 from utils import im_utils
 
 from config import DeeplabV3Config, SegnetConfig, UNetConfig, UNet2_5DConfig
-from im_generator import img_generator_test, calc_generator_info, img_generator_oai_test
+from generators.im_generator import img_generator_test, calc_generator_info, img_generator_oai_test
 from utils.metric_utils import dice_score_coefficient
 from models.models import get_model
 from keras.utils import plot_model

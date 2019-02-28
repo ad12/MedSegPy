@@ -16,13 +16,13 @@ from keras.optimizers import Adam
 
 import config as MCONFIG
 import glob_constants
-import parallel_utils as putils
-import utils
 from config import DeeplabV3Config, UNetConfig, SegnetConfig, parse_cmd_line, SUPPORTED_CONFIGS
 from cross_validation import cv_utils
-from im_generator import calc_generator_info, img_generator, img_generator_oai
+from generators.im_generator import calc_generator_info, img_generator, img_generator_oai
+from generators import im_gens
 from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS, dice_loss
 from models.models import get_model
+from utils import io_utils, parallel_utils as putils
 
 CLASS_WEIGHTS = np.asarray([100, 1])
 
@@ -89,20 +89,10 @@ def train_model(config, optimizer=None, model=None, class_weights=None):
 
     # set image format to be (N, dim1, dim2, dim3, ch)
     K.set_image_data_format('channels_last')
-    train_files, train_nbatches = calc_generator_info(train_path, train_batch_size, learn_files=learn_files,
-                                                      pids=config.PIDS, augment_data=config.AUGMENT_DATA)
-    valid_files, valid_nbatches = calc_generator_info(valid_path, valid_batch_size)
-
-    print('INFO: Train size: %d, batch size: %d' % (len(train_files), train_batch_size))
-    print('INFO: Valid size: %d, batch size: %d' % (len(valid_files), valid_batch_size))
-    print('INFO: Image size: %s' % (img_size,))
-    print('INFO: Image types included in training: %s' % (file_types,))
-    print('INFO: Number of frozen layers: %s' % len(layers_to_freeze))
 
     # model callbacks
-    cp_cb = ModelCheckpoint(
-        os.path.join(cp_save_path, cp_save_tag + '_weights.{epoch:03d}-{val_loss:.4f}.h5'),
-        save_best_only=True)
+    cp_cb = ModelCheckpoint(os.path.join(cp_save_path, cp_save_tag + '_weights.{epoch:03d}-{val_loss:.4f}.h5'),
+                            save_best_only=True)
     tfb_cb = tfb(config.TF_LOG_DIR,
                  write_grads=False,
                  write_images=False)
@@ -124,33 +114,38 @@ def train_model(config, optimizer=None, model=None, class_weights=None):
         callbacks_list.append(es_cb)
 
     # Determine training generator based on version of config
-    if config.VERSION > 1:
-        train_gen = img_generator_oai(train_path,
-                                      train_batch_size,
-                                      config=config,
-                                      state='training',
-                                      shuffle_epoch=True)
-        val_gen = img_generator_oai(valid_path,
-                                    valid_batch_size,
-                                    config=config,
-                                    state='validation',
-                                    shuffle_epoch=False)
-    else:
-        train_gen = img_generator(train_path, train_batch_size, img_size, tag, config.TISSUES, pids=config.PIDS)
-        val_gen = img_generator(valid_path, valid_batch_size, img_size, tag, config.TISSUES)
+    # if config.VERSION > 1:
+    #     train_gen = img_generator_oai(train_path,
+    #                                   train_batch_size,
+    #                                   config=config,
+    #                                   state='training',
+    #                                   shuffle_epoch=True)
+    #     val_gen = img_generator_oai(valid_path,
+    #                                 valid_batch_size,
+    #                                 config=config,
+    #                                 state='validation',
+    #                                 shuffle_epoch=False)
+    # else:
+
+    generator = im_gens.get_generator(config)
+    generator.summary()
+
+    train_nbatches, valid_nbatches = generator.num_steps()
+
+    train_gen = generator.img_generator(state='training')
+    val_gen = generator.img_generator(state='validation')
 
     # Start training
-    model.fit_generator(
-        train_gen,
-        train_nbatches,
-        epochs=n_epochs,
-        validation_data=val_gen,
-        validation_steps=valid_nbatches,
-        callbacks=callbacks_list,
-        verbose=1)
+    model.fit_generator(train_gen,
+                        train_nbatches,
+                        epochs=n_epochs,
+                        validation_data=val_gen,
+                        validation_steps=valid_nbatches,
+                        callbacks=callbacks_list,
+                        verbose=1)
 
     # Save optimizer state
-    utils.save_optimizer(model.optimizer, config.CP_SAVE_PATH)
+    io_utils.save_optimizer(model.optimizer, config.CP_SAVE_PATH)
 
     # Save files to write as output
     data = [hist_cb.epoch, hist_cb.losses, hist_cb.val_losses]

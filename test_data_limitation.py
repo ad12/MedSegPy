@@ -5,7 +5,7 @@ import unittest
 import parse_pids
 import utils
 from config import DeeplabV3Config, SegnetConfig, UNetConfig
-from im_generator import calc_generator_info
+from generators.im_generator import calc_generator_info
 
 
 class DataLimitationTest(unittest.TestCase):

@@ -13,43 +13,6 @@ import h5py
 import numpy as np
 
 
-# TODO: support weighting more than 1 class
-def get_class_freq(data_path, class_id=[0], pids=None, augment_data=True):
-    if pids is not None:
-        learn_files = []
-
-    files = listdir(data_path)
-    unique_filename = {}
-
-    for file in files:
-        file, _ = splitext(file)
-        if add_file(file, unique_filename, pids, augment_data):
-            unique_filename[file] = file
-
-    files = list(unique_filename.keys())
-
-    # organized as freq = [background, class]
-    freqs = np.zeros([len(class_id) + 1, 1])
-
-    count = 0
-    for file in files:
-        seg_path = '%s/%s.seg' % (data_path, file)
-        with h5py.File(seg_path, 'r') as f:
-            seg = f['data'][:].astype('float32')
-            # select class of interest
-            seg = seg[..., class_id]
-            seg = seg.flatten()
-
-            freqs[0] += np.sum(seg == 0)
-            freqs[1] += np.sum(seg == 1)
-
-        count += 1
-
-        if count % 1000 == 0:
-            print('%d/%d' % (count, len(files)))
-    return freqs
-
-
 # find unique data regardless of the file prefix
 def calc_generator_info(data_path, batch_size, learn_files=[], pids=None, augment_data=True):
     if pids is not None:

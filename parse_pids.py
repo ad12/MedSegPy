@@ -1,6 +1,6 @@
 import os
 
-import utils
+from utils import io_utils
 
 TRAIN_PID_PATH = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/train_aug'
 VAL_PID_PATH = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/valid'
@@ -24,7 +24,7 @@ def get_pids(pid_path):
 # Create list of pids
 if __name__ == '__main__':
     train_pids = get_pids(TRAIN_PID_PATH)
-    utils.save_pik(train_pids, PID_TXT_PATH)
+    io_utils.save_pik(train_pids, PID_TXT_PATH)
 
     test_pids = get_pids(TEST_PID_PATH)
     val_pids = get_pids(VAL_PID_PATH)

@@ -3,11 +3,11 @@ import warnings
 
 K_BIN_SAVE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'oai_data-k%d.cv')
 
-import utils
+from utils import io_utils
 
 
 def load_cross_validation(k):
-    return utils.load_pik(K_BIN_SAVE_PATH % k)
+    return io_utils.load_pik(K_BIN_SAVE_PATH % k)
 
 
 def get_cv_experiments(k, num_valid_bins=1, num_test_bins=1):

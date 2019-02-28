@@ -13,7 +13,7 @@ from keras import backend as K
 
 import utils
 from config import SegnetConfig
-from im_generator import img_generator_test, calc_generator_info
+from generators.im_generator import img_generator_test, calc_generator_info
 from models import get_model
 from utils.metric_utils import dice_score_coefficient
 
