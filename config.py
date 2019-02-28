@@ -305,14 +305,14 @@ class Config():
                                        help='number of training epochs. Default: %d' % cls.N_EPOCHS)
 
         # Augment data
-        subcommand_parser.add_argument('--augment_data',  default=cls.AUGMENT_DATA, action='store_const',
-                                       const=not cls.AUGMENT_DATA,
-                                       help='use augmented data for training. Default: %s' % cls.AUGMENT_DATA)
+        subcommand_parser.add_argument('--augment_data',  default=False, action='store_const',
+                                       const=True,
+                                       help='use augmented data for training. Default: %s' % False)
 
         # Learning rate step decay
-        subcommand_parser.add_argument('--use_step_decay', default=cls.USE_STEP_DECAY, action='store_const',
-                                       const=not cls.USE_STEP_DECAY,
-                                       help='use learning rate step decay. Default: %s' % cls.USE_STEP_DECAY)
+        subcommand_parser.add_argument('--use_step_decay', default=False, action='store_const',
+                                       const=True,
+                                       help='use learning rate step decay. Default: %s' % False)
         subcommand_parser.add_argument('--initial_learning_rate', metavar='LR', type=float,
                                        default=cls.INITIAL_LEARNING_RATE,
                                        nargs='?',
@@ -327,9 +327,9 @@ class Config():
                                        help='drop rate for learning rate decay. Default: %s' % cls.DROP_RATE)
 
         # Early stopping
-        subcommand_parser.add_argument('--use_early_stopping', default=cls.USE_EARLY_STOPPING, action='store_const',
-                                       const=not cls.USE_EARLY_STOPPING,
-                                       help='use learning rate step decay. Default: %s' % cls.USE_EARLY_STOPPING)
+        subcommand_parser.add_argument('--use_early_stopping', default=False, action='store_const',
+                                       const=True,
+                                       help='use learning rate step decay. Default: %s' % False)
         subcommand_parser.add_argument('--early_stopping_min_delta', metavar='D', type=float, default=cls.EARLY_STOPPING_MIN_DELTA, nargs='?',
                                        help='minimum change in the monitored quantity to qualify as an improvement, '
                                  'i.e. an absolute change of less than min_delta, will count as no improvement. Default: %s' % cls.EARLY_STOPPING_MIN_DELTA)
@@ -354,9 +354,9 @@ class Config():
                                        help='loss function')
 
         # Include background
-        subcommand_parser.add_argument('--include_background', default=cls.INCLUDE_BACKGROUND, action='store_const',
-                                       const=not cls.INCLUDE_BACKGROUND,
-                                       help='include background for loss function (i.e. softmax)')
+        subcommand_parser.add_argument('--include_background', default=False, action='store_const',
+                                       const=True,
+                                       help='include background for loss function (i.e. softmax). Default: ' % False)
 
         # Image size
         subcommand_parser.add_argument('--img_size', type=tuple, default=cls.IMG_SIZE, nargs='?',
