@@ -142,7 +142,7 @@ def test_model(config, save_file=0):
     mw = MetricWrapper()
 
     # # Iterature through the files to be segmented
-    for x_test, y_test, fname, num_slices in test_gen:
+    for x_test, y_test, fname, num_slices in test_gen.img_generator_test():
         # Perform the actual segmentation using pre-loaded model
         # Threshold at 0.5
         recon = model.predict(x_test, batch_size=test_batch_size)
