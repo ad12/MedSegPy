@@ -153,5 +153,8 @@ if __name__ == '__main__':
     # save data to filepath
     io_utils.save_pik(bins, save_path)
 
-    # Verify list
-    verify_bins(k)
+    try:
+        # Verify list
+        verify_bins(k)
+    except Exception:
+        os.remove(save_path)
