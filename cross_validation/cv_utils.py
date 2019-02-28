@@ -1,8 +1,9 @@
-import os
+import os, sys
 import warnings
 
 K_BIN_SAVE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'oai_data-k%d.cv')
 
+sys.path.append('../')
 from utils import io_utils
 
 

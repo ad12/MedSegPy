@@ -10,6 +10,7 @@ import sys
 
 sys.path.append('../')
 from utils import io_utils
+from cross_validation import cv_utils
 
 DATA_PATHS = ['/bmrNAS/people/akshay/dl/oai_data/unet_2d/train_aug/',
               '/bmrNAS/people/akshay/dl/oai_data/unet_2d/valid/',
@@ -56,6 +57,42 @@ def get_bins_list(num_pids, k):
     assert len(bin_ids) == num_pids
 
     return bin_ids
+
+
+def check_duplicates(x_list: list):
+    for i in range(len(x_list)):
+        if len(x_list[i]) != len(set(x_list[i])):
+            raise ValueError('Duplicates in list %d' % i)
+
+
+def verify_bins(k):
+    bins =    cv_utils.load_cross_validation(k)
+    assert len(bins) == k
+
+    bin_to_pid_dict = dict()
+    bin_to_scanid_dict = dict()
+
+    for bin_id in range(k):
+        bin = bins[bin_id]
+        pids = []
+        scan_ids = []
+        for filepath in bin:
+            file_info = get_file_info(os.path.basename(filepath), os.path.dirname(filepath))
+            pids.append(file_info['pid'])
+            scan_ids.append(file_info['scanid'])
+
+        bin_to_pid_dict[bin_id] = list(set(pids))
+        bin_to_scanid_dict[bin_id] = list(set(scan_ids))
+
+    max_num_pids = max([len(bin_to_pid_dict[bin_id]) for bin_id in range(k)])
+    min_num_pids = min([len(bin_to_pid_dict[bin_id]) for bin_id in range(k)])
+    assert max_num_pids - min_num_pids <= 1
+
+    max_num_scan_ids = max([len(bin_to_scanid_dict[bin_id]) for bin_id in range(k)])
+    min_num_scan_ids = min([len(bin_to_scanid_dict[bin_id]) for bin_id in range(k)])
+    assert max_num_scan_ids - min_num_scan_ids <= 2  # each pid has 2 scans
+
+
 
 
 if __name__ == '__main__':
@@ -109,9 +146,10 @@ if __name__ == '__main__':
                 raise ValueError('Bins %d and %d not exclusive' % (i, j))
 
     # Check for duplicates
-    for i in range(len(bins)):
-        if len(bins[i]) != len(set(bins[i])):
-            raise ValueError('Duplicates in bin %d' % i)
+    check_duplicates(bins)
 
     # save data to filepath
     io_utils.save_pik(bins, save_path)
+
+    # Verify list
+    verify_bins(k)
