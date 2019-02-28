@@ -356,7 +356,7 @@ class Config():
         # Include background
         subcommand_parser.add_argument('--include_background', default=False, action='store_const',
                                        const=True,
-                                       help='include background for loss function (i.e. softmax). Default: ' % False)
+                                       help='include background for loss function (i.e. softmax). Default: %s' % False)
 
         # Image size
         subcommand_parser.add_argument('--img_size', type=tuple, default=cls.IMG_SIZE, nargs='?',
