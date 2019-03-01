@@ -257,8 +257,7 @@ def train(config, vals_dict=None, class_weights=CLASS_WEIGHTS):
         for key in vals_dict.keys():
             val = vals_dict[key]
             config.set_attr(key, val)
-    
-    import pdb; pdb.set_trace()
+
     config.save_config()
     config.summary()
 

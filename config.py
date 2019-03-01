@@ -444,9 +444,11 @@ class DeeplabV3Config(Config):
         return cmd_line_vars
 
     @classmethod
-    def parse_cmd_line(cls, vargin):
+    def parse_cmd_line(cls, vargin) -> dict:
         config_dict = super().parse_cmd_line(vargin)
         assert len(config_dict['DIL_RATES']) == 3
+
+        return config_dict
 
 
 class SegnetConfig(Config):
@@ -492,7 +494,7 @@ class SegnetConfig(Config):
         return cmd_line_vars
 
     @classmethod
-    def parse_cmd_line(cls, vargin):
+    def parse_cmd_line(cls, vargin) -> dict:
         config_dict = super().parse_cmd_line(vargin)
         depth = len(config_dict['DEPTH'])
 
