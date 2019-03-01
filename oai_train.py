@@ -262,9 +262,9 @@ if __name__ == '__main__':
                             help='python seed to initialize filter weights. default=None')
         s_parser.add_argument('-k', '--k_fold_cross_validation', metavar='K', type=int, default=None, nargs='?',
                             help='Use k-fold cross-validation for training. Argument specifies k')
-        s_parser.add_argument('-ho_test', metavar='T', type=int, default=1, nargs='?',
+        s_parser.add_argument('--ho_test', metavar='T', type=int, default=1, nargs='?',
                             help='Number of hold-out test bins')
-        s_parser.add_argument('-ho_valid', metavar='V', type=int, default=1, nargs='?',
+        s_parser.add_argument('--ho_valid', metavar='V', type=int, default=1, nargs='?',
                             help='Number of hold-out validation bins')
         s_parser.add_argument('--class_weights', type=tuple, nargs='?', default=CLASS_WEIGHTS,
                             help='weight classes in order')
@@ -272,6 +272,8 @@ if __name__ == '__main__':
                               choices=sorted(list(EXP_DIR_MAP.keys())),
                               help='experiment to run'
                               )
+        s_parser.add_argument('--fine_tune_path', type=str, default='', nargs='?',
+                              help='directory to fine tune.')
 
     # Parse input arguments
     args = base_parser.parse_args()
@@ -284,6 +286,7 @@ if __name__ == '__main__':
     glob_constants.SEED = args.seed
     k_fold_cross_validation = args.k_fold_cross_validation
 
+    fine_tune_dirpath = args.fine_tune_path
     print(glob_constants.SEED)
 
     print('Using GPU %s' % gpu)
@@ -292,6 +295,10 @@ if __name__ == '__main__':
 
     c = MCONFIG.get_config(config_name = vargin['config'])
     config_dict = c.parse_cmd_line(vargin)
+
+    if fine_tune_dirpath:
+        fine_tune(fine_tune_dirpath, c, config_dict)
+        exit(0)
 
     if k_fold_cross_validation:
         ho_test = args.ho_test
