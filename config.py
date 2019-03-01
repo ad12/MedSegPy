@@ -370,6 +370,10 @@ class Config():
         subcommand_parser.add_argument('--img_size', type=tuple, default=cls.IMG_SIZE, nargs='?',
                                        help='image size. Default: %s' % str(cls.IMG_SIZE))
 
+        # Kernel initializer
+        subcommand_parser.add_argument('--kernel_initializer', type=str, default=cls.KERNEL_INITIALIZER, nargs='?',
+                                       help='kernel initializer. Default: %s' % str(cls.KERNEL_INITIALIZER))
+
         return subcommand_parser
 
     @classmethod
