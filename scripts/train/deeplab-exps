@@ -31,5 +31,5 @@ python -m oai_train deeplabv3_2d -g 0,1 --experiment best --train_batch_size 12 
 # Exp 3: Train deeplab with non-augmented data and larger batch size
 python -m oai_train deeplabv3_2d -g 0,1 --experiment best --train_batch_size 25
 
-# Exp 3: Train deeplab with non-augmented data and smaller batch size
+# Exp 4: Train deeplab with non-augmented data and smaller batch size
 python -m oai_train deeplabv3_2d -g 0,1 --experiment best --train_batch_size 12
