@@ -275,6 +275,7 @@ class Config():
                  'INITIAL_LEARNING_RATE', ''
                  'USE_STEP_DECAY', 'DROP_FACTOR', 'DROP_RATE', 'MIN_LEARNING_RATE', '',
                  'USE_EARLY_STOPPING', 'EARLY_STOPPING_MIN_DELTA', 'EARLY_STOPPING_PATIENCE', 'EARLY_STOPPING_CRITERION', '',
+                 'KERNEL_INITIALIZER', ''
                  'FINE_TUNE', 'INIT_WEIGHT_PATH' if self.FINE_TUNE else ''])
         else:
             summary_vals.extend(['TEST_RESULT_PATH', 'TEST_WEIGHT_PATH', 'TEST_BATCH_SIZE'])

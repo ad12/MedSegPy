@@ -14,7 +14,6 @@ import os
 import time
 from time import strptime, strftime
 
-import h5py
 import numpy as np
 import scipy.io as sio
 from keras import backend as K
@@ -25,7 +24,6 @@ from utils.metric_utils import MetricWrapper
 from utils import im_utils
 
 from config import DeeplabV3Config, SegnetConfig, UNetConfig, UNet2_5DConfig
-from generators.im_generator import img_generator_test, calc_generator_info, img_generator_oai_test
 from utils.metric_utils import dice_score_coefficient
 from models.models import get_model
 from keras.utils import plot_model
@@ -209,6 +207,7 @@ def test_model(config, save_file=0):
     # Write details to test file
     with open(os.path.join(test_result_path, 'results.txt'), 'w+') as f:
         f.write('Results generated on %s \n' % strftime('%X %x %Z'))
+        f.write('Best weights: %s' % os.path.basename(config.TEST_WEIGHT_PATH))
         f.write('--' * 20)
         f.write('\n')
         f.write(pids_str)
