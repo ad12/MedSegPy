@@ -224,7 +224,7 @@ class Config():
         curr_val = self.__getattribute__(attr)
 
         if (curr_val is not None and (type(val) != type(curr_val))):
-            raise ValueError('Input value is of type %s. Expected %s' % (str(type(val)), str(type(curr_val))))
+            raise ValueError('%s is of type %s. Expected %s' % (attr, str(type(val)), str(type(curr_val))))
 
         self.__setattr__(attr, val)
 
@@ -304,7 +304,7 @@ class Config():
     @classmethod
     def init_cmd_line_parser(cls, parser):
         subcommand_parser = parser.add_parser('%s' % cls.CP_SAVE_TAG, description='%s config parameters')
-
+        
         # Number of epochs
         subcommand_parser.add_argument('--n_epochs', metavar='E', type=int, default=cls.N_EPOCHS, nargs='?',
                                        help='number of training epochs. Default: %d' % cls.N_EPOCHS)
@@ -396,7 +396,6 @@ class Config():
                 assert type(val) is tuple and len(val) == 3
 
             config_dict[c_skey] = val
-
         return config_dict
 
 
