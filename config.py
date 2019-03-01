@@ -356,7 +356,7 @@ class Config():
         # Loss function
         subcommand_parser.add_argument('--loss', metavar='L', type=str, default='DICE_LOSS', nargs='?',
                                        choices=CMD_LINE_SUPPORTED_LOSSES,
-                                       help='loss function')
+                                       help='loss function. Choose from %s' % CMD_LINE_SUPPORTED_LOSSES)
 
         # Include background
         subcommand_parser.add_argument('--include_background', default=False, action='store_const',

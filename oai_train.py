@@ -33,22 +33,11 @@ def train_model(config, optimizer=None, model=None, class_weights=None):
     """
 
     # Load data from config
-    train_path = config.TRAIN_PATH
-    valid_path = config.VALID_PATH
-    train_batch_size = config.TRAIN_BATCH_SIZE
-    valid_batch_size = config.VALID_BATCH_SIZE
     cp_save_path = config.CP_SAVE_PATH
     cp_save_tag = config.CP_SAVE_TAG
     n_epochs = config.N_EPOCHS
-    file_types = config.FILE_TYPES
     pik_save_path = config.PIK_SAVE_PATH
-    tag = config.TAG
-    learn_files = config.LEARN_FILES
     loss = config.LOSS
-    layers_to_freeze = []
-
-    # Get model based on config
-    img_size = config.IMG_SIZE
 
     if model is None:
         model = get_model(config)
@@ -110,20 +99,6 @@ def train_model(config, optimizer=None, model=None, class_weights=None):
                               min_delta=config.EARLY_STOPPING_MIN_DELTA,
                               patience=config.EARLY_STOPPING_PATIENCE)
         callbacks_list.append(es_cb)
-
-    # Determine training generator based on version of config
-    # if config.VERSION > 1:
-    #     train_gen = img_generator_oai(train_path,
-    #                                   train_batch_size,
-    #                                   config=config,
-    #                                   state='training',
-    #                                   shuffle_epoch=True)
-    #     val_gen = img_generator_oai(valid_path,
-    #                                 valid_batch_size,
-    #                                 config=config,
-    #                                 state='validation',
-    #                                 shuffle_epoch=False)
-    # else:
 
     generator = im_gens.get_generator(config)
     generator.summary()

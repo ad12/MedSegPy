@@ -10,7 +10,7 @@
 #
 # @initialization protocol:
 #   1. run "chmod +x draft1-exps" from the command line
-#   2. Update `WEIGHTS_DIRECTORY` field below
+
 # @author: Arjun Desai, Stanford University
 #          (c) Stanford University, 2019
 
