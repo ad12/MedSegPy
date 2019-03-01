@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# List of deeplab experiments
+#
+# @usage (from terminal/command line):
+# ./deeplab-exps GPU_ID(s)
+# eg: "./deeplab-exps 0", "./deeplab-exps 0,1"
+#
+# @initialization protocol:
+#   1. run "chmod +x deeplab-exps" from the command line
+#
+# @author: Arjun Desai, Stanford University
+#          (c) Stanford University, 2019
+
+if [ $# -lt 1 ]; then
+	echo "Please provide gpus to run inference on in format `0` for single gpu or `0,1,2` for multiple gpus"
+	exit 125
+fi
+
+GPU=$1
+
+# Navigate to project directory
+cd ../..
+
+# Exp 1: Train deeplab with augmented data and larger batch size
+python -m oai_train deeplabv3_2d -g 0,1 --experiment best --train_batch_size 25 --augment_data
+
+# Exp 2: Train deeplab with augmented data and smaller batch size
+python -m oai_train deeplabv3_2d -g 0,1 --experiment best --train_batch_size 12 --augment_data
+
+# Exp 3: Train deeplab with non-augmented data and larger batch size
+python -m oai_train deeplabv3_2d -g 0,1 --experiment best --train_batch_size 25
+
+# Exp 3: Train deeplab with non-augmented data and smaller batch size
+python -m oai_train deeplabv3_2d -g 0,1 --experiment best --train_batch_size 12
