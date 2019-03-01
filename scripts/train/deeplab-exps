@@ -23,13 +23,13 @@ GPU=$1
 cd ../..
 
 # Exp 1: Train deeplab with augmented data and larger batch size
-python -m oai_train deeplabv3_2d -g 0,1 --experiment best --train_batch_size 25 --augment_data
+python -m oai_train deeplabv3_2d -g $GPU --experiment best --train_batch_size 25 --augment_data
 
 # Exp 2: Train deeplab with augmented data and smaller batch size
-python -m oai_train deeplabv3_2d -g 0,1 --experiment best --train_batch_size 12 --augment_data
+python -m oai_train deeplabv3_2d -g $GPU --experiment best --train_batch_size 12 --augment_data
 
 # Exp 3: Train deeplab with non-augmented data and larger batch size
-python -m oai_train deeplabv3_2d -g 0,1 --experiment best --train_batch_size 25
+python -m oai_train deeplabv3_2d -g $GPU --experiment best --train_batch_size 25
 
 # Exp 4: Train deeplab with non-augmented data and smaller batch size
-python -m oai_train deeplabv3_2d -g 0,1 --experiment best --train_batch_size 12
+python -m oai_train deeplabv3_2d -g $GPU --experiment best --train_batch_size 12
