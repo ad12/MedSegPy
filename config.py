@@ -107,6 +107,9 @@ class Config():
     # Restrict number of files learned. Default is all []
     LEARN_FILES = []
 
+    # Initializer
+    KERNEL_INITIALIZER = 'glorot_uniform'
+
     def __init__(self, cp_save_tag, state='training', create_dirs=True):
         self.SEED = glc.SEED
         if state not in ['testing', 'training']:

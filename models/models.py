@@ -5,10 +5,11 @@ from keras.initializers import glorot_uniform
 from keras.layers import Input, Conv2D
 from keras.utils import plot_model
 
+import glob_constants as glc
 from config import DeeplabV3Config, SegnetConfig, UNetConfig, \
     UNetMultiContrastConfig, UNet2_5DConfig, DeeplabV3_2_5DConfig
 from glob_constants import SEED
-from models.deeplab_2d.deeplab_model import Deeplabv3
+from models.deeplab_2d.deeplab_model import DeeplabModel
 from models.segnet_2d.segnet import Segnet_v2
 from models.unet_2d.unet_model import unet_2d_model, unet_2d_model_v2
 
@@ -75,7 +76,7 @@ def deeplabv3_2d(config):
 
     :raises ValueError: if config not of type DeeplabV3Config
     """
-    if (type(config) is not DeeplabV3Config):
+    if type(config) is not DeeplabV3Config:
         raise ValueError('config must be an instance of DeeplabV3Config')
 
     input_shape = config.IMG_SIZE
@@ -84,13 +85,14 @@ def deeplabv3_2d(config):
     activation = config.LOSS[1]
     dropout_rate = config.DROPOUT_RATE
     num_classes = config.get_num_classes()
-    model = Deeplabv3(weights=None,
-                      input_shape=input_shape,
-                      classes=num_classes,
-                      backbone='xception',
-                      OS=OS,
-                      dil_rate_input=dil_rate_input,
-                      dropout_rate=dropout_rate)
+    m = DeeplabModel(kernel_initializer=config.KERNEL_INITIALIZER, seed=glc.SEED)
+    model = m.Deeplabv3(weights=None,
+                        input_shape=input_shape,
+                        classes=num_classes,
+                        backbone='xception',
+                        OS=OS,
+                        dil_rate_input=dil_rate_input,
+                        dropout_rate=dropout_rate)
 
     # Add sigmoid activation layer -
     x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation)
@@ -226,13 +228,14 @@ def deeplabv3_2_5d(config):
     activation = config.LOSS[1]
     dropout_rate = config.DROPOUT_RATE
     num_classes = config.get_num_classes()
-    model = Deeplabv3(weights=None,
-                      input_shape=input_shape,
-                      classes=num_classes,
-                      backbone='xception',
-                      OS=OS,
-                      dil_rate_input=dil_rate_input,
-                      dropout_rate=dropout_rate)
+    m = DeeplabModel(kernel_initializer=config.KERNEL_INITIALIZER, seed=glc.SEED)
+    model = m.Deeplabv3(weights=None,
+                        input_shape=input_shape,
+                        classes=num_classes,
+                        backbone='xception',
+                        OS=OS,
+                        dil_rate_input=dil_rate_input,
+                        dropout_rate=dropout_rate)
 
     # Add sigmoid activation layer -
     x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation)
