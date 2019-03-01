@@ -263,14 +263,16 @@ class Config():
         :return:
         """
 
-        summary_vals = ['CP_SAVE_TAG']
+        summary_vals = ['CP_SAVE_TAG', 'TAG', '']
 
         if self.STATE == 'training':
             summary_vals.extend(
-                ['N_EPOCHS', 'AUGMENT_DATA', 'LOSS', 'TRAIN_BATCH_SIZE', 'VALID_BATCH_SIZE', 'USE_STEP_DECAY',
-                 'INITIAL_LEARNING_RATE', 'MIN_LEARNING_RATE', 'DROP_FACTOR', 'DROP_RATE', 'FINE_TUNE'])
-            if self.FINE_TUNE:
-                summary_vals.extend(['INIT_WEIGHT_PATH'])
+                ['N_EPOCHS', 'AUGMENT_DATA', 'LOSS', 'USE_CROSS_VALIDATION', '',
+                 'TRAIN_BATCH_SIZE', 'VALID_BATCH_SIZE', '',
+                 'INITIAL_LEARNING_RATE', ''
+                 'USE_STEP_DECAY', 'DROP_FACTOR', 'DROP_RATE', 'MIN_LEARNING_RATE', '',
+                 'USE_EARLY_STOPPING', 'EARLY_STOPPING_MIN_DELTA', 'EARLY_STOPPING_PATIENCE', 'EARLY_STOPPING_CRITERION', '',
+                 'FINE_TUNE', 'INIT_WEIGHT_PATH' if self.FINE_TUNE else ''])
         else:
             summary_vals.extend(['TEST_RESULT_PATH', 'TEST_WEIGHT_PATH', 'TEST_BATCH_SIZE'])
 
@@ -282,6 +284,9 @@ class Config():
         print('==' * 40)
 
         for attr in summary_vals:
+            if attr == '':
+                print('')
+                continue
             print(attr + ": " + str(self.__getattribute__(attr)))
 
         print('==' * 40)
