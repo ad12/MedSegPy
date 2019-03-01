@@ -131,7 +131,7 @@ def write_prob_map(dir_path, y_probs):
         slice_name = '%03d.png' % i
         im = y_probs[i, :, :] * 255
         im = im[..., np.newaxis].astype(np.uint8)
-        imC = cv2.applyColorMap(im, cv2.COLORMAP_JET)
+        imC = cv2.applyColorMap(im, cv2.COLORMAP_HOT)
         cv2.imwrite(os.path.join(dir_path, slice_name), imC)
 
 
