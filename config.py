@@ -550,6 +550,39 @@ class UNetConfig(Config):
         return cmd_line_vars
 
 
+class ResidualUNet(Config):
+    CP_SAVE_TAG = 'res_unet'
+    TEST_WEIGHT_PATH = ''
+
+    DEPTH = 6
+    NUM_FILTERS = None
+
+    DROPOUT_RATE = 0.0
+    LAYER_ORDER = ['relu', 'bn', 'dropout', 'conv']
+
+    def __init__(self, state='training', create_dirs=True):
+        super().__init__(self.CP_SAVE_TAG, state, create_dirs=create_dirs)
+
+    @classmethod
+    def init_cmd_line_parser(cls, parser):
+        subparser = super().init_cmd_line_parser(parser)
+
+        subparser.add_argument('--depth', type=int, default=cls.DEPTH, nargs='?',
+                               help='network depth. Default: %d' % cls.DEPTH)
+        subparser.add_argument('--dropout_rate', type=float, default=cls.DROPOUT_RATE, nargs='?',
+                               help='dropout rate. Default: %d' % cls.DROPOUT_RATE)
+        subparser.add_argument('--layer_order', type=list, default=cls.LAYER_ORDER, nargs='?',
+                               help='layer order. Default: %s' % cls.LAYER_ORDER)
+
+        return subparser
+
+    @classmethod
+    def __get_cmd_line_vars__(cls):
+        cmd_line_vars = super().__get_cmd_line_vars__()
+        cmd_line_vars.extend(['depth', 'dropout_rate', 'layer_order'])
+        return cmd_line_vars
+
+
 class EnsembleUDSConfig(Config):
     CP_SAVE_TAG = ENSEMBLE_UDS_NAME
     AUGMENT_DATA = False
