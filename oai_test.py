@@ -23,7 +23,7 @@ from utils import io_utils
 from utils.metric_utils import MetricWrapper
 from utils import im_utils
 
-from config import DeeplabV3Config, SegnetConfig, UNetConfig, UNet2_5DConfig
+from config import DeeplabV3Config, SegnetConfig, UNetConfig, UNet2_5DConfig, ResidualUNet
 from utils.metric_utils import dice_score_coefficient
 from models.models import get_model
 from keras.utils import plot_model
@@ -404,7 +404,7 @@ DIL_RATES_KEY = 'DIL_RATES'
 
 def get_config(name):
     configs = [DeeplabV3Config(create_dirs=False), UNetConfig(create_dirs=False), SegnetConfig(create_dirs=False),
-               UNet2_5DConfig(create_dirs=False)]
+               UNet2_5DConfig(create_dirs=False), ResidualUNet(create_dirs=False)]
 
     for config in configs:
         if config.CP_SAVE_TAG == name:
