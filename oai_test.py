@@ -394,7 +394,7 @@ VOLUME_PATH_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_seg_networks/volume_
 BEST_NETWORK_PATHS_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/best_network/%s'
 EXP_KEY = 'exp'
 BATCH_TEST_KEY = 'batch'
-SUPPORTED_ARCHITECTURES = ['unet_2d', 'deeplabv3_2d', 'segnet_2d']
+SUPPORTED_ARCHITECTURES = ['unet_2d', 'deeplabv3_2d', 'segnet_2d', 'res_unet']
 ARCHITECTURE_KEY = 'architecture'
 OVERWRITE_KEY = 'ov'
 
