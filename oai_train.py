@@ -281,7 +281,6 @@ if __name__ == '__main__':
 
     experiment_filepath = EXP_DIR_MAP[args.experiment[0]]
     MCONFIG.SAVE_PATH_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_seg_networks', experiment_filepath)
-
     gpu = args.gpu
     glob_constants.SEED = args.seed
     k_fold_cross_validation = args.k_fold_cross_validation

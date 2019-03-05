@@ -390,6 +390,7 @@ class Config():
     @classmethod
     def parse_cmd_line(cls, vargin):
         config_dict = dict()
+        import pdb; pdb.set_trace()
         for skey in cls.__get_cmd_line_vars__():
             if skey not in vargin.keys():
                 continue
@@ -560,6 +561,9 @@ class ResidualUNet(Config):
     DROPOUT_RATE = 0.0
     LAYER_ORDER = ['relu', 'bn', 'dropout', 'conv']
 
+    USE_SE_BLOCK = False
+    SE_RATIO = 16
+
     def __init__(self, state='training', create_dirs=True):
         super().__init__(self.CP_SAVE_TAG, state, create_dirs=create_dirs)
 
@@ -573,6 +577,11 @@ class ResidualUNet(Config):
                                help='dropout rate. Default: %d' % cls.DROPOUT_RATE)
         subparser.add_argument('--layer_order', type=list, default=cls.LAYER_ORDER, nargs='?',
                                help='layer order. Default: %s' % cls.LAYER_ORDER)
+
+        subparser.add_argument('--use_se_block', action='store_const', default=False, const=True,
+                               help='use squeeze-excitation block. Default: False')
+        subparser.add_argument('--se_ratio', type=int, default=cls.SE_RATIO, nargs='?',
+                               help='squeeze-excitation downsampling ratio. Default: %d' % cls.SE_RATIO)
 
         return subparser
 
