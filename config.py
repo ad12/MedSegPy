@@ -591,6 +591,11 @@ class ResidualUNet(Config):
         cmd_line_vars.extend(['depth', 'dropout_rate', 'layer_order'])
         return cmd_line_vars
 
+    def summary(self, additional_vars=[]):
+        summary_attrs = ['DEPTH', 'NUM_FILTERS', 'DROPOUT_RATE', '',
+                         'USE_SE_BLOCK', 'SE_RATIO']
+        super().summary(summary_attrs)
+
 
 class EnsembleUDSConfig(Config):
     CP_SAVE_TAG = ENSEMBLE_UDS_NAME

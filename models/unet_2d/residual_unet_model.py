@@ -188,6 +188,6 @@ def residual_unet_2d(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, output_mo
 
 
 if __name__ == '__main__':
-    save_path = '../imgs/res_unet2d.png'
-    m = residual_unet_2d()
+    save_path = '../imgs/res_unet2d_se.png'
+    m = residual_unet_2d(use_squeeze_excitation=True)
     plot_model(m, to_file=save_path)
