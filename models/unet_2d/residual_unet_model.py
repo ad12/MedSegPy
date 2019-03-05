@@ -2,14 +2,16 @@ from __future__ import print_function, division
 
 import os
 
+import keras.backend as K
 import numpy as np
 from keras.engine.topology import get_source_inputs
 from keras.initializers import he_normal
 from keras.layers import BatchNormalization as BN
-from keras.layers import Input, Conv2D, MaxPooling2D, Conv2DTranspose, Dropout, Concatenate, Activation, Add
+from keras.layers import Input, Conv2D, MaxPooling2D, Conv2DTranspose, Dropout, Concatenate, Activation, Add, \
+    GlobalAveragePooling2D, Dense, Reshape, Permute, multiply
 from keras.models import Model
-from keras.activations import relu
 from keras.utils import plot_model
+
 # List of tissues that can be segmented
 FEMORAL_CARTILAGE_STR = 'fc'
 MENISCUS_STR = 'men'
@@ -29,33 +31,59 @@ WEIGHTS_DICT = {FEMORAL_CARTILAGE_STR: os.path.join(__ABS_DIR__, 'weights/unet_2
 DEFAULT_INPUT_SIZE = (288, 288, 1)
 
 
-def res_block(xi, base_name: str, nfeatures: int, nlayers: int=2, kernel_size=(3, 3), seed=None,
-              layer_order=['conv', 'relu', 'bn'], dropout_rate=0.0):
+def squeeze_excitation_block(xi, base_name: str, seed=None, ratio=8):
+    """Adapted from https://github.com/titu1994/keras-squeeze-excite-network"""
+    x = xi
+    channel_axis = 1 if K.image_data_format() == "channels_first" else -1
+    filters = x._keras_shape[channel_axis]
+    se_shape = (1, 1, filters)
+
+    se = GlobalAveragePooling2D(name='%s_se_glob_avg_pool' % base_name)(x)
+    se = Reshape(se_shape, name='%s_se_reshape' % base_name)(se)
+    se = Dense(filters // ratio, name='%s_se_fc1' % base_name, kernel_initializer=he_normal(seed), use_bias=False)(se)
+    se = Activation('relu', name='%s_se_relu' % base_name)(se)
+    se = Dense(filters, use_bias=False)(se)
+    se = Activation('sigmoid', name='%s_se_sigmoid' % base_name)(se)
+
+    if K.image_data_format() == 'channels_first':
+        se = Permute((3, 1, 2))(se)
+
+    x = multiply([x, se], name='%s_se_scale' % base_name)
+    return x
+
+
+def res_block(xi, base_name: str, nfeatures: int, nlayers: int = 2, kernel_size=(3, 3), seed=None,
+              layer_order=['conv', 'relu', 'bn'], dropout_rate=0.0, use_squeeze_excitation=False,
+              squeeze_excitation_ratio=8):
     x = xi
 
     layers = []
     for l in range(nlayers):
         layers_dict = {'conv': Conv2D(nfeatures, kernel_size=kernel_size, padding='same',
-                                 kernel_initializer=he_normal(seed=seed),
-                                 name='%s_conv_%d' % (base_name, l+1)),
-                  'bn': BN(axis=-1,
-                           momentum=0.95,
-                           epsilon=0.001,
-                           name='%s_bn_%d' % (base_name, l + 1)),
-                  'relu': Activation('relu', name='%s_relu_%d' % (base_name, l+1)),
-                  'dropout': Dropout(rate=dropout_rate, name='%s_dropout_%d' % (base_name, l+1))}
+                                      kernel_initializer=he_normal(seed=seed),
+                                      name='%s_conv_%d' % (base_name, l + 1)),
+                       'bn': BN(axis=-1,
+                                momentum=0.95,
+                                epsilon=0.001,
+                                name='%s_bn_%d' % (base_name, l + 1)),
+                       'relu': Activation('relu', name='%s_relu_%d' % (base_name, l + 1)),
+                       'dropout': Dropout(rate=dropout_rate, name='%s_dropout_%d' % (base_name, l + 1))}
 
         for layer in layer_order:
             x = layers_dict[layer](x)
             layers.append(x)
 
-    x = Add()([x, xi])
+    if use_squeeze_excitation:
+        x = squeeze_excitation_block(x, base_name=base_name, seed=seed, ratio=squeeze_excitation_ratio)
 
+    x = Add()([x, xi])
 
     return x
 
+
 def residual_unet_2d(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, output_mode=None, num_filters=None,
-                     depth=6, dropout_rate=0.0, layer_order=['relu', 'bn', 'dropout', 'conv']):
+                     depth=6, dropout_rate=0.0, layer_order=['relu', 'bn', 'dropout', 'conv'],
+                     use_squeeze_excitation=False, squeeze_excitation_ratio=8):
     """Generate Unet 2D model compatible with Keras 2
 
     :param input_size: tuple of input size - format: (height, width, 1)
@@ -84,16 +112,18 @@ def residual_unet_2d(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, output_mo
     # step down convolutional layers
     pool = inputs
     for depth_cnt in range(depth):
-        conv = Conv2D(nfeatures[depth_cnt], kernel_size=(3,3), padding='same',
+        conv = Conv2D(nfeatures[depth_cnt], kernel_size=(3, 3), padding='same',
                       kernel_initializer=he_normal(seed=SEED),
-                      name='enc_%d_input' % (depth_cnt+1))(pool)
+                      name='enc_%d_input' % (depth_cnt + 1))(pool)
 
         conv = res_block(conv, base_name='enc_%d' % (depth_cnt + 1), nfeatures=nfeatures[depth_cnt],
-                         layer_order = layer_order,
+                         layer_order=layer_order,
                          dropout_rate=dropout_rate,
-                         seed=SEED)
+                         seed=SEED,
+                         use_squeeze_excitation=use_squeeze_excitation,
+                         squeeze_excitation_ratio=squeeze_excitation_ratio)
 
-        conv = Activation('relu', name='enc_%d_ouput_relu' % (depth_cnt+1))(conv)
+        conv = Activation('relu', name='enc_%d_ouput_relu' % (depth_cnt + 1))(conv)
         conv = BN(axis=-1, momentum=0.95, epsilon=0.001, name='enc_%d_ouput_bn' % (depth_cnt + 1))(conv)
 
         conv_ptr.append(conv)
@@ -108,7 +138,7 @@ def residual_unet_2d(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, output_mo
             elif (xres % 2 == 1):
                 pooling_size = (3, 3)
 
-            pool = MaxPooling2D(pool_size=pooling_size, name='enc_maxpool_%d' % (depth_cnt+1))(conv)
+            pool = MaxPooling2D(pool_size=pooling_size, name='enc_maxpool_%d' % (depth_cnt + 1))(conv)
 
     # step up convolutional layers
     for depth_cnt in range(depth - 2, -1, -1):
@@ -126,17 +156,19 @@ def residual_unet_2d(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, output_mo
                                                   padding='same',
                                                   strides=unpooling_size,
                                                   kernel_initializer=he_normal(seed=SEED),
-                                                  name='dec_deconv_%d' % (depth_cnt+1))(conv),
+                                                  name='dec_deconv_%d' % (depth_cnt + 1))(conv),
                                   conv_ptr[depth_cnt]])
 
-        up = Conv2D(nfeatures[depth_cnt], kernel_size=(3,3), padding='same',
-                      kernel_initializer=he_normal(seed=SEED),
-                      name='dec_%d_input' % (depth_cnt+1))(up)
+        up = Conv2D(nfeatures[depth_cnt], kernel_size=(3, 3), padding='same',
+                    kernel_initializer=he_normal(seed=SEED),
+                    name='dec_%d_input' % (depth_cnt + 1))(up)
 
-        conv = res_block(up, base_name='dec_%d' % (depth_cnt+1), nfeatures=nfeatures[depth_cnt], seed=SEED,
-                         layer_order=layer_order)
+        conv = res_block(up, base_name='dec_%d' % (depth_cnt + 1), nfeatures=nfeatures[depth_cnt], seed=SEED,
+                         layer_order=layer_order,
+                         use_squeeze_excitation=use_squeeze_excitation,
+                         squeeze_excitation_ratio=squeeze_excitation_ratio)
 
-        conv = Activation('relu', name='dec_%d_ouput_relu' % (depth_cnt+1))(conv)
+        conv = Activation('relu', name='dec_%d_ouput_relu' % (depth_cnt + 1))(conv)
         conv = BN(axis=-1, momentum=0.95, epsilon=0.001, name='dec_%d_ouput_bn' % (depth_cnt + 1))(conv)
 
     if output_mode is not None:
@@ -153,6 +185,7 @@ def residual_unet_2d(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, output_mo
     model = Model(inputs=inputs, outputs=[recon])
 
     return model
+
 
 if __name__ == '__main__':
     save_path = '../imgs/res_unet2d.png'

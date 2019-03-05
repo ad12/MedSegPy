@@ -55,7 +55,9 @@ def residual_unet(config):
     DEPTH = config.DEPTH
     NUM_FILTERS = config.NUM_FILTERS
     model = residual_unet_2d(input_size=input_shape, depth=DEPTH, num_filters=NUM_FILTERS, layer_order=config.LAYER_ORDER,
-                             dropout_rate=config.DROPOUT_RATE)
+                             dropout_rate=config.DROPOUT_RATE,
+                             use_squeeze_excitation=config.USE_SE_BLOCK,
+                             squeeze_excitation_ratio=config.SE_RATIO)
 
     # Add activation
     x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation)
