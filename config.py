@@ -637,7 +637,7 @@ class DeeplabV3_2_5DConfig(DeeplabV3Config):
         return self.IMG_SIZE[2]
 
 
-SUPPORTED_CONFIGS = [UNetConfig, SegnetConfig, DeeplabV3Config]
+SUPPORTED_CONFIGS = [UNetConfig, SegnetConfig, DeeplabV3Config, ResidualUNet]
 
 
 def get_config(config_name):
