@@ -390,7 +390,6 @@ class Config():
     @classmethod
     def parse_cmd_line(cls, vargin):
         config_dict = dict()
-        import pdb; pdb.set_trace()
         for skey in cls.__get_cmd_line_vars__():
             if skey not in vargin.keys():
                 continue
@@ -562,7 +561,7 @@ class ResidualUNet(Config):
     LAYER_ORDER = ['relu', 'bn', 'dropout', 'conv']
 
     USE_SE_BLOCK = False
-    SE_RATIO = 16
+    SE_RATIO = 8
 
     def __init__(self, state='training', create_dirs=True):
         super().__init__(self.CP_SAVE_TAG, state, create_dirs=create_dirs)
