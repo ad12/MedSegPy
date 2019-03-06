@@ -226,7 +226,10 @@ class Config():
             raise ValueError('The attribute %s does not exist' % attr)
         curr_val = self.__getattribute__(attr)
 
-        if (curr_val is not None and (type(val) != type(curr_val))):
+        if type(val) is str and type(curr_val) is not str:
+            val = utils.convert_data_type(var_string=val, data_type=type(curr_val))
+
+        if curr_val is not None and (type(val) != type(curr_val)):
             raise ValueError('%s is of type %s. Expected %s' % (attr, str(type(val)), str(type(curr_val))))
 
         self.__setattr__(attr, val)
@@ -297,7 +300,7 @@ class Config():
         print('')
 
     def get_num_classes(self):
-        if (self.INCLUDE_BACKGROUND):
+        if self.INCLUDE_BACKGROUND:
             return len(self.TISSUES) + 1
 
         return len(self.TISSUES)
@@ -368,7 +371,7 @@ class Config():
                                        help='include background for loss function (i.e. softmax). Default: %s' % False)
 
         # Image size
-        subcommand_parser.add_argument('--img_size', type=tuple, default=cls.IMG_SIZE, nargs='?',
+        subcommand_parser.add_argument('--img_size', type=str, default=str(cls.IMG_SIZE), nargs='?',
                                        help='image size. Default: %s' % str(cls.IMG_SIZE))
 
         # Kernel initializer
@@ -401,9 +404,11 @@ class Config():
                 val = get_training_loss_from_str(vargin[skey].upper())
 
             if skey == 'img_size':
+                val = utils.convert_data_type(vargin[skey], data_type=type(cls.IMG_SIZE))
                 assert type(val) is tuple and len(val) == 3
 
             config_dict[c_skey] = val
+        import pdb; pdb.set_trace()
         return config_dict
 
 
@@ -442,7 +447,7 @@ class DeeplabV3Config(Config):
 
         subparser.add_argument('--os', type=int, default=cls.OS, nargs='?',
                                help='output stride. Default: %d' % cls.OS)
-        subparser.add_argument('--dil_rates', type=tuple, default=cls.DIL_RATES, nargs='?',
+        subparser.add_argument('--dil_rates', type=str, default=str(cls.DIL_RATES), nargs='?',
                                help='dilation rates. Default: %s' % str(cls.DIL_RATES))
         subparser.add_argument('--dropout_rate', type=float, default=cls.DROPOUT_RATE, nargs='?',
                                help='dropout rate before classification layer')
@@ -492,9 +497,9 @@ class SegnetConfig(Config):
 
         subparser.add_argument('--depth', type=int, default=cls.DEPTH, nargs='?',
                                help='network depth. Default: %d' % cls.DEPTH)
-        subparser.add_argument('--num_conv_layers', type=list, default=cls.NUM_CONV_LAYERS, nargs='?',
+        subparser.add_argument('--num_conv_layers', type=str, default=str(cls.NUM_CONV_LAYERS), nargs='?',
                                help='number of convolutional layers. Default: %s' % str(cls.NUM_CONV_LAYERS))
-        subparser.add_argument('--num_filters', type=list, default=cls.NUM_FILTERS, nargs='?',
+        subparser.add_argument('--num_filters', type=str, default=str(cls.NUM_FILTERS), nargs='?',
                                help='number of filters at each depth layer. Default: ' % cls.NUM_FILTERS)
 
         return subparser
@@ -510,8 +515,14 @@ class SegnetConfig(Config):
         config_dict = super().parse_cmd_line(vargin)
         depth = len(config_dict['DEPTH'])
 
-        assert len(config_dict['NUM_CONV_LAYERS']) == depth, "Number of conv layers must be specified for each depth"
-        assert len(config_dict['NUM_FILTERS']) == depth, "Number of filters must be specified for each depth"
+        num_conv_layers = utils.convert_data_type(config_dict['NUM_CONV_LAYERS'], type(cls.NUM_CONV_LAYERS))
+        num_filters = utils.convert_data_type(config_dict['NUM_FILTERS'], type(cls.NUM_FILTERS))
+
+        assert len(num_conv_layers) == depth, "Number of conv layers must be specified for each depth"
+        assert len(num_filters) == depth, "Number of filters must be specified for each depth"
+
+        config_dict['NUM_CONV_LAYERS'] = num_conv_layers
+        config_dict['NUM_FILTERS'] = num_filters
 
         return config_dict
 
@@ -574,7 +585,7 @@ class ResidualUNet(Config):
                                help='network depth. Default: %d' % cls.DEPTH)
         subparser.add_argument('--dropout_rate', type=float, default=cls.DROPOUT_RATE, nargs='?',
                                help='dropout rate. Default: %d' % cls.DROPOUT_RATE)
-        subparser.add_argument('--layer_order', type=list, default=cls.LAYER_ORDER, nargs='?',
+        subparser.add_argument('--layer_order', type=str, default=str(cls.LAYER_ORDER), nargs='?',
                                help='layer order. Default: %s' % cls.LAYER_ORDER)
 
         subparser.add_argument('--use_se_block', action='store_const', default=False, const=True,
