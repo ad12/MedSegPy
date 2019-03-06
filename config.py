@@ -587,7 +587,7 @@ class ResidualUNet(Config):
     @classmethod
     def __get_cmd_line_vars__(cls):
         cmd_line_vars = super().__get_cmd_line_vars__()
-        cmd_line_vars.extend(['depth', 'dropout_rate', 'layer_order'])
+        cmd_line_vars.extend(['depth', 'dropout_rate', 'layer_order', 'use_se_block', 'se_ratio'])
         return cmd_line_vars
 
     def summary(self, additional_vars=[]):
