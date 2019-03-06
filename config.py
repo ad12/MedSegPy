@@ -408,7 +408,6 @@ class Config():
                 assert type(val) is tuple and len(val) == 3
 
             config_dict[c_skey] = val
-        import pdb; pdb.set_trace()
         return config_dict
 
 
@@ -603,6 +602,7 @@ class ResidualUNet(Config):
 
     def summary(self, additional_vars=[]):
         summary_attrs = ['DEPTH', 'NUM_FILTERS', 'DROPOUT_RATE', '',
+                         'LAYER_ORDER', '',
                          'USE_SE_BLOCK', 'SE_RATIO']
         super().summary(summary_attrs)
 
