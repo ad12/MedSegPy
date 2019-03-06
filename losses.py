@@ -36,6 +36,8 @@ def get_training_loss_from_str(loss_str: str):
         return BINARY_CROSS_ENTROPY_SIG_LOSS
     elif loss_str == 'FOCAL_LOSS':
         return FOCAL_LOSS
+    elif loss_str == 'DICE_FOCAL_LOSS':
+        return DICE_FOCAL_LOSS
     else:
         raise ValueError('%s not supported' % loss_str)
 
