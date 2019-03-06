@@ -13,6 +13,7 @@ import argparse
 import os
 import time
 from time import strptime, strftime
+import h5py
 
 import numpy as np
 import scipy.io as sio
@@ -173,10 +174,11 @@ def test_model(config, save_file=0):
         y_total.append(yt)
 
         if save_file == 1:
-            # save_name = '%s/%s_recon.pred' % (test_result_path, fname)
-            # with h5py.File(save_name, 'w') as h5f:
-            #     h5f.create_dataset('recon', data=recon)
-            #     h5f.create_dataset('gt', data=y_test)
+            if SAVE_H5_DATA:
+                save_name = '%s/%s_recon.pred' % (test_result_path, fname)
+                with h5py.File(save_name, 'w') as h5f:
+                    h5f.create_dataset('recon', data=recon)
+                    h5f.create_dataset('gt', data=y_test)
 
             # in case of 2.5D, we want to only select center slice
             x_write = x_test[..., x_test.shape[-1] // 2]
@@ -401,6 +403,7 @@ OVERWRITE_KEY = 'ov'
 OS_KEY = 'OS'
 DIL_RATES_KEY = 'DIL_RATES'
 
+SAVE_H5_DATA = False
 
 def get_config(name):
     configs = [DeeplabV3Config(create_dirs=False), UNetConfig(create_dirs=False), SegnetConfig(create_dirs=False),
@@ -446,6 +449,8 @@ def add_base_architecture_parser(architecture_parser, supported_architectures=SU
         parser.add_argument('-c', '--cpu', metavar='c', action='store_const', default=False, const=True)
         parser.add_argument('-date', nargs='?')
         parser.add_argument('-batch_size', default=72, type=int, nargs='?')
+        parser.add_argument('-save_h5_data', action='store_const', default=False, const=True,
+                            help='save ground truth and prediction data in h5 format')
 
         for v in add_vals:
             parser.add_argument('-%s' % v, nargs='?', type=str, default=None)
@@ -740,5 +745,5 @@ if __name__ == '__main__':
         os.environ['CUDA_VISIBLE_DEVICES'] = gpu
 
     vargin = vars(args)
-
+    SAVE_H5_DATA = vargin['save_h5_data']
     args.func(vargin)
