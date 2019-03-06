@@ -15,8 +15,11 @@ BINARY_CROSS_ENTROPY_SIG_LOSS = ('binary_crossentropy', 'sigmoid')
 FOCAL_LOSS = ('focal_loss', 'sigmoid')
 FOCAL_LOSS_GAMMA = 3.0
 
+DICE_FOCAL_LOSS = ('dice_focal_loss', 'sigmoid')
+
 CMD_LINE_SUPPORTED_LOSSES = ['DICE_LOSS', 'WEIGHTED_CROSS_ENTROPY_LOSS', 'WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS',
-                             'BINARY_CROSS_ENTROPY_LOSS', 'BINARY_CROSS_ENTROPY_SIG_LOSS', 'FOCAL_LOSS']
+                             'BINARY_CROSS_ENTROPY_LOSS', 'BINARY_CROSS_ENTROPY_SIG_LOSS', 'FOCAL_LOSS',
+                             'DICE_FOCAL_LOSS']
 
 
 def get_training_loss_from_str(loss_str: str):
@@ -54,9 +57,16 @@ def get_training_loss(loss, weights=None):
         if weights is None:
             raise ValueError("Weights must be specified to initialize weighted_cross_entropy")
         return weighted_categorical_crossentropy_sigmoid(weights)
+    elif loss == DICE_FOCAL_LOSS:
+        return dice_focal_loss
     else:
         raise ValueError("Loss type not supported")
 
+def dice_focal_loss(y_true, y_pred):
+    dsc = dice_loss(y_true, y_pred)
+    fc = focal_loss(FOCAL_LOSS_GAMMA)(y_true, y_pred)
+
+    return dsc + fc
 
 # Dice function loss optimizer
 def dice_loss(y_true, y_pred):
@@ -147,7 +157,7 @@ def weighted_categorical_crossentropy_sigmoid(weights):
     return loss
 
 
-def focal_loss(gamma=3.0):
+def focal_loss(gamma=FOCAL_LOSS_GAMMA):
     """
     Focal loss as implemented by facebook
 

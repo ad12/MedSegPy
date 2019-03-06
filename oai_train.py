@@ -18,7 +18,7 @@ import config as MCONFIG
 import glob_constants
 from cross_validation import cv_utils
 from generators import im_gens
-from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS, dice_loss
+from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS, dice_loss, focal_loss
 from models.models import get_model
 from utils import io_utils, parallel_utils as putils
 
@@ -72,7 +72,7 @@ def train_model(config, optimizer=None, model=None, class_weights=None):
     loss_func = get_training_loss(loss, weights=class_weights)
     lr_metric = get_lr_metric(optimizer)
     model.compile(optimizer=optimizer,
-                  loss=loss_func, metrics=[lr_metric, dice_loss])
+                  loss=loss_func, metrics=[lr_metric, dice_loss, focal_loss()])
 
     # set image format to be (N, dim1, dim2, dim3, ch)
     K.set_image_data_format('channels_last')
