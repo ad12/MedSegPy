@@ -173,7 +173,7 @@ def focal_loss(gamma=FOCAL_LOSS_GAMMA):
     @:param: weights: numpy array of shape (C,) where C is the number of classes
     """
 
-    def loss(y_true, y_pred):
+    def f_loss(y_true, y_pred):
         y_true = K.flatten(y_true)
         y_pred = K.flatten(y_pred)
 
@@ -187,7 +187,7 @@ def focal_loss(gamma=FOCAL_LOSS_GAMMA):
 
         return loss_val
 
-    return loss
+    return f_loss
 
 
 def wasserstein_disagreement_map(prediction, ground_truth, M):
