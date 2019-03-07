@@ -111,7 +111,7 @@ def train_model(config, optimizer=None, model=None, class_weights=None):
     val_gen = generator.img_generator(state='validation')
 
     # plot model
-    plot_model(model, to_file=os.path.join(cp_save_path, 'model.png'))
+    plot_model(model, to_file=os.path.join(cp_save_path, 'model.png'), show_shapes=True)
 
     # Start training
     model.fit_generator(train_gen,
