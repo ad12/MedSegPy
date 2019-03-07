@@ -36,3 +36,6 @@ class TestResults(unittest.TestCase):
             expected_best_weights = utils.get_weights(os.path.dirname(exp))
 
             assert weights == expected_best_weights, 'weights %s not expected %s' % (weights, expected_best_weights)
+
+if __name__ == '__main__':
+    unittest.main()
