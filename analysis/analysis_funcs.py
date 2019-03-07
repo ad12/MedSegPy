@@ -24,7 +24,7 @@ import scipy.io as sio
 
 import seaborn as sns
 
-import utils
+from utils import io_utils, utils
 
 from scipy import optimize as sop
 from matplotlib.ticker import ScalarFormatter
@@ -38,7 +38,7 @@ color_brewer_2 = ['#8dd3c7', '#ffffb3', '#bebada', '#fb8072', '#80b1d3']  # not 
 cpal = sns.color_palette("pastel", 8)
 # cpal = sns.color_palette(american_palette)
 
-SAVE_PATH = utils.check_dir('/bmrNAS/people/arjun/msk_seg_networks/analysis/exp_graphs')
+SAVE_PATH = io_utils.check_dir('/bmrNAS/people/arjun/msk_seg_networks/analysis/exp_graphs')
 
 import stats
 

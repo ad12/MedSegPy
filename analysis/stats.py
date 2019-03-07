@@ -13,7 +13,7 @@ import pandas as pd
 from scipy import stats
 import scikit_posthocs as sp
 
-import utils
+from utils import io_utils, utils
 
 from analysis.analysis_funcs import cpal
 from analysis import analysis_funcs as af
@@ -21,7 +21,7 @@ from analysis import analysis_funcs as af
 from scipy import optimize as sop
 
 ALPHA = 0.05
-SAVE_PATH = utils.check_dir('/bmrNAS/people/arjun/msk_seg_networks/analysis/exp_graphs')
+SAVE_PATH = io_utils.check_dir('/bmrNAS/people/arjun/msk_seg_networks/analysis/exp_graphs')
 
 
 def parse_results_file(dirpath):
