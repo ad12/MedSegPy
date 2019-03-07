@@ -42,7 +42,7 @@ python -m oai_train unet_2d --use_early_stopping --early_stopping_min_delta 1e-5
 fi
 
 # Exp 2: Training Batch Size
-if [[ "$EXP" -eq 1 ]]; then
+if [[ "$EXP" -eq 2 ]]; then
 python -m oai_train unet_2d --train_batch_size 6 $BASE_ARG_STR
 python -m oai_train unet_2d --train_batch_size 12 $BASE_ARG_STR
 python -m oai_train unet_2d --train_batch_size 24 $BASE_ARG_STR

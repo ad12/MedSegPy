@@ -301,7 +301,6 @@ if __name__ == '__main__':
     print('Using GPU %s' % gpu)
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
-    global SAVE_BEST_WEIGHTS
     SAVE_BEST_WEIGHTS = not args.save_all_weights
 
     c = MCONFIG.get_config(config_name = vargin['config'])
