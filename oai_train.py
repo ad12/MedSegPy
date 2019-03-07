@@ -21,6 +21,7 @@ from generators import im_gens
 from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS, dice_loss, focal_loss
 from models.models import get_model
 from utils import io_utils, parallel_utils as putils
+import mri_utils
 
 CLASS_WEIGHTS = np.asarray([100, 1])
 SAVE_BEST_WEIGHTS = True
@@ -274,8 +275,12 @@ if __name__ == '__main__':
                               )
         s_parser.add_argument('--fine_tune_path', type=str, default='', nargs='?',
                               help='directory to fine tune.')
+
         s_parser.add_argument('--save_all_weights', default=False, action='store_const', const=True,
                               help="store weights for each epoch. Default: False")
+
+        # add support for specifying tissues
+        mri_utils.init_cmd_line(s_parser)
 
     # Parse input arguments
     args = base_parser.parse_args()
@@ -301,6 +306,9 @@ if __name__ == '__main__':
 
     c = MCONFIG.get_config(config_name = vargin['config'])
     config_dict = c.parse_cmd_line(vargin)
+
+    # parse tissues
+    config_dict['TISSUES'] = mri_utils.parse_tissues(vargin)
 
     if fine_tune_dirpath:
         fine_tune(fine_tune_dirpath, c, config_dict)

@@ -273,7 +273,8 @@ class Config():
 
         if self.STATE == 'training':
             summary_vals.extend(
-                ['N_EPOCHS', 'AUGMENT_DATA', 'LOSS', 'USE_CROSS_VALIDATION', '',
+                ['TISSUES', '',
+                 'N_EPOCHS', 'AUGMENT_DATA', 'LOSS', 'USE_CROSS_VALIDATION', '',
                  'TRAIN_BATCH_SIZE', 'VALID_BATCH_SIZE', '',
                  'INITIAL_LEARNING_RATE', ''
                  'USE_STEP_DECAY', 'DROP_FACTOR', 'DROP_RATE', 'MIN_LEARNING_RATE', '',
