@@ -42,5 +42,7 @@ class TestResults(unittest.TestCase):
             print('%s valid' % exp)
 
 if __name__ == '__main__':
-    print(sys.argv)
+    if len(sys.argv) > 1:
+        GPU=sys.argv[1]
+
     unittest.main()
