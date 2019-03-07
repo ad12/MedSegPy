@@ -5,9 +5,9 @@ from time import localtime, strftime
 
 import glob_constants as glc
 import mri_utils
-from utils import io_utils
 import utils.utils as utils
 from losses import DICE_LOSS, CMD_LINE_SUPPORTED_LOSSES, get_training_loss_from_str
+from utils import io_utils
 
 DEPRECATED_KEYS = ['NUM_CLASSES']
 
@@ -20,6 +20,7 @@ ENSEMBLE_UDS_NAME = 'ensemble_uds'
 SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/oai_data'
 
 SUPPORTED_CONFIGS_NAMES = [DEEPLABV3_NAME, SEGNET_NAME, UNET_NAME]
+
 
 class Config():
     VERSION = 4
@@ -277,10 +278,11 @@ class Config():
                  'N_EPOCHS', 'AUGMENT_DATA', 'LOSS', 'USE_CROSS_VALIDATION', '',
                  'TRAIN_BATCH_SIZE', 'VALID_BATCH_SIZE', '',
                  'INITIAL_LEARNING_RATE', ''
-                 'USE_STEP_DECAY', 'DROP_FACTOR', 'DROP_RATE', 'MIN_LEARNING_RATE', '',
-                 'USE_EARLY_STOPPING', 'EARLY_STOPPING_MIN_DELTA', 'EARLY_STOPPING_PATIENCE', 'EARLY_STOPPING_CRITERION', '',
+                                          'USE_STEP_DECAY', 'DROP_FACTOR', 'DROP_RATE', 'MIN_LEARNING_RATE', '',
+                 'USE_EARLY_STOPPING', 'EARLY_STOPPING_MIN_DELTA', 'EARLY_STOPPING_PATIENCE',
+                 'EARLY_STOPPING_CRITERION', '',
                  'KERNEL_INITIALIZER', ''
-                 'FINE_TUNE', 'INIT_WEIGHT_PATH' if self.FINE_TUNE else ''])
+                                       'FINE_TUNE', 'INIT_WEIGHT_PATH' if self.FINE_TUNE else ''])
         else:
             summary_vals.extend(['TEST_RESULT_PATH', 'TEST_WEIGHT_PATH', 'TEST_BATCH_SIZE'])
 
@@ -312,13 +314,13 @@ class Config():
     @classmethod
     def init_cmd_line_parser(cls, parser):
         subcommand_parser = parser.add_parser('%s' % cls.CP_SAVE_TAG, description='%s config parameters')
-        
+
         # Number of epochs
         subcommand_parser.add_argument('--n_epochs', metavar='E', type=int, default=cls.N_EPOCHS, nargs='?',
                                        help='number of training epochs. Default: %d' % cls.N_EPOCHS)
 
         # Augment data
-        subcommand_parser.add_argument('--augment_data',  default=False, action='store_const',
+        subcommand_parser.add_argument('--augment_data', default=False, action='store_const',
                                        const=True,
                                        help='use augmented data for training. Default: %s' % False)
 
@@ -343,12 +345,14 @@ class Config():
         subcommand_parser.add_argument('--use_early_stopping', default=False, action='store_const',
                                        const=True,
                                        help='use learning rate step decay. Default: %s' % False)
-        subcommand_parser.add_argument('--early_stopping_min_delta', metavar='D', type=float, default=cls.EARLY_STOPPING_MIN_DELTA, nargs='?',
+        subcommand_parser.add_argument('--early_stopping_min_delta', metavar='D', type=float,
+                                       default=cls.EARLY_STOPPING_MIN_DELTA, nargs='?',
                                        help='minimum change in the monitored quantity to qualify as an improvement, '
-                                 'i.e. an absolute change of less than min_delta, will count as no improvement. Default: %s' % cls.EARLY_STOPPING_MIN_DELTA)
+                                            'i.e. an absolute change of less than min_delta, will count as no improvement. Default: %s' % cls.EARLY_STOPPING_MIN_DELTA)
         subcommand_parser.add_argument('--early_stopping_patience', metavar='P', type=int, default=0, nargs='?',
                                        help='number of epochs with no improvement after which training will be stopped. Default: %s' % cls.EARLY_STOPPING_PATIENCE)
-        subcommand_parser.add_argument('--early_stopping_criterion', metavar='C', type=str, default='val_loss', nargs='?',
+        subcommand_parser.add_argument('--early_stopping_criterion', metavar='C', type=str, default='val_loss',
+                                       nargs='?',
                                        help='criterion to monitor for early stopping. Default: %s' % cls.EARLY_STOPPING_CRITERION)
 
         # Batch size
@@ -358,7 +362,8 @@ class Config():
         subcommand_parser.add_argument('--valid_batch_size', metavar='vBS', type=int, default=cls.VALID_BATCH_SIZE,
                                        nargs='?',
                                        help='validation batch size. Default: %s' % cls.VALID_BATCH_SIZE)
-        subcommand_parser.add_argument('--test_batch_size', metavar='tBS', type=int, default=cls.TEST_BATCH_SIZE, nargs='?',
+        subcommand_parser.add_argument('--test_batch_size', metavar='tBS', type=int, default=cls.TEST_BATCH_SIZE,
+                                       nargs='?',
                                        help='testing/inference batch size. Default %s' % cls.TEST_BATCH_SIZE)
 
         # Loss function
@@ -384,12 +389,12 @@ class Config():
     @classmethod
     def __get_cmd_line_vars__(cls):
         return ['n_epochs', 'augment_data',
-         'use_step_decay', 'initial_learning_rate', 'min_learning_rate', 'drop_factor', 'drop_rate',
-         'use_early_stopping', 'early_stopping_min_delta', 'early_stopping_patience',
-         'early_stopping_criterion',
-         'train_batch_size', 'valid_batch_size', 'test_batch_size',
-         'loss', 'include_background',
-         'img_size']
+                'use_step_decay', 'initial_learning_rate', 'min_learning_rate', 'drop_factor', 'drop_rate',
+                'use_early_stopping', 'early_stopping_min_delta', 'early_stopping_patience',
+                'early_stopping_criterion',
+                'train_batch_size', 'valid_batch_size', 'test_batch_size',
+                'loss', 'include_background',
+                'img_size']
 
     @classmethod
     def parse_cmd_line(cls, vargin):
@@ -665,15 +670,23 @@ class DeeplabV3_2_5DConfig(DeeplabV3Config):
 SUPPORTED_CONFIGS = [UNetConfig, SegnetConfig, DeeplabV3Config, ResidualUNet]
 
 
-def get_config(config_name):
+def get_config(config_name, is_testing=False):
+    create_dirs = not is_testing
+
     configs = SUPPORTED_CONFIGS
     for config in configs:
         if config.CP_SAVE_TAG == config_name:
-            c = config(create_dirs=True)
+            c = config(create_dirs=create_dirs)
             return c
 
     raise ValueError('config %s not found' % config_name)
 
+
+def get_cp_save_tag(filepath: str):
+    config = configparser.ConfigParser()
+    config.read(filepath)
+    vars_dict = config['DEFAULT']
+    return vars_dict['CP_SAVE_TAG']
 
 def init_cmd_line_parser(parser):
     subparsers = []
