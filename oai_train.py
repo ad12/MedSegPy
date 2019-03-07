@@ -13,6 +13,7 @@ from keras.callbacks import LearningRateScheduler as lrs
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.callbacks import TensorBoard as tfb
 from keras.optimizers import Adam
+from keras.utils import plot_model
 
 import config as MCONFIG
 import glob_constants
@@ -108,6 +109,9 @@ def train_model(config, optimizer=None, model=None, class_weights=None):
 
     train_gen = generator.img_generator(state='training')
     val_gen = generator.img_generator(state='validation')
+
+    # plot model
+    plot_model(model, to_file=os.path.join(cp_save_path, 'model.png'))
 
     # Start training
     model.fit_generator(train_gen,
