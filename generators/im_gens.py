@@ -268,6 +268,8 @@ class OAIGenerator(Generator):
 
         for t_inds in tissues:
             c_seg = seg[..., 0, t_inds]
+            if c_seg.ndim == 3:
+                c_seg = np.sum(c_seg, axis=-1)
             o_seg.append(c_seg)
 
         return np.stack(o_seg, axis=-1)
