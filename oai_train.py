@@ -23,7 +23,7 @@ from models.models import get_model
 from utils import io_utils, parallel_utils as putils
 
 CLASS_WEIGHTS = np.asarray([100, 1])
-
+SAVE_BEST_WEIGHTS = True
 
 def train_model(config, optimizer=None, model=None, class_weights=None):
     """
@@ -79,7 +79,7 @@ def train_model(config, optimizer=None, model=None, class_weights=None):
 
     # model callbacks
     cp_cb = ModelCheckpoint(os.path.join(cp_save_path, cp_save_tag + '_weights.{epoch:03d}-{val_loss:.4f}.h5'),
-                            save_best_only=True)
+                            save_best_only=SAVE_BEST_WEIGHTS)
     tfb_cb = tfb(config.TF_LOG_DIR,
                  write_grads=False,
                  write_images=False)
@@ -246,11 +246,11 @@ EXP_DIR_MAP = {'arch': 'architecture_limited',
                'best': 'best_network',
                'data': 'data_limit',
                'loss': 'loss_limit',
-               'vol': 'volume_limited'
+               'vol': 'volume_limited',
+               'control': 'control_exps'
                }
 
 if __name__ == '__main__':
-
     base_parser = argparse.ArgumentParser(description='Train OAI dataset')
     arg_subparser = base_parser.add_subparsers(help='supported configs for different architectures', dest='config')
     subparsers = MCONFIG.init_cmd_line_parser(arg_subparser)
@@ -274,6 +274,8 @@ if __name__ == '__main__':
                               )
         s_parser.add_argument('--fine_tune_path', type=str, default='', nargs='?',
                               help='directory to fine tune.')
+        s_parser.add_argument('--save_all_weights', default=False, action='store_const', const=True,
+                              help="store weights for each epoch. Default: False")
 
     # Parse input arguments
     args = base_parser.parse_args()
@@ -294,6 +296,8 @@ if __name__ == '__main__':
     print('Using GPU %s' % gpu)
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+    global SAVE_BEST_WEIGHTS
+    SAVE_BEST_WEIGHTS = not args.save_all_weights
 
     c = MCONFIG.get_config(config_name = vargin['config'])
     config_dict = c.parse_cmd_line(vargin)
