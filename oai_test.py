@@ -207,7 +207,7 @@ def test_model(config, save_file=0):
     # Write details to test file
     with open(os.path.join(test_result_path, 'results.txt'), 'w+') as f:
         f.write('Results generated on %s\n' % strftime('%X %x %Z'))
-        f.write('Best weights: %s\n' % os.path.basename(config.TEST_WEIGHT_PATH))
+        f.write('Weights Loaded: %s\n' % os.path.basename(config.TEST_WEIGHT_PATH))
         f.write('--' * 20)
         f.write('\n')
         f.write(pids_str)
