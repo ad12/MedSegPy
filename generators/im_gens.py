@@ -249,7 +249,11 @@ class OAIGenerator(Generator):
         else:
             im, seg = self.__load_inputs__(os.path.dirname(filepath), os.path.basename(filepath))
 
-        seg_tissues = seg[..., 0, tissues]
+        # support multi class
+        if len(tissues) > 1:
+            seg_tissues = self.__compress_multi_class_mask__(seg, tissues)
+        else:
+            seg_tissues = seg[..., 0, tissues]
         seg_total = seg_tissues
 
         # if considering background, add class
@@ -258,6 +262,15 @@ class OAIGenerator(Generator):
             seg_total = self.__add_background_labels__(seg_tissues)
 
         return im, seg_total
+
+    def __compress_multi_class_mask__(self, seg, tissues):
+        o_seg = []
+
+        for t_inds in tissues:
+            c_seg = seg[..., 0, t_inds]
+            o_seg.append(c_seg)
+
+        return np.stack(o_seg, axis=-1)
 
     def __load_neighboring_slices__(self, num_slices, filepath, max_slice=72):
         """
