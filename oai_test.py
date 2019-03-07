@@ -24,6 +24,7 @@ from utils import io_utils
 from utils.metric_utils import MetricWrapper
 from utils import im_utils
 
+import config as MCONFIG
 from config import DeeplabV3Config, SegnetConfig, UNetConfig, UNet2_5DConfig, ResidualUNet
 from utils.metric_utils import dice_score_coefficient
 from models.models import get_model
@@ -357,7 +358,7 @@ def find_best_test_dir(base_folder):
     print(max_dsc_details)
 
 
-def test_dir(dirpath, config, vals_dict=None, best_weight_path=None):
+def test_dir(dirpath, config=None, vals_dict=None, best_weight_path=None):
     """
     Run testing experiment
     By default, save all data
@@ -372,8 +373,12 @@ def test_dir(dirpath, config, vals_dict=None, best_weight_path=None):
     if best_weight_path is None:
         best_weight_path = utils.get_weights(dirpath)
     print('Best weight path: %s' % best_weight_path)
-
-    config.load_config(os.path.join(dirpath, 'config.ini'))
+    
+    config_filepath = os.path.join(dirpath, 'config.ini')
+    if not config:
+        config = MCONFIG.get_config(MCONFIG.get_cp_save_tag(config_filepath), is_testing=True)
+    
+    config.load_config(config_filepath)
     config.TEST_WEIGHT_PATH = best_weight_path
 
     if vals_dict is not None:
