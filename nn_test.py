@@ -16,8 +16,8 @@ def add_testing_arguments(parser: argparse.ArgumentParser):
 
     parser.add_argument('--batch_size', default=72, type=int, nargs='?')
 
-    parser.add_argument('--save_h5_data', action='store_const', default=False, const=True,
-                        help='save ground truth and prediction data in h5 format')
+    # parser.add_argument('--save_h5_data', action='store_const', default=False, const=True,
+    #                     help='save ground truth and prediction data in h5 format')
 
 
 def create_config_dict(vargin):
@@ -46,7 +46,6 @@ if __name__ == '__main__':
     print('Using GPU %s' % gpu)
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
-    SAVE_BEST_WEIGHTS = not args.save_all_weights
 
     c = MCONFIG.get_config(config_name=MCONFIG.get_cp_save_tag(config_filepath), is_testing=True)
 
