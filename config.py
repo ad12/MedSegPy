@@ -108,7 +108,7 @@ class Config():
     LEARN_FILES = []
 
     # Initializer
-    KERNEL_INITIALIZER = 'glorot_uniform'
+    KERNEL_INITIALIZER = 'he_normal'
 
     def __init__(self, cp_save_tag, state='training', create_dirs=True):
         self.SEED = glc.SEED
