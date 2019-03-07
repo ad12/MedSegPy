@@ -25,17 +25,17 @@ class TestResults(unittest.TestCase):
             for l in file_lines:
                 if 'Weights Loaded:' in l:
                     if weights:
-                        raise ValueError('Multiple lines with `Weights Loaded:` keyword - rerun test for %s' % exp_filepath)
+                        raise ValueError('Multiple lines with `Weights Loaded:` keyword- rerun test for %s: %s' % (exp, exp_filepath))
 
                     weights = l.split(':')[1].strip()
 
             if not weights:
-                raise ValueError('`Weights Loaded:` keyword not found - rerun test for %s' % exp_filepath)
+                raise ValueError('`Weights Loaded:` keyword not found - rerun test for %s: %s' % (exp, exp_filepath))
 
             # get best weights in the folder
             expected_best_weights = utils.get_weights(os.path.dirname(exp))
 
-            assert weights == expected_best_weights, 'weights %s not expected %s' % (weights, expected_best_weights)
+            assert weights == expected_best_weights, 'weights %s not expected %s- rerun test for %s: %s' % (weights, expected_best_weights, exp, exp_filepath)
 
 if __name__ == '__main__':
     unittest.main()
