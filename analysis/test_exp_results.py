@@ -38,6 +38,7 @@ class TestResults(unittest.TestCase):
             expected_best_weights = utils.get_weights(base_folder)
 
             assert weights == expected_best_weights, 'weights %s not expected %s- rerun test for %s: %s' % (weights, expected_best_weights, exp, exp_filepath)
+            print('%s valid' % exp)
 
 if __name__ == '__main__':
     unittest.main()
