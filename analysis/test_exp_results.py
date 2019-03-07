@@ -5,6 +5,7 @@ sys.path.append('../')
 from analysis import exp_filepaths
 from utils import utils
 
+GPU = None
 
 class TestResults(unittest.TestCase):
     experiment_names = [item for item in dir(exp_filepaths) if not item.startswith("__")]
@@ -41,4 +42,5 @@ class TestResults(unittest.TestCase):
             print('%s valid' % exp)
 
 if __name__ == '__main__':
+    print(sys.argv)
     unittest.main()
