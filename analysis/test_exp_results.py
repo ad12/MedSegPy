@@ -33,7 +33,7 @@ class TestResults(unittest.TestCase):
                 raise ValueError('`Weights Loaded:` keyword not found - rerun test for %s: %s' % (exp, exp_filepath))
 
             # get best weights in the folder
-            expected_best_weights = utils.get_weights(os.path.dirname(exp))
+            expected_best_weights = utils.get_weights(os.path.dirname(exp_filepath))
 
             assert weights == expected_best_weights, 'weights %s not expected %s- rerun test for %s: %s' % (weights, expected_best_weights, exp, exp_filepath)
 
