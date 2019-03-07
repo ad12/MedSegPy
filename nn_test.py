@@ -8,7 +8,7 @@ from oai_test import test_dir
 
 def add_testing_arguments(parser: argparse.ArgumentParser):
 
-    parser.add_argument('--config_path', metavar='fp', type=str, nargs=1,
+    parser.add_argument('--dirpath', metavar='dp', type=str, nargs=1,
                         help='path to config to test')
 
     parser.add_argument('-g', '--gpu', metavar='G', type=str, nargs='?', default='0',
@@ -37,7 +37,7 @@ if __name__ == '__main__':
     args = base_parser.parse_args()
     vargin = vars(args)
 
-    config_filepath = vargin['config_path'][0]
+    config_filepath = vargin['dirpath'][0]
     if not os.path.isdir(config_filepath):
         raise NotADirectoryError('Directory %s does not exist.' % config_filepath)
 
@@ -47,6 +47,4 @@ if __name__ == '__main__':
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
-    c = MCONFIG.get_config(config_name=MCONFIG.get_cp_save_tag(config_filepath), is_testing=True)
-
-    test_dir(config_filepath, c, vals_dict=create_config_dict(vargin))
+    test_dir(config_filepath, vals_dict=create_config_dict(vargin))

@@ -30,7 +30,7 @@ EXP=($2)
 # Navigate to project directory
 cd ../..
 
-BASE_ARG_STR="-g $GPU --experiment control"
+BASE_ARG_STR="--use_step_decay -g $GPU --experiment control"
 
 # Exp 1: Early stopping
 if [[ "$EXP" -eq 1 ]]; then
