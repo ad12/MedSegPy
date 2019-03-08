@@ -56,9 +56,16 @@ def parse_results_file(dirpath):
 
     return np.asarray(dsc), np.asarray(voe), np.asarray(cv)
 
-
+def load_metrics(dirpath):
+    filepath = os.path.join(dirpath, 'metrics.dat')
+    metrics = io_utils.load_pik(filepath)
+    for k in metrics.keys():
+        metrics[k] = np.asarray(metrics[k])
+        
+    return metrics
+    
 def get_metrics(dirpaths):
-    metrics = {'DSC': [], 'VOE': [], 'CV': []}
+    metrics = {'dsc': [], 'voe': [], 'cv': []}
 
     for dp in dirpaths:
         if type(dp) is list:
@@ -78,22 +85,47 @@ def get_metrics(dirpaths):
         else:
             dsc, voe, cv = parse_results_file(dp)
 
-        metrics['DSC'].append(dsc)
-        metrics['VOE'].append(voe)
-        metrics['CV'].append(cv)
+        metrics['dsc'].append(dsc)
+        metrics['voe'].append(voe)
+        metrics['cv'].append(cv)
+
+    return metrics
+
+def get_metrics_v2(dirpaths):
+    metrics = {'dsc': [], 'voe': [], 'cv': [], 'assd': [], 'precision': [], 'recall': []}
+
+    for dp in dirpaths:
+        exp_metrics = dict()
+        if type(dp) is list:
+            c = 0
+            for d_p in dp:
+                if c == 0:
+                    exp_metrics = load_metrics(d_p)
+                else:
+                    em = load_metrics(d_p)
+                    for k in em.keys():
+                        exp_metrics[k] += em[k]
+                c += 1
+            for k in exp_metrics.keys():
+                exp_metrics[k] = exp_metrics[k] / len(dp)
+        else:
+            exp_metrics = load_metrics(dp)
+
+        for k in metrics.keys():
+            metrics[k].append(exp_metrics[k])
 
     return metrics
 
 
 def compare_metrics_v2(dirpaths, names, dirname):
-    x_labels = ('DSC', 'VOE', 'CV')
+    x_labels = ('dsc', 'voe', 'cv', 'assd')
     n_groups = len(x_labels)
     x_index = np.arange(0, n_groups * 2, 2)
 
     exp_names = names
     exp_filepath = os.path.join(SAVE_PATH, dirname, 'bar.png')
 
-    metrics_dict = get_metrics(dirpaths)
+    metrics_dict = get_metrics_v2(dirpaths)
 
     exp_means = []
     exp_stds = []
@@ -118,7 +150,7 @@ def compare_metrics_v2(dirpaths, names, dirname):
 
 
 def compare_metrics(dirpaths, names, dirname):
-    x_labels = ('DSC', 'VOE', 'CV')
+    x_labels = ('dsc', 'voe', 'cv', 'assd')
     n_groups = len(x_labels)
     x_index = np.arange(0, n_groups * 2, 2)
 
@@ -162,7 +194,7 @@ def kruskal_dunn_analysis(dirpaths, names, dirname):
     save_dirpath = os.path.join(SAVE_PATH, dirname)
     assert len(dirpaths) == len(names), '%d vs %d' % (len(dirpaths), len(names))
 
-    metrics = get_metrics(dirpaths)
+    metrics = get_metrics_v2(dirpaths)
 
     metrics_results = dict()
     for k in metrics.keys():
@@ -171,7 +203,7 @@ def kruskal_dunn_analysis(dirpaths, names, dirname):
 
         metrics_results[k] = kruskal_dunn(metrics[k], names)
 
-    for k in ['DSC', 'VOE', 'CV']:
+    for k in ['dsc', 'voe', 'cv', 'assd']:
         print_results(metrics_results[k], k)
         print('')
 

@@ -313,6 +313,7 @@ def display_bar_graph(df_mean, df_error, exp_filepath=None, legend_loc='bottom',
     # display_sig_markers(p, e, [(0,1,'*')], ax)
 
     if exp_filepath is not None:
+        io_utils.check_dir(os.path.dirname(exp_filepath))
         plt.savefig(exp_filepath, format='png',
                     dpi=1000,
                     bbox_inches='tight')
