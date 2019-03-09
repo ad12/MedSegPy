@@ -106,7 +106,7 @@ if __name__ == '__main__':
     pids = []
     for dp in DATA_PATHS:
         for fname in os.listdir(dp):
-            if fname.endswith('.im'):
+            if fname.endswith('.im') and 'Aug00' in fname:
                 im_info = get_file_info(fname, dp)
                 pids.append(im_info['pid'])
     pids = list(set(pids))
