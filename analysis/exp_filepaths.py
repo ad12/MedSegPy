@@ -37,6 +37,7 @@ VOLUME_3D = '/bmrNAS/people/arjun/msk_seg_networks/volume_limited/unet_3d_asc/te
 # batch size experiments (unet_2d)
 TRAIN_BATCH_SIZE_6 = '/bmrNAS/people/arjun/msk_seg_networks/control_exps/unet_2d/2019-03-06-21-30-41/test_results'
 TRAIN_BATCH_SIZE_12 = '/bmrNAS/people/arjun/msk_seg_networks/control_exps/unet_2d/2019-03-07-08-20-45/test_results'
+TRAIN_BATCH_SIZE_24 = '/bmrNAS/people/arjun/msk_seg_networks/control_exps/unet_2d/2019-03-07-17-14-07/test_results'
 
 # early-stopping experiments (note in this case 1e4 == 1e-4)
 EARLY_STOPPING_2_1e4 = '/bmrNAS/people/arjun/msk_seg_networks/control_exps/unet_2d/2019-03-07-12-46-49/test_results'

@@ -241,7 +241,7 @@ def print_results(data, metric):
 
     if data['dunn'] is not None:
         print('Dunn: ')
-        print(data['dunn'])
+        display(data['dunn'])
 
 
 def fit(x, y, func, p0):

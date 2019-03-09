@@ -28,7 +28,7 @@ def get_cv_experiments(k, num_valid_bins=1, num_test_bins=1):
 
     test_bin_start_ind = 0
     exps_bin_division = []
-    for i in range(k / num_test_bins):
+    for i in range(int(k / num_test_bins)):
         test_bin_start_ind = test_bin_start_ind + i * num_test_bins
         valid_bin_start_ind = test_bin_start_ind + num_test_bins
         train_bin_start_ind = valid_bin_start_ind + num_valid_bins
@@ -50,7 +50,7 @@ def get_cv_experiments(k, num_valid_bins=1, num_test_bins=1):
 
     for i in range(len(temp)):
         for j in range(i + 1, len(temp)):
-            assert len(set(temp[i]) & set(temp[j])) == 0, "Test bins %d and %d not mutually exclusive" % (i, j)
+            assert len(set(temp[i]) & set(temp[j])) == 0, "Test bins %d and %d not mutually exclusive - %d overlap" % (i, j, len(set(temp[i]) & set(temp[j])))
 
     return exps_bin_division
 
