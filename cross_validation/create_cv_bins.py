@@ -68,7 +68,7 @@ def check_duplicates(x_list: list):
 
 
 def verify_bins(k):
-    bins = cv_utils.load_cross_validation(k)
+    bins = cv_utils.load_cross_validation(k)['bins']
     assert len(bins) == k
 
     bin_to_pid_dict = dict()
@@ -103,13 +103,19 @@ if __name__ == '__main__':
             'Cross-validation with %d bins already exists. To overwrite, manually delete previous file' % k)
 
     # Get all patient ids (pids)
-    pids = []
+    pids = dict()
     for dp in DATA_PATHS:
         for fname in os.listdir(dp):
-            if fname.endswith('.im') and 'Aug00' in fname:
+            if fname.endswith('.im'):
                 im_info = get_file_info(fname, dp)
-                pids.append(im_info['pid'])
-    pids = list(set(pids))
+                curr_pid = im_info['pid']
+                if curr_pid in pids.keys():
+                    assert dp == pids[curr_pid], "dirpath mismatch. Expected: %s, got %s" % (dp, pids[curr_pid])
+                else:
+                    pids[curr_pid] = dp
+
+    pids_dict = pids.copy()
+    pids = list(pids.keys())
 
     # Shuffle pids in random order
     random.shuffle(pids)
