@@ -683,6 +683,23 @@ class UNet2_5DConfig(UNetConfig):
         return self.IMG_SIZE[2]
 
 
+class UNet3DConfig(UNetConfig):
+    IMG_SIZE = (288, 288, 4)
+
+    CP_SAVE_TAG = 'unet_3d'
+    N_EPOCHS = 20
+    INITIAL_LEARNING_RATE = 1e-2
+
+    DROP_RATE = 1.0
+    DROP_FACTOR = 0.8
+
+    # Train path - volumetric augmentation
+    TRAIN_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/vol_aug/train_sag/'
+
+    def num_neighboring_slices(self):
+        return self.IMG_SIZE[2]
+
+
 class DeeplabV3_2_5DConfig(DeeplabV3Config):
     IMG_SIZE = (288, 288, 3)
 

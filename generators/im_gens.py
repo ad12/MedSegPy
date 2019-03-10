@@ -113,6 +113,11 @@ class OAIGenerator(Generator):
         fname_info = self.__get_file_info__(fname, '')
         return str(fname_info['pid']) + str(fname_info['timepoint']) + str(fname_info['aug']) + str(fname_info['slice'])
 
+    def get_fname_from_info(self, file_info: dict):
+        # sample fname: 9311328_V01-Aug04_072.im
+        return '%s_V%02d-Aug%02d_%03d' % (
+            file_info['pid'], file_info['timepoint'], file_info['aug'], file_info['slice'])
+
     def img_generator(self, state='training'):
         super().img_generator(state)
 
@@ -363,7 +368,7 @@ class OAIGenerator(Generator):
 
         return files, batches_per_epoch, max_slice_num
 
-    def __get_file_info__(self, fname: str, dirpath: str=''):
+    def __get_file_info__(self, fname: str, dirpath: str = ''):
         fname, ext = os.path.splitext(fname)
         dirpath = os.path.dirname(fname)
         fname = os.path.basename(fname)
@@ -383,7 +388,8 @@ class OAIGenerator(Generator):
                     'segpath': os.path.join(dirpath, '%s.%s' % (fname, 'seg')),
                     'scanid': scan_id}
         except Exception as e:
-            import pdb; pdb.set_trace()
+            import pdb;
+            pdb.set_trace()
             raise e
         assert data['pid'] == fname[:7], str(data)
 
@@ -422,8 +428,10 @@ class OAIGenerator(Generator):
             num_train_subjects = len(set(train_pids))
             num_valid_subjects = len(set(valid_pids))
 
-            print('INFO: Train size: %d (%d subjects), batch size: %d' % (len(train_files), num_train_subjects, self.config.TRAIN_BATCH_SIZE))
-            print('INFO: Valid size: %d (%d subjects), batch size: %d' % (len(valid_files), num_valid_subjects, self.config.VALID_BATCH_SIZE))
+            print('INFO: Train size: %d slices (%d subjects), batch size: %d' % (
+                len(train_files), num_train_subjects, self.config.TRAIN_BATCH_SIZE))
+            print('INFO: Valid size: %d slices (%d subjects), batch size: %d' % (
+                len(valid_files), num_valid_subjects, self.config.VALID_BATCH_SIZE))
             print('INFO: Image size: %s' % (self.config.IMG_SIZE,))
             print('INFO: Image types included in training: %s' % (self.config.FILE_TYPES,))
         else:  # config in Testing state
@@ -436,10 +444,11 @@ class OAIGenerator(Generator):
                 augment_data=False)
 
             scanset_info = self.__get_scanset_data__(test_files)
-            print('INFO: Test size: %d, batch size: %d, # subjects: %d, # scans: %d' % (len(test_files),
-                                                                                        config.TEST_BATCH_SIZE,
-                                                                                        len(scanset_info['pid']),
-                                                                                        len(scanset_info['scanid'])))
+            print('INFO: Test size: %d slices, batch size: %d, # subjects: %d, # scans: %d' % (len(test_files),
+                                                                                               config.TEST_BATCH_SIZE,
+                                                                                               len(scanset_info['pid']),
+                                                                                               len(scanset_info[
+                                                                                                       'scanid'])))
             if not config.USE_CROSS_VALIDATION:
                 print('Test path: %s' % (config.TEST_PATH))
 
@@ -485,8 +494,141 @@ class OAIGenerator(Generator):
         return train_batches_per_epoch, valid_batches_per_epoch
 
 
-class OAI3DGenerator(Generator):
-    SUPPORTED_TAGS = ['oai_aug_3d_pixel', 'oai_3d']
+class OAI3DGenerator(OAIGenerator):
+    """
+    Generator for training 3D networks with slice-wise OAI data (i.e. 9311328_V01-Aug04_072.im)
+    """
+    SUPPORTED_TAGS = ['oai_3d']
+
+    def __validate_img_size__(self, slices_per_scan):
+        # only accept image sizes where slices can be perfectly disjoint
+        input_volume_num_slices = self.config.IMG_SIZE[-1]
+        if input_volume_num_slices == 1:
+            raise ValueError('For 2D/2.5D networks, use `OAIGenerator`')
+
+        if slices_per_scan % input_volume_num_slices != 0:
+            raise ValueError('All input volumes must be disjoint. %d slices per scan, but %d slices in input' % (
+                slices_per_scan, self.config.IMG_SIZE[-1]))
+
+    def __get_corresponding_files__(self, fname: str):
+        num_slices = self.config.IMG_SIZE[-1]
+        file_info = self.__get_file_info__(fname=fname)
+        f_slice = file_info['slice']
+
+        volume_index = int((f_slice - 1) / num_slices)
+
+        base_info = {'pid': file_info['pid'], 'timepoint': file_info['timepoint'],
+                     'aug': file_info['aug'], 'slice': file_info['slice']}
+
+        # slices are 1-indexed
+        slices = list(range(volume_index * num_slices + 1, (volume_index + 1) * num_slices + 1))
+        slice_fnames = []
+        for s in slices:
+            base_info['slice'] = s
+            slice_fnames.append(self.get_fname_from_info(base_info))
+
+        return slice_fnames
+
+    def __load_input_helper__(self, filepath, tissues, num_neighboring_slices, max_slice_num, include_background):
+        # check that fname contains a dirpath
+        assert os.path.dirname(filepath) is not ''
+
+        if num_neighboring_slices:
+            im, seg = self.__load_corresponding_slices__(filepath)
+        else:
+            im, seg = self.__load_inputs__(os.path.dirname(filepath), os.path.basename(filepath))
+
+        # support multi class
+        if len(tissues) > 1:
+            seg_tissues = self.__compress_multi_class_mask__(seg, tissues)
+        else:
+            seg_tissues = seg[..., 0, tissues]
+        seg_total = seg_tissues
+
+        # if considering background, add class
+        # background should mark every other pixel that is not already accounted for in segmentation
+        if include_background:
+            seg_total = self.__add_background_labels__(seg_tissues)
+
+        return im, seg_total
+
+    def __load_corresponding_slices__(self, filepath):
+        """
+        Assumes that there are at most slices go from 1-max_slice
+        :param num_slices:
+        :param filepath:
+        :return:
+        """
+        data_path, filename = os.path.dirname(filepath), os.path.basename(filepath)
+        corresponding_files = self.__get_corresponding_files__(filename)
+
+        ims = []
+        segs = []
+        for f in corresponding_files:
+            im, seg = self.__load_inputs__(data_path, f)
+            ims.append(im)
+            segs.append(seg)
+
+        # segmentation is central slice segmentation
+        im = np.stack(ims, axis=-1)
+        seg = np.stack(segs, axis=-1)
+
+        return im, seg
+
+    def __calc_generator_info__(self, data_path_or_files: Union[str, list], batch_size, pids=None, augment_data=False):
+        if type(data_path_or_files) is str:
+            data_path = data_path_or_files
+            files = listdir(data_path)
+            filepaths = [os.path.join(data_path, f) for f in files]
+        elif type(data_path_or_files) is list:
+            filepaths = data_path_or_files
+        else:
+            raise ValueError('data_path_or_files must be type str or list')
+
+        unique_filepaths = {}  # use dict to avoid having to reconstruct set every time
+
+        # track the largest slice number that we see - assume it is the same for all scans
+        max_slice_num = 0
+
+        for fp in filepaths:
+            fp, _ = os.path.splitext(fp)
+            dirpath, filename = os.path.dirname(fp), os.path.basename(fp)
+
+            if self.__add_file__(fp, unique_filepaths, pids, augment_data):
+                file_info = self.__get_file_info__(filename, dirpath)
+                if max_slice_num < file_info['slice']:
+                    max_slice_num = file_info['slice']
+
+                unique_filepaths[fp] = fp
+
+        files = list(unique_filepaths.keys())
+
+        # validate image size
+        self.__validate_img_size__(max_slice_num)
+
+        # Remove files corresponding to the same volume
+        # e.g. If input volume has 4 slices, slice 1 and 2 will be part of the same volume
+        #      We only include file corresponding to slice 1, because other files are accounted for by default
+        slices_to_include = range(1, max_slice_num + 1, self.config.IMG_SIZE[-1])
+        files_refined = []
+        for filepath in files:
+            fname = os.path.basename(filepath)
+            f_info = self.__get_file_info__(fname)
+            if f_info['slice'] in slices_to_include:
+                files_refined.append(filepath)
+
+        files = list(set(files_refined))
+
+        # Set total number of volumes based on argument for limiting training size
+        nvolumes = len(files)
+
+        batches_per_epoch = nvolumes // batch_size
+
+        return files, batches_per_epoch, max_slice_num
+
+
+class OAI3DStackGenerator(Generator):
+    SUPPORTED_TAGS = ['oai_aug_3d_pixel', 'oai_3d_stack']
 
     def get_file_id(self, fname):
         # sample fname: 9146462_V01-Aug0_9.im
