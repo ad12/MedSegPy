@@ -119,13 +119,13 @@ class OAIGenerator(Generator):
         config = self.config
 
         if state == 'training':
-            data_path_or_files = config.TRAIN_FILES_CV if config.USE_CROSS_VALIDATION else config.TRAIN_PATH
+            data_path_or_files = config.__CV_TRAIN_FILES__ if config.USE_CROSS_VALIDATION else config.TRAIN_PATH
             batch_size = config.TRAIN_BATCH_SIZE
             shuffle_epoch = True
             pids = config.PIDS
             augment_data = config.AUGMENT_DATA
         else:
-            data_path_or_files = config.VALID_FILES_CV if config.USE_CROSS_VALIDATION else config.VALID_PATH
+            data_path_or_files = config.__CV_VALID_FILES__ if config.USE_CROSS_VALIDATION else config.VALID_PATH
             batch_size = config.VALID_BATCH_SIZE
             shuffle_epoch = False
             pids = None
@@ -178,7 +178,7 @@ class OAIGenerator(Generator):
         img_size = config.IMG_SIZE
         tissues = config.TISSUES
         include_background = config.INCLUDE_BACKGROUND
-        data_path_or_files = config.TEST_FILES_CV if config.USE_CROSS_VALIDATION else config.TEST_PATH
+        data_path_or_files = config.__CV_TEST_FILES__ if config.USE_CROSS_VALIDATION else config.TEST_PATH
         num_neighboring_slices = config.num_neighboring_slices()
         batch_size = config.TEST_BATCH_SIZE
 
