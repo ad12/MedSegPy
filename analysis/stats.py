@@ -149,10 +149,21 @@ def print_results(data, metric):
     print('===================')
     print('F-value: %0.4f' % data['f'])
     print('p-value: %0.4f' % data['p'])
+    
+    
+    def highlight_significant(val):
+        """
+        Takes a scalar and returns a string with
+        the css property `'color: red'` for negative
+        strings, black otherwise.
+        """
+        bg_color = 'yellow' if abs(val) < ALPHA else ''
+        return 'background-color: %s' % bg_color
 
     if data['dunn'] is not None:
         print('Dunn: ')
-        display(data['dunn'])
+        s = data['dunn'].style.applymap(highlight_significant)
+        display(s)
 
 
 def fit(x, y, func, p0):
