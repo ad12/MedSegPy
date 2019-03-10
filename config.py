@@ -6,9 +6,11 @@ from time import localtime, strftime
 import glob_constants as glc
 import mri_utils
 import utils.utils as utils
+from cross_validation import cv_utils
 from losses import DICE_LOSS, CMD_LINE_SUPPORTED_LOSSES, get_training_loss_from_str
 from utils import io_utils
-from cross_validation import cv_utils
+
+from itertools import groupby
 
 DEPRECATED_KEYS = ['NUM_CLASSES', 'TRAIN_FILES_CV', 'VALID_FILES_CV', 'TEST_FILES_CV']
 
@@ -288,20 +290,25 @@ class Config():
         summary_vals = ['CP_SAVE_TAG', 'TAG', '']
 
         if self.STATE == 'training':
-            summary_vals.extend(
-                ['TISSUES', '',
-                 'N_EPOCHS', 'AUGMENT_DATA', 'LOSS', 'USE_CROSS_VALIDATION', '',
-                 'TRAIN_BATCH_SIZE', 'VALID_BATCH_SIZE', '',
-                 'INITIAL_LEARNING_RATE', ''
-                                          'USE_STEP_DECAY', 'DROP_FACTOR', 'DROP_RATE', 'MIN_LEARNING_RATE', '',
-                 'USE_EARLY_STOPPING', 'EARLY_STOPPING_MIN_DELTA', 'EARLY_STOPPING_PATIENCE',
-                 'EARLY_STOPPING_CRITERION', '',
-                 'KERNEL_INITIALIZER', ''
-                                       'FINE_TUNE', 'INIT_WEIGHT_PATH' if self.FINE_TUNE else ''])
+            summary_vals.extend([
+                'TISSUES', '',
+                'N_EPOCHS', 'AUGMENT_DATA', 'LOSS', '',
+                'USE_CROSS_VALIDATION', 'CV_K' if self.USE_CROSS_VALIDATION else '',
+                'CV_TRAIN_BINS' if self.USE_CROSS_VALIDATION else '',
+                'CV_VALID_BINS' if self.USE_CROSS_VALIDATION else '', 'CV_TEST_BINS' if self.USE_CROSS_VALIDATION else ''
+                'TRAIN_BATCH_SIZE', 'VALID_BATCH_SIZE', '',
+                'INITIAL_LEARNING_RATE', 'USE_STEP_DECAY', 'DROP_FACTOR', 'DROP_RATE', 'MIN_LEARNING_RATE', '',
+                'USE_EARLY_STOPPING', 'EARLY_STOPPING_MIN_DELTA', 'EARLY_STOPPING_PATIENCE',
+                'EARLY_STOPPING_CRITERION', '',
+                'KERNEL_INITIALIZER', '',
+                'FINE_TUNE', 'INIT_WEIGHT_PATH' if self.FINE_TUNE else ''])
         else:
             summary_vals.extend(['TEST_RESULT_PATH', 'TEST_WEIGHT_PATH', 'TEST_BATCH_SIZE'])
 
         summary_vals.extend(additional_vars)
+
+        # Remove consecutive elements in summary vals that are the same
+        summary_vals = [x[0] for x in groupby(summary_vals)]
 
         print('')
         print('==' * 40)
@@ -702,6 +709,7 @@ def get_cp_save_tag(filepath: str):
     config.read(filepath)
     vars_dict = config['DEFAULT']
     return vars_dict['CP_SAVE_TAG']
+
 
 def init_cmd_line_parser(parser):
     subparsers = []

@@ -408,8 +408,22 @@ class OAIGenerator(Generator):
                 pids=None,
                 augment_data=False)
 
-            print('INFO: Train size: %d, batch size: %d' % (len(train_files), self.config.TRAIN_BATCH_SIZE))
-            print('INFO: Valid size: %d, batch size: %d' % (len(valid_files), self.config.VALID_BATCH_SIZE))
+            # Get number of subjects training and validation sets
+            train_pids = []
+            for f in train_files:
+                file_info = self.__get_file_info__(os.path.dirname(f))
+                train_pids.append(file_info['pid'])
+
+            valid_pids = []
+            for f in valid_files:
+                file_info = self.__get_file_info__(os.path.dirname(f))
+                valid_pids.append(file_info['pid'])
+
+            num_train_subjects = len(set(train_pids))
+            num_valid_subjects = len(set(valid_pids))
+
+            print('INFO: Train size: %d (%d subjects), batch size: %d' % (len(train_files), num_train_subjects, self.config.TRAIN_BATCH_SIZE))
+            print('INFO: Valid size: %d (%d subjects), batch size: %d' % (len(valid_files), num_valid_subjects, self.config.VALID_BATCH_SIZE))
             print('INFO: Image size: %s' % (self.config.IMG_SIZE,))
             print('INFO: Image types included in training: %s' % (self.config.FILE_TYPES,))
         else:  # config in Testing state
