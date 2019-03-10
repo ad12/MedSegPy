@@ -40,7 +40,7 @@ cpal = sns.color_palette("pastel", 8)
 
 SAVE_PATH = io_utils.check_dir('/bmrNAS/people/arjun/msk_seg_networks/analysis/exp_graphs')
 
-import stats
+from analysis import stats
 
 
 def graph_slice_exp(exp_dict, show_plot=False, ax=None, title='', ylim=[0.6, 1], show_error=True, legend_loc='side'):

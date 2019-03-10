@@ -8,7 +8,7 @@ import numpy as np
 
 from generators.im_generator import img_generator_oai_test
 from config import UNetConfig
-import utils
+from utils import io_utils
 import pandas as pd
 
 test_path = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/test'
@@ -28,7 +28,7 @@ def normalize_im(x):
 
 
 SAVE_PATH = '/bmrNAS/people/arjun/msk_seg_networks/oai_data_test'
-utils.check_dir(SAVE_PATH)
+io_utils.check_dir(SAVE_PATH)
 
 if __name__ == '__main__':
     config = UNetConfig(create_dirs=False)
