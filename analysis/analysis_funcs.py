@@ -177,7 +177,7 @@ def get_data_limitation(multi_data, metric_id, decay_exp_fit=False, asymtote=0):
             for j in range(len(data)):
                 test_results_folder = data[j][i]
                 metrics_filepath = os.path.join(test_results_folder, 'metrics.dat')
-                metrics = utils.load_pik(metrics_filepath)
+                metrics = io_utils.load_pik(metrics_filepath)
 
                 num_patients_data[num_p] = np.append(num_patients_data[num_p], metrics[metric_id].flatten())
 

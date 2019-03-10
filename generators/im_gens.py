@@ -417,12 +417,12 @@ class OAIGenerator(Generator):
             # Get number of subjects training and validation sets
             train_pids = []
             for f in train_files:
-                file_info = self.__get_file_info__(os.path.dirname(f))
+                file_info = self.__get_file_info__(os.path.basename(f))
                 train_pids.append(file_info['pid'])
 
             valid_pids = []
             for f in valid_files:
-                file_info = self.__get_file_info__(os.path.dirname(f))
+                file_info = self.__get_file_info__(os.path.basename(f))
                 valid_pids.append(file_info['pid'])
 
             num_train_subjects = len(set(train_pids))
