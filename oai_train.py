@@ -321,12 +321,19 @@ if __name__ == '__main__':
         ho_test = args.ho_test
         ho_valid = args.ho_valid
 
+        cv_file = cv_utils.get_cross_validation_file(k_fold_cross_validation)
         bins_files = cv_utils.load_cross_validation(k_fold_cross_validation)
         bins_split = cv_utils.get_cv_experiments(k_fold_cross_validation, num_valid_bins=ho_valid, num_test_bins=ho_test)
         cv_exp_id = 1
+
         for bin_inds in bins_split:
-            train_files, valid_files, test_files = cv_utils.get_fnames(bins_files, bin_inds)
-            c.init_cross_validation(train_files, valid_files, test_files, 'cv-exp-%03d' % cv_exp_id)
+            c.init_cross_validation(bins_files=bins_files,
+                                    train_bins= bin_inds[0],
+                                    valid_bins=bin_inds[1],
+                                    test_bins=bin_inds[2],
+                                    cv_k=k_fold_cross_validation,
+                                    cv_file=cv_file,
+                                    cv_tag='cv-exp-%03d' % cv_exp_id)
             cv_exp_id += 1
 
             train(c, config_dict)

@@ -8,8 +8,9 @@ import mri_utils
 import utils.utils as utils
 from losses import DICE_LOSS, CMD_LINE_SUPPORTED_LOSSES, get_training_loss_from_str
 from utils import io_utils
+from cross_validation import cv_utils
 
-DEPRECATED_KEYS = ['NUM_CLASSES']
+DEPRECATED_KEYS = ['NUM_CLASSES', 'TRAIN_FILES_CV', 'VALID_FILES_CV', 'TEST_FILES_CV']
 
 DEEPLABV3_NAME = 'deeplabv3_2d'
 SEGNET_NAME = 'segnet_2d'
@@ -23,7 +24,7 @@ SUPPORTED_CONFIGS_NAMES = [DEEPLABV3_NAME, SEGNET_NAME, UNET_NAME]
 
 
 class Config():
-    VERSION = 4
+    VERSION = 5
 
     # Loss function in form (id, output_mode)
     LOSS = DICE_LOSS
@@ -83,9 +84,14 @@ class Config():
 
     # Cross-Validation-Parameters
     USE_CROSS_VALIDATION = False
-    TRAIN_FILES_CV = None
-    VALID_FILES_CV = None
-    TEST_FILES_CV = None
+    CV_FILE = ''
+    CV_K = 0
+    CV_TRAIN_BINS = None
+    CV_VALID_BINS = None
+    CV_TEST_BINS = None
+    __CV_TRAIN_FILES__ = None
+    __CV_VALID_FILES__ = None
+    __CV_TEST_FILES__ = None
 
     # test result folder name
     TEST_RESULTS_FOLDER_NAME = 'test_results'
@@ -142,13 +148,22 @@ class Config():
         self.PIK_SAVE_PATH_DIR = io_utils.check_dir(os.path.dirname(self.PIK_SAVE_PATH))
         self.TF_LOG_DIR = io_utils.check_dir(os.path.join(self.CP_SAVE_PATH, 'tf_log'))
 
-    def init_cross_validation(self, train_files, valid_files, test_files, cv_tag):
+    def init_cross_validation(self, bins_files,
+                              train_bins, valid_bins, test_bins,
+                              cv_k, cv_file, cv_tag):
         assert self.STATE == 'training', "To initialize cross-validation, must be in training state"
 
         self.USE_CROSS_VALIDATION = True
-        self.TRAIN_FILES_CV = train_files
-        self.VALID_FILES_CV = valid_files
-        self.TEST_FILES_CV = test_files
+        self.CV_TRAIN_BINS = train_bins
+        self.CV_VALID_BINS = valid_bins
+        self.CV_TEST_BINS = test_bins
+        self.CV_K = cv_k
+        self.CV_FILE = cv_file
+
+        train_files, valid_files, test_files = cv_utils.get_fnames(bins_files, (train_bins, valid_bins, test_bins))
+        self.__CV_TRAIN_FILES__ = train_files
+        self.__CV_VALID_FILES__ = valid_files
+        self.__CV_TEST_FILES__ = test_files
 
         assert self.CP_SAVE_PATH, "CP_SAVE_PATH must be defined - call init_training_paths prior to calling this function"
 

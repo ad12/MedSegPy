@@ -7,6 +7,7 @@ Data is stored in Pickle format
 import os
 import random
 import sys
+from time import strftime, localtime
 
 sys.path.append('../')
 from utils import io_utils
@@ -15,7 +16,8 @@ from cross_validation import cv_utils
 DATA_PATHS = ['/bmrNAS/people/akshay/dl/oai_data/unet_2d/train_aug/',
               '/bmrNAS/people/akshay/dl/oai_data/unet_2d/valid/',
               '/bmrNAS/people/akshay/dl/oai_data/unet_2d/test']
-K_BIN_SAVE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'oai_data-k%d.cv')
+K_BIN_FILENAME_BASE = 'oai_cv-k%d'  # Do not change unless
+K_BIN_SAVE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), K_BIN_FILENAME_BASE + '-%s.cv')
 
 
 def get_file_info(fname, dirpath):
@@ -97,10 +99,14 @@ def verify_bins(k):
 
 if __name__ == '__main__':
     k = int(sys.argv[1])
-    save_path = K_BIN_SAVE_PATH % k
-    if os.path.isfile(save_path):
-        raise FileExistsError(
-            'Cross-validation with %d bins already exists. To overwrite, manually delete previous file' % k)
+    save_path = K_BIN_SAVE_PATH % (k, strftime("%Y-%m-%d-%H-%M-%S", localtime()))
+    base_name = K_BIN_FILENAME_BASE % k
+
+    save_directory = os.path.dirname(save_path)
+    for f in os.listdir(save_directory):
+        if base_name in f:
+            raise FileExistsError(
+                'Cross-validation with %d bins already exists (%s). To overwrite, manually delete previous file' % (k, os.path.join(save_directory, f)))
 
     # Get all patient ids (pids)
     pids = dict()

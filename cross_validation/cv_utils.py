@@ -1,14 +1,28 @@
 import os, sys
 import warnings
 
-K_BIN_SAVE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'oai_data-k%d.cv')
+K_BIN_FILENAME_BASE = 'oai_cv-k%d'  # Do not change unless
+K_BIN_SAVE_DIRECTORY = os.path.dirname(os.path.realpath(__file__))
 
 sys.path.append('../')
 from utils import io_utils
 
 
+def get_cross_validation_file(k):
+    save_directory = K_BIN_SAVE_DIRECTORY
+    base_name = K_BIN_FILENAME_BASE % k
+    for f in os.listdir(save_directory):
+        if base_name in f:
+            return os.path.join(save_directory, f)
+
+    return None
+
+
 def load_cross_validation(k):
-    return io_utils.load_pik(K_BIN_SAVE_PATH % k)
+    filepath = get_cross_validation_file(k)
+
+    print('Loading %d-fold cross-validation data from %s...' % (k, filepath))
+    return io_utils.load_pik(filepath)
 
 
 def get_cv_experiments(k, num_valid_bins=1, num_test_bins=1):
