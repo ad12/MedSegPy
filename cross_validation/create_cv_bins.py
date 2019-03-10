@@ -68,7 +68,7 @@ def check_duplicates(x_list: list):
 
 
 def verify_bins(k):
-    bins = cv_utils.load_cross_validation(k)['bins']
+    bins = cv_utils.load_cross_validation(k)
     assert len(bins) == k
 
     bin_to_pid_dict = dict()
