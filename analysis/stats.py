@@ -102,20 +102,19 @@ def compare_metrics(dirpaths, names, dirname):
                 transparent=True)
 
 
-def kruskal_dunn_analysis(dirpaths, names, dirname):
-    save_dirpath = os.path.join(SAVE_PATH, dirname)
+def kruskal_dunn_analysis(dirpaths, names, metrics=('dsc', 'voe', 'cv', 'assd')):
     assert len(dirpaths) == len(names), '%d vs %d' % (len(dirpaths), len(names))
 
     metrics = get_metrics_v2(dirpaths)
 
     metrics_results = dict()
     for k in metrics.keys():
-        vals = np.transpose(np.stack(metrics[k]))
-        df = pd.DataFrame(data=vals, columns=names)
+        #vals = np.transpose(np.stack(metrics[k]))
+        #df = pd.DataFrame(data=vals, columns=names)
 
         metrics_results[k] = kruskal_dunn(metrics[k], names)
 
-    for k in ['dsc', 'voe', 'cv', 'assd']:
+    for k in metrics:
         print_results(metrics_results[k], k)
         print('')
 
