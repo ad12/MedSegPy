@@ -393,8 +393,8 @@ class OAIGenerator(Generator):
         config = self.config
 
         if config.STATE == 'training':
-            train_data_path_or_files = config.TRAIN_FILES_CV if config.USE_CROSS_VALIDATION else config.TRAIN_PATH
-            valid_data_path_or_files = config.VALID_FILES_CV if config.USE_CROSS_VALIDATION else config.VALID_PATH
+            train_data_path_or_files = config.__CV_TRAIN_FILES__ if config.USE_CROSS_VALIDATION else config.TRAIN_PATH
+            valid_data_path_or_files = config.__CV_VALID_FILES__ if config.USE_CROSS_VALIDATION else config.VALID_PATH
 
             train_files, train_batches_per_epoch, _ = self.__calc_generator_info__(
                 data_path_or_files=train_data_path_or_files,
@@ -427,7 +427,7 @@ class OAIGenerator(Generator):
             print('INFO: Image size: %s' % (self.config.IMG_SIZE,))
             print('INFO: Image types included in training: %s' % (self.config.FILE_TYPES,))
         else:  # config in Testing state
-            test_data_path_or_files = config.TEST_FILES_CV if config.USE_CROSS_VALIDATION else config.TEST_PATH
+            test_data_path_or_files = config.__CV_TEST_FILES__ if config.USE_CROSS_VALIDATION else config.TEST_PATH
 
             test_files, test_batches_per_epoch, _ = self.__calc_generator_info__(
                 data_path_or_files=test_data_path_or_files,
@@ -467,8 +467,8 @@ class OAIGenerator(Generator):
         if config.STATE is not 'training':
             raise ValueError('Method is only active when config is in training state')
 
-        train_data_path_or_files = config.TRAIN_FILES_CV if config.USE_CROSS_VALIDATION else config.TRAIN_PATH
-        valid_data_path_or_files = config.VALID_FILES_CV if config.USE_CROSS_VALIDATION else config.VALID_PATH
+        train_data_path_or_files = config.__CV_TRAIN_FILES__ if config.USE_CROSS_VALIDATION else config.TRAIN_PATH
+        valid_data_path_or_files = config.__CV_VALID_FILES__ if config.USE_CROSS_VALIDATION else config.VALID_PATH
 
         train_files, train_batches_per_epoch, _ = self.__calc_generator_info__(
             data_path_or_files=train_data_path_or_files,
