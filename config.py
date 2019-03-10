@@ -150,6 +150,27 @@ class Config():
         self.PIK_SAVE_PATH_DIR = io_utils.check_dir(os.path.dirname(self.PIK_SAVE_PATH))
         self.TF_LOG_DIR = io_utils.check_dir(os.path.join(self.CP_SAVE_PATH, 'tf_log'))
 
+    def init_fine_tune(self, init_weight_path):
+        """
+        Initialize fine tune state
+        :param init_weight_path: path to initial weights
+        """
+        if (self.STATE != 'training'):
+            raise ValueError('Must be in training state')
+
+        self.FINE_TUNE = True
+        self.INIT_WEIGHT_PATH = init_weight_path
+
+        prefix = os.path.join(self.DATE_TIME_STR, 'fine_tune')
+
+        # if fine_tune folder already exists, do not overwrite it
+        count = 2
+        while os.path.isdir(os.path.join(SAVE_PATH_PREFIX, self.CP_SAVE_TAG, prefix)):
+            prefix = os.path.join(self.DATE_TIME_STR, 'fine_tune_%03d' % count)
+            count += 1
+
+        self.init_training_paths(prefix)
+
     def init_cross_validation(self, bins_files,
                               train_bins, valid_bins, test_bins,
                               cv_k, cv_file, cv_tag):
@@ -252,33 +273,20 @@ class Config():
 
         self.__setattr__(attr, val)
 
-    def init_fine_tune(self, init_weight_path):
-        """
-        Initialize fine tune state
-        :param init_weight_path: path to initial weights
-        """
-        if (self.STATE != 'training'):
-            raise ValueError('Must be in training state')
-
-        self.FINE_TUNE = True
-        self.INIT_WEIGHT_PATH = init_weight_path
-
-        prefix = os.path.join(self.DATE_TIME_STR, 'fine_tune')
-
-        # if fine_tune folder already exists, do not overwrite it
-        count = 2
-        while os.path.isdir(os.path.join(SAVE_PATH_PREFIX, self.CP_SAVE_TAG, prefix)):
-            prefix = os.path.join(self.DATE_TIME_STR, 'fine_tune_%03d' % count)
-            count += 1
-
-        self.init_training_paths(prefix)
-
     def change_to_test(self):
         """
         Initialize testing state
         """
         self.STATE = 'testing'
         self.TEST_RESULT_PATH = io_utils.check_dir(os.path.join(self.CP_SAVE_PATH, self.TEST_RESULTS_FOLDER_NAME))
+
+        # if cross validation is enabled, load testing cross validation bin
+        if self.USE_CROSS_VALIDATION:
+            train_files, valid_files, test_files = cv_utils.get_fnames(cv_utils.load_cross_validation(self.CV_K),
+                                                                       (self.CV_TRAIN_BINS, self.CV_VALID_BINS, self.CV_TEST_BINS))
+            self.__CV_TRAIN_FILES__ = train_files
+            self.__CV_VALID_FILES__ = valid_files
+            self.__CV_TEST_FILES__ = test_files
 
     def summary(self, additional_vars=[]):
         """
