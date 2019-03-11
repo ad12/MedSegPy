@@ -345,6 +345,10 @@ class Config():
     def init_cmd_line_parser(cls, parser):
         subcommand_parser = parser.add_parser('%s' % cls.CP_SAVE_TAG, description='%s config parameters')
 
+        # Data format tag
+        subcommand_parser.add_argument('--tag', metavar='T', type=str, default=cls.TAG, nargs='?',
+                                       help='tag defining data format. Default: %d' % cls.TAG)
+
         # Number of epochs
         subcommand_parser.add_argument('--n_epochs', metavar='E', type=int, default=cls.N_EPOCHS, nargs='?',
                                        help='number of training epochs. Default: %d' % cls.N_EPOCHS)
@@ -418,7 +422,8 @@ class Config():
 
     @classmethod
     def __get_cmd_line_vars__(cls):
-        return ['n_epochs', 'augment_data',
+        return ['tag',
+                'n_epochs', 'augment_data',
                 'use_step_decay', 'initial_learning_rate', 'min_learning_rate', 'drop_factor', 'drop_rate',
                 'use_early_stopping', 'early_stopping_min_delta', 'early_stopping_patience',
                 'early_stopping_criterion',
@@ -692,6 +697,8 @@ class UNet3DConfig(UNetConfig):
 
     DROP_RATE = 1.0
     DROP_FACTOR = 0.8
+
+    TAG = 'oai_3d'
 
     # Train path - volumetric augmentation
     TRAIN_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/vol_aug/train_sag/'

@@ -496,7 +496,9 @@ class OAIGenerator(Generator):
 
 class OAI3DGenerator(OAIGenerator):
     """
-    Generator for training 3D networks with slice-wise OAI data (i.e. 9311328_V01-Aug04_072.im)
+    Generator for training 3D networks where data is stored per slice
+    Filename format: %07d_V%02d-Aug%02d_%03d % (patient_id, timepoint, augmentation, slice_number)
+                    e.g. '9311328_V01-Aug04_072.im'
     """
     SUPPORTED_TAGS = ['oai_3d']
 
@@ -552,12 +554,24 @@ class OAI3DGenerator(OAIGenerator):
 
         return im, seg_total
 
+    def __compress_multi_class_mask__(self, seg, tissues):
+        o_seg = []
+
+        for t_inds in tissues:
+            c_seg = seg[..., 0, t_inds]
+            if c_seg.ndim == 3:
+                c_seg = np.sum(c_seg, axis=-1)
+            o_seg.append(c_seg)
+
+        return np.stack(o_seg, axis=-1)
+
     def __load_corresponding_slices__(self, filepath):
         """
-        Assumes that there are at most slices go from 1-max_slice
-        :param num_slices:
-        :param filepath:
-        :return:
+        Loads volume that slice (filepath) corresponds to
+        e.g. If each input volume consists of 4 slices, slices 1-4 will be in the same volume.
+             If `filepath` corresponds to slice 2, the volume (slices 1-4) and corresponding segmentations will be returned
+        :param filepath: Filepath corresponding to single slice
+        :return: tuple of 2 3d numpy array corresponding to 3d input volume and 3d segmentation volume (im_vol, seg_vol)
         """
         data_path, filename = os.path.dirname(filepath), os.path.basename(filepath)
         corresponding_files = self.__get_corresponding_files__(filename)
@@ -570,10 +584,10 @@ class OAI3DGenerator(OAIGenerator):
             segs.append(seg)
 
         # segmentation is central slice segmentation
-        im = np.stack(ims, axis=-1)
-        seg = np.stack(segs, axis=-1)
+        im_vol = np.stack(ims, axis=-1)
+        seg_vol = np.stack(segs, axis=-1)
 
-        return im, seg
+        return im_vol, seg_vol
 
     def __calc_generator_info__(self, data_path_or_files: Union[str, list], batch_size, pids=None, augment_data=False):
         if type(data_path_or_files) is str:
