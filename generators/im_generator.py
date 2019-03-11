@@ -410,8 +410,16 @@ def img_generator_oai_test(data_path, batch_size, config):
     tissue = config.TISSUES
     include_background = config.INCLUDE_BACKGROUND
     tag = config.TAG
+
     files, batches_per_epoch = calc_generator_info(data_path, batch_size)
+    # remove files with augmentation
+    fs = []
+    for f in files:
+        if 'Aug00' in f:
+            fs.append(f)
+    files = fs
     files = sort_files(files, tag)
+
     num_neighboring = config.num_neighboring_slices()
     print(num_neighboring)
     # img_size must be 3D

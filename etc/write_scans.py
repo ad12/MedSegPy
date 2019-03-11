@@ -1,17 +1,18 @@
 import os, sys
 import SimpleITK as sitk
 import numpy as np
+import pandas as pd
 
 # Matplotlib initialization
 import matplotlib
 matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 
 sys.path.insert(0, '../')
 from generators.im_generator import img_generator_oai_test
 from config import UNetConfig
 from utils import io_utils
-import pandas as pd
 
 
 def write_tiff(x, filepath):
@@ -27,10 +28,18 @@ def write_subplot(x, filepath):
     print('Saving %s' % filepath)
     x = np.squeeze(x)
     x = normalize_im(x)
-    x_img = sitk.GetImageFromArray(normalize_im(x))
-    x_img = sitk.Cast(x_img, sitk.sitkFloat32)
 
-    sitk.WriteImage(x_img, filepath)
+    nrows = 5
+    ncols = 5
+    fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(30,30))
+    count = 0
+    for i in np.linspace(0, x.shape[0], nrows*ncols):
+        slice_ind = int(i)
+        slice_title = 'Slice %d' % (slice_ind + 1)
+        ax = axs[int(count / ncols)][count % ncols]
+        ax.imshow(x[slice_ind, ...])
+        ax.set_title(slice_title)
+
 
 
 def normalize_im(x):
