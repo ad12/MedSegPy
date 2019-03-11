@@ -328,6 +328,7 @@ if __name__ == '__main__':
                                                  num_test_bins=ho_test)
         cv_exp_id = 1
 
+        base_save_path = c.CP_SAVE_PATH
         for bin_inds in bins_split:
             c.init_cross_validation(bins_files=bins_files,
                                     train_bins=bin_inds[0],
@@ -335,7 +336,7 @@ if __name__ == '__main__':
                                     test_bins=bin_inds[2],
                                     cv_k=k_fold_cross_validation,
                                     cv_file=cv_file,
-                                    cv_tag='cv-exp-%03d' % cv_exp_id)
+                                    cp_save_path=os.path.join(base_save_path, 'cv-exp-%03d' % cv_exp_id))
             cv_exp_id += 1
 
             train(c, config_dict)

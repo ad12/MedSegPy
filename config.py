@@ -172,7 +172,7 @@ class Config():
 
     def init_cross_validation(self, bins_files,
                               train_bins, valid_bins, test_bins,
-                              cv_k, cv_file, cv_tag):
+                              cv_k, cv_file, cp_save_path):
         assert self.STATE == 'training', "To initialize cross-validation, must be in training state"
 
         self.USE_CROSS_VALIDATION = True
@@ -187,9 +187,7 @@ class Config():
         self.__CV_VALID_FILES__ = valid_files
         self.__CV_TEST_FILES__ = test_files
 
-        assert self.CP_SAVE_PATH, "CP_SAVE_PATH must be defined - call init_training_paths prior to calling this function"
-
-        self.CP_SAVE_PATH = io_utils.check_dir(os.path.join(self.CP_SAVE_PATH, cv_tag))
+        self.CP_SAVE_PATH = io_utils.check_dir(cp_save_path)
         self.PIK_SAVE_PATH = os.path.join(self.CP_SAVE_PATH, 'pik_data.dat')
         self.PIK_SAVE_PATH_DIR = io_utils.check_dir(os.path.dirname(self.PIK_SAVE_PATH))
         self.TF_LOG_DIR = io_utils.check_dir(os.path.join(self.CP_SAVE_PATH, 'tf_log'))
