@@ -2,7 +2,6 @@ import os
 from abc import ABC, abstractmethod
 from os import listdir
 from random import shuffle
-from re import split
 from typing import Union
 
 import h5py
@@ -388,8 +387,6 @@ class OAIGenerator(Generator):
                     'segpath': os.path.join(dirpath, '%s.%s' % (fname, 'seg')),
                     'scanid': scan_id}
         except Exception as e:
-            import pdb;
-            pdb.set_trace()
             raise e
         assert data['pid'] == fname[:7], str(data)
 
@@ -641,19 +638,59 @@ class OAI3DGenerator(OAIGenerator):
         return files, batches_per_epoch, max_slice_num
 
 
-class OAI3DStackGenerator(Generator):
-    SUPPORTED_TAGS = ['oai_aug_3d_pixel', 'oai_3d_stack']
+class OAI3DBlockGenerator(Generator):
+    """
+    Generator for 3D networks where data is stored in blocks
+    """
+    SUPPORTED_TAGS = ['oai_3d_block']
 
     def get_file_id(self, fname):
         # sample fname: 9146462_V01-Aug0_9.im
-        tmp = split('_', fname)
-        int(tmp[0] + tmp[1][1:3] + tmp[1][-1:] + tmp[2])
+        tmp = fname.split('_')
+        return int(tmp[0] + tmp[1][1:3] + tmp[1][-1:] + tmp[2])
 
     def __load_inputs__(self, data_path, file):
-        pass
+        # TODO: refactor - function identical in OAIGenerator
+        im_path = '%s/%s.im' % (data_path, file)
+        with h5py.File(im_path, 'r') as f:
+            im = f['data'][:]
+            if len(im.shape) == 2:
+                im = im[..., np.newaxis]
+
+        seg_path = '%s/%s.seg' % (data_path, file)
+        with h5py.File(seg_path, 'r') as f:
+            seg = f['data'][:].astype('float32')
+
+        assert len(im.shape) == 3
+        assert len(seg.shape) == 4 and seg.shape[-2] == 1
+
+        return im, seg
 
     def img_generator(self, state='training'):
         super().img_generator(state)
 
-    def __get_file_info__(self, file: str, dirpath: str):
-        pass
+    def __get_file_info__(self, fname: str, dirpath: str):
+        # sample fname: 9146462_V01-Aug0_9.im
+        fname, ext = os.path.splitext(fname)
+        dirpath = os.path.dirname(fname)
+        fname = os.path.basename(fname)
+
+        f_data = fname.split('-')
+        scan_id = f_data[0]
+        pid_timepoint_split = scan_id.split('_')
+        pid = pid_timepoint_split[0]
+        f_aug_slice = f_data[1].split('_')
+        try:
+            data = {'pid': pid,
+                    'timepoint': int(pid_timepoint_split[1][1:]),
+                    'aug': int(f_aug_slice[0][3:]),
+                    'block': int(f_aug_slice[1]),
+                    'fname': fname,
+                    'impath': os.path.join(dirpath, '%s.%s' % (fname, 'im')),
+                    'segpath': os.path.join(dirpath, '%s.%s' % (fname, 'seg')),
+                    'scanid': scan_id}
+        except Exception as e:
+            raise e
+        assert data['pid'] == fname[:7], str(data)
+
+        return data

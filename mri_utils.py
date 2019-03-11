@@ -38,5 +38,3 @@ def parse_tissues(vargin: dict):
         tissues.append(MASK_PATELLAR_CARTILAGE)
 
     return tissues
-
-

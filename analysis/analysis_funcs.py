@@ -24,7 +24,7 @@ import scipy.io as sio
 
 import seaborn as sns
 
-from utils import io_utils, utils
+from utils import io_utils
 
 from scipy import optimize as sop
 from matplotlib.ticker import ScalarFormatter

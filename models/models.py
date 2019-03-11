@@ -11,8 +11,8 @@ from config import DeeplabV3Config, SegnetConfig, UNetConfig, \
 from glob_constants import SEED
 from models.deeplab_2d.deeplab_model import DeeplabModel
 from models.segnet_2d.segnet import Segnet_v2
-from models.unet_2d.unet_model import unet_2d_model, unet_2d_model_v2
 from models.unet_2d.residual_unet_model import residual_unet_2d
+from models.unet_2d.unet_model import unet_2d_model, unet_2d_model_v2
 
 
 def get_model(config):
@@ -54,7 +54,8 @@ def residual_unet(config):
 
     DEPTH = config.DEPTH
     NUM_FILTERS = config.NUM_FILTERS
-    model = residual_unet_2d(input_size=input_shape, depth=DEPTH, num_filters=NUM_FILTERS, layer_order=config.LAYER_ORDER,
+    model = residual_unet_2d(input_size=input_shape, depth=DEPTH, num_filters=NUM_FILTERS,
+                             layer_order=config.LAYER_ORDER,
                              dropout_rate=config.DROPOUT_RATE,
                              use_squeeze_excitation=config.USE_SE_BLOCK,
                              squeeze_excitation_ratio=config.SE_RATIO)
@@ -64,6 +65,7 @@ def residual_unet(config):
     model = Model(inputs=model.input, outputs=x)
 
     return model
+
 
 def unet_2d(config):
     """

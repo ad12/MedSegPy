@@ -31,8 +31,8 @@ def compare_metrics_v2(dirpaths, exp_names, save_directory: str, metrics=('dsc',
     :param save_directory: directory to save bar graph
     :param metrics: metrics to plot
     """
-    #n_groups = len(x_labels)
-    #x_index = np.arange(0, n_groups * 2, 2)
+    # n_groups = len(x_labels)
+    # x_index = np.arange(0, n_groups * 2, 2)
 
     exp_filepath = os.path.join(SAVE_PATH, save_directory, 'bar.png')
 
@@ -109,8 +109,8 @@ def kruskal_dunn_analysis(dirpaths, names, metrics=('dsc', 'voe', 'cv', 'assd'))
 
     metrics_results = dict()
     for k in metrics.keys():
-        #vals = np.transpose(np.stack(metrics[k]))
-        #df = pd.DataFrame(data=vals, columns=names)
+        # vals = np.transpose(np.stack(metrics[k]))
+        # df = pd.DataFrame(data=vals, columns=names)
 
         metrics_results[k] = kruskal_dunn(metrics[k], names)
 
@@ -149,8 +149,7 @@ def print_results(data, metric):
     print('===================')
     print('F-value: %0.4f' % data['f'])
     print('p-value: %0.4f' % data['p'])
-    
-    
+
     def highlight_significant(val):
         """
         Takes a scalar and returns a string with

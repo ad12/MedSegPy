@@ -7,8 +7,9 @@ import matplotlib
 import numpy as np
 import scipy.io as sio
 
-from utils import io_utils
 from utils import im_utils
+from utils import io_utils
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import oai_test

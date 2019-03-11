@@ -1,6 +1,7 @@
 import configparser
 import os
 import warnings
+from itertools import groupby
 from time import localtime, strftime
 
 import glob_constants as glc
@@ -9,8 +10,6 @@ import utils.utils as utils
 from cross_validation import cv_utils
 from losses import DICE_LOSS, CMD_LINE_SUPPORTED_LOSSES, get_training_loss_from_str
 from utils import io_utils
-
-from itertools import groupby
 
 DEPRECATED_KEYS = ['NUM_CLASSES', 'TRAIN_FILES_CV', 'VALID_FILES_CV', 'TEST_FILES_CV']
 
@@ -283,7 +282,8 @@ class Config():
         # if cross validation is enabled, load testing cross validation bin
         if self.USE_CROSS_VALIDATION:
             train_files, valid_files, test_files = cv_utils.get_fnames(cv_utils.load_cross_validation(self.CV_K),
-                                                                       (self.CV_TRAIN_BINS, self.CV_VALID_BINS, self.CV_TEST_BINS))
+                                                                       (self.CV_TRAIN_BINS, self.CV_VALID_BINS,
+                                                                        self.CV_TEST_BINS))
             self.__CV_TRAIN_FILES__ = train_files
             self.__CV_VALID_FILES__ = valid_files
             self.__CV_TEST_FILES__ = test_files
@@ -303,8 +303,9 @@ class Config():
                 'N_EPOCHS', 'AUGMENT_DATA', 'LOSS', '',
                 'USE_CROSS_VALIDATION', 'CV_K' if self.USE_CROSS_VALIDATION else '',
                 'CV_TRAIN_BINS' if self.USE_CROSS_VALIDATION else '',
-                'CV_VALID_BINS' if self.USE_CROSS_VALIDATION else '', 'CV_TEST_BINS' if self.USE_CROSS_VALIDATION else ''
-                'TRAIN_BATCH_SIZE', 'VALID_BATCH_SIZE', '',
+                'CV_VALID_BINS' if self.USE_CROSS_VALIDATION else '',
+                'CV_TEST_BINS' if self.USE_CROSS_VALIDATION else ''
+                                                                 'TRAIN_BATCH_SIZE', 'VALID_BATCH_SIZE', '',
                 'INITIAL_LEARNING_RATE', 'USE_STEP_DECAY', 'DROP_FACTOR', 'DROP_RATE', 'MIN_LEARNING_RATE', '',
                 'USE_EARLY_STOPPING', 'EARLY_STOPPING_MIN_DELTA', 'EARLY_STOPPING_PATIENCE',
                 'EARLY_STOPPING_CRITERION', '',

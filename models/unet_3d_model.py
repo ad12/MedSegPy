@@ -1,11 +1,9 @@
 import numpy as np
-
-from keras.models import Model, Sequential
-from keras.layers import Input, Conv3D, MaxPooling3D, concatenate, add, Lambda, Dropout, AlphaDropout
+from keras.initializers import he_normal
 from keras.layers import BatchNormalization as BN
 from keras.layers import Deconvolution3D
-from keras.utils import plot_model
-from keras.initializers import he_normal
+from keras.layers import Input, Conv3D, MaxPooling3D, concatenate, Dropout
+from keras.models import Model
 
 DEFAULT_INPUT_SIZE = (288, 288, 64)
 
@@ -61,9 +59,9 @@ def unet_3d_model(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, output_mode=
 
         # Pool in slice dimension only if dim has length => 2
         if (dim3[depth_cnt] > 0):
-            pool = MaxPooling3D(pool_size=in_plane_pool_size+(2,))(conv)
+            pool = MaxPooling3D(pool_size=in_plane_pool_size + (2,))(conv)
         else:
-            pool = MaxPooling3D(pool_size=in_plane_pool_size+(1,))(conv)
+            pool = MaxPooling3D(pool_size=in_plane_pool_size + (1,))(conv)
 
     # step up convolutional layers
     for depth_cnt in range(depth - 2, -1, -1):
@@ -75,7 +73,7 @@ def unet_3d_model(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, output_mode=
         if (dim3[depth_cnt] > 0):
             up = concatenate([Deconvolution3D(nfeatures[depth_cnt], filter_size,
                                               padding='same',
-                                              strides=in_plane_pool_size+(2,),
+                                              strides=in_plane_pool_size + (2,),
                                               output_shape=deconv_shape,
                                               kernel_initializer=he_normal(seed=SEED))(conv),
                               conv_ptr[depth_cnt]],
@@ -84,7 +82,7 @@ def unet_3d_model(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, output_mode=
         else:
             up = concatenate([Deconvolution3D(nfeatures[depth_cnt], filter_size,
                                               padding='same',
-                                              strides=in_plane_pool_size+(1,),
+                                              strides=in_plane_pool_size + (1,),
                                               output_shape=deconv_shape,
                                               kernel_initializer=he_normal(seed=SEED))(conv),
                               conv_ptr[depth_cnt]],

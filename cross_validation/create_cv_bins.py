@@ -84,7 +84,7 @@ def verify_bins(k):
             file_info = get_file_info(os.path.basename(filepath), os.path.dirname(filepath))
             pids.append(file_info['pid'])
             scan_ids.append(file_info['scanid'])
-        
+
         bin_to_pid_dict[bin_id] = list(set(pids))
         bin_to_scanid_dict[bin_id] = list(set(scan_ids))
 
@@ -106,7 +106,8 @@ if __name__ == '__main__':
     for f in os.listdir(save_directory):
         if base_name in f:
             raise FileExistsError(
-                'Cross-validation with %d bins already exists (%s). To overwrite, manually delete previous file' % (k, os.path.join(save_directory, f)))
+                'Cross-validation with %d bins already exists (%s). To overwrite, manually delete previous file' % (
+                k, os.path.join(save_directory, f)))
 
     # Get all patient ids (pids)
     pids = dict()

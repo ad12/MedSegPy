@@ -64,11 +64,13 @@ def get_training_loss(loss, weights=None):
     else:
         raise ValueError("Loss type not supported")
 
+
 def dice_focal_loss(y_true, y_pred):
     dsc = dice_loss(y_true, y_pred)
     fc = focal_loss(FOCAL_LOSS_GAMMA)(y_true, y_pred)
 
     return dsc + fc
+
 
 # Dice function loss optimizer
 def dice_loss(y_true, y_pred):

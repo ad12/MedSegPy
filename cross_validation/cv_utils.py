@@ -1,4 +1,5 @@
-import os, sys
+import os
+import sys
 import warnings
 
 K_BIN_FILENAME_BASE = 'oai_cv-k%d'  # Do not change unless
@@ -65,7 +66,8 @@ def get_cv_experiments(k, num_valid_bins=1, num_test_bins=1):
 
     for i in range(len(temp)):
         for j in range(i + 1, len(temp)):
-            assert len(set(temp[i]) & set(temp[j])) == 0, "Test bins %d and %d not mutually exclusive - %d overlap" % (i, j, len(set(temp[i]) & set(temp[j])))
+            assert len(set(temp[i]) & set(temp[j])) == 0, "Test bins %d and %d not mutually exclusive - %d overlap" % (
+            i, j, len(set(temp[i]) & set(temp[j])))
 
     return exps_bin_division
 
@@ -83,6 +85,7 @@ def get_fnames(bins_files, bin_inds):
     test_files = [filepath for x in test_files for filepath in x]
 
     return train_files, valid_files, test_files
+
 
 if __name__ == '__main__':
     print(get_cv_experiments(6, num_test_bins=2))

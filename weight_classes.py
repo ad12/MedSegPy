@@ -14,6 +14,7 @@ CLASS_FREQ_DAT_FOLDER = io_utils.check_dir('/bmrNAS/people/arjun/msk_seg_network
 CLASS_FREQ_DAT_WEIGHTS_AUG = os.path.join(CLASS_FREQ_DAT_FOLDER, 'class_frequencies-aug.dat')
 CLASS_FREQ_DAT_WEIGHTS_NO_AUG = os.path.join(CLASS_FREQ_DAT_FOLDER, 'class_frequencies-no_aug.dat')
 
+
 # Create list of pids
 
 # TODO: support weighting more than 1 class

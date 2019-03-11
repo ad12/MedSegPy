@@ -128,7 +128,7 @@ def test_model(config, save_file=0):
     test_gen.summary()
     print('Save path: %s' % (test_result_path))
 
-    #test_gen = img_generator_oai_test(test_path, test_batch_size, config)
+    # test_gen = img_generator_oai_test(test_path, test_batch_size, config)
 
     pids_str = ''
 
@@ -156,12 +156,13 @@ def test_model(config, save_file=0):
                            np.transpose(np.squeeze(labels), axes=[1, 2, 0]),
                            voxel_spacing=VOXEL_SPACING)
 
-        print_str = 'Scan #%03d (name = %s, %d slices) = DSC: %0.3f, VOE: %0.3f, CV: %0.3f, ASSD (mm): %0.3f' % (img_cnt, fname,
-                                                                                                       num_slices,
-                                                                                                       mw.metrics['dsc'][-1],
-                                                                                                       mw.metrics['voe'][-1],
-                                                                                                       mw.metrics['cv'][-1],
-                                                                                                       mw.metrics['assd'][-1])
+        print_str = 'Scan #%03d (name = %s, %d slices) = DSC: %0.3f, VOE: %0.3f, CV: %0.3f, ASSD (mm): %0.3f' % (
+        img_cnt, fname,
+        num_slices,
+        mw.metrics['dsc'][-1],
+        mw.metrics['voe'][-1],
+        mw.metrics['cv'][-1],
+        mw.metrics['assd'][-1])
         pids_str = pids_str + print_str + '\n'
         print(print_str)
 
@@ -373,11 +374,11 @@ def test_dir(dirpath, config=None, vals_dict=None, best_weight_path=None):
     if best_weight_path is None:
         best_weight_path = utils.get_weights(dirpath)
     print('Best weight path: %s' % best_weight_path)
-    
+
     config_filepath = os.path.join(dirpath, 'config.ini')
     if not config:
         config = MCONFIG.get_config(MCONFIG.get_cp_save_tag(config_filepath), is_testing=True)
-    
+
     config.load_config(config_filepath)
     config.TEST_WEIGHT_PATH = best_weight_path
 
@@ -409,6 +410,7 @@ OS_KEY = 'OS'
 DIL_RATES_KEY = 'DIL_RATES'
 
 SAVE_H5_DATA = False
+
 
 def get_config(name):
     configs = [DeeplabV3Config(create_dirs=False), UNetConfig(create_dirs=False), SegnetConfig(create_dirs=False),

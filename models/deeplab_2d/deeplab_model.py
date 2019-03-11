@@ -32,7 +32,6 @@ from keras.applications import imagenet_utils
 from keras.engine import InputSpec
 from keras.engine import Layer
 from keras.engine.topology import get_source_inputs
-from keras.initializers import he_normal
 from keras.layers import Activation
 from keras.layers import Add
 from keras.layers import AveragePooling2D
@@ -158,7 +157,6 @@ class DeeplabModel():
 
         return x
 
-
     def _conv2d_same(self, x, filters, prefix, stride=1, kernel_size=3, rate=1):
         """Implements right 'same' padding for even kernel sizes
             Without this there is a 1 pixel drift when stride = 2
@@ -192,7 +190,6 @@ class DeeplabModel():
                           kernel_initializer=init_utils.get_initializer(self.kernel_initializer, self.seed),
                           name=prefix)(x)
 
-
     def _xception_block(self, inputs, depth_list, prefix, skip_connection_type, stride,
                         rate=1, depth_activation=False, return_skip=False):
         """ Basic building block of modified Xception network
@@ -209,17 +206,17 @@ class DeeplabModel():
         residual = inputs
         for i in range(3):
             residual = self.SepConv_BN(residual,
-                                  depth_list[i],
-                                  prefix + '_separable_conv{}'.format(i + 1),
-                                  stride=stride if i == 2 else 1,
-                                  rate=rate,
-                                  depth_activation=depth_activation)
+                                       depth_list[i],
+                                       prefix + '_separable_conv{}'.format(i + 1),
+                                       stride=stride if i == 2 else 1,
+                                       rate=rate,
+                                       depth_activation=depth_activation)
             if i == 1:
                 skip = residual
         if skip_connection_type == 'conv':
             shortcut = self._conv2d_same(inputs, depth_list[-1], prefix + '_shortcut',
-                                    kernel_size=1,
-                                    stride=stride)
+                                         kernel_size=1,
+                                         stride=stride)
             shortcut = BatchNormalization(name=prefix + '_shortcut_BN')(shortcut)
             outputs = layers.add([residual, shortcut])
         elif skip_connection_type == 'sum':
@@ -239,7 +236,6 @@ class DeeplabModel():
         if new_v < 0.9 * v:
             new_v += divisor
         return new_v
-
 
     def _inverted_res_block(self, inputs, expansion, stride, alpha, filters, block_id, skip_connection, rate=1):
         in_channels = inputs._keras_shape[-1]
@@ -285,7 +281,8 @@ class DeeplabModel():
 
         return x
 
-    def Deeplabv3(self, weights='pascal_voc', input_tensor=None, input_shape=(512, 512, 3), classes=21, backbone='mobilenetv2',
+    def Deeplabv3(self, weights='pascal_voc', input_tensor=None, input_shape=(512, 512, 3), classes=21,
+                  backbone='mobilenetv2',
                   OS=16, alpha=1., dilation_divisor=1, dil_rate_input=None, dropout_rate=0.1):
         """ Instantiates the Deeplabv3+ architecture
 
@@ -373,26 +370,26 @@ class DeeplabModel():
             x = Activation('relu')(x)
 
             x = self._xception_block(x, [128, 128, 128], 'entry_flow_block1',
-                                skip_connection_type='conv', stride=2,
-                                depth_activation=False)
+                                     skip_connection_type='conv', stride=2,
+                                     depth_activation=False)
             x, skip1 = self._xception_block(x, [256, 256, 256], 'entry_flow_block2',
-                                       skip_connection_type='conv', stride=2,
-                                       depth_activation=False, return_skip=True)
+                                            skip_connection_type='conv', stride=2,
+                                            depth_activation=False, return_skip=True)
 
             x = self._xception_block(x, [728, 728, 728], 'entry_flow_block3',
-                                skip_connection_type='conv', stride=entry_block3_stride,
-                                depth_activation=False)
+                                     skip_connection_type='conv', stride=entry_block3_stride,
+                                     depth_activation=False)
             for i in range(16):
                 x = self._xception_block(x, [728, 728, 728], 'middle_flow_unit_{}'.format(i + 1),
-                                    skip_connection_type='sum', stride=1, rate=middle_block_rate,
-                                    depth_activation=False)
+                                         skip_connection_type='sum', stride=1, rate=middle_block_rate,
+                                         depth_activation=False)
 
             x = self._xception_block(x, [728, 1024, 1024], 'exit_flow_block1',
-                                skip_connection_type='conv', stride=1, rate=exit_block_rates[0],
-                                depth_activation=False)
+                                     skip_connection_type='conv', stride=1, rate=exit_block_rates[0],
+                                     depth_activation=False)
             x = self._xception_block(x, [1536, 1536, 2048], 'exit_flow_block2',
-                                skip_connection_type='none', stride=1, rate=exit_block_rates[1],
-                                depth_activation=True)
+                                     skip_connection_type='none', stride=1, rate=exit_block_rates[1],
+                                     depth_activation=True)
 
         else:
             OS = 8
@@ -407,46 +404,46 @@ class DeeplabModel():
             x = Activation(self.relu6, name='Conv_Relu6')(x)
 
             x = self._inverted_res_block(x, filters=16, alpha=alpha, stride=1,
-                                    expansion=1, block_id=0, skip_connection=False)
+                                         expansion=1, block_id=0, skip_connection=False)
 
             x = self._inverted_res_block(x, filters=24, alpha=alpha, stride=2,
-                                    expansion=6, block_id=1, skip_connection=False)
+                                         expansion=6, block_id=1, skip_connection=False)
             x = self._inverted_res_block(x, filters=24, alpha=alpha, stride=1,
-                                    expansion=6, block_id=2, skip_connection=True)
+                                         expansion=6, block_id=2, skip_connection=True)
 
             x = self._inverted_res_block(x, filters=32, alpha=alpha, stride=2,
-                                    expansion=6, block_id=3, skip_connection=False)
+                                         expansion=6, block_id=3, skip_connection=False)
             x = self._inverted_res_block(x, filters=32, alpha=alpha, stride=1,
-                                    expansion=6, block_id=4, skip_connection=True)
+                                         expansion=6, block_id=4, skip_connection=True)
             x = self._inverted_res_block(x, filters=32, alpha=alpha, stride=1,
-                                    expansion=6, block_id=5, skip_connection=True)
+                                         expansion=6, block_id=5, skip_connection=True)
 
             # stride in block 6 changed from 2 -> 1, so we need to use rate = 2
             x = self._inverted_res_block(x, filters=64, alpha=alpha, stride=1,  # 1!
-                                    expansion=6, block_id=6, skip_connection=False)
+                                         expansion=6, block_id=6, skip_connection=False)
             x = self._inverted_res_block(x, filters=64, alpha=alpha, stride=1, rate=2,
-                                    expansion=6, block_id=7, skip_connection=True)
+                                         expansion=6, block_id=7, skip_connection=True)
             x = self._inverted_res_block(x, filters=64, alpha=alpha, stride=1, rate=2,
-                                    expansion=6, block_id=8, skip_connection=True)
+                                         expansion=6, block_id=8, skip_connection=True)
             x = self._inverted_res_block(x, filters=64, alpha=alpha, stride=1, rate=2,
-                                    expansion=6, block_id=9, skip_connection=True)
+                                         expansion=6, block_id=9, skip_connection=True)
 
             x = self._inverted_res_block(x, filters=96, alpha=alpha, stride=1, rate=2,
-                                    expansion=6, block_id=10, skip_connection=False)
+                                         expansion=6, block_id=10, skip_connection=False)
             x = self._inverted_res_block(x, filters=96, alpha=alpha, stride=1, rate=2,
-                                    expansion=6, block_id=11, skip_connection=True)
+                                         expansion=6, block_id=11, skip_connection=True)
             x = self._inverted_res_block(x, filters=96, alpha=alpha, stride=1, rate=2,
-                                    expansion=6, block_id=12, skip_connection=True)
+                                         expansion=6, block_id=12, skip_connection=True)
 
             x = self._inverted_res_block(x, filters=160, alpha=alpha, stride=1, rate=2,  # 1!
-                                    expansion=6, block_id=13, skip_connection=False)
+                                         expansion=6, block_id=13, skip_connection=False)
             x = self._inverted_res_block(x, filters=160, alpha=alpha, stride=1, rate=4,
-                                    expansion=6, block_id=14, skip_connection=True)
+                                         expansion=6, block_id=14, skip_connection=True)
             x = self._inverted_res_block(x, filters=160, alpha=alpha, stride=1, rate=4,
-                                    expansion=6, block_id=15, skip_connection=True)
+                                         expansion=6, block_id=15, skip_connection=True)
 
             x = self._inverted_res_block(x, filters=320, alpha=alpha, stride=1, rate=4,
-                                    expansion=6, block_id=16, skip_connection=False)
+                                         expansion=6, block_id=16, skip_connection=False)
 
         # end of feature extractor
 
@@ -474,13 +471,13 @@ class DeeplabModel():
         if backbone == 'xception':
             # rate = 6 (12)
             b1 = self.SepConv_BN(x, 256, 'aspp1',
-                            rate=atrous_rates[0], depth_activation=True, epsilon=1e-5)
+                                 rate=atrous_rates[0], depth_activation=True, epsilon=1e-5)
             # rate = 12 (24)
             b2 = self.SepConv_BN(x, 256, 'aspp2',
-                            rate=atrous_rates[1], depth_activation=True, epsilon=1e-5)
+                                 rate=atrous_rates[1], depth_activation=True, epsilon=1e-5)
             # rate = 18 (36)
             b3 = self.SepConv_BN(x, 256, 'aspp3',
-                            rate=atrous_rates[2], depth_activation=True, epsilon=1e-5)
+                                 rate=atrous_rates[2], depth_activation=True, epsilon=1e-5)
 
             # concatenate ASPP branches & project
             x = Concatenate()([b4, b0, b1, b2, b3])
@@ -511,9 +508,9 @@ class DeeplabModel():
             dec_skip1 = Activation('relu')(dec_skip1)
             x = Concatenate()([x, dec_skip1])
             x = self.SepConv_BN(x, 256, 'decoder_conv0',
-                           depth_activation=True, epsilon=1e-5)
+                                depth_activation=True, epsilon=1e-5)
             x = self.SepConv_BN(x, 256, 'decoder_conv1',
-                           depth_activation=True, epsilon=1e-5)
+                                depth_activation=True, epsilon=1e-5)
 
         # you can use it with arbitary number of classes
         if classes == 21:
@@ -549,7 +546,6 @@ class DeeplabModel():
             model.load_weights(weights_path, by_name=True)
         return model
 
-
     def preprocess_input(self, x):
         """Preprocesses a numpy array encoding a batch of images.
         # Arguments
@@ -558,7 +554,6 @@ class DeeplabModel():
             Input array scaled to [-1.,1.]
         """
         return imagenet_utils.preprocess_input(x, mode='tf')
-
 
     def relu6(self, x):
         return K.relu(x, max_value=6)

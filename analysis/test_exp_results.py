@@ -1,4 +1,5 @@
-import os, sys
+import os
+import sys
 import unittest
 
 sys.path.append('../')
@@ -6,6 +7,7 @@ from analysis import exp_filepaths
 from utils import utils
 
 GPU = None
+
 
 class TestResults(unittest.TestCase):
     experiment_names = [item for item in dir(exp_filepaths) if not item.startswith("__")]
@@ -26,7 +28,8 @@ class TestResults(unittest.TestCase):
             for l in file_lines:
                 if 'Weights Loaded:' in l:
                     if weights:
-                        raise ValueError('Multiple lines with `Weights Loaded:` keyword- rerun test for %s: %s' % (exp, exp_filepath))
+                        raise ValueError('Multiple lines with `Weights Loaded:` keyword- rerun test for %s: %s' % (
+                        exp, exp_filepath))
 
                     weights = l.split(':')[1].strip()
 
@@ -38,11 +41,13 @@ class TestResults(unittest.TestCase):
             base_folder = exp_filepath[:ind]
             expected_best_weights = os.path.basename(utils.get_weights(base_folder))
 
-            assert weights == expected_best_weights, 'weights %s not expected %s- rerun test for %s: %s' % (weights, expected_best_weights, exp, exp_filepath)
+            assert weights == expected_best_weights, 'weights %s not expected %s- rerun test for %s: %s' % (
+            weights, expected_best_weights, exp, exp_filepath)
             print('%s valid' % exp)
+
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
-        GPU=sys.argv[1]
+        GPU = sys.argv[1]
 
     unittest.main()

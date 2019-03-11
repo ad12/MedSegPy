@@ -17,15 +17,16 @@ from keras.utils import plot_model
 
 import config as MCONFIG
 import glob_constants
+import mri_utils
 from cross_validation import cv_utils
 from generators import im_gens
 from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS, dice_loss, focal_loss
 from models.models import get_model
 from utils import io_utils, parallel_utils as putils, utils
-import mri_utils
 
 CLASS_WEIGHTS = np.asarray([100, 1])
 SAVE_BEST_WEIGHTS = True
+
 
 def train_model(config, optimizer=None, model=None, class_weights=None):
     """
@@ -262,17 +263,17 @@ if __name__ == '__main__':
 
     for s_parser in subparsers:
         s_parser.add_argument('-g', '--gpu', metavar='G', type=str, nargs='?', default='0',
-                            help='gpu id to use. default=0')
+                              help='gpu id to use. default=0')
         s_parser.add_argument('-s', '--seed', metavar='S', type=int, nargs='?', default=None,
-                            help='python seed to initialize filter weights. default=None')
+                              help='python seed to initialize filter weights. default=None')
         s_parser.add_argument('-k', '--k_fold_cross_validation', metavar='K', type=int, default=None, nargs='?',
-                            help='Use k-fold cross-validation for training. Argument specifies k')
+                              help='Use k-fold cross-validation for training. Argument specifies k')
         s_parser.add_argument('--ho_test', metavar='T', type=int, default=1, nargs='?',
-                            help='Number of hold-out test bins')
+                              help='Number of hold-out test bins')
         s_parser.add_argument('--ho_valid', metavar='V', type=int, default=1, nargs='?',
-                            help='Number of hold-out validation bins')
+                              help='Number of hold-out validation bins')
         s_parser.add_argument('--class_weights', type=tuple, nargs='?', default=CLASS_WEIGHTS,
-                            help='weight classes in order')
+                              help='weight classes in order')
         s_parser.add_argument('--experiment', type=str, nargs=1,
                               choices=sorted(list(EXP_DIR_MAP.keys())),
                               help='experiment to run'
@@ -293,7 +294,7 @@ if __name__ == '__main__':
     experiment_filepath = EXP_DIR_MAP[args.experiment[0]]
     MCONFIG.SAVE_PATH_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_seg_networks', experiment_filepath)
 
-    #MCONFIG.SAVE_PATH_PREFIX = os.path.join('./sample_data/cmd_line', experiment_filepath)
+    # MCONFIG.SAVE_PATH_PREFIX = os.path.join('./sample_data/cmd_line', experiment_filepath)
 
     gpu = args.gpu
     glob_constants.SEED = args.seed
@@ -307,7 +308,7 @@ if __name__ == '__main__':
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
     SAVE_BEST_WEIGHTS = not args.save_all_weights
 
-    c = MCONFIG.get_config(config_name = vargin['config'])
+    c = MCONFIG.get_config(config_name=vargin['config'])
     config_dict = c.parse_cmd_line(vargin)
 
     # parse tissues
@@ -323,12 +324,13 @@ if __name__ == '__main__':
 
         cv_file = cv_utils.get_cross_validation_file(k_fold_cross_validation)
         bins_files = cv_utils.load_cross_validation(k_fold_cross_validation)
-        bins_split = cv_utils.get_cv_experiments(k_fold_cross_validation, num_valid_bins=ho_valid, num_test_bins=ho_test)
+        bins_split = cv_utils.get_cv_experiments(k_fold_cross_validation, num_valid_bins=ho_valid,
+                                                 num_test_bins=ho_test)
         cv_exp_id = 1
 
         for bin_inds in bins_split:
             c.init_cross_validation(bins_files=bins_files,
-                                    train_bins= bin_inds[0],
+                                    train_bins=bin_inds[0],
                                     valid_bins=bin_inds[1],
                                     test_bins=bin_inds[2],
                                     cv_k=k_fold_cross_validation,

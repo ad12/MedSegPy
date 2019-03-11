@@ -2,17 +2,16 @@ from __future__ import print_function, division
 
 import argparse
 import os
-import config as MCONFIG
+
 from oai_test import test_dir
 
 
 def add_testing_arguments(parser: argparse.ArgumentParser):
-
     parser.add_argument('--dirpath', metavar='dp', type=str, nargs=1,
                         help='path to config to test')
 
     parser.add_argument('-g', '--gpu', metavar='G', type=str, nargs='?', default='0',
-                          help='gpu id to use. default=0')
+                        help='gpu id to use. default=0')
 
     parser.add_argument('--batch_size', default=72, type=int, nargs='?')
 

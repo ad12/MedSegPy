@@ -1,7 +1,7 @@
-import os, sys
+import os
 import re
+import sys
 
-import deprecated
 import numpy as np
 
 sys.path.insert(0, '../')
