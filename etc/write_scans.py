@@ -1,11 +1,13 @@
-import sys
-
-sys.path.insert(0, '../')
-
-import os
+import os, sys
 import SimpleITK as sitk
 import numpy as np
 
+# Matplotlib initialization
+import matplotlib
+matplotlib.use('Agg')
+
+
+sys.path.insert(0, '../')
 from generators.im_generator import img_generator_oai_test
 from config import UNetConfig
 from utils import io_utils
@@ -15,6 +17,16 @@ import pandas as pd
 def write_tiff(x, filepath):
     print('Saving %s' % filepath)
     x = np.squeeze(x)
+    x_img = sitk.GetImageFromArray(normalize_im(x))
+    x_img = sitk.Cast(x_img, sitk.sitkFloat32)
+
+    sitk.WriteImage(x_img, filepath)
+
+
+def write_subplot(x, filepath):
+    print('Saving %s' % filepath)
+    x = np.squeeze(x)
+    x = normalize_im(x)
     x_img = sitk.GetImageFromArray(normalize_im(x))
     x_img = sitk.Cast(x_img, sitk.sitkFloat32)
 

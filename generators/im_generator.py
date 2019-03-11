@@ -221,6 +221,13 @@ def img_generator(data_path, batch_size, img_size, tag, tissue_inds, shuffle_epo
 
 def img_generator_test(data_path, batch_size, img_size, tag, tissue_inds, shuffle_epoch=False):
     files, batches_per_epoch = calc_generator_info(data_path, batch_size)
+
+    # remove files with augmentation
+    fs = []
+    for f in files:
+        if 'Aug00' in f:
+            fs.append(f)
+    files = fs
     files = sort_files(files, tag)
 
     # img_size must be 3D
