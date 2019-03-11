@@ -65,7 +65,7 @@ if __name__ == '__main__':
 
     data = list(zip(*[iter(pids)] * 1))
 
-    df = pd.DataFrame(data)
+    df = pd.DataFrame(data, columns=['Patient ID', 'Direction', 'KL Grade'])
     writer = pd.ExcelWriter(os.path.join(SAVE_PATH, 'oai_data.xlsx'))
     df.to_excel(writer)
     writer.save()
