@@ -31,15 +31,18 @@ def write_subplot(x, filepath):
 
     nrows = 5
     ncols = 5
-    fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(30,30))
+    fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(15,15))
     count = 0
-    for i in np.linspace(0, x.shape[0], nrows*ncols):
+    for i in np.linspace(0, x.shape[0]-1, nrows*ncols):
         slice_ind = int(i)
         slice_title = 'Slice %d' % (slice_ind + 1)
         ax = axs[int(count / ncols)][count % ncols]
-        ax.imshow(x[slice_ind, ...])
+        ax.imshow(x[slice_ind, ...], cmap='gray')
         ax.set_title(slice_title)
+        ax.axis('off')
+        count += 1
     plt.savefig(filepath)
+    plt.close()
 
 
 def normalize_im(x):
