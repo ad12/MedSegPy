@@ -39,7 +39,7 @@ def write_subplot(x, filepath):
         ax = axs[int(count / ncols)][count % ncols]
         ax.imshow(x[slice_ind, ...])
         ax.set_title(slice_title)
-
+    plt.savefig(filepath)
 
 
 def normalize_im(x):
@@ -54,7 +54,8 @@ if __name__ == '__main__':
     pids = []
     for s_path in [config.TRAIN_PATH, config.VALID_PATH, config.TEST_PATH]:
         for x, y, pid, num_slices in img_generator_oai_test(s_path, config.TEST_BATCH_SIZE, config):
-            write_tiff(x, os.path.join(SAVE_PATH, pid + '.tiff'))
+            #write_tiff(x, os.path.join(SAVE_PATH, pid + '.tiff'))
+            write_subplot(x, os.path.join(SAVE_PATH, pid + '.png'))
             pids.append(pid)
 
     data = list(zip(*[iter(pids)] * 1))
