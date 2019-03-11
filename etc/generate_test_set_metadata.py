@@ -1,6 +1,12 @@
+"""
+Generate metadata (medial/lateral & KL grade) for each scan
+"""
+
+import sys
 import pandas as pd
 
-import utils
+sys.path.append('../')
+from utils import io_utils
 
 if __name__ == '__main__':
     TEST_SET_METADATA = '/bmrNAS/people/arjun/msk_seg_networks/oai_data_test/oai_test_data.xlsx'
@@ -14,4 +20,4 @@ if __name__ == '__main__':
         kl_grade = test_scan_data[2]
         test_set_metadata_dict[scan_id] = (scan_id, slice_direction, kl_grade)
 
-    utils.save_pik(test_set_metadata_dict, TEST_SET_METADATA_PIK)
+    io_utils.save_pik(test_set_metadata_dict, TEST_SET_METADATA_PIK)

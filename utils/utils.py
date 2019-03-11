@@ -39,22 +39,22 @@ def convert_data_type(var_string, data_type):
     :param data_type: the type of the data
     :return: string converted to data_type
     """
-    if (data_type is str):
+    if data_type is str:
         return var_string
 
-    if (data_type is float):
+    if data_type is float:
         return float(var_string)
 
-    if (data_type is int):
+    if data_type is int:
         return int(var_string)
 
-    if (data_type is bool):
+    if data_type is bool:
         return ast.literal_eval(var_string)
 
-    if (data_type is list):
+    if data_type is list:
         return ast.literal_eval(var_string)
 
-    if (data_type is tuple):
+    if data_type is tuple:
         return ast.literal_eval(var_string)
 
 

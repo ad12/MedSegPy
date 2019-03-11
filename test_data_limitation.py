@@ -3,7 +3,7 @@ import random
 import unittest
 
 import parse_pids
-import utils
+from utils import io_utils
 from config import DeeplabV3Config, SegnetConfig, UNetConfig
 from generators.im_generator import calc_generator_info
 
@@ -25,7 +25,7 @@ class DataLimitationTest(unittest.TestCase):
                                                      augment_data=config.AUGMENT_DATA)
 
             # config when PIDS is list of all subjects
-            pids = utils.load_pik(parse_pids.PID_TXT_PATH)
+            pids = io_utils.load_pik(parse_pids.PID_TXT_PATH)
             num_pids = len(pids)
             pids_sampled = random.sample(pids, num_pids)
             config.PIDS = pids_sampled
