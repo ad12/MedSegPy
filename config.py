@@ -454,18 +454,15 @@ class Config():
 
 
 class DeeplabV3Config(Config):
+    """
+    Configuration for 2D Deeplabv3+ architecture (https://arxiv.org/abs/1802.02611)
+    """
     CP_SAVE_TAG = DEEPLABV3_NAME
 
     OS = 16
     DIL_RATES = (2, 4, 6)
     AT_DIVISOR = 2
     DROPOUT_RATE = 0.1
-
-    FINE_TUNE = False
-    INIT_WEIGHT_PATH = '/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d/2018-08-21-07-03-24/deeplabv3_2d_weights.018-0.1191.h5'
-
-    # Test weight path is divisor 2
-    TEST_WEIGHT_PATH = '/bmrNAS/people/arjun/msk_seg_networks/oai_data/deeplabv3_2d/2018-08-21-07-03-24/deeplabv3_2d_weights.018-0.1191.h5'
 
     def __init__(self, state='training', create_dirs=True):
         super().__init__(self.CP_SAVE_TAG, state, create_dirs=create_dirs)
@@ -510,12 +507,12 @@ class DeeplabV3Config(Config):
 
 
 class SegnetConfig(Config):
+    """
+    Configuration for 2D Segnet architecture (https://arxiv.org/abs/1505.07293)
+    """
     CP_SAVE_TAG = SEGNET_NAME
 
     TRAIN_BATCH_SIZE = 15
-    FINE_TUNE = False
-    INIT_WEIGHT_PATH = ''
-    TEST_WEIGHT_PATH = ''
 
     DEPTH = 6
     NUM_CONV_LAYERS = [2, 2, 3, 3, 3, 3]
@@ -569,12 +566,13 @@ class SegnetConfig(Config):
 
 
 class UNetConfig(Config):
+    """
+    Configuration for 2D U-Net architecture (https://arxiv.org/abs/1505.04597)
+    """
     CP_SAVE_TAG = UNET_NAME
-    TEST_WEIGHT_PATH = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/select_weights/unet_2d_fc_weights.004--0.8968.h5'
 
     INIT_UNET_2D = False
 
-    USE_STEP_DECAY = True
     INITIAL_LEARNING_RATE = 2e-2
     DROP_FACTOR = 0.8 ** (1 / 5)
     DROP_RATE = 1.0
@@ -603,8 +601,10 @@ class UNetConfig(Config):
 
 
 class ResidualUNet(Config):
+    """
+    Configuration for 2D Residual U-Net architecture
+    """
     CP_SAVE_TAG = 'res_unet'
-    TEST_WEIGHT_PATH = ''
 
     DEPTH = 6
     NUM_FILTERS = None
@@ -648,13 +648,16 @@ class ResidualUNet(Config):
                          'USE_SE_BLOCK', 'SE_RATIO']
         super().summary(summary_attrs)
 
+    def num_neighboring_slices(self):
+        return self.IMG_SIZE[-1] if self.IMG_SIZE[-1] != 1 else None
+
 
 class EnsembleUDSConfig(Config):
     CP_SAVE_TAG = ENSEMBLE_UDS_NAME
-    AUGMENT_DATA = False
     N_EPOCHS = 100
 
     def __init__(self, state='training', create_dirs=True):
+        raise DeprecationWarning('This config is deprecated')
         super().__init__(self.CP_SAVE_TAG, state, create_dirs=create_dirs)
 
 
@@ -664,14 +667,18 @@ class UNetMultiContrastConfig(UNetConfig):
     CP_SAVE_TAG = 'unet_2d_multi_contrast'
 
     # Whether to load weights from original unet model
-    INIT_UNET_2D = True
-    INIT_UNET_2D_WEIGHTS = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/select_weights/unet_2d_fc_weights.004--0.8968.h5'
+    # INIT_UNET_2D = True
+    # INIT_UNET_2D_WEIGHTS = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/select_weights/unet_2d_fc_weights.004--0.8968.h5'
 
     def __init__(self, state='training', create_dirs=True):
-        super().__init__(self.CP_SAVE_TAG, state, create_dirs=create_dirs)
+        super().__init__(state, create_dirs=create_dirs)
 
 
 class UNet2_5DConfig(UNetConfig):
+    """
+    Configuration for 3D U-Net architecture
+    """
+
     IMG_SIZE = (288, 288, 7)
 
     CP_SAVE_TAG = 'unet_2_5d'
@@ -690,6 +697,7 @@ class UNet2_5DConfig(UNetConfig):
 
 
 class UNet3DConfig(UNetConfig):
+
     IMG_SIZE = (288, 288, 4)
 
     CP_SAVE_TAG = 'unet_3d'
@@ -705,15 +713,17 @@ class UNet3DConfig(UNetConfig):
     TRAIN_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/vol_aug/train_sag/'
 
     def num_neighboring_slices(self):
-        return self.IMG_SIZE[2]
+        return self.IMG_SIZE[-1]
 
 
 class DeeplabV3_2_5DConfig(DeeplabV3Config):
+    """
+    Configuration for 2.5D Deeplabv3+ architecture
+    """
     IMG_SIZE = (288, 288, 3)
 
     CP_SAVE_TAG = 'deeplabv3_2_5d'
     N_EPOCHS = 100
-    AUGMENT_DATA = False
 
     # Train path - volumetric augmentation
     TRAIN_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/vol_aug/train_sag/'
@@ -725,19 +735,30 @@ class DeeplabV3_2_5DConfig(DeeplabV3Config):
 SUPPORTED_CONFIGS = [UNetConfig, SegnetConfig, DeeplabV3Config, ResidualUNet]
 
 
-def get_config(config_name, is_testing=False):
+def get_config(config_cp_save_tag: str, is_testing: bool=False):
+    """
+    Get config using config cp_save_tag
+    :param config_cp_save_tag: config cp_save_tag
+    :param is_testing: if config should be loaded in testing state
+    :return: A Config instance
+    """
     create_dirs = not is_testing
 
     configs = SUPPORTED_CONFIGS
     for config in configs:
-        if config.CP_SAVE_TAG == config_name:
+        if config.CP_SAVE_TAG == config_cp_save_tag:
             c = config(create_dirs=create_dirs)
             return c
 
-    raise ValueError('config %s not found' % config_name)
+    raise ValueError('config %s not found' % config_cp_save_tag)
 
 
 def get_cp_save_tag(filepath: str):
+    """
+    Get cp_save_tag from a INI file
+    :param filepath: filepath to INI file where config is stored
+    :return: cp_save_tag specified in ini_filepath
+    """
     config = configparser.ConfigParser()
     config.read(filepath)
     vars_dict = config['DEFAULT']
@@ -745,6 +766,11 @@ def get_cp_save_tag(filepath: str):
 
 
 def init_cmd_line_parser(parser):
+    """
+    Initialize command line parser for configs by adding supported configs as arguments
+    :param parser: an ArgumentParser
+    :return: subparsers corresponding to command line arguments for each config
+    """
     subparsers = []
     for config in SUPPORTED_CONFIGS:
         subparsers.append(config.init_cmd_line_parser(parser))
