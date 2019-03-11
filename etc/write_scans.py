@@ -2,6 +2,7 @@ import os, sys
 import SimpleITK as sitk
 import numpy as np
 import pandas as pd
+import time
 
 # Matplotlib initialization
 import matplotlib
@@ -53,6 +54,7 @@ SAVE_PATH = '/bmrNAS/people/arjun/msk_seg_networks/oai_metadata'
 io_utils.check_dir(SAVE_PATH)
 
 if __name__ == '__main__':
+    start_time = time.time()
     config = UNetConfig(create_dirs=False)
     pids = []
     for s_path in [config.TRAIN_PATH, config.VALID_PATH, config.TEST_PATH]:
@@ -67,3 +69,5 @@ if __name__ == '__main__':
     writer = pd.ExcelWriter(os.path.join(SAVE_PATH, 'oai_data.xlsx'))
     df.to_excel(writer)
     writer.save()
+
+    print('Time Elapsed: %0.2d seconds' % (time.time() - start_time))
