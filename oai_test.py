@@ -373,12 +373,13 @@ def test_dir(dirpath, config=None, vals_dict=None, best_weight_path=None):
     # Get best weight path
     if best_weight_path is None:
         best_weight_path = utils.get_weights(dirpath)
-    print('Best weight path: %s' % best_weight_path)
+    print('Best weights: %s' % best_weight_path)
 
     config_filepath = os.path.join(dirpath, 'config.ini')
     if not config:
         config = MCONFIG.get_config(MCONFIG.get_cp_save_tag(config_filepath), is_testing=True)
-
+    
+    print('Config: %s' % config_filepath)
     config.load_config(config_filepath)
     config.TEST_WEIGHT_PATH = best_weight_path
 

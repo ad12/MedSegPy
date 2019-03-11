@@ -87,9 +87,9 @@ class Config():
     USE_CROSS_VALIDATION = False
     CV_FILE = ''
     CV_K = 0
-    CV_TRAIN_BINS = None
-    CV_VALID_BINS = None
-    CV_TEST_BINS = None
+    CV_TRAIN_BINS = []
+    CV_VALID_BINS = []
+    CV_TEST_BINS = []
     __CV_TRAIN_FILES__ = None
     __CV_VALID_FILES__ = None
     __CV_TEST_FILES__ = None
@@ -221,7 +221,7 @@ class Config():
         config = configparser.ConfigParser()
         config.read(ini_filepath)
         vars_dict = config['DEFAULT']
-
+        
         if vars_dict['CP_SAVE_TAG'] != self.CP_SAVE_TAG:
             raise ValueError('Wrong config. Expected %s' % str(vars_dict['CP_SAVE_TAG']))
 
@@ -346,7 +346,7 @@ class Config():
 
         # Data format tag
         subcommand_parser.add_argument('--tag', metavar='T', type=str, default=cls.TAG, nargs='?',
-                                       help='tag defining data format. Default: %d' % cls.TAG)
+                                       help='tag defining data format. Default: %s' % cls.TAG)
 
         # Number of epochs
         subcommand_parser.add_argument('--n_epochs', metavar='E', type=int, default=cls.N_EPOCHS, nargs='?',
