@@ -166,14 +166,15 @@ def test_model(config, save_file=0):
         pids_str = pids_str + print_str + '\n'
         print(print_str)
 
-        slice_dir = test_set_md[fname].slice_dir
+        if fname in test_set_md.keys():
+            slice_dir = test_set_md[fname].slice_dir
 
-        # interpolate region of interest
-        xs, ys, xt, yt = interp_slice(y_test, labels, orientation=slice_dir)
-        x_interp.append(xs)
-        y_interp.append(ys)
-        x_total.append(xt)
-        y_total.append(yt)
+            # interpolate region of interest
+            xs, ys, xt, yt = interp_slice(y_test, labels, orientation=slice_dir)
+            x_interp.append(xs)
+            y_interp.append(ys)
+            x_total.append(xt)
+            y_total.append(yt)
 
         if save_file == 1:
             if SAVE_H5_DATA:
