@@ -607,6 +607,10 @@ class UNetConfig(Config):
         cmd_line_vars.extend(['depth'])
         return cmd_line_vars
 
+    def summary(self, additional_vars=[]):
+        summary_attrs = ['DEPTH', 'NUM_FILTERS']
+        super().summary(summary_attrs)
+
 
 class ResidualUNet(Config):
     """
@@ -781,6 +785,10 @@ class AnisotropicUNetConfig(Config):
         cmd_line_vars = super().__get_cmd_line_vars__()
         cmd_line_vars.extend(['depth', 'kernel_size'])
         return cmd_line_vars
+
+    def summary(self, additional_vars=[]):
+        summary_attrs = ['DEPTH', 'NUM_FILTERS', 'KERNEL_SIZE']
+        super().summary(summary_attrs)
 
 
 SUPPORTED_CONFIGS = [UNetConfig, SegnetConfig, DeeplabV3Config, ResidualUNet, AnisotropicUNetConfig]
