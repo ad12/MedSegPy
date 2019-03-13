@@ -35,10 +35,10 @@ cd ../..
 
 # Experiment 1: Coronal data
 if [[ "$EXP" -eq 1 ]]; then
-python -m oai_train anisotropic_unet --experiment anisotropic/coronal -g $GPU --img_size '(288, 72, 1)' --kernel_size '(7,3)' --train_path $CORONAL_DATA_PATH'train' --valid_path $CORONAL_DATA_PATH'valid' --test_path $CORONAL_DATA_PATH'test'
+python -m oai_train anisotropic_unet --experiment anisotropic/coronal -g $GPU --img_size '(288, 72, 1)' --kernel_size '(7,3)' --train_path $CORONAL_DATA_PATH'train' --valid_path $CORONAL_DATA_PATH'valid' --test_path $CORONAL_DATA_PATH'test' --use_step_decay
 fi
 
 # Experiment 2: Axial data
 if [[ "$EXP" -eq 2 ]]; then
-python -m oai_train anisotropic_unet --experiment anisotropic/axial -g $GPU --img_size '(72, 288, 1)' --kernel_size '(3,7)' --train_path $AXIAL_DATA_PATH'train' --valid_path $AXIAL_DATA_PATH'valid' --test_path $AXIAL_DATA_PATH'test'
+python -m oai_train anisotropic_unet --experiment anisotropic/axial -g $GPU --img_size '(72, 288, 1)' --kernel_size '(3,7)' --train_path $AXIAL_DATA_PATH'train' --valid_path $AXIAL_DATA_PATH'valid' --test_path $AXIAL_DATA_PATH'test' --use_step_decay
 fi
