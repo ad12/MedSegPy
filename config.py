@@ -297,6 +297,7 @@ class Config():
 
         if self.STATE == 'training':
             summary_vals.extend([
+                'TRAIN_PATH', 'VALID_PATH', 'TEST_PATH', '',
                 'TISSUES', '',
                 'N_EPOCHS', 'AUGMENT_DATA', 'LOSS', '',
                 'USE_CROSS_VALIDATION', 'CV_K' if self.USE_CROSS_VALIDATION else '',
@@ -430,6 +431,7 @@ class Config():
     @classmethod
     def __get_cmd_line_vars__(cls):
         return ['tag',
+                'train_path', 'valid_path', 'test_path',
                 'n_epochs', 'augment_data',
                 'use_step_decay', 'initial_learning_rate', 'min_learning_rate', 'drop_factor', 'drop_rate',
                 'use_early_stopping', 'early_stopping_min_delta', 'early_stopping_patience',
@@ -777,7 +779,7 @@ class AnisotropicUNetConfig(Config):
     @classmethod
     def __get_cmd_line_vars__(cls):
         cmd_line_vars = super().__get_cmd_line_vars__()
-        cmd_line_vars.extend(['depth'])
+        cmd_line_vars.extend(['depth', 'kernel_size'])
         return cmd_line_vars
 
 
