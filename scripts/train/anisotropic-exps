@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# List of anisotropic experiments
+#
+# @usage (from terminal/command line):
+# ./anisotropic-exps GPU_ID(s)
+# eg: "./anisotropic-exps 0", "./anisotropic-exps 0,1"
+#
+# @initialization protocol:
+#   1. run "chmod +x anisotropic-exps" from the command line
+#
+# @author: Arjun Desai, Stanford University
+#          (c) Stanford University, 2019
+
+if [ $# -lt 1 ]; then
+	echo "Please provide gpus to run inference on in format `0` for single gpu or `0,1,2` for multiple gpus"
+	exit 125
+fi
+
+GPU=$1
+
+# Navigate to project directory
+cd ../..
+
+# Experiment 1: Coronal data
+python -m oai_train anisotropic_unet --experiment anisotropic/coronal -g $GPU --IMG_SIZE '(288, 72, 1)' --kernel_size '(7,3)'
+
+# Experiment 2: Axial data
+python -m oai_train anisotropic_unet --experiment anisotropic/axial -g $GPU --IMG_SIZE '(72, 288, 1)' --kernel_size '(3,7)'

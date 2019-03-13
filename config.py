@@ -348,6 +348,14 @@ class Config():
         subcommand_parser.add_argument('--tag', metavar='T', type=str, default=cls.TAG, nargs='?',
                                        help='tag defining data format. Default: %s' % cls.TAG)
 
+        # Data paths
+        subcommand_parser.add_argument('--train_path', metavar='tp', type=str, default=cls.TRAIN_PATH, nargs='?',
+                                       help='training data path. Default: %s' % cls.TRAIN_PATH)
+        subcommand_parser.add_argument('--valid_path', metavar='tp', type=str, default=cls.VALID_PATH, nargs='?',
+                                       help='validation data path. Default: %s' % cls.VALID_PATH)
+        subcommand_parser.add_argument('--test_path', metavar='tp', type=str, default=cls.TEST_PATH, nargs='?',
+                                       help='testing data path. Default: %s' % cls.TEST_PATH)
+
         # Number of epochs
         subcommand_parser.add_argument('--n_epochs', metavar='E', type=int, default=cls.N_EPOCHS, nargs='?',
                                        help='number of training epochs. Default: %d' % cls.N_EPOCHS)
@@ -730,7 +738,50 @@ class DeeplabV3_2_5DConfig(DeeplabV3Config):
         return self.IMG_SIZE[2]
 
 
-SUPPORTED_CONFIGS = [UNetConfig, SegnetConfig, DeeplabV3Config, ResidualUNet]
+class AnisotropicUNetConfig(Config):
+    """
+    Configuration for 2D Anisotropic U-Net architecture
+    """
+    CP_SAVE_TAG = 'anisotropic_unet'
+
+    IMG_SIZE = (288, 72, 1)
+
+    INITIAL_LEARNING_RATE = 2e-2
+    DROP_FACTOR = 0.8 ** (1 / 5)
+    DROP_RATE = 1.0
+    TRAIN_BATCH_SIZE = 35
+
+    DEPTH = 6
+    NUM_FILTERS = None
+
+    KERNEL_SIZE = (7, 3)
+
+    #KERNEL_SIZE_RATIO = None
+    #POOLING_SIZE_RATIO = None
+    #POOLING_SIZE = (3, 11)
+
+    def __init__(self, state='training', create_dirs=True):
+        super().__init__(self.CP_SAVE_TAG, state, create_dirs=create_dirs)
+
+    @classmethod
+    def init_cmd_line_parser(cls, parser):
+        subparser = super().init_cmd_line_parser(parser)
+
+        subparser.add_argument('--depth', type=int, default=cls.DEPTH, nargs='?',
+                               help='network depth. Default: %d' % cls.DEPTH)
+        subparser.add_argument('--kernel_size', type=str, default=str(cls.KERNEL_SIZE), nargs='?',
+                               help='kernel size. Default: %d' % str(cls.KERNEL_SIZE))
+
+        return subparser
+
+    @classmethod
+    def __get_cmd_line_vars__(cls):
+        cmd_line_vars = super().__get_cmd_line_vars__()
+        cmd_line_vars.extend(['depth'])
+        return cmd_line_vars
+
+
+SUPPORTED_CONFIGS = [UNetConfig, SegnetConfig, DeeplabV3Config, ResidualUNet, AnisotropicUNetConfig]
 
 
 def get_config(config_cp_save_tag: str, is_testing: bool=False):
@@ -773,3 +824,4 @@ def init_cmd_line_parser(parser):
     for config in SUPPORTED_CONFIGS:
         subparsers.append(config.init_cmd_line_parser(parser))
     return subparsers
+
