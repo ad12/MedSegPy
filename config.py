@@ -749,9 +749,9 @@ class AnisotropicUNetConfig(Config):
     IMG_SIZE = (288, 72, 1)
 
     INITIAL_LEARNING_RATE = 2e-2
-    DROP_FACTOR = 0.8 ** (1 / 5)
+    DROP_FACTOR = 0.85
     DROP_RATE = 1.0
-    TRAIN_BATCH_SIZE = 35
+    TRAIN_BATCH_SIZE = 60
 
     DEPTH = 6
     NUM_FILTERS = None
