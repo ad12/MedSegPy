@@ -292,7 +292,7 @@ if __name__ == '__main__':
 
     experiment_type = args.experiment[0]
     experiment_filepath = EXP_DIR_MAP[experiment_type] if experiment_type in EXP_DIR_MAP.keys() else experiment_type
-    MCONFIG.SAVE_PATH_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_seg_networks', experiment_filepath)
+    MCONFIG.SAVE_PATH_PREFIX = io_utils.check_dir(os.path.join('/bmrNAS/people/arjun/msk_seg_networks', experiment_filepath))
 
     # MCONFIG.SAVE_PATH_PREFIX = os.path.join('./sample_data/cmd_line', experiment_filepath)
 
