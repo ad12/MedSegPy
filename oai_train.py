@@ -275,7 +275,6 @@ if __name__ == '__main__':
         s_parser.add_argument('--class_weights', type=tuple, nargs='?', default=CLASS_WEIGHTS,
                               help='weight classes in order')
         s_parser.add_argument('--experiment', type=str, nargs=1,
-                              choices=sorted(list(EXP_DIR_MAP.keys())),
                               help='experiment to run'
                               )
         s_parser.add_argument('--fine_tune_path', type=str, default='', nargs='?',

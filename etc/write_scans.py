@@ -57,7 +57,9 @@ if __name__ == '__main__':
     start_time = time.time()
     config = UNetConfig(create_dirs=False)
     pids = []
-    for s_path in [config.TRAIN_PATH, config.VALID_PATH, config.TEST_PATH]:
+    dirpaths = [config.TRAIN_PATH, config.VALID_PATH, config.TEST_PATH]
+    #dirpaths = [config.TEST_PATH]
+    for s_path in dirpaths:
         for x, y, pid, num_slices in img_generator_oai_test(s_path, config.TEST_BATCH_SIZE, config):
             #write_tiff(x, os.path.join(SAVE_PATH, pid + '.tiff'))
             write_subplot(x, os.path.join(SAVE_PATH, pid + '.png'))
@@ -65,9 +67,9 @@ if __name__ == '__main__':
 
     data = list(zip(*[iter(pids)] * 1))
 
-    df = pd.DataFrame(data, columns=['Patient ID', 'Direction', 'KL Grade'])
+    df = pd.DataFrame(data)
     writer = pd.ExcelWriter(os.path.join(SAVE_PATH, 'oai_data.xlsx'))
     df.to_excel(writer)
     writer.save()
 
-    print('Time Elapsed: %0.2d seconds' % (time.time() - start_time))
+    print('Time Elapsed: %0.2f seconds' % (time.time() - start_time))

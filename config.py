@@ -770,7 +770,7 @@ class AnisotropicUNetConfig(Config):
         subparser.add_argument('--depth', type=int, default=cls.DEPTH, nargs='?',
                                help='network depth. Default: %d' % cls.DEPTH)
         subparser.add_argument('--kernel_size', type=str, default=str(cls.KERNEL_SIZE), nargs='?',
-                               help='kernel size. Default: %d' % str(cls.KERNEL_SIZE))
+                               help='kernel size. Default: %s' % str(cls.KERNEL_SIZE))
 
         return subparser
 
