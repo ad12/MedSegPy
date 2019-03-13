@@ -17,17 +17,28 @@ if [ $# -lt 1 ]; then
 	exit 125
 fi
 
+if [ $# -lt 2 ]; then
+	echo "Please provide experiment to run"
+	exit 125
+fi
+
+
 GPU=$1
+EXP=($2)
+
 CORONAL_DATA_PATH='/bmrNAS/people/arjun/oai_data/imorphics/vol_aug/coronal/'
 AXIAL_DATA_PATH='/bmrNAS/people/arjun/oai_data/imorphics/vol_aug/axial/'
-
 
 
 # Navigate to project directory
 cd ../..
 
 # Experiment 1: Coronal data
+if [[ "$EXP" -eq 1 ]]; then
 python -m oai_train anisotropic_unet --experiment anisotropic/coronal -g $GPU --IMG_SIZE '(288, 72, 1)' --kernel_size '(7,3)' --train_path $CORONAL_DATA_PATH'train' --valid_path $CORONAL_DATA_PATH'valid' --test_path $CORONAL_DATA_PATH'test'
+fi
 
 # Experiment 2: Axial data
+if [[ "$EXP" -eq 2 ]]; then
 python -m oai_train anisotropic_unet --experiment anisotropic/axial -g $GPU --IMG_SIZE '(72, 288, 1)' --kernel_size '(3,7)' --train_path $AXIAL_DATA_PATH'train' --valid_path $AXIAL_DATA_PATH'valid' --test_path $AXIAL_DATA_PATH'test'
+fi
