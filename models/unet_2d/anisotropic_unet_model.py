@@ -40,7 +40,7 @@ def anisotropic_unet_2d(input_size=None, input_tensor=None, output_mode=None, nu
     inputs = input_tensor if input_tensor is not None else Input(input_size)
 
     # step down convolutional layers
-    pooling_sizes = []
+    unpooling_sizes = []
     pool = inputs
     for depth_cnt in range(depth):
 
@@ -62,14 +62,14 @@ def anisotropic_unet_2d(input_size=None, input_tensor=None, output_mode=None, nu
         if depth_cnt < depth - 1:
             x_shape = conv.shape.as_list()
             pool_size = pooling_size if pooling_size else __get_pooling_size__(x_shape, pooling_ratio)
-            pooling_sizes.append(pool_size)
+            unpooling_sizes.append(pool_size)
             pool = MaxPooling2D(pool_size=pool_size, padding='same')(conv)
 
     # step up convolutional layers
     for depth_cnt in range(depth - 2, -1, -1):
         deconv_shape = conv_ptr[depth_cnt].shape.as_list()
         deconv_shape[0] = None
-        unpooling_size = pooling_sizes[depth_cnt]
+        unpooling_size = unpooling_sizes[depth_cnt]
         up = Concatenate(axis=3)([Conv2DTranspose(nfeatures[depth_cnt], kernel_size,
                                                   padding='same',
                                                   strides=unpooling_size,
@@ -108,10 +108,14 @@ def __get_pooling_size__(x_shape: list, pool_ratio=None):
     yres = x_shape[1]
     xres = x_shape[2]
 
-    if xres % 2 == 0:
-        pooling_size = (2, 2)
-    else:
-        pooling_size = (3, 3)
+    pooling_size = []
+    for r in yres, xres:
+        if r % 2 == 0:
+            pooling_size.append(2)
+        else:
+            pooling_size.append(3)
+
+    pooling_size = tuple(pooling_size)
 
     if not pool_ratio:
         return pooling_size
@@ -124,6 +128,6 @@ def __get_pooling_size__(x_shape: list, pool_ratio=None):
 
 if __name__ == '__main__':
     save_path = '../imgs/anisotropic_unet2d.png'
-    m = anisotropic_unet_2d(input_size=(288, 72, 1), kernel_size=(7,3))
+    m = anisotropic_unet_2d(input_size=(72, 288, 1), kernel_size=(3, 3))
     plot_model(m, to_file=save_path, show_shapes=True)
 
