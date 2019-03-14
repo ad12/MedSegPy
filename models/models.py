@@ -1,14 +1,16 @@
-import os
+import os, sys
 
 from keras import Model
 from keras.initializers import glorot_uniform
 from keras.layers import Input, Conv2D
 from keras.utils import plot_model
 
+sys.path.append('../')
 import glob_constants as glc
 from config import DeeplabV3Config, SegnetConfig, UNetConfig, \
-    UNetMultiContrastConfig, UNet2_5DConfig, DeeplabV3_2_5DConfig, ResidualUNet, AnisotropicUNetConfig, BasicRefineNet
+    UNetMultiContrastConfig, UNet2_5DConfig, DeeplabV3_2_5DConfig, ResidualUNet, AnisotropicUNetConfig, BasicRefineNetConfig
 from glob_constants import SEED
+
 from models.deeplab_2d.deeplab_model import DeeplabModel
 from models.segnet_2d.segnet import Segnet_v2
 from models.unet_2d.residual_unet_model import residual_unet_2d
@@ -38,7 +40,7 @@ def get_model(config):
         model = residual_unet(config)
     elif type(config) is AnisotropicUNetConfig:
         model = anisotropic_unet(config)
-    elif type(config) is BasicRefineNet:
+    elif type(config) is BasicRefineNetConfig:
         model = basic_refinenet(config)
     else:
         raise ValueError('This config type has not been implemented')
@@ -335,7 +337,11 @@ def __add_activation_layer(output, num_classes, activation='sigmoid'):
 
 
 if __name__ == '__main__':
-    config = UNetMultiContrastConfig(create_dirs=False)
-    config.INIT_UNET_2D_WEIGHTS = './test_data/unet_2d_fc_weights.004--0.8968.h5'
-
-    unet_2d_multi_contrast(config)
+    # config = UNetMultiContrastConfig(create_dirs=False)
+    # config.INIT_UNET_2D_WEIGHTS = './test_data/unet_2d_fc_weights.004--0.8968.h5'
+    #
+    # unet_2d_multi_contrast(config)
+    config = BasicRefineNetConfig(create_dirs=False)
+    save_path = '../imgs/refinenet_resnet50.png'
+    m = get_model(config)
+    plot_model(m, to_file=save_path, show_shapes=True)
