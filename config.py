@@ -796,7 +796,7 @@ class BasicRefineNet(Config):
     Configuration for RefineNet architecture as suggested by paper below
     http://openaccess.thecvf.com/content_cvpr_2017/papers/Lin_RefineNet_Multi-Path_Refinement_CVPR_2017_paper.pdf
     """
-    CP_SAVE_TAG = 'refinenet_basic'
+    CP_SAVE_TAG = 'refinenet'
 
     INITIAL_LEARNING_RATE = 1e-3
 
