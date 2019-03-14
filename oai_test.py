@@ -37,7 +37,7 @@ TEST_SET_METADATA_PIK = '/bmrNAS/people/arjun/msk_seg_networks/oai_data_test/oai
 TEST_SET_MD = io_utils.load_pik(TEST_SET_METADATA_PIK)
 
 VOXEL_SPACING = (0.3125, 0.3125, 1.5)
-
+SAVE_H5_DATA = False
 
 def find_start_and_end_slice(y_true):
     for i in range(y_true.shape[0]):
@@ -94,7 +94,7 @@ def interp_slice(y_true, y_pred, orientation='M'):
     return xs, ys, xt, yt
 
 
-def test_model(config, save_file=0):
+def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
     """
     Test model
     :param config: a Config object
@@ -177,7 +177,7 @@ def test_model(config, save_file=0):
             y_total.append(yt)
 
         if save_file == 1:
-            if SAVE_H5_DATA:
+            if save_h5_data:
                 save_name = '%s/%s_recon.pred' % (test_result_path, fname)
                 with h5py.File(save_name, 'w') as h5f:
                     h5f.create_dataset('recon', data=recon)
@@ -360,7 +360,7 @@ def find_best_test_dir(base_folder):
     print(max_dsc_details)
 
 
-def test_dir(dirpath, config=None, vals_dict=None, best_weight_path=None):
+def test_dir(dirpath, config=None, vals_dict=None, best_weight_path=None, save_h5_data=False):
     """
     Run testing experiment
     By default, save all data
@@ -391,7 +391,7 @@ def test_dir(dirpath, config=None, vals_dict=None, best_weight_path=None):
 
     config.change_to_test()
 
-    test_model(config, save_file=1)
+    test_model(config, save_file=1, save_h5_data=save_h5_data)
 
     K.clear_session()
 
@@ -410,8 +410,6 @@ OVERWRITE_KEY = 'ov'
 
 OS_KEY = 'OS'
 DIL_RATES_KEY = 'DIL_RATES'
-
-SAVE_H5_DATA = False
 
 
 def get_config(name):

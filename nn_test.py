@@ -14,6 +14,8 @@ def add_testing_arguments(parser: argparse.ArgumentParser):
                         help='gpu id to use. default=0')
 
     parser.add_argument('--batch_size', default=72, type=int, nargs='?')
+    parser.add_argument('--save_h5_data', action='store_const', const=True, default=False,
+                        help='save h5 data')
 
     # parser.add_argument('--save_h5_data', action='store_const', default=False, const=True,
     #                     help='save ground truth and prediction data in h5 format')
@@ -46,4 +48,4 @@ if __name__ == '__main__':
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
-    test_dir(config_filepath, vals_dict=create_config_dict(vargin))
+    test_dir(config_filepath, vals_dict=create_config_dict(vargin), save_h5_data=vargin['save_h5_data'])
