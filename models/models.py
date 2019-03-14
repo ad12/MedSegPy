@@ -7,14 +7,14 @@ from keras.utils import plot_model
 
 import glob_constants as glc
 from config import DeeplabV3Config, SegnetConfig, UNetConfig, \
-    UNetMultiContrastConfig, UNet2_5DConfig, DeeplabV3_2_5DConfig, ResidualUNet, AnisotropicUNetConfig
+    UNetMultiContrastConfig, UNet2_5DConfig, DeeplabV3_2_5DConfig, ResidualUNet, AnisotropicUNetConfig, BasicRefineNet
 from glob_constants import SEED
 from models.deeplab_2d.deeplab_model import DeeplabModel
 from models.segnet_2d.segnet import Segnet_v2
 from models.unet_2d.residual_unet_model import residual_unet_2d
 from models.unet_2d.anisotropic_unet_model import anisotropic_unet_2d
 from models.unet_2d.unet_model import unet_2d_model, unet_2d_model_v2
-
+from models.refinenet.refinenet_model import refinenet_model
 
 def get_model(config):
     """
@@ -38,10 +38,26 @@ def get_model(config):
         model = residual_unet(config)
     elif type(config) is AnisotropicUNetConfig:
         model = anisotropic_unet(config)
+    elif type(config) is BasicRefineNet:
+        model = basic_refinenet(config)
     else:
         raise ValueError('This config type has not been implemented')
 
     # if weighted cross entropy, use softmax
+    return model
+
+
+def basic_refinenet(config):
+    input_shape = config.IMG_SIZE
+    activation = config.LOSS[1]
+    num_classes = config.get_num_classes()
+
+    model = refinenet_model(input_shape=input_shape)
+
+    # Add activation
+    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation)
+    model = Model(inputs=model.input, outputs=x)
+
     return model
 
 def anisotropic_unet(config):
