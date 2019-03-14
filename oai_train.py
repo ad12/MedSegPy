@@ -44,6 +44,9 @@ def train_model(config, optimizer=None, model=None, class_weights=None):
 
     if model is None:
         model = get_model(config)
+    
+    # plot model
+    plot_model(model, to_file=os.path.join(cp_save_path, 'model.png'), show_shapes=True)
 
     # Fine tune - initialize with weights
     if config.FINE_TUNE:
@@ -110,10 +113,7 @@ def train_model(config, optimizer=None, model=None, class_weights=None):
 
     train_gen = generator.img_generator(state='training')
     val_gen = generator.img_generator(state='validation')
-
-    # plot model
-    plot_model(model, to_file=os.path.join(cp_save_path, 'model.png'), show_shapes=True)
-
+    
     # Start training
     model.fit_generator(train_gen,
                         train_nbatches,

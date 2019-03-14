@@ -53,7 +53,6 @@ def basic_refinenet(config):
     input_shape = config.IMG_SIZE
     activation = config.LOSS[1]
     num_classes = config.get_num_classes()
-
     model = refinenet_model(input_shape=input_shape)
 
     # Add activation
