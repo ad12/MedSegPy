@@ -791,7 +791,20 @@ class AnisotropicUNetConfig(Config):
         super().summary(summary_attrs)
 
 
-SUPPORTED_CONFIGS = [UNetConfig, SegnetConfig, DeeplabV3Config, ResidualUNet, AnisotropicUNetConfig]
+class BasicRefineNet(Config):
+    """
+    Configuration for RefineNet architecture as suggested by paper below
+    http://openaccess.thecvf.com/content_cvpr_2017/papers/Lin_RefineNet_Multi-Path_Refinement_CVPR_2017_paper.pdf
+    """
+    CP_SAVE_TAG = 'refinenet_basic'
+
+    INITIAL_LEARNING_RATE = 1e-3
+
+    def __init__(self, state='training', create_dirs=True):
+        super().__init__(self.CP_SAVE_TAG, state, create_dirs=create_dirs)
+
+
+SUPPORTED_CONFIGS = [UNetConfig, SegnetConfig, DeeplabV3Config, ResidualUNet, AnisotropicUNetConfig, BasicRefineNet]
 
 
 def get_config(config_cp_save_tag: str, is_testing: bool=False):
