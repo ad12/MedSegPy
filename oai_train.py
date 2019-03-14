@@ -218,8 +218,8 @@ def fine_tune(dirpath, config, vals_dict=None, class_weights=None):
             val = vals_dict[key]
             config.set_attr(key, val)
 
-    config.summary()
     config.save_config()
+    config.summary()
 
     train_model(config, class_weights=class_weights)
 
