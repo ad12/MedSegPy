@@ -178,7 +178,7 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
 
         if save_file == 1:
             if save_h5_data:
-                save_name = '%s/%s_recon.pred' % (test_result_path, fname)
+                save_name = '%s/%s.pred' % (test_result_path, fname)
                 with h5py.File(save_name, 'w') as h5f:
                     h5f.create_dataset('recon', data=recon)
                     h5f.create_dataset('gt', data=y_test)
