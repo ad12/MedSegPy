@@ -380,7 +380,7 @@ class Config():
                                        help='minimum learning rate during decay. Default: %s' % cls.MIN_LEARNING_RATE)
         subcommand_parser.add_argument('--drop_factor', metavar='DF', type=float, default=cls.DROP_FACTOR, nargs='?',
                                        help='drop factor for learning rate decay. Default: %s' % cls.DROP_FACTOR)
-        subcommand_parser.add_argument('--drop_rate', metavar='DR', type=int, default=cls.DROP_RATE, nargs='?',
+        subcommand_parser.add_argument('--drop_rate', metavar='DR', type=float, default=cls.DROP_RATE, nargs='?',
                                        help='drop rate for learning rate decay. Default: %s' % cls.DROP_RATE)
 
         # Early stopping
