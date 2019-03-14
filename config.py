@@ -380,7 +380,7 @@ class Config():
                                        help='minimum learning rate during decay. Default: %s' % cls.MIN_LEARNING_RATE)
         subcommand_parser.add_argument('--drop_factor', metavar='DF', type=float, default=cls.DROP_FACTOR, nargs='?',
                                        help='drop factor for learning rate decay. Default: %s' % cls.DROP_FACTOR)
-        subcommand_parser.add_argument('--drop_rate', metavar='DR', type=int, default=cls.DROP_RATE, nargs='?',
+        subcommand_parser.add_argument('--drop_rate', metavar='DR', type=float, default=cls.DROP_RATE, nargs='?',
                                        help='drop rate for learning rate decay. Default: %s' % cls.DROP_RATE)
 
         # Early stopping
@@ -796,7 +796,7 @@ class BasicRefineNetConfig(Config):
     Configuration for RefineNet architecture as suggested by paper below
     http://openaccess.thecvf.com/content_cvpr_2017/papers/Lin_RefineNet_Multi-Path_Refinement_CVPR_2017_paper.pdf
     """
-    CP_SAVE_TAG = 'refinenet_basic'
+    CP_SAVE_TAG = 'refinenet'
 
     INITIAL_LEARNING_RATE = 1e-3
 

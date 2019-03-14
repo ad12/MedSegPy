@@ -35,6 +35,7 @@ VOLUME_2_5D_7 = '/bmrNAS/people/arjun/msk_seg_networks/volume_limited/unet_2_5d/
 VOLUME_3D = '/bmrNAS/people/arjun/msk_seg_networks/volume_limited/unet_3d_asc/test_results'  # 3D network with 4 slice inputs
 
 # batch size experiments (unet_2d)
+TRAIN_BATCH_SIZE_2 = '/bmrNAS/people/arjun/msk_seg_networks/control_exps/unet_2d/2019-03-13-00-28-51/test_results'
 TRAIN_BATCH_SIZE_6 = '/bmrNAS/people/arjun/msk_seg_networks/control_exps/unet_2d/2019-03-06-21-30-41/test_results'
 TRAIN_BATCH_SIZE_12 = '/bmrNAS/people/arjun/msk_seg_networks/control_exps/unet_2d/2019-03-07-08-20-45/test_results'
 TRAIN_BATCH_SIZE_24 = '/bmrNAS/people/arjun/msk_seg_networks/control_exps/unet_2d/2019-03-07-17-14-07/test_results'
