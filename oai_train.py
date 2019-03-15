@@ -26,7 +26,7 @@ from utils import io_utils, parallel_utils as putils, utils
 
 CLASS_WEIGHTS = np.asarray([100, 1])
 SAVE_BEST_WEIGHTS = True
-
+FREEZE_LAYERS = None
 
 def train_model(config, optimizer=None, model=None, class_weights=None):
     """
@@ -52,6 +52,15 @@ def train_model(config, optimizer=None, model=None, class_weights=None):
     if config.FINE_TUNE:
         print('loading weights')
         model.load_weights(config.INIT_WEIGHT_PATH, by_name=True)
+        if FREEZE_LAYERS:
+            if len(FREEZE_LAYERS) == 1:
+                fl = range(FREEZE_LAYERS[0], len(model.layers))
+            else:
+                fl = range(FREEZE_LAYERS[0], FREEZE_LAYERS[1])
+            print('freezing layers %s' % fl)
+            for i in fl:
+                model.layers[i].trainable = False
+
 
     # Replicate model on multiple gpus - note this does not solve issue of having too large of a model
     num_gpus = len(os.environ["CUDA_VISIBLE_DEVICES"].split(','))
@@ -279,6 +288,8 @@ if __name__ == '__main__':
                               )
         s_parser.add_argument('--fine_tune_path', type=str, default='', nargs='?',
                               help='directory to fine tune.')
+        s_parser.add_argument('--freeze_layers', type=str, default=None, nargs='?',
+                              help='range of layers to freeze. eg. `(0,100)`, `(5, 45)`, `(5,)`')
 
         s_parser.add_argument('--save_all_weights', default=False, action='store_const', const=True,
                               help="store weights for each epoch. Default: False")
@@ -315,6 +326,8 @@ if __name__ == '__main__':
     config_dict['TISSUES'] = mri_utils.parse_tissues(vargin)
 
     if fine_tune_dirpath:
+        # parse freeze layers
+        FREEZE_LAYERS = utils.convert_data_type(vargin['freeze_layers'], tuple)
         fine_tune(fine_tune_dirpath, c, config_dict)
         exit(0)
 
