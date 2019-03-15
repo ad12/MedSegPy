@@ -378,7 +378,7 @@ def test_dir(dirpath, config=None, vals_dict=None, best_weight_path=None, save_h
 
     config_filepath = os.path.join(dirpath, 'config.ini')
     if not config:
-        config = MCONFIG.get_config(MCONFIG.get_cp_save_tag(config_filepath), is_testing=True)
+        config = MCONFIG.get_config(MCONFIG.get_cp_save_tag(config_filepath), create_dirs=False)
     
     print('Config: %s' % config_filepath)
     config.load_config(config_filepath)

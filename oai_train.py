@@ -322,7 +322,7 @@ if __name__ == '__main__':
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
     SAVE_BEST_WEIGHTS = not args.save_all_weights
 
-    c = MCONFIG.get_config(config_cp_save_tag=vargin['config'])
+    c = MCONFIG.get_config(config_cp_save_tag=vargin['config'], create_dirs=not fine_tune_dirpath)
     config_dict = c.parse_cmd_line(vargin)
 
     # parse tissues

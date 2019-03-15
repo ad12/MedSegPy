@@ -807,14 +807,13 @@ class RefineNetConfig(Config):
 SUPPORTED_CONFIGS = [UNetConfig, SegnetConfig, DeeplabV3Config, ResidualUNet, AnisotropicUNetConfig, RefineNetConfig]
 
 
-def get_config(config_cp_save_tag: str, is_testing: bool=False):
+def get_config(config_cp_save_tag: str, create_dirs: bool=True):
     """
     Get config using config cp_save_tag
     :param config_cp_save_tag: config cp_save_tag
     :param is_testing: if config should be loaded in testing state
     :return: A Config instance
     """
-    create_dirs = not is_testing
 
     configs = SUPPORTED_CONFIGS
     for config in configs:
