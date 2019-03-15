@@ -6,6 +6,8 @@ from __future__ import print_function, division
 
 import matplotlib
 
+import utils.dl_utils
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
@@ -373,7 +375,7 @@ def test_dir(dirpath, config=None, vals_dict=None, best_weight_path=None, save_h
     """
     # Get best weight path
     if best_weight_path is None:
-        best_weight_path = utils.get_weights(dirpath)
+        best_weight_path = utils.dl_utils.get_weights(dirpath)
     print('Best weights: %s' % best_weight_path)
 
     config_filepath = os.path.join(dirpath, 'config.ini')

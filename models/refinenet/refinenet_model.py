@@ -37,7 +37,10 @@ def refinenet_model(input_shape=None, backbone='resnet50'):
         else:
             num_filters_out = num_filters[i-1]
 
-        curr_refine = refine_module(x_ins, num_filters_in = num_filters[i], num_filters_out=num_filters_out)
+        curr_refine = refine_module(x_ins,
+                                    num_filters_in = num_filters[i],
+                                    num_filters_out=num_filters_out,
+                                    name_prefix='dec_%d' % i)
 
     return Model(inputs=m.inputs, outputs=curr_refine)
 

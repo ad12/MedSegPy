@@ -18,6 +18,7 @@ from keras.utils import plot_model
 import config as MCONFIG
 import glob_constants
 import mri_utils
+import utils.dl_utils
 from cross_validation import cv_utils
 from generators import im_gens
 from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS, dice_loss, focal_loss
@@ -27,6 +28,7 @@ from keras.models import Model
 CLASS_WEIGHTS = np.asarray([100, 1])
 SAVE_BEST_WEIGHTS = True
 FREEZE_LAYERS = None
+
 
 def train_model(config, optimizer=None, model=None, class_weights=None):
     """
@@ -44,7 +46,7 @@ def train_model(config, optimizer=None, model=None, class_weights=None):
 
     if model is None:
         model = get_model(config)
-    
+
     # plot model
     plot_model(model, to_file=os.path.join(cp_save_path, 'model.png'), show_shapes=True)
 
@@ -60,10 +62,6 @@ def train_model(config, optimizer=None, model=None, class_weights=None):
             print('freezing layers %s' % fl)
             for i in fl:
                 model.layers[i].trainable = False
-            for i in fl:
-                l = model.layers[i]
-                print(l, l.trainable)
-            model = Model(model.inputs, model.outputs)
 
     # Replicate model on multiple gpus - note this does not solve issue of having too large of a model
     num_gpus = len(os.environ["CUDA_VISIBLE_DEVICES"].split(','))
@@ -128,7 +126,7 @@ def train_model(config, optimizer=None, model=None, class_weights=None):
 
     train_gen = generator.img_generator(state='training')
     val_gen = generator.img_generator(state='validation')
-    
+
     # Start training
     model.fit_generator(train_gen,
                         train_nbatches,
@@ -224,7 +222,7 @@ def fine_tune(dirpath, config, vals_dict=None, class_weights=None):
     config.load_config(os.path.join(dirpath, 'config.ini'))
 
     # Get best weight path
-    best_weight_path = utils.get_weights(dirpath)
+    best_weight_path = utils.dl_utils.get_weights(dirpath)
     print('Best weight path: %s' % best_weight_path)
 
     config.init_fine_tune(best_weight_path)
