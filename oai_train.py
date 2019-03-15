@@ -23,7 +23,7 @@ from generators import im_gens
 from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS, dice_loss, focal_loss
 from models.models import get_model
 from utils import io_utils, parallel_utils as putils, utils
-
+from keras.models import Model
 CLASS_WEIGHTS = np.asarray([100, 1])
 SAVE_BEST_WEIGHTS = True
 FREEZE_LAYERS = None
@@ -60,7 +60,10 @@ def train_model(config, optimizer=None, model=None, class_weights=None):
             print('freezing layers %s' % fl)
             for i in fl:
                 model.layers[i].trainable = False
-
+            for i in fl:
+                l = model.layers[i]
+                print(l, l.trainable)
+            model = Model(model.inputs, model.outputs)
 
     # Replicate model on multiple gpus - note this does not solve issue of having too large of a model
     num_gpus = len(os.environ["CUDA_VISIBLE_DEVICES"].split(','))
@@ -88,6 +91,9 @@ def train_model(config, optimizer=None, model=None, class_weights=None):
     lr_metric = get_lr_metric(optimizer)
     model.compile(optimizer=optimizer,
                   loss=loss_func, metrics=[lr_metric, dice_loss, focal_loss()])
+    
+    if config.FINE_TUNE and FREEZE_LAYERS:
+        model.summary()
 
     # set image format to be (N, dim1, dim2, dim3, ch)
     K.set_image_data_format('channels_last')

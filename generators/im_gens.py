@@ -470,7 +470,7 @@ class OAIGenerator(Generator):
     def num_steps(self):
         config = self.config
 
-        if config.STATE is not 'training':
+        if config.STATE != 'training':
             raise ValueError('Method is only active when config is in training state')
 
         train_data_path_or_files = config.__CV_TRAIN_FILES__ if config.USE_CROSS_VALIDATION else config.TRAIN_PATH
