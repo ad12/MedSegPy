@@ -18,13 +18,12 @@ from keras.utils import plot_model
 import config as MCONFIG
 import glob_constants
 import mri_utils
-import utils.dl_utils
 from cross_validation import cv_utils
 from generators import im_gens
 from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS, dice_loss, focal_loss
 from models.models import get_model
-from utils import io_utils, parallel_utils as putils, utils
-from keras.models import Model
+from utils import io_utils, parallel_utils as putils, utils, dl_utils
+
 CLASS_WEIGHTS = np.asarray([100, 1])
 SAVE_BEST_WEIGHTS = True
 FREEZE_LAYERS = None
@@ -222,7 +221,7 @@ def fine_tune(dirpath, config, vals_dict=None, class_weights=None):
     config.load_config(os.path.join(dirpath, 'config.ini'))
 
     # Get best weight path
-    best_weight_path = utils.dl_utils.get_weights(dirpath)
+    best_weight_path = dl_utils.get_weights(dirpath)
     print('Best weight path: %s' % best_weight_path)
 
     config.init_fine_tune(best_weight_path)
