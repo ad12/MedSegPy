@@ -52,7 +52,7 @@ def train_model(config, optimizer=None, model=None, class_weights=None):
     # Fine tune - initialize with weights
     if config.FINE_TUNE:
         print('loading weights')
-        model.load_weights(config.INIT_WEIGHT_PATH, by_name=True)
+        model.load_weights(config.INIT_WEIGHT_PATH)
         if FREEZE_LAYERS:
             if len(FREEZE_LAYERS) == 1:
                 fl = range(FREEZE_LAYERS[0], len(model.layers))
