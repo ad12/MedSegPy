@@ -286,9 +286,8 @@ if __name__ == '__main__':
                               help='Number of hold-out validation bins')
         s_parser.add_argument('--class_weights', type=tuple, nargs='?', default=CLASS_WEIGHTS,
                               help='weight classes in order')
-        s_parser.add_argument('--experiment', type=str, nargs=1,
-                              help='experiment to run'
-                              )
+        s_parser.add_argument('--experiment', type=str, nargs='?', default='',
+                              help='experiment to run')
         s_parser.add_argument('--fine_tune_path', type=str, default='', nargs='?',
                               help='directory to fine tune.')
         s_parser.add_argument('--freeze_layers', type=str, default=None, nargs='?',
@@ -304,7 +303,12 @@ if __name__ == '__main__':
     args = base_parser.parse_args()
     vargin = vars(args)
 
-    experiment_type = args.experiment[0]
+    experiment_type = args.experiment
+    fine_tune_dirpath = args.fine_tune_path
+
+    if not fine_tune_dirpath and not experiment_type:
+        raise ValueError('--experiment must be specified if not fine-tuning')
+
     experiment_filepath = EXP_DIR_MAP[experiment_type] if experiment_type in EXP_DIR_MAP.keys() else experiment_type
     MCONFIG.SAVE_PATH_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_seg_networks', experiment_filepath)
 
@@ -314,7 +318,6 @@ if __name__ == '__main__':
     glob_constants.SEED = args.seed
     k_fold_cross_validation = args.k_fold_cross_validation
 
-    fine_tune_dirpath = args.fine_tune_path
     print(glob_constants.SEED)
 
     print('Using GPU %s' % gpu)

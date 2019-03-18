@@ -115,7 +115,7 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
     # Load weights into Deeplabv3 model
     model = get_model(config)
     plot_model(model, os.path.join(config.TEST_RESULT_PATH, 'model.png'), show_shapes=True)
-    model.load_weights(config.TEST_WEIGHT_PATH, by_name=True)
+    model.load_weights(config.TEST_WEIGHT_PATH)
 
     img_cnt = 0
 
