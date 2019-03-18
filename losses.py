@@ -20,7 +20,7 @@ DICE_MEDIAN_LOSS = ('dice_median_loss', 'sigmoid')
 
 CMD_LINE_SUPPORTED_LOSSES = ['DICE_LOSS', 'WEIGHTED_CROSS_ENTROPY_LOSS', 'WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS',
                              'BINARY_CROSS_ENTROPY_LOSS', 'BINARY_CROSS_ENTROPY_SIG_LOSS', 'FOCAL_LOSS',
-                             'DICE_FOCAL_LOSS']
+                             'DICE_FOCAL_LOSS', 'DICE_MEDIAN_LOSS']
 
 
 def get_training_loss_from_str(loss_str: str):
@@ -39,6 +39,8 @@ def get_training_loss_from_str(loss_str: str):
         return FOCAL_LOSS
     elif loss_str == 'DICE_FOCAL_LOSS':
         return DICE_FOCAL_LOSS
+    elif loss_str == 'DICE_MEDIAN_LOSS':
+        return DICE_MEDIAN_LOSS
     else:
         raise ValueError('%s not supported' % loss_str)
 
@@ -62,6 +64,8 @@ def get_training_loss(loss, weights=None):
         return weighted_categorical_crossentropy_sigmoid(weights)
     elif loss == DICE_FOCAL_LOSS:
         return dice_focal_loss
+    elif loss == DICE_MEDIAN_LOSS:
+        return dice_median_loss
     else:
         raise ValueError("Loss type not supported")
 
