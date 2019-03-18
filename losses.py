@@ -98,18 +98,19 @@ def dice_median_loss(y_true, y_pred):
     """Get the median dice loss"""
     lambda1 = 2
     mu = K.epsilon()
-
+    
     szp = K.get_variable_shape(y_pred)
     img_len = szp[1] * szp[2] * szp[3]
-
+    
     y_true = K.reshape(y_true, (-1, img_len))
     y_pred = K.reshape(y_pred, (-1, img_len))
-
-    dsc = (2.0 * y_true * y_pred + mu) / (K.sum(y_true, axis=-1) + K.sum(y_pred, axis=-1) + mu)
+    
+    dsc = (2.0 * K.sum(y_true * y_pred, axis=-1) + mu) / (K.sum(y_true, axis=-1) + K.sum(y_pred, axis=-1) + mu)
     dsc_mean = K.mean(dsc)
     dsc_std = K.std(dsc)
     bool_mask = tf.logical_and(K.greater_equal(dsc - dsc_mean + lambda1*dsc_std, 0),
                                K.less_equal(dsc - dsc_mean - lambda1*dsc_std, 0))
+    
     binarize_dsc = tf.boolean_mask(dsc, bool_mask)
 
     loss = 1 - K.mean(binarize_dsc)
