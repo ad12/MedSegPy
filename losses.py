@@ -16,6 +16,7 @@ FOCAL_LOSS = ('focal_loss', 'sigmoid')
 FOCAL_LOSS_GAMMA = 3.0
 
 DICE_FOCAL_LOSS = ('dice_focal_loss', 'sigmoid')
+DICE_MEDIAN_LOSS = ('dice_median_loss', 'sigmoid')
 
 CMD_LINE_SUPPORTED_LOSSES = ['DICE_LOSS', 'WEIGHTED_CROSS_ENTROPY_LOSS', 'WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS',
                              'BINARY_CROSS_ENTROPY_LOSS', 'BINARY_CROSS_ENTROPY_SIG_LOSS', 'FOCAL_LOSS',
@@ -85,6 +86,27 @@ def dice_loss(y_true, y_pred):
     mu = K.epsilon()
     dice = (2.0 * ovlp + mu) / (K.sum(y_true, axis=-1) + K.sum(y_pred, axis=-1) + mu)
     loss = 1 - dice
+
+    return loss
+
+
+def dice_median_loss(y_true, y_pred):
+    """Get the median dice loss"""
+    lambda1 = 2
+    mu = K.epsilon()
+
+    szp = K.get_variable_shape(y_pred)
+    img_len = szp[1] * szp[2] * szp[3]
+
+    y_true = K.reshape(y_true, (-1, img_len))
+    y_pred = K.reshape(y_pred, (-1, img_len))
+
+    dsc = (2.0 * y_true * y_pred + mu) / (K.sum(y_true, axis=-1) + K.sum(y_pred, axis=-1) + mu)
+    dsc_mean = K.mean(dsc)
+    dsc_std = K.std(dsc)
+    binarize_dsc = dsc[((dsc - dsc_mean) >= -lambda1*dsc_std) and ((dsc - dsc_mean) <= lambda1*dsc_std)]
+
+    loss = 1 - K.mean(binarize_dsc)
 
     return loss
 
