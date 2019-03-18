@@ -104,7 +104,9 @@ def dice_median_loss(y_true, y_pred):
     dsc = (2.0 * y_true * y_pred + mu) / (K.sum(y_true, axis=-1) + K.sum(y_pred, axis=-1) + mu)
     dsc_mean = K.mean(dsc)
     dsc_std = K.std(dsc)
-    binarize_dsc = dsc[((dsc - dsc_mean) >= -lambda1*dsc_std) and ((dsc - dsc_mean) <= lambda1*dsc_std)]
+    bool_mask = tf.logical_and(K.greater_equal(dsc - dsc_mean + lambda1*dsc_std, 0),
+                               K.less_equal(dsc - dsc_mean - lambda1*dsc_std, 0))
+    binarize_dsc = tf.boolean_mask(dsc, bool_mask)
 
     loss = 1 - K.mean(binarize_dsc)
 
