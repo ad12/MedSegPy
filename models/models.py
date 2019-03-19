@@ -45,7 +45,7 @@ def get_model(config):
     elif type(config) is RefineNetConfig:
         model = basic_refinenet(config)
     elif type(config) is UNet3DConfig:
-        model = unet3d(config)
+        model = unet_3d(config)
     else:
         raise ValueError('This config type has not been implemented')
 
@@ -121,10 +121,6 @@ def unet_3d(config):
     NUM_FILTERS = config.NUM_FILTERS
     model = unet_3d_model(input_size=input_shape, depth=DEPTH, num_filters=NUM_FILTERS, num_classes=num_classes,
                           activation=activation)
-
-    # Add activation
-    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation)
-    model = Model(inputs=model.input, outputs=x)
 
     return model
 

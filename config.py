@@ -455,7 +455,7 @@ class Config():
 
             if skey == 'img_size':
                 val = utils.convert_data_type(vargin[skey], data_type=type(cls.IMG_SIZE))
-                assert type(val) is tuple and len(val) == 3
+                assert type(val) is tuple
 
             config_dict[c_skey] = val
         return config_dict

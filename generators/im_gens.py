@@ -501,7 +501,7 @@ class OAI3DGenerator(OAIGenerator):
 
     def __validate_img_size__(self, slices_per_scan):
         # only accept image sizes where slices can be perfectly disjoint
-        input_volume_num_slices = self.config.IMG_SIZE[-1]
+        input_volume_num_slices = self.config.IMG_SIZE[2]
         if input_volume_num_slices == 1:
             raise ValueError('For 2D/2.5D networks, use `OAIGenerator`')
 
