@@ -298,18 +298,33 @@ class Config():
         if self.STATE == 'training':
             summary_vals.extend([
                 'TRAIN_PATH', 'VALID_PATH', 'TEST_PATH', '',
+
                 'TISSUES', '',
+
                 'N_EPOCHS', 'AUGMENT_DATA', 'LOSS', '',
+
                 'USE_CROSS_VALIDATION', 'CV_K' if self.USE_CROSS_VALIDATION else '',
                 'CV_TRAIN_BINS' if self.USE_CROSS_VALIDATION else '',
                 'CV_VALID_BINS' if self.USE_CROSS_VALIDATION else '',
-                'CV_TEST_BINS' if self.USE_CROSS_VALIDATION else ''
-                                                                 'TRAIN_BATCH_SIZE', 'VALID_BATCH_SIZE', '',
-                'INITIAL_LEARNING_RATE', 'USE_STEP_DECAY', 'DROP_FACTOR', 'DROP_RATE', 'MIN_LEARNING_RATE', '',
-                'USE_EARLY_STOPPING', 'EARLY_STOPPING_MIN_DELTA', 'EARLY_STOPPING_PATIENCE',
-                'EARLY_STOPPING_CRITERION', '',
+                'CV_TEST_BINS' if self.USE_CROSS_VALIDATION else '', ''
+                                                                     
+                'TRAIN_BATCH_SIZE', 'VALID_BATCH_SIZE', '',
+
+                'INITIAL_LEARNING_RATE',
+                'USE_STEP_DECAY',
+                'DROP_FACTOR' if self.USE_STEP_DECAY else '',
+                'DROP_RATE' if self.USE_STEP_DECAY else '',
+                'MIN_LEARNING_RATE' if self.USE_STEP_DECAY else '', '',
+
+                'USE_EARLY_STOPPING',
+                'EARLY_STOPPING_MIN_DELTA' if self.USE_EARLY_STOPPING else '',
+                'EARLY_STOPPING_PATIENCE' if self.USE_EARLY_STOPPING else '',
+                'EARLY_STOPPING_CRITERION' if self.USE_EARLY_STOPPING else '', '',
+
                 'KERNEL_INITIALIZER', '',
-                'FINE_TUNE', 'INIT_WEIGHT_PATH' if self.FINE_TUNE else ''])
+
+                'FINE_TUNE',
+                'INIT_WEIGHT_PATH' if self.FINE_TUNE else ''])
         else:
             summary_vals.extend(['TEST_RESULT_PATH', 'TEST_WEIGHT_PATH', 'TEST_BATCH_SIZE'])
 
