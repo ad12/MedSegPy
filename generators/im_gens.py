@@ -278,7 +278,7 @@ class OAIGenerator(Generator):
 
         return np.stack(o_seg, axis=-1)
 
-    def __load_neighboring_slices__(self, num_slices, filepath, max_slice=72):
+    def __load_neighboring_slices__(self, num_slices, filepath, max_slice):
         """
         Assumes that there are at most slices go from 1-max_slice
         :param num_slices:
@@ -501,6 +501,9 @@ class OAI3DGenerator(OAIGenerator):
 
     def __validate_img_size__(self, slices_per_scan):
         # only accept image sizes where slices can be perfectly disjoint
+        if len(self.config.IMG_SIZE) != 4:
+            raise ValueError('`IMG_SIZE` must be in format (y, x, z, #channels)')
+
         input_volume_num_slices = self.config.IMG_SIZE[2]
         if input_volume_num_slices == 1:
             raise ValueError('For 2D/2.5D networks, use `OAIGenerator`')
@@ -599,7 +602,7 @@ class OAI3DGenerator(OAIGenerator):
         unique_filepaths = {}  # use dict to avoid having to reconstruct set every time
 
         # track the largest slice number that we see - assume it is the same for all scans
-        max_slice_num = 0
+        slice_ids = []
 
         for fp in filepaths:
             fp, _ = os.path.splitext(fp)
@@ -607,20 +610,22 @@ class OAI3DGenerator(OAIGenerator):
 
             if self.__add_file__(fp, unique_filepaths, pids, augment_data):
                 file_info = self.__get_file_info__(filename, dirpath)
-                if max_slice_num < file_info['slice']:
-                    max_slice_num = file_info['slice']
+                slice_ids.append(file_info['slice'])
 
                 unique_filepaths[fp] = fp
 
         files = list(unique_filepaths.keys())
 
+        min_slice_id = min(slice_ids)
+        max_slice_id = min(slice_ids)
+
         # validate image size
-        self.__validate_img_size__(max_slice_num)
+        self.__validate_img_size__(max_slice_id - min_slice_id)
 
         # Remove files corresponding to the same volume
         # e.g. If input volume has 4 slices, slice 1 and 2 will be part of the same volume
         #      We only include file corresponding to slice 1, because other files are accounted for by default
-        slices_to_include = range(1, max_slice_num + 1, self.config.IMG_SIZE[-1])
+        slices_to_include = range(min_slice_id, max_slice_id + 1, self.config.IMG_SIZE[2])
         files_refined = []
         for filepath in files:
             fname = os.path.basename(filepath)
@@ -635,7 +640,17 @@ class OAI3DGenerator(OAIGenerator):
 
         batches_per_epoch = nvolumes // batch_size
 
-        return files, batches_per_epoch, max_slice_num
+        return files, batches_per_epoch, max_slice_id
+
+    def __add_file__(self, file: str, unique_filenames, pids, augment_data: bool):
+        add_file = super().__add_file__(file, unique_filenames, pids, augment_data)
+
+        # If only subset of slices should be selected, then return
+        if hasattr(self.config, 'SLICE_SUBSET') and self.config.SLICE_SUBSET is not None:
+            file_info = self.__get_file_info__(file)
+            add_file &= file_info['slice'] in range(self.config.SLICE_SUBSET[0], self.config.SLICE_SUBSET[1] + 1)
+
+        return add_file
 
 
 class OAI3DBlockGenerator(Generator):

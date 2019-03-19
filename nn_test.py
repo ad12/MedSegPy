@@ -17,9 +17,6 @@ def add_testing_arguments(parser: argparse.ArgumentParser):
     parser.add_argument('--save_h5_data', action='store_const', const=True, default=False,
                         help='save h5 data')
 
-    # parser.add_argument('--save_h5_data', action='store_const', default=False, const=True,
-    #                     help='save ground truth and prediction data in h5 format')
-
 
 def create_config_dict(vargin):
     return {'TEST_BATCH_SIZE': vargin['batch_size']}
@@ -28,11 +25,6 @@ def create_config_dict(vargin):
 if __name__ == '__main__':
     base_parser = argparse.ArgumentParser(description='Run inference (testing)')
     add_testing_arguments(base_parser)
-    # arg_subparser = base_parser.add_subparsers(help='supported configs for different architectures', dest='config')
-    # subparsers = MCONFIG.init_cmd_line_parser(arg_subparser)
-    #
-    # for s_parser in subparsers:
-    #     add_testing_arguments(s_parser)
 
     # Parse input arguments
     args = base_parser.parse_args()
