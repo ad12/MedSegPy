@@ -724,7 +724,7 @@ class UNet3DConfig(UNetConfig):
 
     TAG = 'oai_3d'
 
-    SLICE_SUBSET = (4, 64)  # 1 indexed inclusive - i.e. (4, 64) means slices [4, 64]
+    SLICE_SUBSET = (5, 68)  # 1 indexed inclusive - i.e. (4, 64) means slices [4, 64]
 
     # Train path - volumetric augmentation
     TRAIN_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/vol_aug/train_sag/'

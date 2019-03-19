@@ -150,7 +150,8 @@ class OAIGenerator(Generator):
         #    raise ValueError('Image size must be 3D')
 
         total_classes = config.get_num_classes()
-        mask_size = (img_size[0], img_size[1], total_classes)
+        mask_size = img_size[:-1] + (total_classes,)
+        #mask_size = (img_size[0], img_size[1], total_classes)
 
         x = np.zeros((batch_size,) + img_size)
         y = np.zeros((batch_size,) + mask_size)
@@ -472,7 +473,7 @@ class OAIGenerator(Generator):
 
         if config.STATE != 'training':
             raise ValueError('Method is only active when config is in training state')
-
+        
         train_data_path_or_files = config.__CV_TRAIN_FILES__ if config.USE_CROSS_VALIDATION else config.TRAIN_PATH
         valid_data_path_or_files = config.__CV_VALID_FILES__ if config.USE_CROSS_VALIDATION else config.VALID_PATH
 
@@ -613,14 +614,14 @@ class OAI3DGenerator(OAIGenerator):
                 slice_ids.append(file_info['slice'])
 
                 unique_filepaths[fp] = fp
-
+        
         files = list(unique_filepaths.keys())
 
         min_slice_id = min(slice_ids)
-        max_slice_id = min(slice_ids)
+        max_slice_id = max(slice_ids)
 
         # validate image size
-        self.__validate_img_size__(max_slice_id - min_slice_id)
+        self.__validate_img_size__(max_slice_id - min_slice_id + 1)
 
         # Remove files corresponding to the same volume
         # e.g. If input volume has 4 slices, slice 1 and 2 will be part of the same volume
