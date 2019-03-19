@@ -146,8 +146,8 @@ class OAIGenerator(Generator):
                                                                                augment_data=augment_data)
 
         # img_size must be 3D
-        if len(img_size) != 3:
-            raise ValueError('Image size must be 3D')
+        #if len(img_size) != 3:
+        #    raise ValueError('Image size must be 3D')
 
         total_classes = config.get_num_classes()
         mask_size = (img_size[0], img_size[1], total_classes)
@@ -507,7 +507,7 @@ class OAI3DGenerator(OAIGenerator):
 
         if slices_per_scan % input_volume_num_slices != 0:
             raise ValueError('All input volumes must be disjoint. %d slices per scan, but %d slices in input' % (
-                slices_per_scan, self.config.IMG_SIZE[-1]))
+                slices_per_scan, input_volume_num_slices))
 
     def __get_corresponding_files__(self, fname: str):
         num_slices = self.config.IMG_SIZE[-1]

@@ -509,6 +509,9 @@ class DeeplabV3Config(Config):
     @classmethod
     def parse_cmd_line(cls, vargin) -> dict:
         config_dict = super().parse_cmd_line(vargin)
+        
+        config_dict['DIL_RATES'] = utils.convert_data_type(config_dict['DIL_RATES'], tuple)
+
         assert len(config_dict['DIL_RATES']) == 3
 
         return config_dict
