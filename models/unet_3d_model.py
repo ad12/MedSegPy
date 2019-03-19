@@ -2,13 +2,16 @@ import numpy as np
 from keras.initializers import he_normal
 from keras.layers import BatchNormalization as BN
 from keras.layers import Deconvolution3D
-from keras.layers import Input, Conv3D, MaxPooling3D, concatenate, Dropout
+from keras.layers import Input, Conv3D, MaxPooling3D, concatenate, Dropout, Activation
 from keras.models import Model
+from keras.utils import plot_model
 
-DEFAULT_INPUT_SIZE = (288, 288, 64)
+
+DEFAULT_INPUT_SIZE = (288, 288, 64, 1)
 
 
-def unet_3d_model(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, output_mode=None, num_filters=None, depth=6,
+def unet_3d_model(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, num_classes=1, activation='sigmoid',
+                  output_mode=None, num_filters=None, depth=6,
                   filter_size=(3, 3, 3), in_plane_pool_size=(2, 2)):
     # input size is a tuple of the size of the image
     # assuming channel last
@@ -17,8 +20,8 @@ def unet_3d_model(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, output_mode=
     import glob_constants
     print('Initializing unet with seed: %s' % str(glob_constants.SEED))
     SEED = glob_constants.SEED
-    if input_tensor is None and (type(input_size) is not tuple or len(input_size) != 3):
-        raise ValueError('input_size must be a tuple of size (height, width, 1)')
+    if input_tensor is None and (type(input_size) is not tuple or len(input_size) != 4):
+        raise ValueError('input_size must be a tuple of size (height, width, slices, 1)')
 
     if num_filters is None:
         nfeatures = [2 ** feat * 32 for feat in np.arange(depth)]
@@ -45,12 +48,12 @@ def unet_3d_model(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, output_mode=
 
         conv = Conv3D(nfeatures[depth_cnt], filter_size,
                       padding='same',
-                      activation='relu',
                       kernel_initializer=he_normal(seed=SEED))(pool)
+        conv = Activation('relu')(conv)
         conv = Conv3D(nfeatures[depth_cnt], filter_size,
                       padding='same',
-                      activation='relu',
                       kernel_initializer=he_normal(seed=SEED))(conv)
+        conv = Activation('relu')(conv)
 
         conv = BN(axis=-1, momentum=0.95, epsilon=0.001)(conv)
         conv = Dropout(rate=0.0)(conv)
@@ -74,7 +77,7 @@ def unet_3d_model(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, output_mode=
             up = concatenate([Deconvolution3D(nfeatures[depth_cnt], filter_size,
                                               padding='same',
                                               strides=in_plane_pool_size + (2,),
-                                              output_shape=deconv_shape,
+                                              #output_shape=deconv_shape,
                                               kernel_initializer=he_normal(seed=SEED))(conv),
                               conv_ptr[depth_cnt]],
                              axis=4)
@@ -83,26 +86,32 @@ def unet_3d_model(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, output_mode=
             up = concatenate([Deconvolution3D(nfeatures[depth_cnt], filter_size,
                                               padding='same',
                                               strides=in_plane_pool_size + (1,),
-                                              output_shape=deconv_shape,
+                                              #output_shape=deconv_shape,
                                               kernel_initializer=he_normal(seed=SEED))(conv),
                               conv_ptr[depth_cnt]],
                              axis=4)
 
         conv = Conv3D(nfeatures[depth_cnt], filter_size,
                       padding='same',
-                      activation='relu',
                       kernel_initializer=he_normal(seed=SEED))(up)
+        conv = Activation('relu')(conv)
         conv = Conv3D(nfeatures[depth_cnt], filter_size,
                       padding='same',
-                      activation='relu',
                       kernel_initializer=he_normal(seed=SEED))(conv)
+        conv = Activation('relu')(conv)
 
         conv = BN(axis=-1, momentum=0.95, epsilon=0.001)(conv)
         conv = Dropout(rate=0.00)(conv)
 
     # combine features
-    recon = Conv3D(1, (1, 1, 1), padding='same', kernel_initializer=he_normal(seed=SEED))(conv)
+    recon = Conv3D(num_classes, (1, 1, 1), padding='same', kernel_initializer=he_normal(seed=SEED))(conv)
+    recon = Activation(activation)(recon)
 
     model = Model(inputs=[inputs], outputs=[recon])
 
     return model
+
+
+if __name__ == '__main__':
+    m = unet_3d_model(input_size=(288, 288, 16, 1))
+    plot_model(m, './imgs/unet_3d.png', show_shapes=True)

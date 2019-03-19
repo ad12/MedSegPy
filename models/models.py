@@ -8,7 +8,7 @@ from keras.utils import plot_model
 sys.path.append('../')
 import glob_constants as glc
 from config import DeeplabV3Config, SegnetConfig, UNetConfig, \
-    UNetMultiContrastConfig, UNet2_5DConfig, DeeplabV3_2_5DConfig, ResidualUNet, AnisotropicUNetConfig, RefineNetConfig
+    UNetMultiContrastConfig, UNet2_5DConfig, DeeplabV3_2_5DConfig, ResidualUNet, AnisotropicUNetConfig, RefineNetConfig, UNet3DConfig
 from glob_constants import SEED
 
 from models.deeplab_2d.deeplab_model import DeeplabModel
@@ -17,6 +17,8 @@ from models.unet_2d.residual_unet_model import residual_unet_2d
 from models.unet_2d.anisotropic_unet_model import anisotropic_unet_2d
 from models.unet_2d.unet_model import unet_2d_model, unet_2d_model_v2
 from models.refinenet.refinenet_model import refinenet_model
+from models.unet_3d_model import unet_3d_model
+
 
 def get_model(config):
     """
@@ -42,6 +44,8 @@ def get_model(config):
         model = anisotropic_unet(config)
     elif type(config) is RefineNetConfig:
         model = basic_refinenet(config)
+    elif type(config) is UNet3DConfig:
+        model = unet3d(config)
     else:
         raise ValueError('This config type has not been implemented')
 
@@ -101,6 +105,28 @@ def residual_unet(config):
 
     return model
 
+def unet_3d(config):
+    """
+     Returns Unet3D model
+     :param config: a UNetConfig object
+     :return: a Keras model
+
+     :raises ValueError: if config not of type UNetConfig
+     """
+    input_shape = config.IMG_SIZE
+    activation = config.LOSS[1]
+    num_classes = config.get_num_classes()
+
+    DEPTH = config.DEPTH
+    NUM_FILTERS = config.NUM_FILTERS
+    model = unet_3d_model(input_size=input_shape, depth=DEPTH, num_filters=NUM_FILTERS, num_classes=num_classes,
+                          activation=activation)
+
+    # Add activation
+    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation)
+    model = Model(inputs=model.input, outputs=x)
+
+    return model
 
 def unet_2d(config):
     """

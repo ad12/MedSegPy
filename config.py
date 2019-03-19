@@ -710,7 +710,7 @@ class UNet2_5DConfig(UNetConfig):
 
 class UNet3DConfig(UNetConfig):
 
-    IMG_SIZE = (288, 288, 4)
+    IMG_SIZE = (288, 288, 4, 1)
 
     CP_SAVE_TAG = 'unet_3d'
     N_EPOCHS = 20
@@ -804,7 +804,8 @@ class RefineNetConfig(Config):
         super().__init__(self.CP_SAVE_TAG, state, create_dirs=create_dirs)
 
 
-SUPPORTED_CONFIGS = [UNetConfig, SegnetConfig, DeeplabV3Config, ResidualUNet, AnisotropicUNetConfig, RefineNetConfig]
+SUPPORTED_CONFIGS = [UNetConfig, SegnetConfig, DeeplabV3Config, ResidualUNet, AnisotropicUNetConfig, RefineNetConfig,
+                     UNet3DConfig]
 
 
 def get_config(config_cp_save_tag: str, create_dirs: bool=True):
