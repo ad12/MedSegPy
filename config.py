@@ -301,6 +301,8 @@ class Config():
 
                 'TISSUES', '',
 
+                'IMG_SIZE', '',
+
                 'N_EPOCHS', 'AUGMENT_DATA', 'LOSS', '',
 
                 'USE_CROSS_VALIDATION', 'CV_K' if self.USE_CROSS_VALIDATION else '',
@@ -740,6 +742,8 @@ class UNet3DConfig(UNetConfig):
     TAG = 'oai_3d'
 
     SLICE_SUBSET = (5, 68)  # 1 indexed inclusive - i.e. (4, 64) means slices [4, 64]
+    
+    NUM_FILTERS = [16, 32, 64, 128, 256, 512]
 
     # Train path - volumetric augmentation
     TRAIN_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/vol_aug/train_sag/'
