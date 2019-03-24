@@ -836,7 +836,7 @@ def get_config(config_cp_save_tag: str, create_dirs: bool=True):
     """
     Get config using config cp_save_tag
     :param config_cp_save_tag: config cp_save_tag
-    :param is_testing: if config should be loaded in testing state
+    :param create_dirs: if directory should be created
     :return: A Config instance
     """
 
