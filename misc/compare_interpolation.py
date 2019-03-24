@@ -21,6 +21,8 @@ VOXEL_SPACING = (0.3125, 0.3125, 0.7)  # mm
 INTERPOLATION_RESULTS_PATH = io_utils.check_dir('/bmrNAS/people/arjun/msk_seg_networks/interpolation')
 INTERPOLATION_EXP = ''
 
+GPU = 0
+
 def load_config():
     # get config
     cp_save_tag = config.get_cp_save_tag(CONFIG_PATH)
@@ -51,6 +53,9 @@ def get_downsampled_masks(c: config.Config):
 
 
 def inference_hr():
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+    os.environ['CUDA_VISIBLE_DEVICES'] = GPU
+
     c = load_config()
     c_hr = deepcopy(c)
     c_hr.TEST_PATH = HR_TEST_PATH
