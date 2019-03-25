@@ -147,7 +147,6 @@ class OAIGenerator(Generator):
 
         total_classes = config.get_num_classes()
         mask_size = img_size[:-1] + (total_classes,)
-
         x = np.zeros((batch_size,) + img_size)
         y = np.zeros((batch_size,) + mask_size)
 
@@ -593,6 +592,10 @@ class OAI3DGenerator(OAIGenerator):
 
         im_vol = np.stack(ims, axis=-1)
         seg_vol = np.stack(segs, axis=-1)
+        im_vol = np.squeeze(im_vol)
+        im_vol = im_vol[..., np.newaxis]
+        seg_vol = np.transpose(np.squeeze(seg_vol), [0, 1, 3, 2])
+        seg_vol = seg_vol[..., np.newaxis]
 
         assert im_vol.shape == self.config.IMG_SIZE, "Loaded volume of size %s. Expected %s" % (im_vol.shape,
                                                                                                 self.config.IMG_SIZE)
