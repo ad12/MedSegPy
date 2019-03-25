@@ -145,13 +145,8 @@ class OAIGenerator(Generator):
                                                                                pids=pids,
                                                                                augment_data=augment_data)
 
-        # img_size must be 3D
-        #if len(img_size) != 3:
-        #    raise ValueError('Image size must be 3D')
-
         total_classes = config.get_num_classes()
         mask_size = img_size[:-1] + (total_classes,)
-        #mask_size = (img_size[0], img_size[1], total_classes)
 
         x = np.zeros((batch_size,) + img_size)
         y = np.zeros((batch_size,) + mask_size)
@@ -172,6 +167,8 @@ class OAIGenerator(Generator):
                                                                num_neighboring_slices=num_neighboring_slices,
                                                                max_slice_num=max_slice_num,
                                                                include_background=include_background)
+
+                    assert im.shape == img_size, "Shape mismatch. Expected %s, got %s" % (img_size, im.shape)
 
                     x[file_cnt, ...] = im
                     y[file_cnt, ...] = seg_total
@@ -245,6 +242,15 @@ class OAIGenerator(Generator):
         return scan_id_files
 
     def __load_input_helper__(self, filepath, tissues, num_neighboring_slices, max_slice_num, include_background):
+        """
+
+        :param filepath:
+        :param tissues:
+        :param num_neighboring_slices: The number of slices to load - None for 2D networks
+        :param max_slice_num:
+        :param include_background:
+        :return:
+        """
         # check that fname contains a dirpath
         assert os.path.dirname(filepath) is not ''
 
@@ -540,7 +546,7 @@ class OAI3DGenerator(OAIGenerator):
         if num_neighboring_slices:
             im, seg = self.__load_corresponding_slices__(filepath)
         else:
-            im, seg = self.__load_inputs__(os.path.dirname(filepath), os.path.basename(filepath))
+            raise ValueError('`num_neighboring_slices` must be initialized')
 
         # support multi class
         if len(tissues) > 1:
@@ -585,9 +591,11 @@ class OAI3DGenerator(OAIGenerator):
             ims.append(im)
             segs.append(seg)
 
-        # segmentation is central slice segmentation
         im_vol = np.stack(ims, axis=-1)
         seg_vol = np.stack(segs, axis=-1)
+
+        assert im_vol.shape == self.config.IMG_SIZE, "Loaded volume of size %s. Expected %s" % (im_vol.shape,
+                                                                                                self.config.IMG_SIZE)
 
         return im_vol, seg_vol
 
