@@ -103,6 +103,41 @@ class Generator(ABC):
 
         return seg_total
 
+    def __img_generator_base_info(self, state):
+        accepted_states = ['training', 'validation', 'testing']
+        if state not in ['training', 'validation', 'testing']:
+            raise ValueError('state must be in %s' % accepted_states)
+
+        config = self.config
+        if state == 'training':
+            # training
+            data_path_or_files = config.__CV_TRAIN_FILES__ if config.USE_CROSS_VALIDATION else config.TRAIN_PATH
+            batch_size = config.TRAIN_BATCH_SIZE
+            shuffle_epoch = True
+            pids = config.PIDS
+            augment_data = config.AUGMENT_DATA
+        elif state == 'validation':
+            # validation
+            data_path_or_files = config.__CV_VALID_FILES__ if config.USE_CROSS_VALIDATION else config.VALID_PATH
+            batch_size = config.VALID_BATCH_SIZE
+            shuffle_epoch = False
+            pids = None
+            augment_data = False
+        elif state == 'testing':
+            data_path_or_files = config.__CV_TEST_FILES__ if config.USE_CROSS_VALIDATION else config.TEST_PATH
+            batch_size = config.TEST_BATCH_SIZE
+            shuffle_epoch = False
+            pids = None
+            augment_data = False
+
+        base_info = {'data_path_or_files': data_path_or_files,
+                     'batch_size': batch_size,
+                     'shuffle_epoch': shuffle_epoch,
+                     'pids': pids,
+                     'augment_data': augment_data}
+
+        return base_info
+
 
 class OAIGenerator(Generator):
     SUPPORTED_TAGS = ['oai_aug', 'oai', 'oai_2d', 'oai_aug_2d', 'oai_2.5d', 'oai_aug_2.5d']
