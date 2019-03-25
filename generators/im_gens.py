@@ -161,16 +161,17 @@ class OAIGenerator(Generator):
                     file_ind = batch_cnt * batch_size + file_cnt
                     filepath = files[file_ind]
 
-                    im, seg_total = self.__load_input_helper__(filepath=filepath,
+                    im, seg = self.__load_input_helper__(filepath=filepath,
                                                                tissues=tissues,
                                                                num_neighboring_slices=num_neighboring_slices,
                                                                max_slice_num=max_slice_num,
                                                                include_background=include_background)
 
-                    assert im.shape == img_size, "Shape mismatch. Expected %s, got %s" % (img_size, im.shape)
+                    assert im.shape == img_size, "Input shape mismatch. Expected %s, got %s" % (img_size, im.shape)
+                    assert seg.shape == mask_size, "Ouput shape mismatch. Expected %s, got %s" % (mask_size, seg.shape)
 
                     x[file_cnt, ...] = im
-                    y[file_cnt, ...] = seg_total
+                    y[file_cnt, ...] = seg
 
                 yield (x, y)
 
