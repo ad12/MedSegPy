@@ -153,7 +153,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         if state not in ['training', 'validation']:
             raise ValueError('state must be in [\'training\', \'validation\']')
 
-        base_info = self.__img_generator_base_info(state)
+        base_info = self.__img_generator_base_info__(state)
         data_path_or_files = base_info['data_path_or_files']
         batch_size = base_info['batch_size']
         pids = base_info['pids']
@@ -229,8 +229,8 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         config = self.config
 
         if config.STATE == 'training':
-            train_base_info = self.__img_generator_base_info('training')
-            valid_base_info = self.__img_generator_base_info('validation')
+            train_base_info = self.__img_generator_base_info__('training')
+            valid_base_info = self.__img_generator_base_info__('validation')
 
             train_scan_to_blocks, train_batches_per_epoch = self.__calc_generator_info__(data_path_or_files=train_base_info['data_path_or_files'],
                                                                                    batch_size=train_base_info['batch_size'],
@@ -253,7 +253,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
             print('INFO: Image types included in training: %s' % (self.config.FILE_TYPES,))
         else:  # config in Testing state
             raise NotImplementedError('Testing summary not implemented')
-            test_base_info = self.__img_generator_base_info('testing')
+            test_base_info = self.__img_generator_base_info__('testing')
 
             test_files, test_batches_per_epoch = self.__calc_generator_info__(data_path_or_files=test_base_info['data_path_or_files'],
                                                                                    batch_size=test_base_info['batch_size'],
@@ -268,8 +268,8 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         if config.STATE != 'training':
             raise ValueError('Method is only active when config is in training state')
 
-        train_base_info = self.__img_generator_base_info('training')
-        valid_base_info = self.__img_generator_base_info('validation')
+        train_base_info = self.__img_generator_base_info__('training')
+        valid_base_info = self.__img_generator_base_info__('validation')
 
         train_scan_to_blocks, train_batches_per_epoch = self.__calc_generator_info__(
             data_path_or_files=train_base_info['data_path_or_files'],
