@@ -30,7 +30,6 @@ ARGS='--n_epochs 100 --use_step_decay --initial_learning_rate 0.02 --experiment 
 # Experiment 1: 3D unet (4 slices)
 python -m oai_train unet_3d --img_size '(288,288,4,1)' $ARGS
 
-exit
 # Experiment 2: 3D unet (8 slices)
 python -m oai_train unet_3d --img_size '(288,288,8,1)' $ARGS
 
