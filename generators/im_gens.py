@@ -2,7 +2,7 @@ import os
 from abc import ABC, abstractmethod
 from os import listdir
 from random import shuffle
-from typing import Union
+from typing import Union, Tuple
 
 import h5py
 import numpy as np
@@ -710,6 +710,16 @@ class OAI3DBlockGenerator(OAI3DGenerator):
 
     def __init__(self, config):
         super().__init__(config=config)
+        self._cached_data = dict()
+
+    def cached_data(self, state):
+        if state not in ['training', 'validation', 'testing']:
+            raise ValueError('state must be one of these: %s' % (['training', 'validation', 'testing']))
+
+        if state not in self._cached_data.keys():
+            self._cached_data[state] = self.__calc_generator_info_wrapper(state)
+
+        return self._cached_data[state]
 
     def __load_all_volumes__(self, filepaths):
         fps_sorted = sorted(filepaths)
@@ -752,7 +762,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
                     im_volume block: a 3D numpy array of size Y/Yi, X/Xi, Z/Zi
                     seg_volume block: a 3D numpy array of size Y/Yi, X/Xi, Z/Zi, #masks
         """
-        yb, xb, zb = tuple(np.squeeze(self.config.IMG_SIZE))
+        yb, xb, zb, _ = self.config.IMG_SIZE
 
         ordered_keys = sorted(scan_volumes.keys())
         scan_to_blocks = dict()
@@ -793,7 +803,15 @@ class OAI3DBlockGenerator(OAI3DGenerator):
 
         return int(num_blocks)
 
-    def __calc_generator_info__(self, data_path_or_files: Union[str, list], batch_size, pids=None, augment_data=False):
+    def __calc_generator_info_wrapper(self, state='training'):
+        base_info = self.__img_generator_base_info__(state)
+        return self.__calc_generator_info__(data_path_or_files=base_info['data_path_or_files'],
+                                            batch_size=base_info['batch_size'],
+                                            pids=base_info['pids'],
+                                            augment_data=base_info['augment_data'])
+
+    def __calc_generator_info__(self, data_path_or_files: Union[str, list],
+                                batch_size, pids=None, augment_data=False) -> Tuple[dict, int]:
         if type(data_path_or_files) is str:
             data_path = data_path_or_files
             files = os.listdir(data_path)
@@ -849,10 +867,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
             raise ValueError('state must be in [\'training\', \'validation\']')
 
         base_info = self.__img_generator_base_info__(state)
-        data_path_or_files = base_info['data_path_or_files']
         batch_size = base_info['batch_size']
-        pids = base_info['pids']
-        augment_data = base_info['augment_data']
         shuffle_epoch = base_info['shuffle_epoch']
 
         config = self.config
@@ -860,10 +875,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         tissues = config.TISSUES
         include_background = config.INCLUDE_BACKGROUND
 
-        scan_to_blocks, batches_per_epoch = self.__calc_generator_info__(data_path_or_files=data_path_or_files,
-                                                                               batch_size=batch_size,
-                                                                               pids=pids,
-                                                                               augment_data=augment_data)
+        scan_to_blocks, batches_per_epoch = self.cached_data(state)
 
         total_classes = config.get_num_classes()
         mask_size = img_size[:-1] + (total_classes,)
@@ -927,15 +939,8 @@ class OAI3DBlockGenerator(OAI3DGenerator):
             train_base_info = self.__img_generator_base_info__('training')
             valid_base_info = self.__img_generator_base_info__('validation')
 
-            train_scan_to_blocks, train_batches_per_epoch = self.__calc_generator_info__(data_path_or_files=train_base_info['data_path_or_files'],
-                                                                                   batch_size=train_base_info['batch_size'],
-                                                                                   pids=train_base_info['pids'],
-                                                                                   augment_data=train_base_info['augment_data'])
-
-            valid_scan_to_blocks, valid_batches_per_epoch = self.__calc_generator_info__(data_path_or_files=valid_base_info['data_path_or_files'],
-                                                                                   batch_size=valid_base_info['batch_size'],
-                                                                                   pids=valid_base_info['pids'],
-                                                                                   augment_data=valid_base_info['augment_data'])
+            train_scan_to_blocks, train_batches_per_epoch = self.cached_data('training')
+            valid_scan_to_blocks, valid_batches_per_epoch = self.cached_data('validation')
 
             num_train_scans = len(train_scan_to_blocks.keys())
             num_valid_scans = len(valid_scan_to_blocks.keys())
@@ -950,12 +955,9 @@ class OAI3DBlockGenerator(OAI3DGenerator):
             raise NotImplementedError('Testing summary not implemented')
             test_base_info = self.__img_generator_base_info__('testing')
 
-            test_files, test_batches_per_epoch = self.__calc_generator_info__(data_path_or_files=test_base_info['data_path_or_files'],
-                                                                                   batch_size=test_base_info['batch_size'],
-                                                                                   pids=test_base_info['pids'],
-                                                                                   augment_data=test_base_info['augment_data'])
+            test_files, test_batches_per_epoch = self.cached_data('testing')
             if not config.USE_CROSS_VALIDATION:
-                print('Test path: %s' % (config.TEST_PATH))
+                print('Test path: %s' % config.TEST_PATH)
 
     def num_steps(self):
         config = self.config
@@ -963,20 +965,8 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         if config.STATE != 'training':
             raise ValueError('Method is only active when config is in training state')
 
-        train_base_info = self.__img_generator_base_info__('training')
-        valid_base_info = self.__img_generator_base_info__('validation')
-
-        train_scan_to_blocks, train_batches_per_epoch = self.__calc_generator_info__(
-            data_path_or_files=train_base_info['data_path_or_files'],
-            batch_size=train_base_info['batch_size'],
-            pids=train_base_info['pids'],
-            augment_data=train_base_info['augment_data'])
-
-        valid_scan_to_blocks, valid_batches_per_epoch = self.__calc_generator_info__(
-            data_path_or_files=valid_base_info['data_path_or_files'],
-            batch_size=valid_base_info['batch_size'],
-            pids=valid_base_info['pids'],
-            augment_data=valid_base_info['augment_data'])
+        _, train_batches_per_epoch = self.cached_data('training')
+        _, valid_batches_per_epoch = self.cached_data('validation')
 
         return train_batches_per_epoch, valid_batches_per_epoch
 
