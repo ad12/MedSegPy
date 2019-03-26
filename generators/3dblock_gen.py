@@ -83,6 +83,12 @@ class OAI3DBlockGenerator(OAI3DGenerator):
 
         return scan_to_blocks
 
+    def __get_num_blocks__(self, scan_to_blocks):
+        temp = []
+        for k in scan_to_blocks:
+            temp.extend(scan_to_blocks[k])
+        return len(temp)
+
     def __calc_num_blocks__(self, total_volume_shape):
         num_blocks = 1
         for dim in range(3):
@@ -218,3 +224,63 @@ class OAI3DBlockGenerator(OAI3DGenerator):
             o_seg.append(c_seg)
 
         return np.stack(o_seg, axis=-1)
+
+    def summary(self):
+        config = self.config
+
+        if config.STATE == 'training':
+            train_base_info = self.__img_generator_base_info('training')
+            valid_base_info = self.__img_generator_base_info('validation')
+
+            train_scan_to_blocks, train_batches_per_epoch = self.__calc_generator_info__(data_path_or_files=train_base_info['data_path_or_files'],
+                                                                                   batch_size=train_base_info['batch_size'],
+                                                                                   pids=train_base_info['pids'],
+                                                                                   augment_data=train_base_info['augment_data'])
+
+            valid_scan_to_blocks, valid_batches_per_epoch = self.__calc_generator_info__(data_path_or_files=valid_base_info['data_path_or_files'],
+                                                                                   batch_size=valid_base_info['batch_size'],
+                                                                                   pids=valid_base_info['pids'],
+                                                                                   augment_data=valid_base_info['augment_data'])
+
+            num_train_scans = len(train_scan_to_blocks.keys())
+            num_valid_scans = len(valid_scan_to_blocks.keys())
+
+            print('INFO: Train size: %d blocks (%d scans), batch size: %d' % (
+                self.__get_num_blocks__(train_scan_to_blocks), num_train_scans, self.config.TRAIN_BATCH_SIZE))
+            print('INFO: Valid size: %d blocks (%d scans), batch size: %d' % (
+                self.__get_num_blocks__(valid_scan_to_blocks), num_valid_scans, self.config.VALID_BATCH_SIZE))
+            print('INFO: Image size: %s' % self.config.IMG_SIZE)
+            print('INFO: Image types included in training: %s' % (self.config.FILE_TYPES,))
+        else:  # config in Testing state
+            raise NotImplementedError('Testing summary not implemented')
+            test_base_info = self.__img_generator_base_info('testing')
+
+            test_files, test_batches_per_epoch = self.__calc_generator_info__(data_path_or_files=test_base_info['data_path_or_files'],
+                                                                                   batch_size=test_base_info['batch_size'],
+                                                                                   pids=test_base_info['pids'],
+                                                                                   augment_data=test_base_info['augment_data'])
+            if not config.USE_CROSS_VALIDATION:
+                print('Test path: %s' % (config.TEST_PATH))
+
+    def num_steps(self):
+        config = self.config
+
+        if config.STATE != 'training':
+            raise ValueError('Method is only active when config is in training state')
+
+        train_base_info = self.__img_generator_base_info('training')
+        valid_base_info = self.__img_generator_base_info('validation')
+
+        train_scan_to_blocks, train_batches_per_epoch = self.__calc_generator_info__(
+            data_path_or_files=train_base_info['data_path_or_files'],
+            batch_size=train_base_info['batch_size'],
+            pids=train_base_info['pids'],
+            augment_data=train_base_info['augment_data'])
+
+        valid_scan_to_blocks, valid_batches_per_epoch = self.__calc_generator_info__(
+            data_path_or_files=valid_base_info['data_path_or_files'],
+            batch_size=valid_base_info['batch_size'],
+            pids=valid_base_info['pids'],
+            augment_data=valid_base_info['augment_data'])
+
+        return train_batches_per_epoch, valid_batches_per_epoch
