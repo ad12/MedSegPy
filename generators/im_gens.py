@@ -8,10 +8,11 @@ import h5py
 import numpy as np
 
 from config import Config
+from generators.im_gens3d import OAI3DBlockGenerator
 
 
 def get_generator(config: Config):
-    for generator in [OAIGenerator, OAI3DGenerator]:
+    for generator in [OAIGenerator, OAI3DGenerator, OAI3DBlockGenerator]:
         try:
             gen = generator(config)
             if gen:
