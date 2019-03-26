@@ -781,8 +781,8 @@ class OAI3DBlockGenerator(OAI3DGenerator):
             for z in range(0, im_volume.shape[2], zb):
                 for y in range(0, im_volume.shape[1], yb):
                     for x in range(0, im_volume.shape[0], xb):
-                        im = im_volume[y:y+yb, x:x+xb, x:z+zb]
-                        seg = seg_volume[y:y+yb, x:x+xb, x:z+zb, :]
+                        im = im_volume[y:y+yb, x:x+xb, z:z+zb]
+                        seg = seg_volume[y:y+yb, x:x+xb, z:z+zb, :]
                         assert im.shape[:3] == seg.shape[:3], "Block shape mismatch. im_block %s, seg_block %s" % (im.shape, seg.shape)
                         assert im.shape[:3] == expected_block_size, "Block shape error. Expected %s, but got %s" % (expected_block_size, im.shape)
                         blocks.append((im, seg))
@@ -900,7 +900,12 @@ class OAI3DBlockGenerator(OAI3DGenerator):
                     block_ind = batch_cnt * batch_size + block_cnt
 
                     im, seg = blocks[block_ind]
+                    if im.ndim == 3:
+                        im = im[..., np.newaxis]
+
                     seg = self.__format_seg_helper__(seg, tissues, include_background)
+                    assert im.shape == img_size, "Input shape mismatch. Expected %s, got %s" % (img_size, im.shape)
+                    assert seg.shape == mask_size, "Ouput shape mismatch. Expected %s, got %s" % (mask_size, seg.shape)
 
                     x[block_cnt, ...] = im
                     y[block_cnt, ...] = seg
