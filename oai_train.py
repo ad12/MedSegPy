@@ -123,8 +123,8 @@ def train_model(config, optimizer=None, model=None, class_weights=None):
 
     train_nbatches, valid_nbatches = generator.num_steps()
 
-    train_gen = generator.img_generator(state='training')
-    val_gen = generator.img_generator(state='validation')
+    train_gen = generator.img_generator(state=im_gens.GeneratorState.TRAINING)
+    val_gen = generator.img_generator(state=im_gens.GeneratorState.VALIDATION)
 
     # Start training
     model.fit_generator(train_gen,
