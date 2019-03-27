@@ -656,23 +656,24 @@ class OAI3DBlockGenerator(OAI3DGenerator):
 
         return self._cached_data[state]
 
+    def process_filepath(self, fp):
+        dirpath = os.path.dirname(fp)
+        fname = os.path.basename(fp)
+
+        im, seg = self.__load_inputs__(data_path=dirpath, file=fname)
+        im = np.squeeze(im)
+        seg = np.squeeze(seg)
+        assert im.ndim == 2 and seg.ndim == 3, "image must be 2D (Y,X) and segmentation must be 3D (Y,X,#masks)"
+
+        info = self.fname_parser.get_file_info(fname)
+        volume_id = info['volume_id']
+        slice_num = info['slice']
+        return volume_id, slice_num, im, seg
+
     def __load_all_volumes__(self, filepaths):
-        def process_filepath(fp):
-            dirpath = os.path.dirname(fp)
-            fname = os.path.basename(fp)
-
-            im, seg = self.__load_inputs__(data_path=dirpath, file=fname)
-            im = np.squeeze(im)
-            seg = np.squeeze(seg)
-            assert im.ndim == 2 and seg.ndim == 3, "image must be 2D (Y,X) and segmentation must be 3D (Y,X,#masks)"
-
-            info = self.fname_parser.get_file_info(fname)
-            volume_id = info['volume_id']
-            slice_num = info['slice']
-            return volume_id, slice_num, im, seg
         start_time = time.time()
         pool = mp.Pool()
-        loaded_data_list = pool.map(process_filepath, filepaths)
+        loaded_data_list = pool.map(self.process_filepath, filepaths)
         pool.close()
         pool.join()
         print('loading volumes: %0.2f' % (time.time() - start_time))
