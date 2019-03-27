@@ -649,6 +649,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
 
     def cached_data(self, state: GeneratorState):
         if state not in self._cached_data.keys():
+            print('Computing %s blocks' % state)
             self._cached_data[state] = self.__calc_generator_info__(state)
 
         return self._cached_data[state]
@@ -695,6 +696,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
                     seg_volume block: a 3D numpy array of size Y/Yi, X/Xi, Z/Zi, #masks
         """
         yb, xb, zb, _ = self.config.IMG_SIZE
+        expected_block_size = (yb, xb, zb)
 
         ordered_keys = sorted(scan_volumes.keys())
         scan_to_blocks = dict()
@@ -711,11 +713,13 @@ class OAI3DBlockGenerator(OAI3DGenerator):
             for z in range(0, im_volume.shape[2], zb):
                 for y in range(0, im_volume.shape[1], yb):
                     for x in range(0, im_volume.shape[0], xb):
-                        im = im_volume[y:y+yb, x:x+xb, x:z+zb]
-                        seg = seg_volume[y:y+yb, x:x+xb, x:z+zb, :]
+                        im = im_volume[y:y+yb, x:x+xb, z:z+zb]
+                        seg = seg_volume[y:y+yb, x:x+xb, z:z+zb, :]
+                        assert im.shape[:3] == seg.shape[:3], "Block shape mismatch. im_block %s, seg_block %s" % (im.shape, seg.shape)
+                        assert im.shape[:3] == expected_block_size, "Block shape error. Expected %s, but got %s" % (expected_block_size, im.shape)
                         blocks.append((im, seg))
             assert len(blocks) == expected_num_blocks, "Expected %d blocks, got %d" % (expected_num_blocks, len(blocks))
-
+            
             scan_to_blocks[scan_id] = blocks
 
         return scan_to_blocks
@@ -826,7 +830,12 @@ class OAI3DBlockGenerator(OAI3DGenerator):
                     block_ind = batch_cnt * batch_size + block_cnt
 
                     im, seg = blocks[block_ind]
+                    if im.ndim == 3:
+                        im = im[..., np.newaxis]
+
                     seg = self.__format_seg_helper__(seg, tissues, include_background)
+                    assert im.shape == img_size, "Input shape mismatch. Expected %s, got %s" % (img_size, im.shape)
+                    assert seg.shape == mask_size, "Ouput shape mismatch. Expected %s, got %s" % (mask_size, seg.shape)
 
                     x[block_cnt, ...] = im
                     y[block_cnt, ...] = seg
@@ -876,7 +885,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
                 self.__get_num_blocks__(train_scan_to_blocks), num_train_scans, self.config.TRAIN_BATCH_SIZE))
             print('INFO: Valid size: %d blocks (%d scans), batch size: %d' % (
                 self.__get_num_blocks__(valid_scan_to_blocks), num_valid_scans, self.config.VALID_BATCH_SIZE))
-            print('INFO: Image size: %s' % self.config.IMG_SIZE)
+            print('INFO: Image size: %s' % (self.config.IMG_SIZE,))
             print('INFO: Image types included in training: %s' % (self.config.FILE_TYPES,))
         else:  # config in Testing state
             raise NotImplementedError('Testing summary not implemented')
