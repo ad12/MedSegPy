@@ -31,13 +31,13 @@ ARGS=$TRAIN_ARGS' '$NEW_PATHS_ARGS
 python -m oai_train unet_2d $ARGS
 
 # Experiment 2: 3D unet (4 slices)
-python -m oai_train unet_3d -g $GPU --img_size '(288,288,4,1)' --train_batch_size 1 $ARGS
+#python -m oai_train unet_3d -g $GPU --img_size '(288,288,4,1)' --train_batch_size 1 $ARGS
 
 # Experiment 3: 3D unet (8 slices)
-python -m oai_train unet_3d -g $GPU --img_size '(288,288,8,1)' --train_batch_size 1 $ARGS
+#python -m oai_train unet_3d -g $GPU --img_size '(288,288,8,1)' --train_batch_size 1 $ARGS
 
 # Experiment 4: 3D unet (16 slices)
-python -m oai_train unet_3d -g $GPU --img_size '(288,288,16,1)' --train_batch_size 1 $ARGS
+#python -m oai_train unet_3d -g $GPU --img_size '(288,288,16,1)' --train_batch_size 1 $ARGS
 
 # Experiment 5: 3D unet (32 slices)
-python -m oai_train unet_3d -g $GPU --img_size '(288,288,32,1)' --train_batch_size 1 $ARGS
+#python -m oai_train unet_3d -g $GPU --img_size '(288,288,32,1)' --train_batch_size 1 $ARGS

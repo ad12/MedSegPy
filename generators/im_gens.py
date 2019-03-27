@@ -651,6 +651,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
 
     def cached_data(self, state: GeneratorState):
         if state not in self._cached_data.keys():
+            start_time
             print('Computing %s blocks' % state.name)
             self._cached_data[state] = self.__calc_generator_info__(state)
 
@@ -678,10 +679,10 @@ class OAI3DBlockGenerator(OAI3DGenerator):
 
         # sort list first by volume_id, then by slice_num
         loaded_data_list = sorted(loaded_data_list, key=(lambda x: (x[0], x[1])))
-        scans_data = dict()
 
+        scans_data = dict()
         for volume_id, slice_num, im, seg in loaded_data_list:
-            if volume_id not in scans_data:
+            if volume_id not in scans_data.keys():
                 scans_data[volume_id] = {'ims': [], 'segs': []}
 
             scans_data[volume_id]['ims'].append(im)
