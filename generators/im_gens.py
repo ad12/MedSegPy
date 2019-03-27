@@ -652,16 +652,12 @@ class OAI3DBlockGenerator(OAI3DGenerator):
     def cached_data(self, state: GeneratorState):
         if state not in self._cached_data.keys():
             print('Computing %s blocks' % state.name)
-            start_time = time.time()
             self._cached_data[state] = self.__calc_generator_info__(state)
-            print('Cached Data - %s: %0.2f sec' % (state.name, time.time() - start_time))
 
         return self._cached_data[state]
 
     def __load_all_volumes__(self, filepaths):
-        fps_sorted = sorted(filepaths)
-        scans_data = dict()
-        for fp in fps_sorted:
+        def process_filepath(fp):
             dirpath = os.path.dirname(fp)
             fname = os.path.basename(fp)
 
@@ -671,12 +667,27 @@ class OAI3DBlockGenerator(OAI3DGenerator):
             assert im.ndim == 2 and seg.ndim == 3, "image must be 2D (Y,X) and segmentation must be 3D (Y,X,#masks)"
 
             info = self.fname_parser.get_file_info(fname)
-            scan_id = info['scanid']
-            if scan_id not in scans_data:
-                scans_data[scan_id] = {'ims': [], 'segs': []}
+            volume_id = info['volume_id']
+            slice_num = info['slice']
+            return volume_id, slice_num, im, seg
 
-            scans_data[scan_id]['ims'].append(im)
-            scans_data[scan_id]['segs'].append(seg)
+        pool = mp.Pool()
+        loaded_data_list = pool.map(process_filepath, filepaths)
+        pool.close()
+        pool.join()
+
+        import pdb; pdb.set_trace()
+
+        # sort list first by volume_id, then by slice_num
+        loaded_data_list = sorted(loaded_data_list, key=(lambda x: (x[0], x[1])))
+        scans_data = dict()
+
+        for volume_id, slice_num, im, seg in loaded_data_list:
+            if volume_id not in scans_data:
+                scans_data[volume_id] = {'ims': [], 'segs': []}
+
+            scans_data[volume_id]['ims'].append(im)
+            scans_data[volume_id]['segs'].append(seg)
 
         packaged_scan_volumes = {}
         for scan_id in scans_data.keys():
@@ -744,15 +755,12 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         return int(num_blocks)
 
     def __calc_generator_info__(self, state:GeneratorState) -> Tuple[dict, int]:
-        st_base_info = time.time()
         base_info = self.__img_generator_base_info__(state)
         data_path_or_files=base_info['data_path_or_files']
         batch_size=base_info['batch_size']
         pids=base_info['pids']
         augment_data=base_info['augment_data']
-        print("Loading %s base info: %0.2f" % (state.name, time.time() - st_base_info))
 
-        st_get_file = time.time()
         if type(data_path_or_files) is str:
             data_path = data_path_or_files
             files = os.listdir(data_path)
@@ -761,9 +769,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
             filepaths = data_path_or_files
         else:
             raise ValueError('data_path_or_files must be type str or list')
-        print("Formatting %s files: %0.2f" % (state.name, time.time() - st_get_file))
 
-        st_curate_files = time.time()
         unique_filepaths = {}  # use dict to avoid having to reconstruct set every time
 
         # track the largest slice number that we see - assume it is the same for all scans
@@ -780,22 +786,14 @@ class OAI3DBlockGenerator(OAI3DGenerator):
                 unique_filepaths[fp] = fp
 
         files = list(unique_filepaths.keys())
-        print("Curating %s files: %0.2f" % (state.name, time.time() - st_curate_files))
-
-        st_load_volumes = time.time()
         scan_to_volumes = self.__load_all_volumes__(files)
-        print("Loading %s volumes: %0.2f" % (state.name, time.time() - st_load_volumes))
 
-        st_blockify = time.time()
         scan_to_blocks = self.__blockify_volumes__(scan_to_volumes)
-        print("Splitting %s volumes to blocks: %0.2f" % (state.name, time.time() - st_blockify))
 
         # Set total number of volumes based on argument for limiting training size
-        st_counting_blocks = time.time()
         nblocks = 0
         for k in scan_to_blocks.keys():
             nblocks += len(scan_to_blocks[k])
-        print("Counting %s blocks: %0.2f" % (state.name, time.time() - st_counting_blocks))
 
         batches_per_epoch = nblocks // batch_size
 

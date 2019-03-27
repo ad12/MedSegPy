@@ -39,7 +39,8 @@ class OAISliceWise(FnameParser):
         slice_num = int(slice_num)
 
         return {'pid': pid, 'timepoint': timepoint, 'aug': augmentation, 'slice': slice_num,
-                'scanid':'%d_V%d' % (pid, timepoint)}
+                'scanid':'%d_V%02d' % (pid, timepoint),
+                'volume_id': '%d_V%02d-Aug%02d' % (pid, timepoint, augmentation)}
 
     def get_file_id(self, fname):
         fname_info = self.get_file_info(fname)
