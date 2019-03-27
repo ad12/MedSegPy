@@ -607,7 +607,7 @@ class UNetConfig(Config):
     TRAIN_BATCH_SIZE = 35
 
     DEPTH = 6
-    NUM_FILTERS = [32, 64, 128, 256, 512, 1024]
+    NUM_FILTERS = None
 
     def __init__(self, state='training', create_dirs=True):
         super().__init__(self.CP_SAVE_TAG, state, create_dirs=create_dirs)
@@ -626,22 +626,12 @@ class UNetConfig(Config):
     @classmethod
     def __get_cmd_line_vars__(cls):
         cmd_line_vars = super().__get_cmd_line_vars__()
-        cmd_line_vars.extend(['depth', 'num_filters'])
+        cmd_line_vars.extend(['depth'])
         return cmd_line_vars
 
     def summary(self, additional_vars=[]):
         summary_attrs = ['DEPTH', 'NUM_FILTERS']
         super().summary(summary_attrs)
-
-    def parse_cmd_line(cls, vargin) -> dict:
-        config_dict = super().parse_cmd_line(vargin)
-        depth = len(config_dict['DEPTH'])
-
-        num_filters = utils.convert_data_type(config_dict['NUM_FILTERS'], type(cls.NUM_FILTERS))
-        assert len(num_filters) == depth, "Number of filters must be specified for each depth"
-
-        config_dict['NUM_FILTERS'] = num_filters
-
 
 class ResidualUNet(Config):
     """

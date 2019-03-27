@@ -30,8 +30,6 @@ ARGS="--tag oai_3d_block --num_filters '[32, 64, 128, 256, 512, 1024]' --n_epoch
 # Experiment 1: 3D unet (4 slices)
 python -m oai_train unet_3d --img_size '(96,96,4,1)' $ARGS
 
-exit
-
 # Experiment 2: 3D unet (8 slices)
 python -m oai_train unet_3d --img_size '(288,288,8,1)' $ARGS
 
