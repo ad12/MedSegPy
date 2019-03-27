@@ -11,6 +11,8 @@ from config import Config
 from generators.fname_parsers import OAISliceWise
 from enum import Enum
 import multiprocessing as mp
+import time
+
 
 class GeneratorState(Enum):
     TRAINING = 1
@@ -649,8 +651,10 @@ class OAI3DBlockGenerator(OAI3DGenerator):
 
     def cached_data(self, state: GeneratorState):
         if state not in self._cached_data.keys():
-            print('Computing %s blocks' % state)
+            print('Computing %s blocks' % state.name)
+            start_time = time.time()
             self._cached_data[state] = self.__calc_generator_info__(state)
+            print('Cached Data - %s: %0.2f sec' % (state.name, time.time() - start_time))
 
         return self._cached_data[state]
 
@@ -740,12 +744,15 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         return int(num_blocks)
 
     def __calc_generator_info__(self, state:GeneratorState) -> Tuple[dict, int]:
+        st_base_info = time.time()
         base_info = self.__img_generator_base_info__(state)
         data_path_or_files=base_info['data_path_or_files']
         batch_size=base_info['batch_size']
         pids=base_info['pids']
         augment_data=base_info['augment_data']
+        print("Loading %s base info: %0.2f" % (state.name, time.time() - st_base_info))
 
+        st_get_file = time.time()
         if type(data_path_or_files) is str:
             data_path = data_path_or_files
             files = os.listdir(data_path)
@@ -754,7 +761,9 @@ class OAI3DBlockGenerator(OAI3DGenerator):
             filepaths = data_path_or_files
         else:
             raise ValueError('data_path_or_files must be type str or list')
+        print("Formatting %s files: %0.2f" % (state.name, time.time() - st_get_file))
 
+        st_curate_files = time.time()
         unique_filepaths = {}  # use dict to avoid having to reconstruct set every time
 
         # track the largest slice number that we see - assume it is the same for all scans
@@ -771,13 +780,22 @@ class OAI3DBlockGenerator(OAI3DGenerator):
                 unique_filepaths[fp] = fp
 
         files = list(unique_filepaths.keys())
+        print("Curating %s files: %0.2f" % (state.name, time.time() - st_curate_files))
+
+        st_load_volumes = time.time()
         scan_to_volumes = self.__load_all_volumes__(files)
+        print("Loading %s volumes: %0.2f" % (state.name, time.time() - st_load_volumes))
+
+        st_blockify = time.time()
         scan_to_blocks = self.__blockify_volumes__(scan_to_volumes)
+        print("Splitting %s volumes to blocks: %0.2f" % (state.name, time.time() - st_blockify))
 
         # Set total number of volumes based on argument for limiting training size
+        st_counting_blocks = time.time()
         nblocks = 0
         for k in scan_to_blocks.keys():
             nblocks += len(scan_to_blocks[k])
+        print("Counting %s blocks: %0.2f" % (state.name, time.time() - st_counting_blocks))
 
         batches_per_epoch = nblocks // batch_size
 
