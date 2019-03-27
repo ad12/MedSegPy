@@ -50,7 +50,6 @@ class OAISliceWise(FnameParser):
                 # 'segpath': os.path.join(dirpath, '%s.%s' % (fname, 'seg')),
                 # 'scanid': scan_id}
 
-    @abstractmethod
     def get_file_id(self, fname):
         fname_info = self.get_file_info(fname)
         return str(fname_info['pid']) + str(fname_info['timepoint']) + str(fname_info['aug']) + str(fname_info['slice'])
