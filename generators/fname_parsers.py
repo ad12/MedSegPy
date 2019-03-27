@@ -27,15 +27,11 @@ class FnameParser(ABC):
 
 
 class OAISliceWise(FnameParser):
-    # sample fname: 9311328_V01-Aug04_072.im
+    # sample fname: 9311328_V01-Aug04_072.im - format: %7d_V%02d-Aug%02d_%03d
     FNAME_FORMAT = '%7d_V%02d-Aug%02d_%03d'
     FNAME_REGEX = '([\d]+)_V([\d]+)-Aug([\d]+)_([\d]+)'
 
     def get_file_info(self, fname_or_filepath: str) -> dict:
-        fname, ext = os.path.splitext(fname_or_filepath)
-        dirpath = os.path.dirname(fname)
-        fname = os.path.basename(fname)
-
         _, pid, timepoint, augmentation, slice_num, _ = tuple(re.split(self.FNAME_REGEX, fname_or_filepath))
         pid = int(pid)
         timepoint = int(timepoint)
@@ -44,10 +40,6 @@ class OAISliceWise(FnameParser):
 
         return {'pid': pid, 'timepoint': timepoint, 'aug': augmentation, 'slice': slice_num,
                 'scanid':'%d_V%d' % (pid, timepoint)}
-                # 'fname': fname,
-                # 'impath': os.path.join(dirpath, '%s.%s' % (fname, 'im')),
-                # 'segpath': os.path.join(dirpath, '%s.%s' % (fname, 'seg')),
-                # 'scanid': scan_id}
 
     def get_file_id(self, fname):
         fname_info = self.get_file_info(fname)
