@@ -6,8 +6,16 @@ from typing import Union, Tuple
 
 import h5py
 import numpy as np
-
+import warnings
 from config import Config
+from generators.fname_parsers import OAISliceWise
+from enum import Enum
+
+
+class GeneratorState(Enum):
+    TRAINING = 1,
+    VALIDATION = 2,
+    TESTING = 3
 
 
 def get_generator(config: Config):
@@ -29,26 +37,20 @@ class Generator(ABC):
         if config.TAG not in self.SUPPORTED_TAGS:
             raise ValueError('Tag mismatch: config must have tag in %s' % self.SUPPORTED_TAGS)
         self.config = config
-
-    @abstractmethod
-    def get_file_id(self, fname):
-        pass
+        self.fname_parser = OAISliceWise()
 
     @abstractmethod
     def __load_inputs__(self, data_path, file):
         pass
 
     @abstractmethod
-    def img_generator(self, state='training'):
-        if state not in ['training', 'validation']:
-            raise ValueError('state must be in [\'training\', \'validation\']')
+    def img_generator(self, state: GeneratorState):
+        accepted_states = [GeneratorState.TRAINING, GeneratorState.VALIDATION]
+        if state not in accepted_states:
+            raise ValueError('Generator must be either %s' % accepted_states)
 
     @abstractmethod
     def img_generator_test(self):
-        pass
-
-    @abstractmethod
-    def __get_file_info__(self, file: str, dirpath: str):
         pass
 
     @abstractmethod
@@ -56,7 +58,7 @@ class Generator(ABC):
         pass
 
     @abstractmethod
-    def num_steps(self):
+    def num_steps(self) -> Tuple[int, int]:
         return 0, 0
 
     def sort_files(self, files):
@@ -65,15 +67,23 @@ class Generator(ABC):
 
         file_id = [None] * len(files)
         for cnt1 in range(len(files)):
-            file_id[cnt1] = self.get_file_id(files[cnt1])
+            file_id[cnt1] = self.fname_parser.get_file_id(files[cnt1])
 
         order = argsort(file_id)
 
         return [files[cnt1] for cnt1 in order]
 
     def __add_file__(self, file: str, unique_filenames, pids, augment_data: bool):
+        """
+        Check if file should be added to list of files
+        :param file: a string (filename or filepath accepted)
+        :param unique_filenames: list of unique filenames
+        :param pids: list of pids to include
+        :param augment_data: If data should be augmented, ignored if 'aug' not found in filename
+        :return: a boolean
+        """
         should_add_file = file not in unique_filenames
-        file_info = self.__get_file_info__(file, '')
+        file_info = self.fname_parser.get_file_info(file)
 
         if pids is not None:
             contains_pid = [str(x) in file for x in pids]
@@ -85,7 +95,11 @@ class Generator(ABC):
             should_add_file &= contains_pid
 
         if not augment_data:
-            should_add_file &= (file_info['aug'] == 0)
+            if 'aug' not in file_info.keys():
+                warnings.simplefilter('once')
+                warnings.warn("Augmentation index not found in filename. Will add all files regardless of name.")
+            else:
+                should_add_file &= (file_info['aug'] == 0)
 
         return should_add_file
 
@@ -103,27 +117,23 @@ class Generator(ABC):
 
         return seg_total
 
-    def __img_generator_base_info__(self, state):
-        accepted_states = ['training', 'validation', 'testing']
-        if state not in ['training', 'validation', 'testing']:
-            raise ValueError('state must be in %s' % accepted_states)
-
+    def __img_generator_base_info__(self, state: GeneratorState):
         config = self.config
-        if state == 'training':
+        if state == GeneratorState.TRAINING:
             # training
             data_path_or_files = config.__CV_TRAIN_FILES__ if config.USE_CROSS_VALIDATION else config.TRAIN_PATH
             batch_size = config.TRAIN_BATCH_SIZE
             shuffle_epoch = True
             pids = config.PIDS
             augment_data = config.AUGMENT_DATA
-        elif state == 'validation':
+        elif state == GeneratorState.VALIDATION:
             # validation
             data_path_or_files = config.__CV_VALID_FILES__ if config.USE_CROSS_VALIDATION else config.VALID_PATH
             batch_size = config.VALID_BATCH_SIZE
             shuffle_epoch = False
             pids = None
             augment_data = False
-        elif state == 'testing':
+        elif state == GeneratorState.TESTING:
             data_path_or_files = config.__CV_TEST_FILES__ if config.USE_CROSS_VALIDATION else config.TEST_PATH
             batch_size = config.TEST_BATCH_SIZE
             shuffle_epoch = False
@@ -142,43 +152,19 @@ class Generator(ABC):
 class OAIGenerator(Generator):
     SUPPORTED_TAGS = ['oai_aug', 'oai', 'oai_2d', 'oai_aug_2d', 'oai_2.5d', 'oai_aug_2.5d']
 
-    def get_file_id(self, fname):
-        # sample fname: 9311328_V01-Aug04_072.im
-        fname_info = self.__get_file_info__(fname, '')
-        return str(fname_info['pid']) + str(fname_info['timepoint']) + str(fname_info['aug']) + str(fname_info['slice'])
-
-    def get_fname_from_info(self, file_info: dict):
-        # sample fname: 9311328_V01-Aug04_072.im
-        return '%s_V%02d-Aug%02d_%03d' % (
-            file_info['pid'], file_info['timepoint'], file_info['aug'], file_info['slice'])
-
-    def img_generator(self, state='training'):
+    def img_generator(self, state: GeneratorState):
         super().img_generator(state)
 
         config = self.config
-
-        if state == 'training':
-            data_path_or_files = config.__CV_TRAIN_FILES__ if config.USE_CROSS_VALIDATION else config.TRAIN_PATH
-            batch_size = config.TRAIN_BATCH_SIZE
-            shuffle_epoch = True
-            pids = config.PIDS
-            augment_data = config.AUGMENT_DATA
-        else:
-            data_path_or_files = config.__CV_VALID_FILES__ if config.USE_CROSS_VALIDATION else config.VALID_PATH
-            batch_size = config.VALID_BATCH_SIZE
-            shuffle_epoch = False
-            pids = None
-            augment_data = False
-
         img_size = config.IMG_SIZE
         tissues = config.TISSUES
         include_background = config.INCLUDE_BACKGROUND
         num_neighboring_slices = config.num_neighboring_slices()
 
-        files, batches_per_epoch, max_slice_num = self.__calc_generator_info__(data_path_or_files=data_path_or_files,
-                                                                               batch_size=batch_size,
-                                                                               pids=pids,
-                                                                               augment_data=augment_data)
+        base_info = self.__img_generator_base_info__(state)
+        batch_size = base_info['batch_size']
+        shuffle_epoch = base_info['shuffle_epoch']
+        files, batches_per_epoch, max_slice_num = self.__calc_generator_info__(state)
 
         total_classes = config.get_num_classes()
         mask_size = img_size[:-1] + (total_classes,)
@@ -224,10 +210,7 @@ class OAIGenerator(Generator):
         if len(img_size) != 3:
             raise ValueError('Image size must be 3D')
 
-        files, batches_per_epoch, _ = self.__calc_generator_info__(data_path_or_files=data_path_or_files,
-                                                                   batch_size=batch_size,
-                                                                   pids=None,
-                                                                   augment_data=False)
+        files, batches_per_epoch, _ = self.__calc_generator_info__(GeneratorState.TESTING)
 
         files = self.sort_files(files)
         scan_id_to_files = self.__map_files_to_scan_id__(files)
@@ -263,7 +246,7 @@ class OAIGenerator(Generator):
         scan_id_files = dict()
         for f in files:
             filename = os.path.basename(f)
-            file_info = self.__get_file_info__(filename, '')
+            file_info = self.fname_parser.get_file_info(filename)
             scan_id = file_info['scanid']
 
             if scan_id in scan_id_files.keys():
@@ -375,7 +358,13 @@ class OAIGenerator(Generator):
 
         return im, seg
 
-    def __calc_generator_info__(self, data_path_or_files: Union[str, list], batch_size, pids=None, augment_data=False):
+    def __calc_generator_info__(self, state: GeneratorState):
+        base_info = self.__img_generator_base_info__(state)
+        data_path_or_files=base_info['data_path_or_files']
+        batch_size=base_info['batch_size']
+        pids=base_info['pids']
+        augment_data=base_info['augment_data']
+
         if type(data_path_or_files) is str:
             data_path = data_path_or_files
             files = listdir(data_path)
@@ -395,7 +384,7 @@ class OAIGenerator(Generator):
             dirpath, filename = os.path.dirname(fp), os.path.basename(fp)
 
             if self.__add_file__(fp, unique_filepaths, pids, augment_data):
-                file_info = self.__get_file_info__(filename, dirpath)
+                file_info = self.fname_parser.get_file_info(filename)
                 if max_slice_num < file_info['slice']:
                     max_slice_num = file_info['slice']
 
@@ -410,59 +399,22 @@ class OAIGenerator(Generator):
 
         return files, batches_per_epoch, max_slice_num
 
-    def __get_file_info__(self, fname: str, dirpath: str = ''):
-        fname, ext = os.path.splitext(fname)
-        dirpath = os.path.dirname(fname)
-        fname = os.path.basename(fname)
-
-        f_data = fname.split('-')
-        scan_id = f_data[0]
-        pid_timepoint_split = scan_id.split('_')
-        pid = pid_timepoint_split[0]
-        f_aug_slice = f_data[1].split('_')
-        try:
-            data = {'pid': pid,
-                    'timepoint': int(pid_timepoint_split[1][1:]),
-                    'aug': int(f_aug_slice[0][3:]),
-                    'slice': int(f_aug_slice[1]),
-                    'fname': fname,
-                    'impath': os.path.join(dirpath, '%s.%s' % (fname, 'im')),
-                    'segpath': os.path.join(dirpath, '%s.%s' % (fname, 'seg')),
-                    'scanid': scan_id}
-        except Exception as e:
-            raise e
-        assert data['pid'] == fname[:7], str(data)
-
-        return data
-
     def summary(self):
         config = self.config
 
         if config.STATE == 'training':
-            train_data_path_or_files = config.__CV_TRAIN_FILES__ if config.USE_CROSS_VALIDATION else config.TRAIN_PATH
-            valid_data_path_or_files = config.__CV_VALID_FILES__ if config.USE_CROSS_VALIDATION else config.VALID_PATH
-
-            train_files, train_batches_per_epoch, _ = self.__calc_generator_info__(
-                data_path_or_files=train_data_path_or_files,
-                batch_size=self.config.TRAIN_BATCH_SIZE,
-                pids=self.config.PIDS,
-                augment_data=self.config.AUGMENT_DATA)
-
-            valid_files, valid_batches_per_epoch, _ = self.__calc_generator_info__(
-                data_path_or_files=valid_data_path_or_files,
-                batch_size=self.config.VALID_BATCH_SIZE,
-                pids=None,
-                augment_data=False)
+            train_files, train_batches_per_epoch, _ = self.__calc_generator_info__(GeneratorState.TRAINING)
+            valid_files, valid_batches_per_epoch, _ = self.__calc_generator_info__(GeneratorState.VALIDATION)
 
             # Get number of subjects training and validation sets
             train_pids = []
             for f in train_files:
-                file_info = self.__get_file_info__(os.path.basename(f))
+                file_info = self.fname_parser.get_file_info(os.path.basename(f))
                 train_pids.append(file_info['pid'])
 
             valid_pids = []
             for f in valid_files:
-                file_info = self.__get_file_info__(os.path.basename(f))
+                file_info = self.fname_parser.get_file_info(os.path.basename(f))
                 valid_pids.append(file_info['pid'])
 
             num_train_subjects = len(set(train_pids))
@@ -475,25 +427,16 @@ class OAIGenerator(Generator):
             print('INFO: Image size: %s' % (self.config.IMG_SIZE,))
             print('INFO: Image types included in training: %s' % (self.config.FILE_TYPES,))
         else:  # config in Testing state
-            test_data_path_or_files = config.__CV_TEST_FILES__ if config.USE_CROSS_VALIDATION else config.TEST_PATH
-
-            test_files, test_batches_per_epoch, _ = self.__calc_generator_info__(
-                data_path_or_files=test_data_path_or_files,
-                batch_size=self.config.TEST_BATCH_SIZE,
-                pids=None,
-                augment_data=False)
-
+            test_files, test_batches_per_epoch, _ = self.__calc_generator_info__(GeneratorState.TESTING)
             scanset_info = self.__get_scanset_data__(test_files)
+
             print('INFO: Test size: %d slices, batch size: %d, # subjects: %d, # scans: %d' % (len(test_files),
                                                                                                config.TEST_BATCH_SIZE,
                                                                                                len(scanset_info['pid']),
                                                                                                len(scanset_info[
                                                                                                        'scanid'])))
             if not config.USE_CROSS_VALIDATION:
-                print('Test path: %s' % (config.TEST_PATH))
-
-        # not supported
-        # print('INFO: Number of frozen layers: %s' % len(self.config.))
+                print('Test path: %s' % config.TEST_PATH)
 
     def __get_scanset_data__(self, files, keys=['pid', 'scanid']):
         info_dict = dict()
@@ -501,7 +444,7 @@ class OAIGenerator(Generator):
             info_dict[k] = []
 
         for f in files:
-            file_info = self.__get_file_info__(os.path.basename(f))
+            file_info = self.fname_parser.get_file_info(os.path.basename(f))
             for k in keys:
                 info_dict[k].append(file_info[k])
 
@@ -515,21 +458,9 @@ class OAIGenerator(Generator):
 
         if config.STATE != 'training':
             raise ValueError('Method is only active when config is in training state')
-        
-        train_data_path_or_files = config.__CV_TRAIN_FILES__ if config.USE_CROSS_VALIDATION else config.TRAIN_PATH
-        valid_data_path_or_files = config.__CV_VALID_FILES__ if config.USE_CROSS_VALIDATION else config.VALID_PATH
 
-        train_files, train_batches_per_epoch, _ = self.__calc_generator_info__(
-            data_path_or_files=train_data_path_or_files,
-            batch_size=self.config.TRAIN_BATCH_SIZE,
-            pids=self.config.PIDS,
-            augment_data=self.config.AUGMENT_DATA)
-
-        valid_files, valid_batches_per_epoch, _ = self.__calc_generator_info__(
-            data_path_or_files=valid_data_path_or_files,
-            batch_size=self.config.VALID_BATCH_SIZE,
-            pids=None,
-            augment_data=False)
+        _, train_batches_per_epoch, _ = self.__calc_generator_info__(GeneratorState.TRAINING)
+        _, valid_batches_per_epoch, _ = self.__calc_generator_info__(GeneratorState.VALIDATION)
 
         return train_batches_per_epoch, valid_batches_per_epoch
 
@@ -537,8 +468,6 @@ class OAIGenerator(Generator):
 class OAI3DGenerator(OAIGenerator):
     """
     Generator for training 3D networks where data is stored per slice
-    Filename format: %07d_V%02d-Aug%02d_%03d % (patient_id, timepoint, augmentation, slice_number)
-                    e.g. '9311328_V01-Aug04_072.im'
     """
     SUPPORTED_TAGS = ['oai_3d']
 
@@ -557,7 +486,7 @@ class OAI3DGenerator(OAIGenerator):
 
     def __get_corresponding_files__(self, fname: str):
         num_slices = self.config.IMG_SIZE[2]
-        file_info = self.__get_file_info__(fname=fname)
+        file_info = self.fname_parser.get_file_info(fname)
         f_slice = file_info['slice']
 
         volume_index = int((f_slice - 1) / num_slices)
@@ -570,7 +499,7 @@ class OAI3DGenerator(OAIGenerator):
         slice_fnames = []
         for s in slices:
             base_info['slice'] = s
-            slice_fnames.append(self.get_fname_from_info(base_info))
+            slice_fnames.append(self.fname_parser.get_fname(base_info))
 
         return slice_fnames
 
@@ -638,7 +567,13 @@ class OAI3DGenerator(OAIGenerator):
 
         return im_vol, seg_vol
 
-    def __calc_generator_info__(self, data_path_or_files: Union[str, list], batch_size, pids=None, augment_data=False):
+    def __calc_generator_info__(self, state: GeneratorState):
+        base_info = self.__img_generator_base_info__(state)
+        data_path_or_files=base_info['data_path_or_files']
+        batch_size=base_info['batch_size']
+        pids=base_info['pids']
+        augment_data=base_info['augment_data']
+
         if type(data_path_or_files) is str:
             data_path = data_path_or_files
             files = listdir(data_path)
@@ -658,7 +593,7 @@ class OAI3DGenerator(OAIGenerator):
             dirpath, filename = os.path.dirname(fp), os.path.basename(fp)
 
             if self.__add_file__(fp, unique_filepaths, pids, augment_data):
-                file_info = self.__get_file_info__(filename, dirpath)
+                file_info = self.fname_parser.get_file_info(filename)
                 slice_ids.append(file_info['slice'])
 
                 unique_filepaths[fp] = fp
@@ -678,7 +613,7 @@ class OAI3DGenerator(OAIGenerator):
         files_refined = []
         for filepath in files:
             fname = os.path.basename(filepath)
-            f_info = self.__get_file_info__(fname)
+            f_info = self.fname_parser.get_file_info(fname)
             if f_info['slice'] in slices_to_include:
                 files_refined.append(filepath)
 
@@ -696,7 +631,7 @@ class OAI3DGenerator(OAIGenerator):
 
         # If only subset of slices should be selected, then return
         if hasattr(self.config, 'SLICE_SUBSET') and self.config.SLICE_SUBSET is not None:
-            file_info = self.__get_file_info__(file)
+            file_info = self.fname_parser.get_file_info(file)
             add_file &= file_info['slice'] in range(self.config.SLICE_SUBSET[0], self.config.SLICE_SUBSET[1] + 1)
 
         return add_file
@@ -712,12 +647,9 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         super().__init__(config=config)
         self._cached_data = dict()
 
-    def cached_data(self, state):
-        if state not in ['training', 'validation', 'testing']:
-            raise ValueError('state must be one of these: %s' % (['training', 'validation', 'testing']))
-
+    def cached_data(self, state: GeneratorState):
         if state not in self._cached_data.keys():
-            self._cached_data[state] = self.__calc_generator_info_wrapper(state)
+            self._cached_data[state] = self.__calc_generator_info__(state)
 
         return self._cached_data[state]
 
@@ -733,7 +665,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
             seg = np.squeeze(seg)
             assert im.ndim == 2 and seg.ndim == 3, "image must be 2D (Y,X) and segmentation must be 3D (Y,X,#masks)"
 
-            info = self.__get_file_info__(fname)
+            info = self.fname_parser.get_file_info(fname)
             scan_id = info['scanid']
             if scan_id not in scans_data:
                 scans_data[scan_id] = {'ims': [], 'segs': []}
@@ -803,15 +735,13 @@ class OAI3DBlockGenerator(OAI3DGenerator):
 
         return int(num_blocks)
 
-    def __calc_generator_info_wrapper(self, state='training'):
+    def __calc_generator_info__(self, state:GeneratorState) -> Tuple[dict, int]:
         base_info = self.__img_generator_base_info__(state)
-        return self.__calc_generator_info__(data_path_or_files=base_info['data_path_or_files'],
-                                            batch_size=base_info['batch_size'],
-                                            pids=base_info['pids'],
-                                            augment_data=base_info['augment_data'])
+        data_path_or_files=base_info['data_path_or_files']
+        batch_size=base_info['batch_size']
+        pids=base_info['pids']
+        augment_data=base_info['augment_data']
 
-    def __calc_generator_info__(self, data_path_or_files: Union[str, list],
-                                batch_size, pids=None, augment_data=False) -> Tuple[dict, int]:
         if type(data_path_or_files) is str:
             data_path = data_path_or_files
             files = os.listdir(data_path)
@@ -831,7 +761,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
             dirpath, filename = os.path.dirname(fp), os.path.basename(fp)
 
             if self.__add_file__(fp, unique_filepaths, pids, augment_data):
-                file_info = self.__get_file_info__(filename, dirpath)
+                file_info = self.fname_parser.get_file_info(filename)
                 slice_ids.append(file_info['slice'])
 
                 unique_filepaths[fp] = fp
@@ -936,11 +866,8 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         config = self.config
 
         if config.STATE == 'training':
-            train_base_info = self.__img_generator_base_info__('training')
-            valid_base_info = self.__img_generator_base_info__('validation')
-
-            train_scan_to_blocks, train_batches_per_epoch = self.cached_data('training')
-            valid_scan_to_blocks, valid_batches_per_epoch = self.cached_data('validation')
+            train_scan_to_blocks, train_batches_per_epoch = self.cached_data(GeneratorState.TRAINING)
+            valid_scan_to_blocks, valid_batches_per_epoch = self.cached_data(GeneratorState.VALIDATION)
 
             num_train_scans = len(train_scan_to_blocks.keys())
             num_valid_scans = len(valid_scan_to_blocks.keys())
@@ -965,8 +892,8 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         if config.STATE != 'training':
             raise ValueError('Method is only active when config is in training state')
 
-        _, train_batches_per_epoch = self.cached_data('training')
-        _, valid_batches_per_epoch = self.cached_data('validation')
+        _, train_batches_per_epoch = self.cached_data(GeneratorState.TRAINING)
+        _, valid_batches_per_epoch = self.cached_data(GeneratorState.VALIDATION)
 
         return train_batches_per_epoch, valid_batches_per_epoch
 

@@ -749,7 +749,7 @@ class UNet3DConfig(UNetConfig):
     TRAIN_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/vol_aug/train_sag/'
 
     def num_neighboring_slices(self):
-        return self.IMG_SIZE[-1]
+        return self.IMG_SIZE[2]
 
 
 class DeeplabV3_2_5DConfig(DeeplabV3Config):
