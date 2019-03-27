@@ -22,10 +22,7 @@ def convert_data_type(var_string, data_type):
     if data_type is bool:
         return ast.literal_eval(var_string)
 
-    if data_type is list:
-        return ast.literal_eval(var_string)
-
-    if data_type is tuple:
+    if data_type is list or data_type is tuple or data_type is type(None):
         return ast.literal_eval(var_string)
 
 

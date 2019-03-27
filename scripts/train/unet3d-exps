@@ -22,7 +22,7 @@ GPU=$1
 # Navigate to project directory
 cd ../..
 
-ARGS='--n_epochs 100 --use_step_decay --initial_learning_rate 0.02 --experiment vol --train_batch_size 1 -g '$GPU
+ARGS='--tag oai_3d --n_epochs 100 --use_step_decay --drop_factor 0.6 --drop_rate 4 --initial_learning_rate 0.001 --experiment vol --train_batch_size 1 -g '$GPU
 
 # Experiment 0: 2D unet
 #python -m oai_train unet_2d $ARGS
