@@ -796,9 +796,10 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         for dim in range(3):
             assert total_volume_shape[dim] % self.config.IMG_SIZE[dim] == 0, "Cannot divide volume of size %s to blocks of size %s" % (total_volume_shape, self.config.IMG_SIZE)
 
-    def img_generator(self, state='training'):
-        if state not in ['training', 'validation']:
-            raise ValueError('state must be in [\'training\', \'validation\']')
+    def img_generator(self, state):
+        accepted_states = [GeneratorState.TRAINING, GeneratorState.VALIDATION]
+        if state not in accepted_states:
+            raise ValueError('state must be either %s' % accepted_states)
 
         base_info = self.__img_generator_base_info__(state)
         batch_size = base_info['batch_size']
