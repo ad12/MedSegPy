@@ -28,7 +28,7 @@ class FnameParser(ABC):
 
 class OAISliceWise(FnameParser):
     # sample fname: 9311328_V01-Aug04_072.im
-    FNAME_FORMAT = '%d_V%d-Aug%d_%d'
+    FNAME_FORMAT = '%7d_V%02d-Aug%02d_%03d'
     FNAME_REGEX = '([\d]+)_V([\d]+)-Aug([\d]+)_([\d]+)'
 
     def get_file_info(self, fname_or_filepath: str) -> dict:
