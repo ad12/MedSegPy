@@ -29,7 +29,7 @@ ARGS='--tag oai_3d --n_epochs 100 --use_step_decay --drop_factor 0.6 --drop_rate
 
 # Experiment 1: 3D unet (4 slices)
 python -m oai_train unet_3d --img_size '(288,288,4,1)' $ARGS
-
+exit
 # Experiment 2: 3D unet (8 slices)
 python -m oai_train unet_3d --img_size '(288,288,8,1)' $ARGS
 

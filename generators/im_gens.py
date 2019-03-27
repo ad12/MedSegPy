@@ -13,8 +13,8 @@ from enum import Enum
 
 
 class GeneratorState(Enum):
-    TRAINING = 1,
-    VALIDATION = 2,
+    TRAINING = 1
+    VALIDATION = 2
     TESTING = 3
 
 

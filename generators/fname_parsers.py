@@ -31,7 +31,6 @@ class OAISliceWise(FnameParser):
     FNAME_FORMAT = '%d_V%d-Aug%d_%d'
     FNAME_REGEX = '([\d]+)_V([\d]+)-Aug([\d]+)_([\d]+)'
 
-    @abstractmethod
     def get_file_info(self, fname_or_filepath: str) -> dict:
         fname, ext = os.path.splitext(fname_or_filepath)
         dirpath = os.path.dirname(fname)
