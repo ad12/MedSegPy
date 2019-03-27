@@ -670,12 +670,12 @@ class OAI3DBlockGenerator(OAI3DGenerator):
             volume_id = info['volume_id']
             slice_num = info['slice']
             return volume_id, slice_num, im, seg
-
+        start_time = time.time()
         pool = mp.Pool()
         loaded_data_list = pool.map(process_filepath, filepaths)
         pool.close()
         pool.join()
-
+        print('loading volumes: %0.2f' % (time.time() - start_time))
         import pdb; pdb.set_trace()
 
         # sort list first by volume_id, then by slice_num
