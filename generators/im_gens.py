@@ -651,9 +651,10 @@ class OAI3DBlockGenerator(OAI3DGenerator):
 
     def cached_data(self, state: GeneratorState):
         if state not in self._cached_data.keys():
-            start_time
+            start_time = time.time()
             print('Computing %s blocks' % state.name)
             self._cached_data[state] = self.__calc_generator_info__(state)
+            print('%0.2f seconds' % (time.time() - start_time))
 
         return self._cached_data[state]
 
@@ -672,11 +673,16 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         return volume_id, slice_num, im, seg
 
     def __load_all_volumes__(self, filepaths):
-        pool = mp.Pool()
-        loaded_data_list = pool.map(self.process_filepath, filepaths)
-        pool.close()
-        pool.join()
-
+        parallelize = True
+        if parallelize:
+            pool = mp.Pool()
+            loaded_data_list = pool.map(self.process_filepath, filepaths)
+            pool.close()
+            pool.join()
+        else:
+            loaded_data_list = []
+            for fp in filepaths:
+                loaded_data_list.append(self.process_filepath(fp))
         # sort list first by volume_id, then by slice_num
         loaded_data_list = sorted(loaded_data_list, key=(lambda x: (x[0], x[1])))
 
