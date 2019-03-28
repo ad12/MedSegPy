@@ -754,7 +754,7 @@ class UNet3DConfig(UNetConfig):
 
     TAG = 'oai_3d'
 
-    SLICE_SUBSET = (5, 68)  # 1 indexed inclusive - i.e. (4, 64) means slices [4, 64]
+    SLICE_SUBSET = None  # 1 indexed inclusive - i.e. (5, 64) means slices [5, 64]
     
     #NUM_FILTERS = [16, 32, 64, 128, 256, 512]
     NUM_FILTERS = [32, 64, 128, 256, 512, 1024]
@@ -764,6 +764,36 @@ class UNet3DConfig(UNetConfig):
 
     def num_neighboring_slices(self):
         return self.IMG_SIZE[2]
+
+    @classmethod
+    def init_cmd_line_parser(cls, parser):
+        subparser = super().init_cmd_line_parser(parser)
+
+        subparser.add_argument('--slice_subset', type=str, default=str(cls.SLICE_SUBSET), nargs='?',
+                               help='subset of slices to select (tuple). Default: %s' % str(cls.SLICE_SUBSET))
+
+        return subparser
+
+    @classmethod
+    def __get_cmd_line_vars__(cls):
+        cmd_line_vars = super().__get_cmd_line_vars__()
+        cmd_line_vars.extend(['slice_subset'])
+        return cmd_line_vars
+
+    def summary(self, additional_vars=[]):
+        summary_attrs = ['SLICE_SUBSET']
+        super().summary(summary_attrs)
+
+    @classmethod
+    def parse_cmd_line(cls, vargin) -> dict:
+        config_dict = super().parse_cmd_line(vargin)
+
+        slice_subset = utils.convert_data_type(config_dict['SLICE_SUBSET'], type(cls.SLICE_SUBSET))
+        assert len(slice_subset) == 2, "slice_subset must define starting and ending slices"
+
+        config_dict['SLICE_SUBSET'] = slice_subset
+
+        return config_dict
 
 
 class DeeplabV3_2_5DConfig(DeeplabV3Config):
