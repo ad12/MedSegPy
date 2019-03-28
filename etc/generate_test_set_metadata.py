@@ -9,8 +9,8 @@ sys.path.append('../')
 from utils import io_utils
 
 if __name__ == '__main__':
-    TEST_SET_METADATA = '/bmrNAS/people/arjun/msk_seg_networks/oai_data_test/oai_test_data.xlsx'
-    TEST_SET_METADATA_PIK = '/bmrNAS/people/arjun/msk_seg_networks/oai_data_test/oai_test_data.dat'
+    TEST_SET_METADATA = '/bmrNAS/people/arjun/msk_seg_networks/oai_metadata/oai_data.xlsx'
+    TEST_SET_METADATA_PIK = '/bmrNAS/people/arjun/msk_seg_networks/oai_metadata/oai_data.dat'
     df = pd.read_excel(pd.ExcelFile(TEST_SET_METADATA))
     test_set_metadata_dict = dict()
 

@@ -673,12 +673,10 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         return volume_id, slice_num, im, seg
 
     def __load_all_volumes__(self, filepaths):
-        parallelize = True
+        parallelize = False
         if parallelize:
-            pool = mp.Pool()
-            loaded_data_list = pool.map(self.process_filepath, filepaths)
-            pool.close()
-            pool.join()
+            with mp.Pool() as pool:
+                loaded_data_list = pool.map(self.process_filepath, filepaths)
         else:
             loaded_data_list = []
             for fp in filepaths:
