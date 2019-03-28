@@ -119,7 +119,9 @@ def unet_3d(config):
 
     DEPTH = config.DEPTH
     NUM_FILTERS = config.NUM_FILTERS
-    model = unet_3d_model(input_size=input_shape, depth=DEPTH, num_filters=NUM_FILTERS, num_classes=num_classes,
+    model = unet_3d_model(input_size=input_shape,
+                          depth=DEPTH,
+                          num_filters=NUM_FILTERS, num_classes=num_classes,
                           activation=activation)
 
     return model
