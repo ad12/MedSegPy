@@ -633,6 +633,18 @@ class UNetConfig(Config):
         summary_attrs = ['DEPTH', 'NUM_FILTERS']
         super().summary(summary_attrs)
 
+    @classmethod
+    def parse_cmd_line(cls, vargin) -> dict:
+        config_dict = super().parse_cmd_line(vargin)
+        depth = len(config_dict['DEPTH'])
+
+        num_filters = utils.convert_data_type(config_dict['NUM_FILTERS'], type(cls.NUM_FILTERS))
+        assert len(num_filters) == depth, "Number of filters must be specified for each depth"
+
+        config_dict['NUM_FILTERS'] = num_filters
+
+        return config_dict
+
 class ResidualUNet(Config):
     """
     Configuration for 2D Residual U-Net architecture
