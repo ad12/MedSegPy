@@ -1,17 +1,18 @@
+import multiprocessing as mp
 import os
+import time
+import warnings
 from abc import ABC, abstractmethod
+from enum import Enum
 from os import listdir
 from random import shuffle
-from typing import Union, Tuple
+from typing import Tuple
 
 import h5py
 import numpy as np
-import warnings
+
 from config import Config
 from generators.fname_parsers import OAISliceWise
-from enum import Enum
-import multiprocessing as mp
-import time
 
 
 class GeneratorState(Enum):
@@ -52,7 +53,7 @@ class Generator(ABC):
             raise ValueError('Generator must be either %s' % accepted_states)
 
     @abstractmethod
-    def img_generator_test(self):
+    def img_generator_test(self, model):
         pass
 
     @abstractmethod
@@ -185,10 +186,10 @@ class OAIGenerator(Generator):
                     filepath = files[file_ind]
 
                     im, seg = self.__load_input_helper__(filepath=filepath,
-                                                               tissues=tissues,
-                                                               num_neighboring_slices=num_neighboring_slices,
-                                                               max_slice_num=max_slice_num,
-                                                               include_background=include_background)
+                                                         tissues=tissues,
+                                                         num_neighboring_slices=num_neighboring_slices,
+                                                         max_slice_num=max_slice_num,
+                                                         include_background=include_background)
 
                     assert im.shape == img_size, "Input shape mismatch. Expected %s, got %s" % (img_size, im.shape)
                     assert seg.shape == mask_size, "Ouput shape mismatch. Expected %s, got %s" % (mask_size, seg.shape)
@@ -198,7 +199,7 @@ class OAIGenerator(Generator):
 
                 yield (x, y)
 
-    def img_generator_test(self):
+    def img_generator_test(self, model):
         config = self.config
 
         img_size = config.IMG_SIZE
@@ -242,7 +243,9 @@ class OAIGenerator(Generator):
                 x[fcount, ...] = im
                 y[fcount, ...] = seg_total
 
-            yield (x, y, scan_id, num_slices)
+            recon = model.predict(x, batch_size=batch_size)
+
+            yield (x, y, recon, scan_id)
 
     def __map_files_to_scan_id__(self, files):
         scan_id_files = dict()
@@ -362,10 +365,10 @@ class OAIGenerator(Generator):
 
     def __calc_generator_info__(self, state: GeneratorState):
         base_info = self.__img_generator_base_info__(state)
-        data_path_or_files=base_info['data_path_or_files']
-        batch_size=base_info['batch_size']
-        pids=base_info['pids']
-        augment_data=base_info['augment_data']
+        data_path_or_files = base_info['data_path_or_files']
+        batch_size = base_info['batch_size']
+        pids = base_info['pids']
+        augment_data = base_info['augment_data']
 
         if type(data_path_or_files) is str:
             data_path = data_path_or_files
@@ -571,10 +574,10 @@ class OAI3DGenerator(OAIGenerator):
 
     def __calc_generator_info__(self, state: GeneratorState):
         base_info = self.__img_generator_base_info__(state)
-        data_path_or_files=base_info['data_path_or_files']
-        batch_size=base_info['batch_size']
-        pids=base_info['pids']
-        augment_data=base_info['augment_data']
+        data_path_or_files = base_info['data_path_or_files']
+        batch_size = base_info['batch_size']
+        pids = base_info['pids']
+        augment_data = base_info['augment_data']
 
         if type(data_path_or_files) is str:
             data_path = data_path_or_files
@@ -599,7 +602,7 @@ class OAI3DGenerator(OAIGenerator):
                 slice_ids.append(file_info['slice'])
 
                 unique_filepaths[fp] = fp
-        
+
         files = list(unique_filepaths.keys())
 
         min_slice_id = min(slice_ids)
@@ -702,6 +705,80 @@ class OAI3DBlockGenerator(OAI3DGenerator):
 
         return packaged_scan_volumes
 
+    def unify_blocks(self, blocks, reshape_dims):
+        # blocks are stored in decreasing order of fastest changing axes: x, y, z
+        # inverse of blockify volume
+        """
+        z= 0:
+        -----------------
+        | 1 | 2 | 3 | 4 |
+        -----------------
+        | 5 | 6 | 7 | 8 |
+        -----------------
+        | 9 | 10| 11| 12|
+        -----------------
+        | 13| 14| 15| 16|
+        -----------------
+        z= 1:
+        -----------------
+        | 17| 18| 19| 20|
+        -----------------
+        | 21| 22| 23| 24|
+        -----------------
+        | 25| 26| 27| 28|
+        -----------------
+        | 29| 30| 31| 32|
+        -----------------
+        :param blocks: a list of tuples of numpy arrays [(im_block1, seg_block1), (im_block2, seg_block2)]
+        :param reshape_dims:
+        :return:
+        """
+        yb, xb, zb, _ = self.config.IMG_SIZE
+
+        num_masks = blocks[0][1].shape[-1]
+        im_volume = np.zeros(reshape_dims)
+        seg_volume = np.zeros(reshape_dims + (num_masks,))
+
+        ind = 0
+        for z in range(0, reshape_dims[2], zb):
+            for y in range(0, reshape_dims[1], yb):
+                for x in range(0, reshape_dims[0], xb):
+                    im, seg = blocks[ind]
+                    im_volume[y:y + yb, x:x + xb, z:z + zb] = im
+                    seg_volume[y:y + yb, x:x + xb, z:z + zb, :] = seg
+                    ind += 1
+        assert ind == len(blocks), "Blocks not appropriately portioned"
+
+        return im_volume, seg_volume
+
+    def blockify_volume(self, im_volume: np.ndarray, seg_volume: np.ndarray):
+        assert im_volume.ndim == 3, "Dimension mismatch. im_volume must be 3D (y, x, z)."
+        assert seg_volume.ndim == 4, "Dimension mismatch. seg_volume must be 4D (y, x, z, #classes)."
+
+        yb, xb, zb, _ = self.config.IMG_SIZE
+        expected_block_size = (yb, xb, zb)
+
+        # verify that the sizes of im_volume and seg_volume are as expected
+        assert im_volume.shape == seg_volume.shape[:-1], "Input volume of size %s. Masks of size %s" % (im_volume.shape,
+                                                                                                        seg_volume.shape)
+        self.__validate_img_size__(im_volume.shape)
+
+        expected_num_blocks = self.__calc_num_blocks__(im_volume.shape)
+        blocks = []
+        for z in range(0, im_volume.shape[2], zb):
+            for y in range(0, im_volume.shape[1], yb):
+                for x in range(0, im_volume.shape[0], xb):
+                    im = im_volume[y:y + yb, x:x + xb, z:z + zb]
+                    seg = seg_volume[y:y + yb, x:x + xb, z:z + zb, :]
+                    assert im.shape[:3] == seg.shape[:3], "Block shape mismatch. im_block %s, seg_block %s" % (im.shape,
+                                                                                                               seg.shape)
+                    assert im.shape[:3] == expected_block_size, "Block shape error. Expected %s, but got %s" % (
+                        expected_block_size, im.shape)
+                    blocks.append((im, seg))
+        assert len(blocks) == expected_num_blocks, "Expected %d blocks, got %d" % (expected_num_blocks, len(blocks))
+
+        return blocks
+
     def __blockify_volumes__(self, scan_volumes: dict):
         """
         Split all volumes into blocks of size config.IMG_SIZE
@@ -713,32 +790,11 @@ class OAI3DBlockGenerator(OAI3DGenerator):
                     im_volume block: a 3D numpy array of size Y/Yi, X/Xi, Z/Zi
                     seg_volume block: a 3D numpy array of size Y/Yi, X/Xi, Z/Zi, #masks
         """
-        yb, xb, zb, _ = self.config.IMG_SIZE
-        expected_block_size = (yb, xb, zb)
-
         ordered_keys = sorted(scan_volumes.keys())
         scan_to_blocks = dict()
         for scan_id in ordered_keys:
             im_volume, seg_volume = scan_volumes[scan_id]
-
-            # verify that the sizes of im_volume and seg_volume are as expected
-            assert im_volume.shape == seg_volume.shape[:-1], "Input volume of size %s. Masks of size %s" % (im_volume.shape,
-                                                                                                            seg_volume.shape)
-            self.__validate_img_size__(im_volume.shape)
-
-            expected_num_blocks = self.__calc_num_blocks__(im_volume.shape)
-            blocks = []
-            for z in range(0, im_volume.shape[2], zb):
-                for y in range(0, im_volume.shape[1], yb):
-                    for x in range(0, im_volume.shape[0], xb):
-                        im = im_volume[y:y+yb, x:x+xb, z:z+zb]
-                        seg = seg_volume[y:y+yb, x:x+xb, z:z+zb, :]
-                        assert im.shape[:3] == seg.shape[:3], "Block shape mismatch. im_block %s, seg_block %s" % (im.shape, seg.shape)
-                        assert im.shape[:3] == expected_block_size, "Block shape error. Expected %s, but got %s" % (expected_block_size, im.shape)
-                        blocks.append((im, seg))
-            assert len(blocks) == expected_num_blocks, "Expected %d blocks, got %d" % (expected_num_blocks, len(blocks))
-            
-            scan_to_blocks[scan_id] = blocks
+            scan_to_blocks[scan_id] = self.blockify_volume(im_volume, seg_volume)
 
         return scan_to_blocks
 
@@ -751,18 +807,19 @@ class OAI3DBlockGenerator(OAI3DGenerator):
     def __calc_num_blocks__(self, total_volume_shape):
         num_blocks = 1
         for dim in range(3):
-            assert total_volume_shape[dim] % self.config.IMG_SIZE[dim] == 0, "Verify volumes prior to calling this function using `__validate_img_size__`"
+            assert total_volume_shape[dim] % self.config.IMG_SIZE[
+                dim] == 0, "Verify volumes prior to calling this function using `__validate_img_size__`"
             num_blocks *= total_volume_shape[dim] // self.config.IMG_SIZE[dim]
         assert int(num_blocks) == num_blocks, "Num_blocks is %0.2f, must be an integer" % num_blocks
 
         return int(num_blocks)
 
-    def __calc_generator_info__(self, state:GeneratorState) -> Tuple[dict, int]:
+    def __calc_generator_info__(self, state: GeneratorState) -> Tuple[dict, int, dict]:
         base_info = self.__img_generator_base_info__(state)
-        data_path_or_files=base_info['data_path_or_files']
-        batch_size=base_info['batch_size']
-        pids=base_info['pids']
-        augment_data=base_info['augment_data']
+        data_path_or_files = base_info['data_path_or_files']
+        batch_size = base_info['batch_size']
+        pids = base_info['pids']
+        augment_data = base_info['augment_data']
 
         if type(data_path_or_files) is str:
             data_path = data_path_or_files
@@ -791,6 +848,11 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         files = list(unique_filepaths.keys())
         scan_to_volumes = self.__load_all_volumes__(files)
 
+        # store original volume sizes in dict
+        scan_to_im_size = dict()
+        for scan in scan_to_volumes.keys():
+            scan_to_im_size[scan] = scan_to_volumes[scan][0].shape
+
         scan_to_blocks = self.__blockify_volumes__(scan_to_volumes)
 
         # Set total number of volumes based on argument for limiting training size
@@ -800,7 +862,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
 
         batches_per_epoch = nblocks // batch_size
 
-        return scan_to_blocks, batches_per_epoch
+        return scan_to_blocks, batches_per_epoch, scan_to_im_size
 
     def __validate_img_size__(self, total_volume_shape):
         """
@@ -813,7 +875,62 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         # check that all blocks will be disjoint
         # this means shape of total volume must be perfectly divisible into cubes of size IMG_SIZE
         for dim in range(3):
-            assert total_volume_shape[dim] % self.config.IMG_SIZE[dim] == 0, "Cannot divide volume of size %s to blocks of size %s" % (total_volume_shape, self.config.IMG_SIZE)
+            assert total_volume_shape[dim] % self.config.IMG_SIZE[
+                dim] == 0, "Cannot divide volume of size %s to blocks of size %s" % (
+            total_volume_shape, self.config.IMG_SIZE)
+
+    def img_generator_test(self, model):
+        state = GeneratorState.TESTING
+        base_info = self.__img_generator_base_info__(state)
+        batch_size = base_info['batch_size']
+
+        config = self.config
+        img_size = config.IMG_SIZE
+        tissues = config.TISSUES
+        include_background = config.INCLUDE_BACKGROUND
+
+        scan_to_blocks, batches_per_epoch, scan_to_im_size = self.cached_data(state)
+
+        total_classes = config.get_num_classes()
+        mask_size = img_size[:-1] + (total_classes,)
+
+        volume_ids = self.sort_files(scan_to_blocks.keys())
+
+        for vol_id in volume_ids:
+            blocks = scan_to_blocks[vol_id]
+            num_blocks = len(blocks)
+
+            x = np.zeros((num_blocks,) + img_size)
+            y = np.zeros((num_blocks,) + mask_size)
+
+            for block_cnt in range(num_blocks):
+                im, seg = blocks[block_cnt]
+                if im.ndim == 3:
+                    im = im[..., np.newaxis]
+
+                seg = self.__format_seg_helper__(seg, tissues, include_background)
+                assert im.shape == img_size, "Input shape mismatch. Expected %s, got %s" % (img_size, im.shape)
+                assert seg.shape == mask_size, "Ouput shape mismatch. Expected %s, got %s" % (mask_size, seg.shape)
+
+                x[block_cnt, ...] = im
+                y[block_cnt, ...] = seg
+
+            recon = model.predict(x, batch_size=batch_size)
+
+            # reshape into original volume shape
+            ytrue_blocks = [(np.squeeze(x[b, ...]), y[b, ...]) for b in range(num_blocks)]
+            im_vol, ytrue_vol = self.unify_blocks(ytrue_blocks, scan_to_im_size[vol_id])
+
+            ypred_blocks = [(np.squeeze(x[b, ...]), recon[b, ...]) for b in range(num_blocks)]
+            _, recon_vol = self.unify_blocks(ytrue_blocks, scan_to_im_size[vol_id])
+
+            # reshape to expected output shape
+            im_vol = np.transpose(im_vol, [2, 0, 1])
+            im_vol = im_vol[..., np.newaxis]
+            ytrue_vol = np.transpose(ytrue_vol, [2, 0, 1, 3])
+            recon_vol = np.transpose(recon_vol, [2, 0, 1, 3])
+
+            yield (im_vol, ytrue_vol, recon_vol, vol_id)
 
     def img_generator(self, state):
         accepted_states = [GeneratorState.TRAINING, GeneratorState.VALIDATION]
@@ -829,7 +946,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         tissues = config.TISSUES
         include_background = config.INCLUDE_BACKGROUND
 
-        scan_to_blocks, batches_per_epoch = self.cached_data(state)
+        scan_to_blocks, batches_per_epoch, _ = self.cached_data(state)
 
         total_classes = config.get_num_classes()
         mask_size = img_size[:-1] + (total_classes,)
@@ -895,25 +1012,33 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         config = self.config
 
         if config.STATE == 'training':
-            train_scan_to_blocks, train_batches_per_epoch = self.cached_data(GeneratorState.TRAINING)
-            valid_scan_to_blocks, valid_batches_per_epoch = self.cached_data(GeneratorState.VALIDATION)
+            self.__state_summary(GeneratorState.TRAINING)
+            self.__state_summary(GeneratorState.VALIDATION)
 
-            num_train_scans = len(train_scan_to_blocks.keys())
-            num_valid_scans = len(valid_scan_to_blocks.keys())
-
-            print('INFO: Train size: %d blocks (%d scans), batch size: %d' % (
-                self.__get_num_blocks__(train_scan_to_blocks), num_train_scans, self.config.TRAIN_BATCH_SIZE))
-            print('INFO: Valid size: %d blocks (%d scans), batch size: %d' % (
-                self.__get_num_blocks__(valid_scan_to_blocks), num_valid_scans, self.config.VALID_BATCH_SIZE))
             print('INFO: Image size: %s' % (self.config.IMG_SIZE,))
             print('INFO: Image types included in training: %s' % (self.config.FILE_TYPES,))
         else:  # config in Testing state
-            raise NotImplementedError('Testing summary not implemented')
-            test_base_info = self.__img_generator_base_info__('testing')
-
-            test_files, test_batches_per_epoch = self.cached_data('testing')
+            self.__state_summary(GeneratorState.TESTING)
             if not config.USE_CROSS_VALIDATION:
                 print('Test path: %s' % config.TEST_PATH)
+
+    def __state_summary(self, state: GeneratorState):
+        scan_to_blocks, batches_per_epoch, _ = self.cached_data(state)
+        volume_ids = scan_to_blocks.keys()
+        num_volumes = len(volume_ids)
+        num_blocks = self.__get_num_blocks__(scan_to_blocks)
+
+        pids = [self.fname_parser.get_pid_from_volume_id(vol_id) for vol_id in volume_ids]
+        num_pids = len(pids)
+
+        base_info = self.__img_generator_base_info__(state)
+        batch_size = base_info['batch_size']
+
+        print('INFO: %s size: %d blocks (%d volumes), batch size: %d, # subjects: %d' % (state.name,
+                                                                                         num_blocks,
+                                                                                         num_volumes,
+                                                                                         batch_size,
+                                                                                         num_pids))
 
     def num_steps(self):
         config = self.config
@@ -921,8 +1046,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         if config.STATE != 'training':
             raise ValueError('Method is only active when config is in training state')
 
-        _, train_batches_per_epoch = self.cached_data(GeneratorState.TRAINING)
-        _, valid_batches_per_epoch = self.cached_data(GeneratorState.VALIDATION)
+        _, train_batches_per_epoch, _ = self.cached_data(GeneratorState.TRAINING)
+        _, valid_batches_per_epoch, _ = self.cached_data(GeneratorState.VALIDATION)
 
         return train_batches_per_epoch, valid_batches_per_epoch
-

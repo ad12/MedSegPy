@@ -756,8 +756,7 @@ class UNet3DConfig(UNetConfig):
     TAG = 'oai_3d'
 
     SLICE_SUBSET = None  # 1 indexed inclusive - i.e. (5, 64) means slices [5, 64]
-    
-    #NUM_FILTERS = [16, 32, 64, 128, 256, 512]
+
     NUM_FILTERS = [32, 64, 128, 256, 512, 1024]
 
     # Train path - volumetric augmentation
