@@ -244,12 +244,12 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
     y_interp_mean = np.mean(y_interp, 0)
     y_interp_sem = np.std(y_interp, 0) / np.sqrt(y_interp.shape[0])
 
-    plt.clf()
-    plt.plot(x_interp_mean, y_interp_mean, 'b-')
-    plt.fill_between(x_interp_mean, y_interp_mean - y_interp_sem, y_interp_mean + y_interp_sem, alpha=0.35)
-    plt.xlabel('FOV (%)')
-    plt.ylabel('Dice')
-    plt.savefig(os.path.join(test_result_path, 'interp_slices.png'))
+    #plt.clf()
+    #plt.plot(x_interp_mean, y_interp_mean, 'b-')
+    #plt.fill_between(x_interp_mean, y_interp_mean - y_interp_sem, y_interp_mean + y_interp_sem, alpha=0.35)
+    #plt.xlabel('FOV (%)')
+    #plt.ylabel('Dice')
+    #plt.savefig(os.path.join(test_result_path, 'interp_slices.png'))
 
 
 def get_stats_string(mw: MetricWrapper, skipped_count, testing_time):
