@@ -29,10 +29,6 @@ class FnameParser(ABC):
     def get_pid_from_volume_id(self, volume_id: str):
         pass
 
-    @abstractmethod
-    def get_scan_id_from_volume_id(self, volume_id: str):
-        pass
-
 
 class OAISliceWise(FnameParser):
     # sample fname: 9311328_V01-Aug04_072.im - format: %7d_V%02d-Aug%02d_%03d

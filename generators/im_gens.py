@@ -894,7 +894,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         total_classes = config.get_num_classes()
         mask_size = img_size[:-1] + (total_classes,)
 
-        volume_ids = self.sort_files(scan_to_blocks.keys())
+        volume_ids = sorted(scan_to_blocks.keys())
 
         for vol_id in volume_ids:
             blocks = scan_to_blocks[vol_id]
@@ -922,7 +922,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
             im_vol, ytrue_vol = self.unify_blocks(ytrue_blocks, scan_to_im_size[vol_id])
 
             ypred_blocks = [(np.squeeze(x[b, ...]), recon[b, ...]) for b in range(num_blocks)]
-            _, recon_vol = self.unify_blocks(ytrue_blocks, scan_to_im_size[vol_id])
+            _, recon_vol = self.unify_blocks(ypred_blocks, scan_to_im_size[vol_id])
 
             # reshape to expected output shape
             im_vol = np.transpose(im_vol, [2, 0, 1])
