@@ -40,6 +40,14 @@ TEST_SET_MD = io_utils.load_pik(TEST_SET_METADATA_PIK)
 VOXEL_SPACING = (0.3125, 0.3125, 1.5)
 SAVE_H5_DATA = False
 
+
+def get_voxel_spacing(num_slices):
+    if num_slices == 72:
+        return (0.3125, 0.3125, 1.4)
+    elif num_slices == 160:
+        return (0.3125, 0.3125, 0.7)
+    raise ValueError('num_slices %d unknown' % num_slices)
+
 def find_start_and_end_slice(y_true):
     for i in range(y_true.shape[0]):
         sum_pixels = np.sum(y_true[i, ...])
@@ -154,7 +162,7 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
         num_slices = x_test.shape[0]
         mw.compute_metrics(np.transpose(np.squeeze(y_test), axes=[1, 2, 0]),
                            np.transpose(np.squeeze(labels), axes=[1, 2, 0]),
-                           voxel_spacing=VOXEL_SPACING)
+                           voxel_spacing=get_voxel_spacing(num_slices))
 
         print_str = 'Scan #%03d (name = %s, %d slices) = DSC: %0.3f, VOE: %0.3f, CV: %0.3f, ASSD (mm): %0.3f' % (
         img_cnt, fname,
