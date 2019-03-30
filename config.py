@@ -630,8 +630,9 @@ class UNetConfig(Config):
         return cmd_line_vars
 
     def summary(self, additional_vars=[]):
-        summary_attrs = ['DEPTH', 'NUM_FILTERS']
-        super().summary(summary_attrs)
+        summary_vars = ['DEPTH', 'NUM_FILTERS', '']
+        summary_vars.extend(additional_vars)
+        super().summary(summary_vars)
 
     @classmethod
     def parse_cmd_line(cls, vargin) -> dict:
@@ -789,7 +790,8 @@ class UNet3DConfig(UNetConfig):
         config_dict = super().parse_cmd_line(vargin)
 
         slice_subset = utils.convert_data_type(config_dict['SLICE_SUBSET'], type(cls.SLICE_SUBSET))
-        assert len(slice_subset) == 2, "slice_subset must define starting and ending slices"
+        if slice_subset:
+            assert len(slice_subset) == 2, "slice_subset must define starting and ending slices"
 
         config_dict['SLICE_SUBSET'] = slice_subset
 
