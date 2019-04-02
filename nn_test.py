@@ -12,7 +12,7 @@ def add_testing_arguments(parser: argparse.ArgumentParser):
 
     parser.add_argument('-g', '--gpu', metavar='G', type=str, nargs='?', default='0',
                         help='gpu id to use. default=0')
-    parser.add_argument('--cpu', type=bool, action='store_const', default=False, const=True,
+    parser.add_argument('--cpu', action='store_const', default=False, const=True,
                         help='use cpu. will overridie `-g` gpu flag')
 
     parser.add_argument('--batch_size', default=72, type=int, nargs='?')
