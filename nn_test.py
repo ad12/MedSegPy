@@ -49,6 +49,7 @@ if __name__ == '__main__':
     if not cpu:
         print('Using GPU %s' % gpu)
         os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
+        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
     else:
 
         os.environ["CUDA_VISIBLE_DEVICES"] = ""
