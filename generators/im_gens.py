@@ -701,12 +701,13 @@ class OAI3DGeneratorFullVolume(OAI3DGenerator):
 
         min_slice_id = min(slice_ids)
         max_slice_id = max(slice_ids)
+        num_slices = min_slice_id - max_slice_id + 1
 
         # load 1 file to get inplane resolution
         filepath = unique_filepaths.keys()[0]
         im_vol, _ = self.__load_inputs__(os.path.dirname(filepath), os.path.basename(filepath))
         print(im_vol.shape)
-        return max_slice_id - min_slice_id + 1
+        return im_vol.shape[:2] + (num_slices,)
 
     def num_steps(self):
         raise ValueError('This method is not supported for a testing-only generator')
