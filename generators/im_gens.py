@@ -703,7 +703,7 @@ class OAI3DGeneratorFullVolume(OAI3DGenerator):
         max_slice_id = max(slice_ids)
 
         # load 1 file to get inplane resolution
-        filepath = unique_filepaths.keys()[0]
+        filepath = list(unique_filepaths.keys())[0]
         im_vol, _ = self.__load_inputs__(os.path.dirname(filepath), os.path.basename(filepath))
         print(im_vol.shape)
         return max_slice_id - min_slice_id + 1
