@@ -4,7 +4,7 @@ import argparse
 import os
 
 from oai_test import test_dir
-
+import nn_interp_test
 
 def add_testing_arguments(parser: argparse.ArgumentParser):
     parser.add_argument('--dirpath', metavar='dp', type=str, nargs=1,
