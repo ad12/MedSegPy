@@ -202,25 +202,24 @@ class OAIGenerator(Generator):
 
     def img_generator_test(self, model):
         config = self.config
-
         img_size = config.IMG_SIZE
         tissues = config.TISSUES
         include_background = config.INCLUDE_BACKGROUND
-        data_path_or_files = config.__CV_TEST_FILES__ if config.USE_CROSS_VALIDATION else config.TEST_PATH
         num_neighboring_slices = config.num_neighboring_slices()
-        batch_size = config.TEST_BATCH_SIZE
 
-        # img_size must be 3D
+        base_info = self.__img_generator_base_info__(GeneratorState.TESTING)
+        batch_size = base_info['batch_size']
+
         if len(img_size) != self.__EXPECTED_IMG_SIZE_DIMS__:
             raise ValueError('Image size must be %dD' % self.__EXPECTED_IMG_SIZE_DIMS__)
 
-        files, batches_per_epoch, _ = self.__calc_generator_info__(GeneratorState.TESTING)
+        total_classes = config.get_num_classes()
+        mask_size = img_size[:-1] + (total_classes,)
 
+        files, batches_per_epoch, _ = self.__calc_generator_info__(GeneratorState.TESTING)
         files = self.sort_files(files)
         scan_id_to_files = self.__map_files_to_scan_id__(files)
         scan_ids = sorted(scan_id_to_files.keys())
-
-        mask_size = (img_size[0], img_size[1], config.get_num_classes())
 
         for scan_id in list(scan_ids):
             scan_id_files = scan_id_to_files[scan_id]
