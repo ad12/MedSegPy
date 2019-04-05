@@ -244,8 +244,11 @@ class OAIGenerator(Generator):
                 y[fcount, ...] = seg_total
 
             recon = model.predict(x, batch_size=batch_size)
-
+            x, y, recon = self.__reformat_testing_scans__(x, y, recon)
             yield (x, y, recon, scan_id)
+    
+    def __reformat_testing_scans__(self, x, y, recon):
+        return x, y, recon
 
     def __map_files_to_scan_id__(self, files):
         scan_id_files = dict()
@@ -706,6 +709,16 @@ class OAI3DGeneratorFullVolume(OAI3DGenerator):
         filepath = list(unique_filepaths.keys())[0]
         im_vol, _ = self.__load_inputs__(os.path.dirname(filepath), os.path.basename(filepath))
         return im_vol.shape[:2] + (num_slices,)
+    
+    def __reformat_testing_scans__(self, x, y, recon):
+        vols = [x, y, recon]
+        vols_updated = []
+        for v in vols:
+            assert v.ndim == 5 and v.shape[0] == 1 and v.shape[1:] == self.config.IMG_SIZE, "img dims must be %s" % str((1,) + self.config.IMG_SIZE)
+            v_updated = np.squeeze(v, axis=0)
+            v_updated = np.transpose(v_updated, [2, 0, 1, 3])
+            vols_updated.append(v_updated)
+        return tuple(vols_updated)
 
     def num_steps(self):
         raise ValueError('This method is not supported for a testing-only generator')

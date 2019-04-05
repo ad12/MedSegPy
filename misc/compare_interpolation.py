@@ -22,7 +22,7 @@ VOXEL_SPACING = (0.3125, 0.3125, 0.7)  # mm
 INTERPOLATION_RESULTS_PATH = io_utils.check_dir('/bmrNAS/people/arjun/msk_seg_networks/interpolation')
 INTERPOLATION_EXP = ''
 
-GPU = '0'
+GPU = '1'
 
 def load_config():
     # get config
@@ -69,10 +69,12 @@ def inference_hr():
     test_gen = im_gens.get_generator(c_hr)
     mw = MetricWrapper()
     y_pred_dict = {}
-    # # Iterature through the files to be segmented
+
+    # Iterate through the files to be segmented
     for x_test, y_test, fname, num_slices in test_gen.img_generator_test():
         print('Running %s' % fname)
         recon = model.predict(x_test, batch_size=test_batch_size)
+        import pdb; pdb.set_trace()
         if c.INCLUDE_BACKGROUND:
             y_test = y_test[..., 1]
             recon = recon[..., 1]
