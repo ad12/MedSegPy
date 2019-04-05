@@ -86,6 +86,9 @@ class InterpolationTest():
         # use config to generate pixel-wise probability maps for low-resolution volumes
         self.lr_prob_maps = self.get_lr_prob_maps(self.lr_config)
 
+        # run analysis
+        self.interp_lr_hr()
+
     def __init_lr_config__(self, dirpath: str):
         weights_path = self.weights_path
         if not weights_path:
