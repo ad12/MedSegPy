@@ -660,15 +660,15 @@ class OAI3DGeneratorFullVolume(OAI3DGenerator):
         super().__init__(config)
 
         # update image size for config to be total volume
-        img_size = self.config.IMG_SIZE
-        num_slices = self.__get_num_slices__(GeneratorState.TESTING)
-        self.config.IMG_SIZE = img_size[:2] + (num_slices,) + img_size[3:]
+        img_size = self.__get_img_dims__(GeneratorState.TESTING)
+        assert len(img_size) == 3, "Loaded image size must be a tuple of 3 integers (y, x, #slices)"
+        self.config.IMG_SIZE = (img_size,) + self.config.IMG_SIZE[3:]
 
     def __img_generator_base_info__(self, state: GeneratorState):
         assert state == GeneratorState.TESTING, "Only testing state is supported for this generator"
         return super().__img_generator_base_info__(state)
 
-    def __get_num_slices__(self, state: GeneratorState):
+    def __get_img_dims__(self, state: GeneratorState):
         base_info = self.__img_generator_base_info__(state)
         data_path_or_files = base_info['data_path_or_files']
         batch_size = base_info['batch_size']
@@ -702,10 +702,15 @@ class OAI3DGeneratorFullVolume(OAI3DGenerator):
         min_slice_id = min(slice_ids)
         max_slice_id = max(slice_ids)
 
+        # load 1 file to get inplane resolution
+        filepath = unique_filepaths.keys()[0]
+        im_vol, _ = self.__load_inputs__(os.path.dirname(filepath), os.path.basename(filepath))
+        print(im_vol.shape)
         return max_slice_id - min_slice_id + 1
 
     def num_steps(self):
         raise ValueError('This method is not supported for a testing-only generator')
+
 
 class OAI3DBlockGenerator(OAI3DGenerator):
     """

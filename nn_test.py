@@ -20,6 +20,7 @@ def add_testing_arguments(parser: argparse.ArgumentParser):
                         help='save h5 data')
     parser.add_argument('--tag', default=None, nargs='?', type=str,
                         help='change tag for inference')
+    parser.add_argument('--img_size', default=None, nargs='?')
 
 
 def create_config_dict(vargin):
