@@ -109,6 +109,7 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
     :param config: a Config object
     :param save_file: save data (default = 0)
     """
+    test_gen = get_generator(config)
 
     test_set_md = dict()
     for k in TEST_SET_MD.keys():
@@ -130,8 +131,6 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
 
     start = time.time()
     skipped_count = 0
-
-    test_gen = get_generator(config)
 
     # Read the files that will be segmented
     test_gen.summary()
