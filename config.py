@@ -358,6 +358,14 @@ class Config():
     def num_neighboring_slices(self):
         return None
 
+    @property
+    def testing(self):
+        return self.STATE == 'testing'
+
+    @property
+    def training(self):
+        return self.STATE == 'training'
+
     @classmethod
     def init_cmd_line_parser(cls, parser):
         subcommand_parser = parser.add_parser('%s' % cls.CP_SAVE_TAG, description='%s config parameters')

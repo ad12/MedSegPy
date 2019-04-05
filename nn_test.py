@@ -18,10 +18,17 @@ def add_testing_arguments(parser: argparse.ArgumentParser):
     parser.add_argument('--batch_size', default=72, type=int, nargs='?')
     parser.add_argument('--save_h5_data', action='store_const', const=True, default=False,
                         help='save h5 data')
+    parser.add_argument('--tag', default=None, nargs='?', type=str,
+                        help='change tag for inference')
 
 
 def create_config_dict(vargin):
-    return {'TEST_BATCH_SIZE': vargin['batch_size']}
+    config_dict = {'TEST_BATCH_SIZE': vargin['batch_size']}
+    if vargin['tag']:
+        config_dict['TAG'] = vargin['tag']
+        config_dict['TEST_RESULTS_FOLDER_NAME'] = 'test_results_%s' % vargin['tag']
+
+    return config_dict
 
 
 if __name__ == '__main__':

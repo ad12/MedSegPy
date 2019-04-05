@@ -476,6 +476,12 @@ class OAI3DGenerator(OAIGenerator):
     """
     SUPPORTED_TAGS = ['oai_3d']
 
+    def __init__(self, config: Config):
+        if config.TAG == 'oai_3d_block-train_full-test':
+            assert config.testing, "Config must be in testing state to use tag %s" % config.TAG
+
+        super().__init__(config)
+
     def __validate_img_size__(self, slices_per_scan):
         # only accept image sizes where slices can be perfectly disjoint
         if len(self.config.IMG_SIZE) != 4:
@@ -641,6 +647,63 @@ class OAI3DGenerator(OAIGenerator):
 
         return add_file
 
+
+class OAI3DGeneratorFullVolume(OAI3DGenerator):
+    SUPPORTED_TAGS = ['oai_3d_block-train_full-vol-test', 'full-vol-test', 'oai_3d_full-vol-test']
+
+    def __init__(self, config: Config):
+        if not config.testing:
+            raise ValueError('%s only available for testing 3D volumes' % self.__class__.__name__)
+
+        super().__init__(config)
+
+        # update image size for config to be total volume
+        img_size = self.config.IMG_SIZE
+        num_slices = self.__get_num_slices__(GeneratorState.TESTING)
+        self.config.IMG_SIZE = img_size[:2] + (num_slices,) + img_size[3:]
+
+    def __img_generator_base_info__(self, state: GeneratorState):
+        assert state == GeneratorState.TESTING, "Only testing state is supported for this generator"
+        return super().__img_generator_base_info__(state)
+
+    def __get_num_slices__(self, state: GeneratorState):
+        base_info = self.__img_generator_base_info__(state)
+        data_path_or_files = base_info['data_path_or_files']
+        batch_size = base_info['batch_size']
+        pids = base_info['pids']
+        augment_data = base_info['augment_data']
+
+        if type(data_path_or_files) is str:
+            data_path = data_path_or_files
+            files = listdir(data_path)
+            filepaths = [os.path.join(data_path, f) for f in files]
+        elif type(data_path_or_files) is list:
+            filepaths = data_path_or_files
+        else:
+            raise ValueError('data_path_or_files must be type str or list')
+
+        unique_filepaths = {}  # use dict to avoid having to reconstruct set every time
+
+        # track the largest slice number that we see - assume it is the same for all scans
+        slice_ids = []
+
+        for fp in filepaths:
+            fp, _ = os.path.splitext(fp)
+            dirpath, filename = os.path.dirname(fp), os.path.basename(fp)
+
+            if self.__add_file__(fp, unique_filepaths, pids, augment_data):
+                file_info = self.fname_parser.get_file_info(filename)
+                slice_ids.append(file_info['slice'])
+
+                unique_filepaths[fp] = fp
+
+        min_slice_id = min(slice_ids)
+        max_slice_id = max(slice_ids)
+
+        return max_slice_id - min_slice_id + 1
+
+    def num_steps(self):
+        raise ValueError('This method is not supported for a testing-only generator')
 
 class OAI3DBlockGenerator(OAI3DGenerator):
     """
@@ -1050,3 +1113,5 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         _, valid_batches_per_epoch, _ = self.cached_data(GeneratorState.VALIDATION)
 
         return train_batches_per_epoch, valid_batches_per_epoch
+
+
