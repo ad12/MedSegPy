@@ -22,7 +22,7 @@ class GeneratorState(Enum):
 
 
 def get_generator(config: Config):
-    for generator in [OAIGenerator, OAI3DGenerator, OAI3DBlockGenerator]:
+    for generator in [OAIGenerator, OAI3DGenerator, OAI3DBlockGenerator, OAI3DGeneratorFullVolume]:
         try:
             gen = generator(config)
             if gen:
