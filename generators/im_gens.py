@@ -486,8 +486,8 @@ class OAI3DGenerator(OAIGenerator):
 
     def __validate_img_size__(self, slices_per_scan):
         # only accept image sizes where slices can be perfectly disjoint
-        if len(self.config.IMG_SIZE) != 4:
-            raise ValueError('`IMG_SIZE` must be in format (y, x, z, #channels)')
+        if len(self.config.IMG_SIZE) != self.__EXPECTED_IMG_SIZE_DIMS__:
+            raise ValueError('`IMG_SIZE` must be in format (y, x, z, #channels) - got %s' % str(self.config.IMG_SIZE))
 
         input_volume_num_slices = self.config.IMG_SIZE[2]
         if input_volume_num_slices == 1:
@@ -662,7 +662,7 @@ class OAI3DGeneratorFullVolume(OAI3DGenerator):
         # update image size for config to be total volume
         img_size = self.__get_img_dims__(GeneratorState.TESTING)
         assert len(img_size) == 3, "Loaded image size must be a tuple of 3 integers (y, x, #slices)"
-        self.config.IMG_SIZE = (img_size,) + self.config.IMG_SIZE[3:]
+        self.config.IMG_SIZE = img_size + self.config.IMG_SIZE[3:]
 
     def __img_generator_base_info__(self, state: GeneratorState):
         assert state == GeneratorState.TESTING, "Only testing state is supported for this generator"
@@ -701,12 +701,11 @@ class OAI3DGeneratorFullVolume(OAI3DGenerator):
 
         min_slice_id = min(slice_ids)
         max_slice_id = max(slice_ids)
-        num_slices = min_slice_id - max_slice_id + 1
+        num_slices = max_slice_id - min_slice_id + 1
 
         # load 1 file to get inplane resolution
         filepath = list(unique_filepaths.keys())[0]
         im_vol, _ = self.__load_inputs__(os.path.dirname(filepath), os.path.basename(filepath))
-        print(im_vol.shape)
         return im_vol.shape[:2] + (num_slices,)
 
     def num_steps(self):
