@@ -154,6 +154,7 @@ class Generator(ABC):
 
 class OAIGenerator(Generator):
     SUPPORTED_TAGS = ['oai_aug', 'oai', 'oai_2d', 'oai_aug_2d', 'oai_2.5d', 'oai_aug_2.5d']
+    __EXPECTED_IMG_SIZE_DIMS__ = 3
 
     def img_generator(self, state: GeneratorState):
         super().img_generator(state)
@@ -210,8 +211,8 @@ class OAIGenerator(Generator):
         batch_size = config.TEST_BATCH_SIZE
 
         # img_size must be 3D
-        if len(img_size) != 3:
-            raise ValueError('Image size must be 3D')
+        if len(img_size) != self.__EXPECTED_IMG_SIZE_DIMS__:
+            raise ValueError('Image size must be %dD' % self.__EXPECTED_IMG_SIZE_DIMS__)
 
         files, batches_per_epoch, _ = self.__calc_generator_info__(GeneratorState.TESTING)
 
@@ -475,6 +476,7 @@ class OAI3DGenerator(OAIGenerator):
     Generator for training 3D networks where data is stored per slice
     """
     SUPPORTED_TAGS = ['oai_3d']
+    __EXPECTED_IMG_SIZE_DIMS__ = 4
 
     def __init__(self, config: Config):
         if config.TAG == 'oai_3d_block-train_full-test':
