@@ -42,7 +42,7 @@ class InterpolationTest():
         self.save_h5_data = False
         self.weights_path = None
         self.hr_test_path = HR_TEST_PATH
-        self.zoom_spline_order = 3
+        self.zoom_spline_order = 1
 
         if 'config_dict' in kwargs:
             config_dict = kwargs.get('config_dict')
@@ -263,6 +263,11 @@ class InterpolationTest():
 
             # in case of 2.5D, we want to only select center slice
             x_write = x_test[..., x_test.shape[-1] // 2]
+
+            y_test = np.transpose(y_test, [2, 0, 1])
+            labels = np.transpose(labels, [2, 0, 1])
+            recon = np.transpose(recon, [2, 0, 1])
+            x_write = np.transpose(x_write, [2, 0, 1])
 
             # Save mask overlap
             ovlps = im_utils.write_ovlp_masks(os.path.join(test_result_path, 'ovlp', fname), y_test, labels)
