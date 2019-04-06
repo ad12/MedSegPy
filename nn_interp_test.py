@@ -20,7 +20,7 @@ from utils import im_utils, utils
 import time
 import scipy.io as sio
 import argparse
-
+import keras.backend as K
 
 # EXP_PATH = '/bmrNAS/people/arjun/msk_seg_networks/architecture_limit/deeplabv3_2d/2018-11-30-05-49-49/fine_tune/'
 HR_TEST_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_3d/test'
@@ -128,7 +128,9 @@ class InterpolationTest():
 
             recon = np.transpose(np.squeeze(recon), [1, 2, 0])
             y_pred_dict[fname] = recon
-
+        
+        model = None
+        K.clear_session()
         return y_pred_dict
 
     def interp_lr_hr(self):
@@ -141,6 +143,7 @@ class InterpolationTest():
         # Get config and make new config for hr data
         c_hr = deepcopy(self.lr_config)
         c_hr.TEST_PATH = self.hr_test_path
+        model = get_model(c_hr)
 
         # get probability masks from inference on downsampled masks
         y_pred_prob_maps = self.lr_prob_maps
@@ -157,9 +160,9 @@ class InterpolationTest():
         img_cnt = 0
 
         # Iterate through the files to be segmented
-        for x_test, y_test, _, fname in test_gen.img_generator_test():
+        for x_test, y_test, _, fname in test_gen.img_generator_test(model):
             y_test = np.transpose(np.squeeze(y_test), [1, 2, 0])
-
+            y_test = y_test[..., 8:-8]
             # interpolate y_pred using ndimage.zoom function
             y_pred = y_pred_prob_maps[fname]
             zoom_factor = np.asarray(y_test.shape) / np.asarray(y_pred.shape)
@@ -168,7 +171,7 @@ class InterpolationTest():
             y_pred = ndimage.zoom(y_pred, zoom_factor, order=self.zoom_spline_order)
             assert y_pred.shape == y_test.shape, "Shape mismatch: y_pred: %s. y_test: %s" % (str(y_pred.shape),
                                                                                              str(y_test.shape))
-
+            y_pred = np.clip(y_pred, 0, 1) 
             assert (y_pred >= 0).all() and (y_pred <= 1).all(), "Error with interpolation - all values must be between [0,1]"
 
             labels = (y_pred > 0.5).astype(np.float32)
@@ -180,7 +183,8 @@ class InterpolationTest():
                                       save_file=1, save_h5_data=self.save_h5_data, test_result_path=test_result_path)
 
             img_cnt += 1
-
+        model = None
+        K.clear_session()
         stats_string = get_stats_string(mw, skipped_count=0, testing_time=(time.time() - self.start_time))
 
         # Print some summary statistics
