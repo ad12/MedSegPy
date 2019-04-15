@@ -143,7 +143,6 @@ class InterpolationTest():
         # Get config and make new config for hr data
         c_hr = deepcopy(self.lr_config)
         c_hr.TEST_PATH = self.hr_test_path
-        model = get_model(c_hr)
 
         # get probability masks from inference on downsampled masks
         y_pred_prob_maps = self.lr_prob_maps
@@ -160,7 +159,7 @@ class InterpolationTest():
         img_cnt = 0
 
         # Iterate through the files to be segmented
-        for x_test, y_test, _, fname in test_gen.img_generator_test(model):
+        for x_test, y_test, _, fname in test_gen.img_generator_test():
             y_test = np.transpose(np.squeeze(y_test), [1, 2, 0])
             y_test = y_test[..., 8:-8]
             # interpolate y_pred using ndimage.zoom function

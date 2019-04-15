@@ -53,7 +53,7 @@ class Generator(ABC):
             raise ValueError('Generator must be either %s' % accepted_states)
 
     @abstractmethod
-    def img_generator_test(self, model):
+    def img_generator_test(self, model=None):
         pass
 
     @abstractmethod
@@ -200,7 +200,7 @@ class OAIGenerator(Generator):
 
                 yield (x, y)
 
-    def img_generator_test(self, model):
+    def img_generator_test(self, model=None):
         config = self.config
         img_size = config.IMG_SIZE
         tissues = config.TISSUES
@@ -243,12 +243,17 @@ class OAIGenerator(Generator):
                 x[fcount, ...] = im
                 y[fcount, ...] = seg_total
 
-            recon = model.predict(x, batch_size=batch_size)
-            x, y, recon = self.__reformat_testing_scans__(x, y, recon)
+            recon = None
+            if model:
+                recon = model.predict(x, batch_size=batch_size)
+                x, y, recon = self.__reformat_testing_scans__((x, y, recon))
+            else:
+                x, y = self.__reformat_testing_scans__((x, y))
+
             yield (x, y, recon, scan_id)
     
-    def __reformat_testing_scans__(self, x, y, recon):
-        return x, y, recon
+    def __reformat_testing_scans__(self, vols):
+        return tuple(vols)
 
     def __map_files_to_scan_id__(self, files):
         scan_id_files = dict()
@@ -710,8 +715,7 @@ class OAI3DGeneratorFullVolume(OAI3DGenerator):
         im_vol, _ = self.__load_inputs__(os.path.dirname(filepath), os.path.basename(filepath))
         return im_vol.shape[:2] + (num_slices,)
     
-    def __reformat_testing_scans__(self, x, y, recon):
-        vols = [x, y, recon]
+    def __reformat_testing_scans__(self, vols):
         vols_updated = []
         for v in vols:
             assert v.ndim == 5 and v.shape[0] == 1 and v.shape[1:] == self.config.IMG_SIZE, "img dims must be %s" % str((1,) + self.config.IMG_SIZE)
@@ -961,7 +965,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
                 dim] == 0, "Cannot divide volume of size %s to blocks of size %s" % (
             total_volume_shape, self.config.IMG_SIZE)
 
-    def img_generator_test(self, model):
+    def img_generator_test(self, model=None):
         state = GeneratorState.TESTING
         base_info = self.__img_generator_base_info__(state)
         batch_size = base_info['batch_size']
@@ -997,20 +1001,21 @@ class OAI3DBlockGenerator(OAI3DGenerator):
                 x[block_cnt, ...] = im
                 y[block_cnt, ...] = seg
 
-            recon = model.predict(x, batch_size=batch_size)
-
             # reshape into original volume shape
+            recon_vol = None
             ytrue_blocks = [(np.squeeze(x[b, ...]), y[b, ...]) for b in range(num_blocks)]
             im_vol, ytrue_vol = self.unify_blocks(ytrue_blocks, scan_to_im_size[vol_id])
-
-            ypred_blocks = [(np.squeeze(x[b, ...]), recon[b, ...]) for b in range(num_blocks)]
-            _, recon_vol = self.unify_blocks(ypred_blocks, scan_to_im_size[vol_id])
 
             # reshape to expected output shape
             im_vol = np.transpose(im_vol, [2, 0, 1])
             im_vol = im_vol[..., np.newaxis]
             ytrue_vol = np.transpose(ytrue_vol, [2, 0, 1, 3])
-            recon_vol = np.transpose(recon_vol, [2, 0, 1, 3])
+
+            if model:
+                recon = model.predict(x, batch_size=batch_size)
+                ypred_blocks = [(np.squeeze(x[b, ...]), recon[b, ...]) for b in range(num_blocks)]
+                _, recon_vol = self.unify_blocks(ypred_blocks, scan_to_im_size[vol_id])
+                recon_vol = np.transpose(recon_vol, [2, 0, 1, 3])
 
             yield (im_vol, ytrue_vol, recon_vol, vol_id)
 
