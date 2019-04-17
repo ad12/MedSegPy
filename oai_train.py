@@ -143,6 +143,11 @@ def train_model(config, optimizer=None, model=None, class_weights=None):
     with open(pik_save_path, "wb") as f:
         pickle.dump(data, f)
 
+    model_json = model.to_json()
+    model_json_save_path = os.path.join(config.CP_SAVE_PATH, 'model.json')
+    with open(model_json_save_path, "w") as json_file:
+        json_file.write(model_json)
+
     # # Save model
     # model.save(filepath=os.path.join(config.CP_SAVE_PATH, 'model.h5'), overwrite=True)
 
