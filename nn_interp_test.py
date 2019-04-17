@@ -21,6 +21,8 @@ import time
 import scipy.io as sio
 import argparse
 import keras.backend as K
+from scipy.misc import imresize
+from keras.utils import plot_model
 
 # EXP_PATH = '/bmrNAS/people/arjun/msk_seg_networks/architecture_limit/deeplabv3_2d/2018-11-30-05-49-49/fine_tune/'
 HR_TEST_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_3d/test'
@@ -42,7 +44,7 @@ class InterpolationTest():
         self.save_h5_data = False
         self.weights_path = None
         self.hr_test_path = HR_TEST_PATH
-        self.zoom_spline_order = 1
+        self.zoom_spline_order = 3
 
         if 'config_dict' in kwargs:
             config_dict = kwargs.get('config_dict')
@@ -116,6 +118,9 @@ class InterpolationTest():
     def get_lr_prob_maps(self, c: config.Config):
         # Load model
         model = get_model(c)
+        plot_model(model, os.path.join(c.TEST_RESULT_PATH, 'model.png'), show_shapes=True)
+        model.load_weights(c.TEST_WEIGHT_PATH)
+
         test_gen = im_gens.get_generator(c)
 
         y_pred_dict = {}
@@ -132,6 +137,9 @@ class InterpolationTest():
         model = None
         K.clear_session()
         return y_pred_dict
+
+    def or_mask(self, y_test):
+        return ((y_test[..., 0:y_test.shape[-1]:2] + y_test[..., 1:y_test.shape[-1]:2]).astype(np.bool)).astype(np.float32)
 
     def interp_lr_hr(self):
         """
@@ -162,17 +170,24 @@ class InterpolationTest():
         # Iterate through the files to be segmented
         for x_test, y_test, _, fname in test_gen.img_generator_test(model):
             y_test = np.transpose(np.squeeze(y_test), [1, 2, 0])
+
             y_test = y_test[..., 8:-8]
+            y_test = self.or_mask(y_test)
+
+            import pdb; pdb.set_trace()
             # interpolate y_pred using ndimage.zoom function
             y_pred = y_pred_prob_maps[fname]
-            zoom_factor = np.asarray(y_test.shape) / np.asarray(y_pred.shape)
-            assert (zoom_factor >= 1).all, "zoom_factor is %s. All values should be >= 1" % str(tuple(zoom_factor))
+            # y_pred_orig = y_pred
 
-            y_pred = ndimage.zoom(y_pred, zoom_factor, order=self.zoom_spline_order)
-            assert y_pred.shape == y_test.shape, "Shape mismatch: y_pred: %s. y_test: %s" % (str(y_pred.shape),
-                                                                                             str(y_test.shape))
-            y_pred = np.clip(y_pred, 0, 1) 
-            assert (y_pred >= 0).all() and (y_pred <= 1).all(), "Error with interpolation - all values must be between [0,1]"
+            # #import pdb; pdb.set_trace()
+            # zoom_factor = np.asarray(y_test.shape) / np.asarray(y_pred.shape)
+            # assert (zoom_factor >= 1).all, "zoom_factor is %s. All values should be >= 1" % str(tuple(zoom_factor))
+
+            # y_pred = ndimage.zoom(y_pred, zoom_factor, order=self.zoom_spline_order)
+            # assert y_pred.shape == y_test.shape, "Shape mismatch: y_pred: %s. y_test: %s" % (str(y_pred.shape),
+            #                                                                                  str(y_test.shape))
+            # y_pred = np.clip(y_pred, 0, 1) 
+            # assert (y_pred >= 0).all() and (y_pred <= 1).all(), "Error with interpolation - all values must be between [0,1]"
 
             labels = (y_pred > 0.5).astype(np.float32)
 
@@ -272,8 +287,9 @@ class InterpolationTest():
             # Save mask overlap
             ovlps = im_utils.write_ovlp_masks(os.path.join(test_result_path, 'ovlp', fname), y_test, labels)
             im_utils.write_mask(os.path.join(test_result_path, 'gt', fname), y_test)
+            im_utils.write_mask(os.path.join(test_result_path, 'labels', fname), labels)
             im_utils.write_prob_map(os.path.join(test_result_path, 'prob_map', fname), recon)
-            im_utils.write_im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write, ovlps)
+           # im_utils.write_im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write, ovlps)
             # im_utils.write_sep_im_overlay(os.path.join(test_result_path, 'im_ovlp_sep', fname), x_write,
             #                               np.squeeze(y_test), np.squeeze(labels))
 

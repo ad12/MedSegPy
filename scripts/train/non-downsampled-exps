@@ -60,7 +60,7 @@ ARGS=$TRAIN_ARGS' '$NEW_PATHS_ARGS
 
 
 # --------------- 3D block training experiments ----------------- #
-TRAIN_ARGS='--tag oai_3d_block --n_epochs 100 --use_step_decay --drop_factor 0.6 --drop_rate 4 --initial_learning_rate 0.1 --experiment non-downsampled --train_batch_size 12 -g '$GPU
+TRAIN_ARGS='--tag oai_3d_block --n_epochs 100 --use_step_decay --drop_factor 0.6 --drop_rate 6 --initial_learning_rate 0.001 --experiment non-downsampled --train_batch_size 12 -g '$GPU
 ARGS=$TRAIN_ARGS" "$NEW_PATHS_ARGS
 echo $ARGS
 # Experiment 7: 3D unet (4 slices)
@@ -70,7 +70,7 @@ echo $ARGS
 #python -m oai_train unet_3d --num_filters '[32, 64, 128, 256, 512, 1024]' --img_size '(96,96,8,1)' $ARGS
 
 # Experiment 9: 3D unet (4 slices)
-python -m oai_train unet_3d --num_filters '[32, 64, 128, 256, 512, 1024]' --img_size '(96,96,16,1)' $ARGS --initial_learning_rate 0.01
+python -m oai_train unet_3d --num_filters '[32, 64, 128, 256, 512, 1024]' --img_size '(96,96,32,1)' $ARGS
 
 # Experiment 10: 3D unet (4 slices)
 #python -m oai_train unet_3d --num_filters '[32, 64, 128, 256, 512, 1024]' --img_size '(96,96,32,1)' $ARGS
