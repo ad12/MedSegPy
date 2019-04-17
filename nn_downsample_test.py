@@ -80,6 +80,7 @@ class InterpolationTest():
 
         lr_config = deepcopy(self.hr_config)
         lr_config.TEST_PATH = DOWNSAMPLED_TEST_PATH
+        #lr_config.TAG = 'oai_aug'  # reduce time for reading
         self.lr_config = lr_config
 
         # use config to generate pixel-wise probability maps for low-resolution volumes
@@ -120,8 +121,8 @@ class InterpolationTest():
         x_test_dict = {}
         # Iterate through the files to be segmented
         for x_test, y_test, _, fname in test_gen.img_generator_test():
-            y_test_dict[fname] = y_test
-            x_test_dict[fname] = x_test
+            y_test_dict[fname] = np.squeeze(y_test)
+            x_test_dict[fname] = np.squeeze(x_test)
 
         return x_test_dict, y_test_dict
 
@@ -150,17 +151,28 @@ class InterpolationTest():
         img_cnt = 0
 
         # Iterate through the files to be segmented
-        for _, _, recon, fname in test_gen.img_generator_test(model):
+        for _, y_test, recon, fname in test_gen.img_generator_test(model):
             recon = recon[8:-8, ...]
-            y_pred = recon
-            labels = (recon > 0.5).astype(np.bool)
+            recon = np.squeeze(recon)
+            recon = np.transpose(recon, [1, 2, 0])
+            
+            labels = (recon > 0.5)
+            y_pred = np.array(recon)
+            y_pred = (y_pred[..., 0::2] + y_pred[..., 1::2]) / 2
 
             # downsample labels using OR mask
-            labels = np.logical_or(labels[0::2, ...], labels[1::2, ...])
-            labels = labels.astype(np.bool)
+            #labels = np.logical_or(labels[..., 0::2], labels[..., 1::2])
+            labels = labels[..., 0::2]
+            labels = labels.astype(np.float32)
 
-            x_test = downsampled_xtest[fname]
-            y_test = downsampled_ytest[fname]
+            x_test = np.transpose(downsampled_xtest[fname], [1, 2, 0])
+            #y_test = np.transpose(downsampled_ytest[fname], [1, 2, 0])
+            y_test = y_test[8:-8, ...]
+            y_test = np.squeeze(y_test)
+            y_test = np.transpose(y_test, [1,2,0])
+            y_test = np.logical_or(y_test[..., 0::2], y_test[..., 1::2]).astype(np.float32)
+
+            import pdb; pdb.set_trace()
 
             pids_str += self.analysis(x_test=x_test, y_test=y_test, recon=y_pred, labels=labels,
                                       mw=mw, voxel_spacing=self.voxel_spacing,
@@ -245,9 +257,8 @@ class InterpolationTest():
                 with h5py.File(save_name, 'w') as h5f:
                     h5f.create_dataset('recon', data=recon)
                     h5f.create_dataset('gt', data=y_test)
-
-            # in case of 2.5D, we want to only select center slice
-            x_write = x_test[..., x_test.shape[-1] // 2]
+            
+            x_write = x_test
 
             y_test = np.transpose(y_test, [2, 0, 1])
             labels = np.transpose(labels, [2, 0, 1])
@@ -259,6 +270,7 @@ class InterpolationTest():
             im_utils.write_mask(os.path.join(test_result_path, 'gt', fname), y_test)
             im_utils.write_prob_map(os.path.join(test_result_path, 'prob_map', fname), recon)
             im_utils.write_im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write, ovlps)
+            im_utils.write_mask(os.path.join(test_result_path, 'labels', fname), labels)
             # im_utils.write_sep_im_overlay(os.path.join(test_result_path, 'im_ovlp_sep', fname), x_write,
             #                               np.squeeze(y_test), np.squeeze(labels))
 
