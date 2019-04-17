@@ -31,9 +31,10 @@ from models.models import get_model
 from keras.utils import plot_model
 from scan_metadata import ScanMetadata
 from generators.im_gens import get_generator
+from stat import S_IREAD, S_IRGRP, S_IROTH
+
 
 DATE_THRESHOLD = strptime('2018-09-01-22-39-39', '%Y-%m-%d-%H-%M-%S')
-#TEST_SET_METADATA_PIK = '/bmrNAS/people/arjun/msk_seg_networks/oai_data_test/oai_test_data.dat'
 TEST_SET_METADATA_PIK = '/bmrNAS/people/arjun/msk_seg_networks/oai_metadata/oai_data.dat'
 TEST_SET_MD = io_utils.load_pik(TEST_SET_METADATA_PIK)
 
@@ -214,8 +215,9 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
     print(stats_string)
     print('--' * 20)
 
+    test_results_summary_path = os.path.join(test_result_path, 'results.txt')
     # Write details to test file
-    with open(os.path.join(test_result_path, 'results.txt'), 'w+') as f:
+    with open(test_results_summary_path, 'w+') as f:
         f.write('Results generated on %s\n' % strftime('%X %x %Z'))
         f.write('Weights Loaded: %s\n' % os.path.basename(config.TEST_WEIGHT_PATH))
         f.write('--' * 20)
@@ -224,6 +226,8 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
         f.write('--' * 20)
         f.write('\n')
         f.write(stats_string)
+
+    os.chmod(test_results_summary_path, S_IREAD | S_IRGRP | S_IROTH)
 
     # Save metrics in dat format using pickle
     results_dat = os.path.join(test_result_path, 'metrics.dat')
