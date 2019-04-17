@@ -78,14 +78,6 @@ class InterpolationTest():
         # initialize config from dirpath (should correspond to config for low resolution data)
         self.hr_config = self.__init_hr_config__(self.dirpath)
 
-        lr_config = deepcopy(self.hr_config)
-        lr_config.TEST_PATH = DOWNSAMPLED_TEST_PATH
-        #lr_config.TAG = 'oai_aug'  # reduce time for reading
-        self.lr_config = lr_config
-
-        # use config to generate pixel-wise probability maps for low-resolution volumes
-        self.lr_data = self.read_downsampled_masks(self.lr_config)
-
         # run analysis
         self.test_downsample_hr()
 
@@ -113,31 +105,15 @@ class InterpolationTest():
 
         return c
 
-    def read_downsampled_masks(self, c: config.Config):
-        # Load model
-        test_gen = im_gens.get_generator(c)
-
-        y_test_dict = {}
-        x_test_dict = {}
-        # Iterate through the files to be segmented
-        for x_test, y_test, _, fname in test_gen.img_generator_test():
-            y_test_dict[fname] = np.squeeze(y_test)
-            x_test_dict[fname] = np.squeeze(x_test)
-
-        return x_test_dict, y_test_dict
-
     def test_downsample_hr(self):
         """
         Downsample hr inference by factor of 2 to get in same dimensions
         :return:
         """
-        test_result_path = self.lr_config.TEST_RESULT_PATH
-
         c_hr = self.hr_config
-        model = get_model(c_hr)
+        test_result_path = c_hr.TEST_RESULT_PATH
 
-        # get ground truth masks for downsampled masks
-        downsampled_xtest, downsampled_ytest = self.lr_data
+        model = get_model(c_hr)
 
         test_gen = im_gens.get_generator(c_hr)
         mw = MetricWrapper()
@@ -189,7 +165,7 @@ class InterpolationTest():
         # Write details to test file
         with open(os.path.join(test_result_path, 'results.txt'), 'w+') as f:
             f.write('Results generated on %s\n' % time.strftime('%X %x %Z'))
-            f.write('Weights Loaded: %s\n' % os.path.basename(self.lr_config.TEST_WEIGHT_PATH))
+            f.write('Weights Loaded: %s\n' % os.path.basename(self.hr_config.TEST_WEIGHT_PATH))
             f.write('--' * 20)
             f.write('\n')
             f.write(pids_str)
