@@ -151,26 +151,21 @@ class InterpolationTest():
         img_cnt = 0
 
         # Iterate through the files to be segmented
-        for _, y_test, recon, fname in test_gen.img_generator_test(model):
-            recon = recon[8:-8, ...]
-            recon = np.squeeze(recon)
-            recon = np.transpose(recon, [1, 2, 0])
-            
+        for x_test, y_test, recon, fname in test_gen.img_generator_test(model):
+            x_test = np.transpose(np.squeeze(x_test[8:-8, ...]), [1,2,0])
+            recon = np.transpose(np.squeeze(recon[8:-8, ...]), [1, 2, 0])
+            y_test = np.transpose(np.squeeze(y_test[8:-8, ...]), [1, 2, 0])
+
             labels = (recon > 0.5)
+
             y_pred = np.array(recon)
             y_pred = (y_pred[..., 0::2] + y_pred[..., 1::2]) / 2
 
             # downsample labels using OR mask
             #labels = np.logical_or(labels[..., 0::2], labels[..., 1::2])
+            y_test = y_test[..., 0::2]
             labels = labels[..., 0::2]
             labels = labels.astype(np.float32)
-
-            x_test = np.transpose(downsampled_xtest[fname], [1, 2, 0])
-            #y_test = np.transpose(downsampled_ytest[fname], [1, 2, 0])
-            y_test = y_test[8:-8, ...]
-            y_test = np.squeeze(y_test)
-            y_test = np.transpose(y_test, [1,2,0])
-            y_test = np.logical_or(y_test[..., 0::2], y_test[..., 1::2]).astype(np.float32)
 
             import pdb; pdb.set_trace()
 
