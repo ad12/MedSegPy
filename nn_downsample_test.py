@@ -1,7 +1,8 @@
 """
-Compare interpolating masks on downsampled scans
+Use 3d models to run inference on full dataset, but ground truth should be downsampled masks
 """
-import os,sys
+
+import os, sys
 from copy import deepcopy
 import numpy as np
 
@@ -21,19 +22,11 @@ import time
 import scipy.io as sio
 import argparse
 import keras.backend as K
-from scipy.misc import imresize
-from keras.utils import plot_model
 
-# EXP_PATH = '/bmrNAS/people/arjun/msk_seg_networks/architecture_limit/deeplabv3_2d/2018-11-30-05-49-49/fine_tune/'
-HR_TEST_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_3d/test'
 
-#
-# WEIGHTS_PATH = dl_utils.get_weights(EXP_PATH)
-# CONFIG_PATH = os.path.join(EXP_PATH, 'config.ini')
-#
-DEFAULT_VOXEL_SPACING = (0.3125, 0.3125, 0.7)  # mm
-# INTERPOLATION_RESULTS_PATH = io_utils.check_dir('/bmrNAS/people/arjun/msk_seg_networks/interpolation')
-# INTERPOLATION_EXP = ''
+DOWNSAMPLED_TEST_PATH = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/test'
+
+DEFAULT_VOXEL_SPACING = (0.3125, 0.3125, 1.4)  # mm
 
 GPU = '1'
 
@@ -43,8 +36,7 @@ class InterpolationTest():
         self.config_dict = dict()
         self.save_h5_data = False
         self.weights_path = None
-        self.hr_test_path = HR_TEST_PATH
-        self.zoom_spline_order = 3
+        self.zoom_spline_order = 1
 
         if 'config_dict' in kwargs:
             config_dict = kwargs.get('config_dict')
@@ -67,9 +59,10 @@ class InterpolationTest():
             self.weights_path = weights_path
 
         if 'TEST_RESULTS_FOLDER_NAME' in self.config_dict:
-            self.config_dict['TEST_RESULTS_FOLDER_NAME'] = '%s-interpolate' % self.config_dict['TEST_RESULTS_FOLDER_NAME']
+            self.config_dict['TEST_RESULTS_FOLDER_NAME'] = '%s-downsampled' % self.config_dict[
+                'TEST_RESULTS_FOLDER_NAME']
         else:
-            self.config_dict['TEST_RESULTS_FOLDER_NAME'] = 'test_results-interpolated'
+            self.config_dict['TEST_RESULTS_FOLDER_NAME'] = 'test_results-downsampled'
 
         self.dirpath = dirpath
         self.voxel_spacing = voxel_spacing
@@ -83,15 +76,19 @@ class InterpolationTest():
         self.start_time = time.time()
 
         # initialize config from dirpath (should correspond to config for low resolution data)
-        self.lr_config = self.__init_lr_config__(self.dirpath)
+        self.hr_config = self.__init_hr_config__(self.dirpath)
+
+        lr_config = deepcopy(self.hr_config)
+        lr_config.TEST_PATH = DOWNSAMPLED_TEST_PATH
+        self.lr_config = lr_config
 
         # use config to generate pixel-wise probability maps for low-resolution volumes
-        self.lr_prob_maps = self.get_lr_prob_maps(self.lr_config)
+        self.lr_data = self.read_downsampled_masks(self.lr_config)
 
         # run analysis
-        self.interp_lr_hr()
+        self.test_downsample_hr()
 
-    def __init_lr_config__(self, dirpath: str):
+    def __init_hr_config__(self, dirpath: str):
         weights_path = self.weights_path
         if not weights_path:
             weights_path = dl_utils.get_weights(dirpath)
@@ -115,45 +112,31 @@ class InterpolationTest():
 
         return c
 
-    def get_lr_prob_maps(self, c: config.Config):
+    def read_downsampled_masks(self, c: config.Config):
         # Load model
-        model = get_model(c)
-        plot_model(model, os.path.join(c.TEST_RESULT_PATH, 'model.png'), show_shapes=True)
-        model.load_weights(c.TEST_WEIGHT_PATH)
-
         test_gen = im_gens.get_generator(c)
 
-        y_pred_dict = {}
-
+        y_test_dict = {}
+        x_test_dict = {}
         # Iterate through the files to be segmented
-        for x_test, y_test, recon, fname in test_gen.img_generator_test(model):
-            if c.INCLUDE_BACKGROUND:
-                recon = recon[..., 1]
-                recon = recon[..., np.newaxis]
+        for x_test, y_test, _, fname in test_gen.img_generator_test():
+            y_test_dict[fname] = y_test
+            x_test_dict[fname] = x_test
 
-            recon = np.transpose(np.squeeze(recon), [1, 2, 0])
-            y_pred_dict[fname] = recon
-        
-        model = None
-        K.clear_session()
-        return y_pred_dict
+        return x_test_dict, y_test_dict
 
-    def or_mask(self, y_test):
-        return ((y_test[..., 0:y_test.shape[-1]:2] + y_test[..., 1:y_test.shape[-1]:2]).astype(np.bool)).astype(np.float32)
-
-    def interp_lr_hr(self):
+    def test_downsample_hr(self):
         """
-        Interpolate low resolution data to high resolution (self.interp_dimensions) and run inference
+        Downsample hr inference by factor of 2 to get in same dimensions
         :return:
         """
         test_result_path = self.lr_config.TEST_RESULT_PATH
 
-        # Get config and make new config for hr data
-        c_hr = deepcopy(self.lr_config)
-        c_hr.TEST_PATH = self.hr_test_path
+        c_hr = self.hr_config
+        model = get_model(c_hr)
 
-        # get probability masks from inference on downsampled masks
-        y_pred_prob_maps = self.lr_prob_maps
+        # get ground truth masks for downsampled masks
+        downsampled_xtest, downsampled_ytest = self.lr_data
 
         test_gen = im_gens.get_generator(c_hr)
         mw = MetricWrapper()
@@ -167,28 +150,17 @@ class InterpolationTest():
         img_cnt = 0
 
         # Iterate through the files to be segmented
-        for x_test, y_test, _, fname in test_gen.img_generator_test():
-            y_test = np.transpose(np.squeeze(y_test), [1, 2, 0])
+        for _, _, recon, fname in test_gen.img_generator_test(model):
+            recon = recon[8:-8, ...]
+            y_pred = recon
+            labels = (recon > 0.5).astype(np.bool)
 
-            y_test = y_test[..., 8:-8]
-            y_test = self.or_mask(y_test)
+            # downsample labels using OR mask
+            labels = np.logical_or(labels[0::2, ...], labels[1::2, ...])
+            labels = labels.astype(np.bool)
 
-            import pdb; pdb.set_trace()
-            # interpolate y_pred using ndimage.zoom function
-            y_pred = y_pred_prob_maps[fname]
-            # y_pred_orig = y_pred
-
-            # #import pdb; pdb.set_trace()
-            # zoom_factor = np.asarray(y_test.shape) / np.asarray(y_pred.shape)
-            # assert (zoom_factor >= 1).all, "zoom_factor is %s. All values should be >= 1" % str(tuple(zoom_factor))
-
-            # y_pred = ndimage.zoom(y_pred, zoom_factor, order=self.zoom_spline_order)
-            # assert y_pred.shape == y_test.shape, "Shape mismatch: y_pred: %s. y_test: %s" % (str(y_pred.shape),
-            #                                                                                  str(y_test.shape))
-            # y_pred = np.clip(y_pred, 0, 1) 
-            # assert (y_pred >= 0).all() and (y_pred <= 1).all(), "Error with interpolation - all values must be between [0,1]"
-
-            labels = (y_pred > 0.5).astype(np.float32)
+            x_test = downsampled_xtest[fname]
+            y_test = downsampled_ytest[fname]
 
             pids_str += self.analysis(x_test=x_test, y_test=y_test, recon=y_pred, labels=labels,
                                       mw=mw, voxel_spacing=self.voxel_spacing,
@@ -199,6 +171,7 @@ class InterpolationTest():
             img_cnt += 1
         model = None
         K.clear_session()
+
         stats_string = get_stats_string(mw, skipped_count=0, testing_time=(time.time() - self.start_time))
 
         # Print some summary statistics
@@ -210,8 +183,6 @@ class InterpolationTest():
         with open(os.path.join(test_result_path, 'results.txt'), 'w+') as f:
             f.write('Results generated on %s\n' % time.strftime('%X %x %Z'))
             f.write('Weights Loaded: %s\n' % os.path.basename(self.lr_config.TEST_WEIGHT_PATH))
-            f.write('High-Resolution test path: %s' % c_hr.TEST_PATH)
-            f.write('Interpolation Method: ndimage.zoom (order %d)' % self.zoom_spline_order)
             f.write('--' * 20)
             f.write('\n')
             f.write(pids_str)
@@ -286,9 +257,8 @@ class InterpolationTest():
             # Save mask overlap
             ovlps = im_utils.write_ovlp_masks(os.path.join(test_result_path, 'ovlp', fname), y_test, labels)
             im_utils.write_mask(os.path.join(test_result_path, 'gt', fname), y_test)
-            im_utils.write_mask(os.path.join(test_result_path, 'labels', fname), labels)
             im_utils.write_prob_map(os.path.join(test_result_path, 'prob_map', fname), recon)
-           # im_utils.write_im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write, ovlps)
+            im_utils.write_im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write, ovlps)
             # im_utils.write_sep_im_overlay(os.path.join(test_result_path, 'im_ovlp_sep', fname), x_write,
             #                               np.squeeze(y_test), np.squeeze(labels))
 

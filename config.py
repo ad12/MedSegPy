@@ -197,7 +197,7 @@ class Config():
         Save params of config to ini file
         """
 
-        members = [attr for attr in dir(self) if not callable(getattr(self, attr)) and not attr.startswith("__")]
+        members = [attr for attr in dir(self) if not callable(getattr(self, attr)) and not attr.startswith("__") and not isinstance(attr, property)]
         filepath = os.path.join(self.CP_SAVE_PATH, 'config.ini')
 
         config_vars = dict()
