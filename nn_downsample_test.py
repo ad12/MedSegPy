@@ -114,7 +114,7 @@ class InterpolationTest():
         test_result_path = c_hr.TEST_RESULT_PATH
 
         model = get_model(c_hr)
-
+        model.load_weights(c_hr.TEST_WEIGHT_PATH)
         test_gen = im_gens.get_generator(c_hr)
         mw = MetricWrapper()
 
@@ -138,12 +138,10 @@ class InterpolationTest():
             y_pred = (y_pred[..., 0::2] + y_pred[..., 1::2]) / 2
 
             # downsample labels using OR mask
-            #labels = np.logical_or(labels[..., 0::2], labels[..., 1::2])
-            y_test = y_test[..., 0::2]
-            labels = labels[..., 0::2]
+            labels = np.logical_or(labels[..., 0::2], labels[..., 1::2])
+            y_test = np.logical_or(y_test[..., 0::2], y_test[..., 1::2])
             labels = labels.astype(np.float32)
-
-            import pdb; pdb.set_trace()
+            y_test = y_test.astype(np.float32)
 
             pids_str += self.analysis(x_test=x_test, y_test=y_test, recon=y_pred, labels=labels,
                                       mw=mw, voxel_spacing=self.voxel_spacing,
@@ -240,7 +238,7 @@ class InterpolationTest():
             ovlps = im_utils.write_ovlp_masks(os.path.join(test_result_path, 'ovlp', fname), y_test, labels)
             im_utils.write_mask(os.path.join(test_result_path, 'gt', fname), y_test)
             im_utils.write_prob_map(os.path.join(test_result_path, 'prob_map', fname), recon)
-            im_utils.write_im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write, ovlps)
+            #im_utils.write_im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write, ovlps)
             im_utils.write_mask(os.path.join(test_result_path, 'labels', fname), labels)
             # im_utils.write_sep_im_overlay(os.path.join(test_result_path, 'im_ovlp_sep', fname), x_write,
             #                               np.squeeze(y_test), np.squeeze(labels))

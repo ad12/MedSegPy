@@ -111,7 +111,6 @@ def kruskal_dunn_analysis(dirpaths, names, metrics=('dsc', 'voe', 'cv', 'assd'))
     for k in metrics.keys():
         # vals = np.transpose(np.stack(metrics[k]))
         # df = pd.DataFrame(data=vals, columns=names)
-
         metrics_results[k] = kruskal_dunn(metrics[k], names)
 
     for k in metrics:

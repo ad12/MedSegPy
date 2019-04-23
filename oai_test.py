@@ -228,7 +228,7 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
         f.write('\n')
         f.write(stats_string)
 
-    os.chmod(test_results_summary_path, S_IREAD | S_IRGRP | S_IROTH)
+    #os.chmod(test_results_summary_path, S_IREAD | S_IRGRP | S_IROTH)
 
     # Save metrics in dat format using pickle
     results_dat = os.path.join(test_result_path, 'metrics.dat')
