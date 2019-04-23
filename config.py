@@ -587,7 +587,7 @@ class SegnetConfig(Config):
     @classmethod
     def parse_cmd_line(cls, vargin) -> dict:
         config_dict = super().parse_cmd_line(vargin)
-        depth = len(config_dict['DEPTH'])
+        depth = config_dict['DEPTH']
 
         num_conv_layers = utils.convert_data_type(config_dict['NUM_CONV_LAYERS'], type(cls.NUM_CONV_LAYERS))
         num_filters = utils.convert_data_type(config_dict['NUM_FILTERS'], type(cls.NUM_FILTERS))

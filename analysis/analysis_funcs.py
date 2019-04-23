@@ -3,12 +3,6 @@ Functions used for analysis
 @author: Arjun Desai, arjundd@stanford.edu
 """
 
-import sys
-
-sys.path.insert(0, '../')
-
-# %matplotlib inline
-# matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 fsize = 12
@@ -18,17 +12,20 @@ params = {'legend.fontsize': fsize * 0.925,
           'xtick.labelsize': fsize * 0.925,
           'ytick.labelsize': fsize * 0.925}
 
-import os
+import os, sys
 import numpy as np
 import scipy.io as sio
 
 import seaborn as sns
 
-from utils import io_utils
-
 from scipy import optimize as sop
 from matplotlib.ticker import ScalarFormatter
 import pandas as pd
+
+from pystats.pystats.graph import bar
+
+sys.path.append('../')
+from utils import io_utils
 
 # Define some custom color palettes
 american_palette = ['#ffeaa7', '#00cec9', '#0984e3', '#6c5ce7', '#b2bec3']  # yellow too pale
@@ -39,8 +36,6 @@ cpal = sns.color_palette("pastel", 8)
 # cpal = sns.color_palette(american_palette)
 
 SAVE_PATH = io_utils.check_dir('/bmrNAS/people/arjun/msk_seg_networks/analysis/exp_graphs')
-
-from analysis import stats
 
 
 def graph_slice_exp(exp_dict, show_plot=False, ax=None, title='', ylim=[0.6, 1], show_error=True, legend_loc='side'):
@@ -250,122 +245,6 @@ def fcn_exp(base_paths, exp_names, dirname):
     # Display bar graph
     display_bar_graph(exp_means, exp_stds, os.path.join(SAVE_PATH, '%s.png' % dirname), ylabel='DSC', legend_loc='best',
                       ncol=2)
-
-
-def display_bar_graph(df_mean, df_error, exp_filepath=None, legend_loc='bottom', pvals=[], bar_width=0.25, opacity=0.9,
-                      ylabel='', ncol=None):
-    line_width = 1
-
-    assert df_mean.shape == df_error.shape, "Both dataframes must be same shape"
-
-    x_labels = df_mean.index.tolist()
-    n_groups = len(x_labels)
-    x_index = np.arange(0, n_groups * 2, 2)
-
-    columns = df_mean.columns.tolist()
-
-    fig, ax = plt.subplots()
-
-    df_mean_arr = np.asarray(df_mean)
-    df_error_arr = np.asarray(df_error)
-
-    p = []
-    e = []
-    errs = []
-    for ind in range(len(columns)):
-        sub_means = df_mean_arr[..., ind]
-        sub_errors = df_error_arr[..., ind]
-
-        p.append(ax.bar(x_index + (bar_width) * ind, sub_means, bar_width,
-                        alpha=opacity,
-                        color=cpal[ind],
-                        label=columns[ind],
-                        edgecolor='gray',
-                        linewidth=line_width,
-                        bottom=0))
-
-        e.append(ax.errorbar(x_index + (bar_width) * ind, sub_means,
-                             yerr=[np.zeros(sub_errors.shape), sub_errors],
-                             ecolor='gray',
-                             elinewidth=line_width,
-                             capsize=5,
-                             capthick=line_width,
-                             linewidth=0))
-        errs.append(sub_errors)
-
-    for eb in e:
-        BarCapSizer(eb.lines[1], 0.1)
-
-    delta = (len(columns) - 1) * bar_width / 2
-    plt.xticks(x_index + delta, x_labels)
-    ax.set_ylabel(ylabel)
-
-    if legend_loc == 'bottom':
-        if ncol is None:
-            ncol = len(columns)
-        plt.legend(loc='lower center', bbox_to_anchor=(0.5, -0.25),
-                   fancybox=True, shadow=True, ncol=len(columns))
-    elif legend_loc == 'upper_left':
-        plt.legend(bbox_to_anchor=(1, 1), loc='upper left', ncol=1, fancybox=True)
-    elif legend_loc == 'best':
-        plt.legend(loc='best')
-
-    # display_sig_markers(p, e, [(0,1,'*')], ax)
-
-    if exp_filepath is not None:
-        io_utils.check_dir(os.path.dirname(exp_filepath))
-        plt.savefig(exp_filepath, format='png',
-                    dpi=1000,
-                    bbox_inches='tight')
-    else:
-        plt.show()
-
-
-def display_sig_markers(p, errs, pvals, ax):
-    def pval_to_marker(pval):
-        if pval < 0.01:
-            return '**'
-        elif pval < 0.05:
-            return '*'
-        else:
-            return ''
-
-    def draw_sig_marker(rect, err, pval):
-        marker = pval_to_marker(pval)
-        if marker == '':
-            return
-
-        x, height, width = rect.get_x(), rect.get_height(), rect.get_width()
-
-        y = height + errs[num] + 0.05 if err is not None else height + 0.05
-        x = x + width / 2.0
-
-        ax.text(x, y, pval_to_marker(pval), ha='center', va='bottom', fontsize=50, color='black', alpha=0.6)
-
-    if len(pvals) == 0:
-        return
-
-    for ind, marker in enumerate(flat_list):
-        rect = flat_list[ind]
-        err = errs[ind]
-        pval = pvals[ind]
-        draw_sig_marker(rect, err, pval)
-
-
-class BarCapSizer():
-    def __init__(self, caps, size=1):
-        self.size = size
-        self.caps = caps
-        self.ax = self.caps[0].axes
-        self.resize()
-
-    def resize(self):
-        ppd = 72. / self.ax.figure.dpi
-        trans = self.ax.transData.transform
-        s = ((trans((self.size, 1)) - trans((0, 0))) * ppd)[0]
-        for i, cap in enumerate(self.caps):
-            cap.set_markersize(s)
-
 
 def fit_power_law(xs, ys):
     def func(x, a, b):

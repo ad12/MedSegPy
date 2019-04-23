@@ -3,10 +3,10 @@ import re
 import sys
 
 import numpy as np
+import pandas as pd
 
-sys.path.insert(0, '../')
 from utils import io_utils
-
+from pystats.pystats.graph import bar
 
 def parse_results_file(dirpath):
     raise DeprecationWarning('`parse_results_file` is deprecated. Use `load_metrics` to load relevant metrics')
@@ -81,7 +81,7 @@ def get_metrics(dirpaths):
     return metrics
 
 
-def get_metrics_v2(dirpaths):
+def get_metrics(dirpaths):
     metrics = {'dsc': [], 'voe': [], 'cv': [], 'assd': [], 'precision': [], 'recall': []}
 
     for dp in dirpaths:
@@ -102,6 +102,50 @@ def get_metrics_v2(dirpaths):
             exp_metrics = load_metrics(dp)
 
         for k in metrics.keys():
+            if k not in exp_metrics.keys():
+                raise KeyError('%s key not found in %s' % (k, dp))
             metrics[k].append(exp_metrics[k])
 
     return metrics
+
+
+def compare_metrics(dirpaths, exp_names, p_sig_matrix=None, metrics=('dsc', 'voe', 'cv', 'assd'), **kwargs):
+    """
+    Plot and save graph comparing specified metrics for specified experiments
+
+    :param dirpaths: iterable of directory paths were test_result information is stored
+    :param exp_names: names of experiments corresponding to directory paths
+    :param save_directory: directory to save bar graph
+    :param metrics: metrics to plot
+    """
+    # n_groups = len(x_labels)
+    # x_index = np.arange(0, n_groups * 2, 2)
+
+    metrics_dict = get_metrics(dirpaths)
+    
+    exp_means = []
+    exp_stds = []
+    for ind in range(len(exp_names)):
+        sub_means = []
+        sub_stds = []
+        for metric in metrics:
+            exp_vals = metrics_dict[metric]
+            vals = np.asarray(exp_vals[ind])
+            sub_means.append(np.mean(vals))
+            std = np.std(vals) if len(vals) > 1 else None
+            sub_stds.append(std)
+
+        exp_means.append(sub_means)
+        exp_stds.append(sub_stds)
+    
+    metrics_labels = [x.upper() for x in metrics]
+    exp_means = pd.DataFrame(exp_means, index=exp_names, columns=metrics_labels).transpose()
+    exp_stds = pd.DataFrame(exp_stds, index=exp_names, columns=metrics_labels).transpose()
+    
+    p_mats = []
+    if p_sig_matrix:
+        for m in p_sig_matrix:
+            p_mats.append(np.asarray(m))
+    
+    # Display bar graph
+    bar.bar(exp_means, exp_stds, p_matrices=p_mats, **kwargs)

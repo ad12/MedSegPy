@@ -243,7 +243,7 @@ class InterpolationTest():
             # im_utils.write_sep_im_overlay(os.path.join(test_result_path, 'im_ovlp_sep', fname), x_write,
             #                               np.squeeze(y_test), np.squeeze(labels))
 
-        return print_str
+        return print_str + '\n'
 
 
 def add_testing_arguments(parser: argparse.ArgumentParser):
