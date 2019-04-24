@@ -124,7 +124,7 @@ class InterpolationTest():
         test_gen = im_gens.get_generator(c)
 
         y_pred_dict = {}
-
+        print(c.TEST_WEIGHT_PATH)
         # Iterate through the files to be segmented
         for x_test, y_test, recon, fname in test_gen.img_generator_test(model):
             if c.INCLUDE_BACKGROUND:
