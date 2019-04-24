@@ -164,6 +164,7 @@ class InterpolationTest():
         with open(os.path.join(test_result_path, 'results.txt'), 'w+') as f:
             f.write('Results generated on %s\n' % time.strftime('%X %x %Z'))
             f.write('Weights Loaded: %s\n' % os.path.basename(self.hr_config.TEST_WEIGHT_PATH))
+            f.write('Voxel Spacing: %s' % (self.voxel_spacing))
             f.write('--' * 20)
             f.write('\n')
             f.write(pids_str)
