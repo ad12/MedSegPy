@@ -154,21 +154,24 @@ class Config():
         Initialize fine tune state
         :param init_weight_path: path to initial weights
         """
-        if (self.STATE != 'training'):
+        if not self.training:
             raise ValueError('Must be in training state')
 
         self.FINE_TUNE = True
         self.INIT_WEIGHT_PATH = init_weight_path
 
-        prefix = os.path.join(self.DATE_TIME_STR, 'fine_tune')
+        prefix = 'fine_tune'
 
         # if fine_tune folder already exists, do not overwrite it
         count = 2
-        while os.path.isdir(os.path.join(SAVE_PATH_PREFIX, self.CP_SAVE_TAG, prefix)):
-            prefix = os.path.join(self.DATE_TIME_STR, 'fine_tune_%03d' % count)
+        while os.path.isdir(os.path.join(self.CP_SAVE_PATH, prefix)):
+            prefix = 'fine_tune_%03d' % count
             count += 1
 
-        self.init_training_paths(prefix)
+        self.CP_SAVE_PATH = io_utils.check_dir(os.path.join(self.CP_SAVE_PATH, prefix))
+        self.PIK_SAVE_PATH = os.path.join(self.CP_SAVE_PATH, 'pik_data.dat')
+        self.PIK_SAVE_PATH_DIR = io_utils.check_dir(os.path.dirname(self.PIK_SAVE_PATH))
+        self.TF_LOG_DIR = io_utils.check_dir(os.path.join(self.CP_SAVE_PATH, 'tf_log'))
 
     def init_cross_validation(self, bins_files,
                               train_bins, valid_bins, test_bins,
