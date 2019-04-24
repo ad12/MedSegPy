@@ -338,7 +338,8 @@ if __name__ == '__main__':
 
     if fine_tune_dirpath:
         # parse freeze layers
-        FREEZE_LAYERS = utils.convert_data_type(vargin['freeze_layers'], tuple)
+        freeze_layer = vargin['freeze_layers']
+        FREEZE_LAYERS = utils.convert_data_type(vargin['freeze_layers'], tuple) if freeze_layer else None
         fine_tune(fine_tune_dirpath, c, config_dict)
         exit(0)
 
