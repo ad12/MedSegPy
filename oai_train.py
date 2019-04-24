@@ -5,6 +5,7 @@ from __future__ import print_function, division
 import argparse
 import os
 import pickle
+from copy import deepcopy
 
 import keras.callbacks as kc
 import numpy as np
@@ -230,10 +231,15 @@ def fine_tune(dirpath, config, vals_dict=None, class_weights=None):
     print('Best weight path: %s' % best_weight_path)
 
     config.init_fine_tune(best_weight_path)
+
+    # only load command line arguments that are not the default
+    temp_config = type(config)(create_dirs=False)
     if vals_dict is not None:
         for key in vals_dict.keys():
             val = vals_dict[key]
-            config.set_attr(key, val)
+            val_default = getattr(temp_config, key)
+            if val != val_default:
+                config.set_attr(key, val)
     
     config.save_config()
     config.summary()
