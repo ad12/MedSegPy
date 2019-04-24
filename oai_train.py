@@ -234,7 +234,7 @@ def fine_tune(dirpath, config, vals_dict=None, class_weights=None):
         for key in vals_dict.keys():
             val = vals_dict[key]
             config.set_attr(key, val)
-
+    
     config.save_config()
     config.summary()
 

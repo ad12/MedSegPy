@@ -227,7 +227,7 @@ class Config():
 
         for key in vars_dict.keys():
             upper_case_key = str(key).upper()
-
+            
             if upper_case_key in DEPRECATED_KEYS:
                 warnings.warn('Key %s is deprecated, not loading' % upper_case_key)
                 continue
@@ -574,7 +574,7 @@ class SegnetConfig(Config):
         subparser.add_argument('--num_conv_layers', type=str, default=str(cls.NUM_CONV_LAYERS), nargs='?',
                                help='number of convolutional layers. Default: %s' % str(cls.NUM_CONV_LAYERS))
         subparser.add_argument('--num_filters', type=str, default=str(cls.NUM_FILTERS), nargs='?',
-                               help='number of filters at each depth layer. Default: ' % cls.NUM_FILTERS)
+                               help='number of filters at each depth layer. Default: %s' % str(cls.NUM_FILTERS))
 
         return subparser
 
