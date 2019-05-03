@@ -740,7 +740,7 @@ class UNet2_5DConfig(UNetConfig):
 
     CP_SAVE_TAG = 'unet_2_5d'
     N_EPOCHS = 20
-    AUGMENT_DATA = True
+    AUGMENT_DATA = False
     INITIAL_LEARNING_RATE = 1e-2
 
     DROP_RATE = 1.0
@@ -885,7 +885,7 @@ class RefineNetConfig(Config):
 
 
 SUPPORTED_CONFIGS = [UNetConfig, SegnetConfig, DeeplabV3Config, ResidualUNet, AnisotropicUNetConfig, RefineNetConfig,
-                     UNet3DConfig]
+                     UNet3DConfig, UNet2_5DConfig]
 
 
 def get_config(config_cp_save_tag: str, create_dirs: bool=True):
