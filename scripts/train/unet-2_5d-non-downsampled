@@ -1,0 +1,33 @@
+if [ $# -lt 1 ]; then
+	echo "Please provide gpus to run inference on in format `0` for single gpu or `0,1,2` for multiple gpus"
+	exit 125
+fi
+GPU=$1
+
+# Navigate to project directory
+cd ../..
+
+
+NEW_PATHS_ARGS='--train_path /bmrNAS/people/akshay/dl/oai_data/oai_3d/train --valid_path /bmrNAS/people/akshay/dl/oai_data/oai_3d/valid --test_path /bmrNAS/people/akshay/dl/oai_data/oai_3d/test'
+
+
+
+# --------------- 2.5D block training experiments ----------------- #
+TRAIN_ARGS='--n_epochs 100 --use_step_decay --initial_learning_rate 0.01 --experiment non-downsampled -g '$GPU
+ARGS=$TRAIN_ARGS" "$NEW_PATHS_ARGS
+echo $ARGS
+# Experiment 7: 2.5D unet (5 slices)
+python -m oai_train unet_2_5d --num_filters '[32, 64, 128, 256, 512, 1024]' --img_size '(288,288,3,1)' $ARGS
+
+# Experiment 8: 2.5D unet (9 slices)
+python -m oai_train unet_2_5d --num_filters '[32, 64, 128, 256, 512, 1024]' --img_size '(288,288,5,1)' $ARGS
+
+# Experiment 9: 2.5D unet (17 slices)
+python -m oai_train unet_2_5d --num_filters '[32, 64, 128, 256, 512, 1024]' --img_size '(288,288,7,1)' $ARGS
+
+# Experiment 10: 2.5D unet (33 slices)
+python -m oai_train unet_2_5d --num_filters '[32, 64, 128, 256, 512, 1024]' --img_size '(288,288,9,1)' $ARGS
+
+python -m oai_train unet_2_5d --num_filters '[32, 64, 128, 256, 512, 1024]' --img_size '(288,288,17,1)' $ARGS
+
+python -m oai_train unet_2_5d --num_filters '[32, 64, 128, 256, 512, 1024]' --img_size '(288,288,33,1)' $ARGS

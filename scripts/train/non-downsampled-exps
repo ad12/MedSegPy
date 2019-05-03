@@ -66,13 +66,13 @@ echo $ARGS
 # Experiment 7: 3D unet (4 slices)
 #python -m oai_train unet_3d --num_filters '[32, 64, 128, 256, 512, 1024]' --img_size '(96,96,4,1)' $ARGS
 
-# Experiment 8: 3D unet (4 slices)
+# Experiment 8: 3D unet (8 slices)
 #python -m oai_train unet_3d --num_filters '[32, 64, 128, 256, 512, 1024]' --img_size '(96,96,8,1)' $ARGS
 
-# Experiment 9: 3D unet (4 slices)
+# Experiment 9: 3D unet (16 slices)
 python -m oai_train unet_3d --num_filters '[32, 64, 128, 256, 512, 1024]' --img_size '(96,96,32,1)' $ARGS
 
-# Experiment 10: 3D unet (4 slices)
+# Experiment 10: 3D unet (32 slices)
 #python -m oai_train unet_3d --num_filters '[32, 64, 128, 256, 512, 1024]' --img_size '(96,96,32,1)' $ARGS
 
 # Experiment 10: 3D unet (4 slices)
