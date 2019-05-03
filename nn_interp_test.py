@@ -131,7 +131,7 @@ class InterpolationTest():
                 recon = recon[..., 1]
                 recon = recon[..., np.newaxis]
 
-            recon = np.transpose(np.squeeze(recon), [1, 2, 0])
+            recon = np.transpose(np.squeeze(y_test), [1, 2, 0])
             y_pred_dict[fname] = recon
         
         model = None
@@ -171,7 +171,7 @@ class InterpolationTest():
             y_test = np.transpose(np.squeeze(y_test), [1, 2, 0])
 
             y_test = y_test[..., 8:-8]
-            #y_test = self.or_mask(y_test)
+            y_test = self.or_mask(y_test)
 
             # interpolate y_pred using ndimage.zoom function
             y_pred = y_pred_prob_maps[fname]
@@ -187,11 +187,11 @@ class InterpolationTest():
             # y_pred = np.clip(y_pred, 0, 1)
             # assert (y_pred >= 0).all() and (y_pred <= 1).all(), "Error with interpolation - all values must be between [0,1]"
 
-            y_pred_new = np.zeros([y_pred.shape[0], y_pred.shape[1], y_pred.shape[2]*2])
-            for i in range(y_pred.shape[2]):
-                y_pred[..., 2*i] = y_pred[..., i]
-                y_pred[..., 2*(i+1)] = y_pred[..., i]
-            y_pred = y_pred_new
+            #y_pred_new = np.zeros([y_pred.shape[0], y_pred.shape[1], y_pred.shape[2]*2])
+            #for i in range(y_pred.shape[2]):
+            #    y_pred_new[..., 2*i] = y_pred[..., i]
+            #    y_pred_new[..., 2*i+1] = y_pred[..., i]
+            #y_pred = y_pred_new
 
             labels = (y_pred > 0.5).astype(np.float32)
 
