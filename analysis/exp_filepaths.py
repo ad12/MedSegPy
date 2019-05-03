@@ -32,7 +32,10 @@ VOLUME_2D = AUG_NO
 VOLUME_2_5D_3 = '/bmrNAS/people/arjun/msk_seg_networks/volume_limited/unet_2_5d/2018-10-26-20-57-21/test_results'  # 2.5D network with 3 slices (+/-1)
 VOLUME_2_5D_5 = '/bmrNAS/people/arjun/msk_seg_networks/volume_limited/unet_2_5d/2018-10-21-02-31-40/test_results'  # 2.5D network with 5 slices (+/-2)
 VOLUME_2_5D_7 = '/bmrNAS/people/arjun/msk_seg_networks/volume_limited/unet_2_5d/2018-10-26-21-00-40/test_results'  # 2.5D network with 7 slices (+/-3)
-VOLUME_3D = '/bmrNAS/people/arjun/msk_seg_networks/volume_limited/unet_3d_asc/test_results'  # 3D network with 4 slice inputs
+VOLUME_3D_4 = '/bmrNAS/people/arjun/msk_seg_networks/non-downsampled/unet_3d/2019-03-28-16-13-06/test_results'  # 3D network with 4 slice inputs
+VOLUME_3D_8 = '/bmrNAS/people/arjun/msk_seg_networks/non-downsampled/unet_3d/2019-04-01-18-05-26/test_results'  # 3D network with 8 slice inputs
+VOLUME_3D_16 = '/bmrNAS/people/arjun/msk_seg_networks/non-downsampled/unet_3d/2019-04-14-23-23-06/test_results'  # 3D network with 16 slice inputs
+VOLUME_3D_32 = '/bmrNAS/people/arjun/msk_seg_networks/non-downsampled/unet_3d/2019-04-15-11-39-10/test_results'  # 3D network with 32 slice inputs
 
 # batch size experiments (unet_2d)
 TRAIN_BATCH_SIZE_2 = '/bmrNAS/people/arjun/msk_seg_networks/control_exps/unet_2d/2019-03-13-00-28-51/test_results'
