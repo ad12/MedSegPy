@@ -25,7 +25,7 @@ from scipy.misc import imresize
 from keras.utils import plot_model
 
 # EXP_PATH = '/bmrNAS/people/arjun/msk_seg_networks/architecture_limit/deeplabv3_2d/2018-11-30-05-49-49/fine_tune/'
-HR_TEST_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_3d/test'
+HR_TEST_PATH = 'us'
 
 #
 # WEIGHTS_PATH = dl_utils.get_weights(EXP_PATH)
