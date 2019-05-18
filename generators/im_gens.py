@@ -349,8 +349,8 @@ class OAIGenerator(Generator):
             segs.append(seg)
 
         # segmentation is central slice segmentation
-        im = np.stack(ims)
-        im = np.transpose(im, (1, 2, 0))
+        im = np.squeeze(np.stack(ims, axis=-1))
+        #im = np.transpose(im, (1, 2, 0))
         seg = segs[len(segs) // 2]
 
         return im, seg

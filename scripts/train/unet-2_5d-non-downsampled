@@ -15,21 +15,21 @@ NEW_PATHS_ARGS='--train_path /bmrNAS/people/akshay/dl/oai_data/oai_3d/train --va
 
 
 # --------------- 2.5D block training experiments ----------------- #
-TRAIN_ARGS='--n_epochs 100 --use_step_decay --initial_learning_rate 0.01 --experiment non-downsampled -g '$GPU
+TRAIN_ARGS='--n_epochs 100 --use_step_decay --drop_factor 0.956352499790037 --drop_rate 1.0 --initial_learning_rate 0.01 --experiment non-downsampled -g '$GPU
 ARGS=$TRAIN_ARGS" "$NEW_PATHS_ARGS
 echo $ARGS
 # Experiment 7: 2.5D unet (5 slices)
-python -m oai_train unet_2_5d --num_filters '[32, 64, 128, 256, 512, 1024]' --img_size '(288,288,3,1)' $ARGS
+python -m oai_train unet_2_5d --num_filters '[32, 64, 128, 256, 512, 1024]' --img_size '(288,288,3)' $ARGS
 
 # Experiment 8: 2.5D unet (9 slices)
-python -m oai_train unet_2_5d --num_filters '[32, 64, 128, 256, 512, 1024]' --img_size '(288,288,5,1)' $ARGS
+python -m oai_train unet_2_5d --num_filters '[32, 64, 128, 256, 512, 1024]' --img_size '(288,288,5)' $ARGS
 
 # Experiment 9: 2.5D unet (17 slices)
-python -m oai_train unet_2_5d --num_filters '[32, 64, 128, 256, 512, 1024]' --img_size '(288,288,7,1)' $ARGS
+python -m oai_train unet_2_5d --num_filters '[32, 64, 128, 256, 512, 1024]' --img_size '(288,288,7)' $ARGS
 
 # Experiment 10: 2.5D unet (33 slices)
-python -m oai_train unet_2_5d --num_filters '[32, 64, 128, 256, 512, 1024]' --img_size '(288,288,9,1)' $ARGS
+python -m oai_train unet_2_5d --num_filters '[32, 64, 128, 256, 512, 1024]' --img_size '(288,288,9)' $ARGS
 
-python -m oai_train unet_2_5d --num_filters '[32, 64, 128, 256, 512, 1024]' --img_size '(288,288,17,1)' $ARGS
+python -m oai_train unet_2_5d --num_filters '[32, 64, 128, 256, 512, 1024]' --img_size '(288,288,17)' $ARGS
 
-python -m oai_train unet_2_5d --num_filters '[32, 64, 128, 256, 512, 1024]' --img_size '(288,288,33,1)' $ARGS
+python -m oai_train unet_2_5d --num_filters '[32, 64, 128, 256, 512, 1024]' --img_size '(288,288,33)' $ARGS
