@@ -16,12 +16,14 @@ from generators.fname_parsers import OAISliceWise
 
 
 class GeneratorState(Enum):
+    """Defines the state for the generator for training/testing networks"""
     TRAINING = 1
     VALIDATION = 2
     TESTING = 3
 
 
 def get_generator(config: Config):
+    """Get generator based on config TAG value"""
     for generator in [OAIGenerator, OAI3DGenerator, OAI3DBlockGenerator, OAI3DGeneratorFullVolume]:
         try:
             gen = generator(config)
@@ -34,6 +36,7 @@ def get_generator(config: Config):
 
 
 class Generator(ABC):
+    """Abstract class for data generator for neural network training and testing"""
     SUPPORTED_TAGS = ['']
 
     def __init__(self, config: Config):
@@ -44,27 +47,57 @@ class Generator(ABC):
 
     @abstractmethod
     def __load_inputs__(self, data_path, file):
+        """
+        Load inputs and ground truth from os.path.join(data_path, file)
+        :param data_path: A path specifying the directory where data is
+        :param file: A filename
+        :return: a tuple of (inputs, outputs)
+        """
         pass
 
     @abstractmethod
     def img_generator(self, state: GeneratorState):
+        """
+        Data generator that yields (inputs, outputs) during Keras training
+        This method should be passed to the data_generator field when training with Keras
+        :param state: A GeneratorState - either TRAINING or VALIDATION
+        """
         accepted_states = [GeneratorState.TRAINING, GeneratorState.VALIDATION]
         if state not in accepted_states:
             raise ValueError('Generator must be either %s' % accepted_states)
 
     @abstractmethod
     def img_generator_test(self, model=None):
+        """
+        Data generator that yields (inputs, outputs-ground truth, predictions, scan_identifier)
+        If model is None, `predictions`=None
+        This method should be passed to the data_generator field when testing model with Keras
+        :param model: A Keras model with which to run inference. Default: None.
+        """
         pass
 
     @abstractmethod
     def summary(self):
+        """
+        Print summary based on self.config state ('training', 'testing')
+        """
         pass
 
     @abstractmethod
     def num_steps(self) -> Tuple[int, int]:
+        """
+        Number of steps per epoch for training and validation
+        Use with args `train_steps` and `validation_steps` in Keras `model.fit`
+        :return: a tuple of (training_steps, validation_steps)
+        """
         return 0, 0
 
     def sort_files(self, files):
+        """
+        Sort files by name
+        :param files: An iterable of filenames
+        :return: A sorted list of filenames
+        """
         def argsort(seq):
             return sorted(range(len(seq)), key=seq.__getitem__)
 
@@ -121,6 +154,11 @@ class Generator(ABC):
         return seg_total
 
     def __img_generator_base_info__(self, state: GeneratorState):
+        """
+        Get base info for either TRAINING, VALIDATION, or TESTING generator states
+        :param state: A GeneratorState
+        :return: a dictionary of basic info pertaining to the GeneratorState
+        """
         config = self.config
         if state == GeneratorState.TRAINING:
             # training
@@ -153,6 +191,11 @@ class Generator(ABC):
 
 
 class OAIGenerator(Generator):
+    """
+    Generator to be used with files where training/testing data is written as 2D slices
+    Filename: PATIENTID_VISIT_AUGMENTATION-NUMBER_SLICE-NUMBER
+    Filename Format: '%07d_V%02d_Aug%02d_%03d' (e.g. '0000001_V00_Aug00_001.h5
+    """
     SUPPORTED_TAGS = ['oai_aug', 'oai', 'oai_2d', 'oai_aug_2d', 'oai_2.5d', 'oai_aug_2.5d']
     __EXPECTED_IMG_SIZE_DIMS__ = 3
 
@@ -253,9 +296,20 @@ class OAIGenerator(Generator):
             yield (x, y, recon, scan_id)
     
     def __reformat_testing_scans__(self, vols):
+        """
+        Reformat testing scans if some rendition of patch-based training is done
+
+        :param vols: an iterable for volumes to be reorganized
+        :return: a tuple of the iterable reorganized into the full volume
+        """
         return tuple(vols)
 
     def __map_files_to_scan_id__(self, files):
+        """
+        Map filenames to scan_ids (patient-id_visit-id)
+        :param files: an iterable of files
+        :return: a dictionary of scan_id --> files
+        """
         scan_id_files = dict()
         for f in files:
             filename = os.path.basename(f)
