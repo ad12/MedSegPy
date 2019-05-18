@@ -28,7 +28,7 @@ NEW_PATHS_ARGS='--train_path /bmrNAS/people/akshay/dl/oai_data/oai_3d/train --va
 
 
 
-# --------------- 2D training experiment (control) ----------------- #
+# --------------- 2D UNet training experiment (control) ----------------- #
 TRAIN_ARGS='--n_epochs 100 --use_step_decay --initial_learning_rate 0.02 --experiment non-downsampled -g '$GPU
 ARGS=$TRAIN_ARGS' '$NEW_PATHS_ARGS
 
@@ -40,15 +40,19 @@ ARGS=$TRAIN_ARGS' '$NEW_PATHS_ARGS
 #python -m oai_train unet_2d $ARGS --num_filters '[16, 32, 64, 128, 256, 512]'
 
 
+# --------------- 2D DeepLabV3+ training experiment----------------- #
+python -m oai_train deeplabv3_2d $NEW_PATHS_ARGS --initial_learning_rate 0.0001 --n_epochs 100 -g $GPU --experiment non-downsampled
 
+# --------------- 2D Segnet+ training experiment----------------- #
+python -m oai_train segnet_2d $NEW_PATHS_ARGS --initial_learning_rate 0.001 --n_epochs 100 -g $GPU --experiment non-downsampled
 
+# --------------- Loss experiments----------------- #
+TRAIN_ARGS='--n_epochs 100 --use_step_decay --initial_learning_rate 0.02 --experiment non-downsampled/loss_funcs -g '$GPU
+ARGS=$TRAIN_ARGS' '$NEW_PATHS_ARGS
 
-
-
-
-
-
-
+python -m oai_train unet_2d $ARGS --loss BINARY_CROSS_ENTROPY_SIG_LOSS
+python -m oai_train unet_2d $ARGS --loss FOCAL_LOSS
+python -m oai_train unet_2d $ARGS --loss FOCAL_LOSS
 
 
 exit
