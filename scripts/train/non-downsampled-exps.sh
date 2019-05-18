@@ -34,10 +34,22 @@ ARGS=$TRAIN_ARGS' '$NEW_PATHS_ARGS
 
 # Experiment 1: 2D unet (num_filters == [32, 64, 128, 256, 512, 1024])
 #python -m oai_train unet_2d $ARGS --num_filters '[32, 64, 128, 256, 512, 1024]' --train_batch_size 12
-python -m oai_train unet_2d $ARGS --num_filters '[32, 64, 128, 256, 512, 1024]' --train_batch_size 35
+#python -m oai_train unet_2d $ARGS --num_filters '[32, 64, 128, 256, 512, 1024]' --train_batch_size 35
 
 # Experiment 2: 2D unet (num_filters == [16, 32, 64, 128, 256, 512])
 #python -m oai_train unet_2d $ARGS --num_filters '[16, 32, 64, 128, 256, 512]'
+
+
+
+
+
+
+
+
+
+
+
+
 
 exit
 
