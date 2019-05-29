@@ -109,7 +109,7 @@ def get_metrics(dirpaths):
     return metrics
 
 
-def compare_metrics(dirpaths, exp_names, p_sig_matrix=None, metrics=('dsc', 'voe', 'cv', 'assd'), **kwargs):
+def compare_metrics(dirpaths, exp_names, p_sig_matrix=None, metrics=('dsc', 'voe', 'cv', 'assd'), metrics_rename={'assd': 'ASSD (mm)'}, **kwargs):
     """
     Plot and save graph comparing specified metrics for specified experiments
 
@@ -139,6 +139,11 @@ def compare_metrics(dirpaths, exp_names, p_sig_matrix=None, metrics=('dsc', 'voe
         exp_stds.append(sub_stds)
     
     metrics_labels = [x.upper() for x in metrics]
+    if metrics_rename:
+        for ind, x in enumerate(metrics_labels):
+            if x.lower() in metrics_rename.keys():
+                metrics_labels[ind] = metrics_rename[x.lower()]
+                
     exp_means = pd.DataFrame(exp_means, index=exp_names, columns=metrics_labels).transpose()
     exp_stds = pd.DataFrame(exp_stds, index=exp_names, columns=metrics_labels).transpose()
     
@@ -146,6 +151,6 @@ def compare_metrics(dirpaths, exp_names, p_sig_matrix=None, metrics=('dsc', 'voe
     if p_sig_matrix:
         for m in p_sig_matrix:
             p_mats.append(np.asarray(m))
-    
+
     # Display bar graph
     bar.bar(exp_means, exp_stds, p_matrices=p_mats, **kwargs)
