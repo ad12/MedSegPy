@@ -289,8 +289,8 @@ if __name__ == '__main__':
                               help='gpu id to use. default=0')
         s_parser.add_argument('-s', '--seed', metavar='S', type=int, nargs='?', default=None,
                               help='python seed to initialize filter weights. default=None')
-        s_parser.add_argument('-k', '--k_fold_cross_validation', metavar='K', type=int, default=None, nargs='?',
-                              help='Use k-fold cross-validation for training. Argument specifies k')
+        s_parser.add_argument('-k', '--k_fold_cross_validation', metavar='K', default=None, nargs='?',
+                              help='Use k-fold cross-validation for training. Argument is k (int) or filepath (str)')
         s_parser.add_argument('--ho_test', metavar='T', type=int, default=1, nargs='?',
                               help='Number of hold-out test bins')
         s_parser.add_argument('--ho_valid', metavar='V', type=int, default=1, nargs='?',
@@ -350,12 +350,18 @@ if __name__ == '__main__':
         exit(0)
 
     if k_fold_cross_validation:
+        # Determine filepath and k
+        cv_wrapper = cv_utils.CrossValidationWrapper(k_fold_cross_validation)
+        cv_file = cv_wrapper.filepath
+        cv_k = cv_wrapper.k
+
         ho_test = args.ho_test
         ho_valid = args.ho_valid
 
-        cv_file = cv_utils.get_cross_validation_file(k_fold_cross_validation)
-        bins_files = cv_utils.load_cross_validation(k_fold_cross_validation)
-        bins_split = cv_utils.get_cv_experiments(k_fold_cross_validation, num_valid_bins=ho_valid,
+        #cv_file = cv_utils.get_cross_validation_file(k_fold_cross_validation)
+        bins_files = cv_utils.load_cross_validation(cv_file)
+        bins_split = cv_utils.get_cv_experiments(cv_k,
+                                                 num_valid_bins=ho_valid,
                                                  num_test_bins=ho_test)
         cv_exp_id = 1
 

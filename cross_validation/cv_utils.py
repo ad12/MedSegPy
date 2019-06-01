@@ -1,12 +1,45 @@
 import os
+import re
 import sys
 import warnings
 
-K_BIN_FILENAME_BASE = 'oai_cv-k%d'  # Do not change unless
+DATASET_NAME = 'oai_imorphics'  # Change based on dataset used for analysis. Do not use any digits
+
+# DO NOT CHANGE CONSTANTS BELOW
+K_REGEX_PATTERN = '_cv-k[0-9]+'
+K_BIN_FILENAME_BASE = DATASET_NAME + '_cv-k%d'
 K_BIN_SAVE_DIRECTORY = os.path.dirname(os.path.realpath(__file__))
 
 sys.path.append('../')
 from utils import io_utils
+
+
+class CrossValidationWrapper():
+    def __init__(self, k_or_filepath):
+        if type(k_or_filepath) not in [int, str]:
+            raise ValueError('`k_or_filepath` must be either the k value (int) or the filepath (str)')
+
+        if type(k_or_filepath) is int:
+            k = k_or_filepath
+            filepath = get_cross_validation_file(k)
+            if not filepath:
+                raise ValueError('No file found for k=%d' % k)
+        else:
+            filepath = k_or_filepath
+
+        if not os.path.isfile(filepath):
+            raise FileNotFoundError('File %s not found' % filepath)
+
+        self._filepath = filepath
+        self._k = get_k_from_file(filepath)
+
+    @property
+    def filepath(self):
+        return self._filepath
+
+    @property
+    def k(self):
+        return self._k
 
 
 def get_cross_validation_file(k):
@@ -19,10 +52,33 @@ def get_cross_validation_file(k):
     return None
 
 
-def load_cross_validation(k):
-    filepath = get_cross_validation_file(k)
+def get_k_from_file(filepath: str) -> int:
+    filename = os.path.basename(filepath)
 
-    print('Loading %d-fold cross-validation data from %s...' % (k, filepath))
+    matches = re.findall(K_REGEX_PATTERN, filename)
+    if len(matches) > 1:
+        warnings.warn('Multiple matches found - using match at 0th index')
+    match = matches[0]
+
+    return int(re.findall('[0-9]+', match)[0])
+
+
+def load_cross_validation(k_or_filepath):
+    if type(k_or_filepath) not in [int, str]:
+        raise ValueError('`k_or_filepath` must be either the k value (int) or the filepath (str)')
+
+    if type(k_or_filepath) is int:
+        k = k_or_filepath
+        filepath = get_cross_validation_file(k)
+        if not filepath:
+            raise ValueError('No file found for k=%d' % k)
+    else:
+        filepath = k_or_filepath
+
+    if not os.path.isfile(filepath):
+        raise FileNotFoundError('File %s not found' % filepath)
+
+    print('Loading %d-fold cross-validation data from %s...' % (get_k_from_file(filepath), filepath))
     return io_utils.load_pik(filepath)
 
 

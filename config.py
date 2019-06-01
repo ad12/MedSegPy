@@ -282,7 +282,9 @@ class Config():
 
         # if cross validation is enabled, load testing cross validation bin
         if self.USE_CROSS_VALIDATION:
-            train_files, valid_files, test_files = cv_utils.get_fnames(cv_utils.load_cross_validation(self.CV_K),
+            assert self.CV_FILE, "No cross-validation file found"
+
+            train_files, valid_files, test_files = cv_utils.get_fnames(cv_utils.load_cross_validation(self.CV_FILE),
                                                                        (self.CV_TRAIN_BINS, self.CV_VALID_BINS,
                                                                         self.CV_TEST_BINS))
             self.__CV_TRAIN_FILES__ = train_files
