@@ -68,7 +68,7 @@ class Config():
     TEST_BATCH_SIZE = 72
 
     # Tissues to render
-    TISSUES = [mri_utils.MASK_FEMORAL_CARTILAGE]
+    TISSUES = [mri_utils.MASK_FEMORAL_CARTILAGE, mri_utils.MASK_PATELLAR_CARTILAGE]
     INCLUDE_BACKGROUND = False
 
     # File Types
@@ -651,7 +651,8 @@ class UNetConfig(Config):
         depth = config_dict['DEPTH']
 
         num_filters = utils.convert_data_type(config_dict['NUM_FILTERS'], type(cls.NUM_FILTERS))
-        assert len(num_filters) == depth, "Number of filters must be specified for each depth"
+        if num_filters:
+            assert len(num_filters) == depth, "Number of filters must be specified for each depth"
 
         config_dict['NUM_FILTERS'] = num_filters
 

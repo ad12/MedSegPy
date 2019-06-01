@@ -145,13 +145,15 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
     y_interp = []
     x_total = []
     y_total = []
-
+    
+    fnames = []
     mw = MetricWrapper()
     voxel_spacing = None
     # # Iterature through the files to be segmented
     for x_test, y_test, recon, fname in test_gen.img_generator_test(model):
         # Perform the actual segmentation using pre-loaded model
         # Threshold at 0.5
+        
         if config.INCLUDE_BACKGROUND:
             y_test = y_test[..., 1]
             recon = recon[..., 1]
@@ -165,6 +167,7 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
         mw.compute_metrics(np.transpose(np.squeeze(y_test), axes=[1, 2, 0]),
                            np.transpose(np.squeeze(labels), axes=[1, 2, 0]),
                            voxel_spacing=voxel_spacing)
+        fnames.append(fname)
 
         print_str = 'Scan #%03d (name = %s, %d slices) = DSC: %0.3f, VOE: %0.3f, CV: %0.3f, ASSD (mm): %0.3f' % (
         img_cnt, fname,
@@ -223,7 +226,7 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
     with open(test_results_summary_path, 'w+') as f:
         f.write('Results generated on %s\n' % strftime('%X %x %Z'))
         f.write('Weights Loaded: %s\n' % os.path.basename(config.TEST_WEIGHT_PATH))
-        f.write('Voxel Spacing: %s' % str(voxel_spacing))
+        f.write('Voxel Spacing: %s\n' % str(voxel_spacing))
         f.write('--' * 20)
         f.write('\n')
         f.write(pids_str)
@@ -236,6 +239,7 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
     # Save metrics in dat format using pickle
     results_dat = os.path.join(test_result_path, 'metrics.dat')
     io_utils.save_pik(mw.metrics, results_dat)
+    io_utils.save_pik(fnames, os.path.join(test_result_path, 'fnames.dat'))
 
     x_interp = np.asarray(x_interp)
     y_interp = np.asarray(y_interp)

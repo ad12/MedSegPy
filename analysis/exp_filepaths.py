@@ -52,3 +52,6 @@ EARLY_STOPPING_4_1e5 = '/bmrNAS/people/arjun/msk_seg_networks/control_exps/unet_
 
 # non-downsampled training data experiments
 NDS_UNET = '/bmrNAS/people/arjun/msk_seg_networks/non-downsampled/unet_2d/2019-04-17-23-20-59/test_results'
+NDS_UNET_2_5D_3 = '/bmrNAS/people/arjun/msk_seg_networks/non-downsampled/unet_2_5d/2019-05-06-11-18-57/test_results'
+NDS_UNET_2_5D_5 = '/bmrNAS/people/arjun/msk_seg_networks/non-downsampled/unet_2_5d/2019-05-11-12-51-14/test_results'
+NDS_UNET_2_5D_7 = '/bmrNAS/people/arjun/msk_seg_networks/non-downsampled/unet_2_5d/2019-05-18-09-15-32/test_results'
