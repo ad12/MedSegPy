@@ -57,7 +57,7 @@ class CrossValidationProcessor():
             raise FileNotFoundError('File %s not found' % filepath)
 
         k_from_filename = self.__get_k_from_file(filepath)
-        cv_data = io_utils.load_pik(self.filepath)
+        cv_data = io_utils.load_pik(filepath)
         assert len(cv_data) == k_from_filename, "Corrupted file: mismatch bins"
 
         self._filepath = filepath
@@ -258,7 +258,8 @@ class CrossValidationFileGenerator():
         except Exception as e:
             os.remove(tmp_path)
             raise e
-
+        
+        os.remove(tmp_path)
         io_utils.save_pik(bins, self.save_path)
 
     def verify_bins(self, filepath, expected_k):

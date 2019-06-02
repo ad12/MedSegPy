@@ -27,3 +27,6 @@
 ._*
 # ignore checkpoint files
 **/.ipynb_checkpoints/
+
+#ignore cross validation files
+*.cv
