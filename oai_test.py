@@ -353,13 +353,6 @@ def batch_test(base_folder, config_name, vals_dicts=[None], overwrite=False):
             config = get_config(config_name)
             test_dir(subdir, config, vals_dict=vals_dict)
 
-            # try:
-            #     test_dir(subdir, config, vals_dict=vals_dict)
-            # except Exception as e:
-            #     #print('Failed for %s\n' % subdir)
-            #     #break
-            #     raise e
-
 
 def find_best_test_dir(base_folder):
     subdirs = get_valid_subdirs(base_folder, no_results=False)

@@ -3,8 +3,8 @@ from __future__ import print_function, division
 import argparse
 import os
 
-from oai_test import test_dir
-import nn_interp_test
+from oai_test import test_dir, get_valid_subdirs
+
 
 def add_testing_arguments(parser: argparse.ArgumentParser):
     parser.add_argument('--dirpath', metavar='dp', type=str, nargs=1,
@@ -21,6 +21,11 @@ def add_testing_arguments(parser: argparse.ArgumentParser):
     parser.add_argument('--tag', default=None, nargs='?', type=str,
                         help='change tag for inference')
     parser.add_argument('--img_size', default=None, nargs='?')
+
+    parser.add_argument('-r', '--recursive', action='store_true',
+                        help='recursively analyze all directories')
+    parser.add_argument('-f', '--force', action='store_true',
+                        help='overwrite existing test folders')
 
 
 def create_config_dict(vargin):
@@ -55,5 +60,12 @@ if __name__ == '__main__':
 
         os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
+    recursive = args.recursive
+    overwrite = args.overwrite
 
-    test_dir(config_filepath, vals_dict=create_config_dict(vargin), save_h5_data=vargin['save_h5_data'])
+    test_dirpaths = config_filepath
+    if recursive:
+        test_dirpaths = get_valid_subdirs(config_filepath, not overwrite)
+
+    for dp in test_dirpaths:
+        test_dir(dp, vals_dict=create_config_dict(vargin), save_h5_data=vargin['save_h5_data'])
