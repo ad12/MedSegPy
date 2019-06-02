@@ -19,7 +19,7 @@ from keras.utils import plot_model
 import config as MCONFIG
 import glob_constants
 import mri_utils
-from cross_validation import cv_utils
+from cross_validation import cv_util
 from generators import im_gens
 from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS, dice_loss, focal_loss
 from models.models import get_model
@@ -350,28 +350,27 @@ if __name__ == '__main__':
         exit(0)
 
     if k_fold_cross_validation:
-        # Determine filepath and k
-        cv_wrapper = cv_utils.CrossValidationWrapper(k_fold_cross_validation)
+        ho_valid = args.ho_valid
+        ho_test = args.ho_test
+
+        # Initialize CrossValidation wrapper
+        cv_wrapper = cv_util.CrossValidationProcessor(k_fold_cross_validation,
+                                                      num_valid_bins=ho_valid,
+                                                      num_test_bins=ho_test)
         cv_file = cv_wrapper.filepath
         cv_k = cv_wrapper.k
 
-        ho_test = args.ho_test
-        ho_valid = args.ho_valid
-
-        #cv_file = cv_utils.get_cross_validation_file(k_fold_cross_validation)
-        bins_files = cv_utils.load_cross_validation(cv_file)
-        bins_split = cv_utils.get_cv_experiments(cv_k,
-                                                 num_valid_bins=ho_valid,
-                                                 num_test_bins=ho_test)
         cv_exp_id = 1
 
         base_save_path = c.CP_SAVE_PATH
-        for bin_inds in bins_split:
-            c.init_cross_validation(bins_files=bins_files,
-                                    train_bins=bin_inds[0],
-                                    valid_bins=bin_inds[1],
-                                    test_bins=bin_inds[2],
-                                    cv_k=k_fold_cross_validation,
+        for tr_f, val_f, test_f, tr_bins, val_bins, test_bins in cv_wrapper.run():
+            c.init_cross_validation(train_files=tr_f,
+                                    valid_files=val_f,
+                                    test_files=test_f,
+                                    train_bins=tr_bins,
+                                    valid_bins=val_bins,
+                                    test_bins=test_bins,
+                                    cv_k=cv_k,
                                     cv_file=cv_file,
                                     cp_save_path=os.path.join(base_save_path, 'cv-exp-%03d' % cv_exp_id))
             cv_exp_id += 1

@@ -7,10 +7,11 @@ from time import localtime, strftime
 import glob_constants as glc
 import mri_utils
 import utils.utils as utils
-from cross_validation import cv_utils
+from cross_validation import cv_util
 from losses import DICE_LOSS, CMD_LINE_SUPPORTED_LOSSES, get_training_loss_from_str
 from utils import io_utils
 
+# Do not change this constant unless version upgrades are done and keys are deprecated
 DEPRECATED_KEYS = ['NUM_CLASSES', 'TRAIN_FILES_CV', 'VALID_FILES_CV', 'TEST_FILES_CV']
 
 DEEPLABV3_NAME = 'deeplabv3_2d'
@@ -173,10 +174,10 @@ class Config():
         self.PIK_SAVE_PATH_DIR = io_utils.check_dir(os.path.dirname(self.PIK_SAVE_PATH))
         self.TF_LOG_DIR = io_utils.check_dir(os.path.join(self.CP_SAVE_PATH, 'tf_log'))
 
-    def init_cross_validation(self, bins_files,
+    def init_cross_validation(self, train_files, valid_files, test_files,
                               train_bins, valid_bins, test_bins,
                               cv_k, cv_file, cp_save_path):
-        assert self.STATE == 'training', "To initialize cross-validation, must be in training state"
+        assert self.STATE == 'training', "Initializing cross-validation must be done in training state"
 
         self.USE_CROSS_VALIDATION = True
         self.CV_TRAIN_BINS = train_bins
@@ -185,7 +186,6 @@ class Config():
         self.CV_K = cv_k
         self.CV_FILE = cv_file
 
-        train_files, valid_files, test_files = cv_utils.get_fnames(bins_files, (train_bins, valid_bins, test_bins))
         self.__CV_TRAIN_FILES__ = train_files
         self.__CV_VALID_FILES__ = valid_files
         self.__CV_TEST_FILES__ = test_files
@@ -282,11 +282,12 @@ class Config():
 
         # if cross validation is enabled, load testing cross validation bin
         if self.USE_CROSS_VALIDATION:
-            assert self.CV_FILE, "No cross-validation file found"
+            assert self.CV_FILE, "No cross-validation file found in config"
+            cv_processor = cv_util.CrossValidationProcessor(self.CV_FILE)
+            bins = (self.CV_TRAIN_BINS, self.CV_VALID_BINS, self.CV_TEST_BINS)
 
-            train_files, valid_files, test_files = cv_utils.get_fnames(cv_utils.load_cross_validation(self.CV_FILE),
-                                                                       (self.CV_TRAIN_BINS, self.CV_VALID_BINS,
-                                                                        self.CV_TEST_BINS))
+            train_files, valid_files, test_files = cv_processor.get_fnames(bins)
+
             self.__CV_TRAIN_FILES__ = train_files
             self.__CV_VALID_FILES__ = valid_files
             self.__CV_TEST_FILES__ = test_files
