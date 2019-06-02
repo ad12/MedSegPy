@@ -350,6 +350,9 @@ if __name__ == '__main__':
         exit(0)
 
     if k_fold_cross_validation:
+        if k_fold_cross_validation.isdigit():
+            k_fold_cross_validation = int(k_fold_cross_validation)
+
         ho_valid = args.ho_valid
         ho_test = args.ho_test
 
@@ -357,6 +360,9 @@ if __name__ == '__main__':
         cv_wrapper = cv_util.CrossValidationProcessor(k_fold_cross_validation,
                                                       num_valid_bins=ho_valid,
                                                       num_test_bins=ho_test)
+
+        print('Loading %d-fold cross-validation data from %s...' % (cv_wrapper.k, cv_wrapper.filepath))
+
         cv_file = cv_wrapper.filepath
         cv_k = cv_wrapper.k
 

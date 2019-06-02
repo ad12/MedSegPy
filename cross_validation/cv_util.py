@@ -60,8 +60,6 @@ class CrossValidationProcessor():
         cv_data = io_utils.load_pik(self.filepath)
         assert len(cv_data) == k_from_filename, "Corrupted file: mismatch bins"
 
-        print('Loading %d-fold cross-validation data from %s...' % (k_from_filename, filepath))
-
         self._filepath = filepath
         self._k = k_from_filename
         self._bin_files = cv_data

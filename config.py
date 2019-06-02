@@ -311,7 +311,9 @@ class Config():
 
                 'N_EPOCHS', 'AUGMENT_DATA', 'LOSS', '',
 
-                'USE_CROSS_VALIDATION', 'CV_K' if self.USE_CROSS_VALIDATION else '',
+                'USE_CROSS_VALIDATION',
+                'CV_K' if self.USE_CROSS_VALIDATION else '',
+                'CV_FILE' if self.USE_CROSS_VALIDATION else '',
                 'CV_TRAIN_BINS' if self.USE_CROSS_VALIDATION else '',
                 'CV_VALID_BINS' if self.USE_CROSS_VALIDATION else '',
                 'CV_TEST_BINS' if self.USE_CROSS_VALIDATION else '', ''
