@@ -163,14 +163,14 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
         y_test_o = np.asarray(y_test)
         recon_o = np.asarray(recon)
 
-
         if config.LOSS[1] == 'sigmoid':
             labels = (recon > 0.5).astype(np.float32)
         else:
             # softmax
             # print(np.amax(recon, axis=-1))
-            labels = np.zeros(recon.shape[:-1])
-            labels[..., np.amax(recon, axis=-1)] = 1
+            #labels = np.zeros(recon.shape[:-1])
+            #labels[..., np.argmax(recon, axis=-1)] = 1
+            labels = (recon > 0.5).astype(np.float32)
 
         if config.INCLUDE_BACKGROUND:
             y_test = y_test[..., 1:]
