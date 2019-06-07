@@ -22,7 +22,7 @@ from keras import backend as K
 import utils.utils as utils
 from utils import io_utils, dl_utils
 from utils.metric_utils import SegMetricsProcessor, MetricsManager
-from utils import im_utils
+from utils.im_utils import MultiClassOverlay
 
 import config as MCONFIG
 from config import DeeplabV3Config, SegnetConfig, UNetConfig, UNet2_5DConfig, ResidualUNet
@@ -147,21 +147,35 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
 
     # TODO (arjundd): fix getting class names
     class_names = [str(x) for x in config.TISSUES]
+
     metrics_manager = MetricsManager(class_names=class_names)
     seg_metrics_processor = metrics_manager.seg_metrics_processor
     voxel_spacing = None
+
+    # image writer
+    print('aadfasdfasfafa')
+    print(len(class_names))
+    mc_overlay = MultiClassOverlay(config.get_num_classes())
+
     # # Iterature through the files to be segmented
     for x_test, y_test, recon, fname in test_gen.img_generator_test(model):
         # Perform the actual segmentation using pre-loaded model
         # Threshold at 0.5
+        x_test_o = np.asarray(x_test)
+        y_test_o = np.asarray(y_test)
+        recon_o = np.asarray(recon)
 
         if config.LOSS[1] == 'sigmoid':
             labels = (recon > 0.5).astype(np.float32)
         else:
             # softmax
-            labels = np.zeros(recon.shape[:-1])
-            import pdb; pdb.set_trace()
-            labels[..., np.argmax(recon, axis=-1)] = 1
+            #labels = np.zeros(recon.shape[:-1])
+            #import pdb; pdb.set_trace()
+            #labels[..., np.argmax(recon, axis=-1)] = 1
+            # print(np.amax(recon, axis=-1))
+            #labels = np.zeros(recon.shape[:-1])
+            #labels[..., np.argmax(recon, axis=-1)] = 1
+            labels = (recon > 0.5).astype(np.float32)
 
         if config.INCLUDE_BACKGROUND:
             y_test = y_test[..., 1:]
@@ -205,7 +219,8 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
 
             # Save mask overlap
             # TODO (arjundd): fix writing
-            ovlps = im_utils.write_ovlp_masks(os.path.join(test_result_path, 'ovlp', fname), y_test[...,0], labels[...,0])
+            mc_overlay.im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write, recon_o)
+            #ovlps = im_utils.write_ovlp_masks(os.path.join(test_result_path, 'ovlp', fname), y_test[...,0], labels[...,0])
             #im_utils.write_mask(os.path.join(test_result_path, 'gt', fname), y_test)
             #im_utils.write_mask(os.path.join(test_result_path, 'labels', fname), labels)
             #im_utils.write_prob_map(os.path.join(test_result_path, 'prob_map', fname), recon)

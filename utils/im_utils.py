@@ -3,8 +3,93 @@ import os
 import cv2
 import h5py
 import numpy as np
+import SimpleITK as sitk
+import seaborn as sns
+
+import sys
 
 from utils.io_utils import check_dir
+
+
+class MultiClassOverlay():
+    """
+    Class to simplify overlaying images and labels
+    """
+    def __init__(self, num_classes,
+                 color_palette=sns.color_palette('pastel'),
+                 background_label=0,
+                 opacity=0.7,
+                 dirpath = ''):
+        """
+        Constructor
+        :param num_classes: Number of classes
+
+        Optional:
+        :param color_palette: list of RGB tuples to use for color. Default seaborn.color_palette('pastel').
+        :param background_label: Label to exclude for background. Default: 0.
+                                 To include background, set to None.
+        :param opacity: How transparent overlay should be (0-1). Default: 0.7
+        """
+        effective_num_classes = num_classes-1 if background_label is not None else num_classes
+        if len(color_palette) < effective_num_classes:
+            raise ValueError('Must provide at least %d colors' % effective_num_classes)
+
+        if opacity < 0 or opacity > 1:
+            raise ValueError('opacity must be between 0-1')
+
+        self.num_classes = num_classes
+        self.background_label = background_label
+        self.opacity = opacity
+
+        # set colormap
+        color_palette = color_palette
+        colormap = dict()
+        cp_ind = 0
+        for i in range(num_classes):
+            if i == background_label:
+                continue
+            cp_ind += 1
+            colormap[i] = color_palette[cp_ind]
+        self.colormap = colormap
+
+    def im_overlay(self, dirpath, volume: np.ndarray, logits: np.ndarray):
+        dirpath = check_dir(dirpath)
+        assert volume.ndim == 3, "Volume must be 3D array with shape [Y, X, Z]"
+        assert logits.ndim == 4, "Labels must be 4D array with shape [Y, X, Z, classes]"
+
+        # labels are argmax(logits) in the class dimension
+        labels = np.argmax(logits, axis=-1)
+        labels_colored = self.__apply_colormap(labels)
+
+        for z in range(volume.shape[-1]):
+            x_im = volume[..., z]
+            label_overlay = labels_colored[..., z, :]
+
+            slice_name = '%03d.png' % (z+1)
+
+            filepath = os.path.join(dirpath, slice_name)
+            self.__im_overlay(x_im, label_overlay, filepath)
+
+    def __apply_colormap(self, labels: np.ndarray):
+        colormap = self.colormap
+        background_label = self.background_label
+
+        labels_colored = np.zeros(labels.shape + (3,))
+
+        for c in np.unique(labels):
+            if c == background_label:
+                continue
+
+            labels_colored[labels == c, :] = colormap[c]
+
+        return (labels_colored*255).astype(np.uint8)
+
+    def __im_overlay(self, x, c_label, filepath=None):
+        x_rgb = np.stack([x, x, x], axis=-1).astype(np.uint8)
+        overlap_img = cv2.addWeighted(x_rgb, 1, c_label, self.opacity, 0)
+
+        if filepath:
+            cv2.imwrite(filepath, overlap_img)
 
 
 def write_im_overlay(dir_path, xs, im_overlay):
@@ -191,3 +276,18 @@ def save_ims(filepath):
 
     # save segs
     cv2.imwrite(os.path.join(filepath, 'seg.png'), scale_img(seg))
+
+#
+# if __name__ == '__main__':
+#     import matplotlib.pyplot as plt
+#     num_classes = 4
+#     a = np.argmax(np.random.rand(100, 100, num_classes), axis=-1)
+#     plt.imshow(a, cmap='gray')
+#     plt.show()
+#
+#     mco = MultiClassOverlay(num_classes=num_classes)
+#     l = mco.arr_to_label_img(a)
+#     print(l.shape)
+#     plt.imshow(np.squeeze(l), cmap='gray')
+#     plt.show()
+#
