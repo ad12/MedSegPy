@@ -85,7 +85,8 @@ class MultiClassOverlay():
         return (labels_colored*255).astype(np.uint8)
 
     def __im_overlay(self, x, c_label, filepath=None):
-        x_rgb = np.stack([x, x, x], axis=-1).astype(np.uint8)
+        x_o = scale_img(np.squeeze(x))
+        x_rgb = np.stack([x_o, x_o, x_o], axis=-1).astype(np.uint8)
         overlap_img = cv2.addWeighted(x_rgb, 1, c_label, self.opacity, 0)
 
         if filepath:
