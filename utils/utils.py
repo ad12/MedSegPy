@@ -1,8 +1,5 @@
 import ast
 
-from utils.im_utils import save_ims
-
-
 def convert_data_type(var_string, data_type):
     """
     Convert string to relevant data type
@@ -24,7 +21,3 @@ def convert_data_type(var_string, data_type):
 
     if data_type is list or data_type is tuple or data_type is type(None):
         return ast.literal_eval(var_string)
-
-
-if __name__ == '__main__':
-    save_ims('./test_data/9968924_V01-Aug00_056')
