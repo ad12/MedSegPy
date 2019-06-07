@@ -1,7 +1,9 @@
 from enum import Enum
 
 import numpy as np
+import scipy.stats as spstats
 import pandas as pd
+import tabulate
 import xarray as xr
 
 from medpy.metric import dc, assd, recall, precision, sensitivity, specificity, positive_predictive_value
@@ -65,19 +67,6 @@ def volumetric_overlap_error(y_pred, y_true):
     return voe
 
 
-class MetricsManager():
-    def __init__(self, class_names: Collection[str]):
-        self.scan_names = []
-        self.class_names = class_names
-
-        # Initialize segmentation metrics
-        class_seg_metrics = {}
-        for n in class_names:
-            class_seg_metrics[n] = SegMetricsProcessor()
-
-    def __analyze(self, scan_name: str,  y_true: np.ndarray, y_pred: np.ndarray, voxel_spacing: tuple):
-        pass
-
 
 class SegMetric(Enum):
     DSC = 1, 'Dice Score Coefficient', dc
@@ -105,6 +94,70 @@ class SegMetric(Enum):
             return self.func(y_pred, y_true)
 
 
+class BaseMetric(Enum):
+    MEAN = 1, lambda x, **kwargs: np.mean(x, **kwargs)
+    MEDIAN = 2, lambda x, **kwargs: np.median(x, **kwargs)
+    RMS = 3, lambda x, **kwargs: np.sqrt(np.mean(x ** 2, **kwargs))
+
+    def __new__(cls, keycode, func):
+        obj = object.__new__(cls)
+        obj._value_ = keycode
+        obj.func = func
+        return obj
+
+    def compute(self, x:np.ndarray, **kwargs):
+        return self.func(np.asarray(x), **kwargs)
+
+
+class ErrorMetric(Enum):
+    STANDARD_DEVIATION = 1, lambda x, **kwargs: np.std(x, **kwargs)
+    STANDARD_ERROR = 2, lambda x, **kwargs: __sem__(x, **kwargs)
+
+    def __new__(cls, keycode, func):
+        obj = object.__new__(cls)
+        obj._value_ = keycode
+        obj.func = func
+        return obj
+
+    def compute(self, x:np.ndarray, **kwargs):
+        return self.func(np.asarray(x), **kwargs)
+
+
+def __sem__(x, **kwargs):
+    args = {'axis': 0, 'ddof': 0}
+    args.update(**kwargs)
+    return spstats.sem(x, **args)
+
+
+class MetricsManager():
+    __METRICS = [SegMetric.DSC, SegMetric.VOE, SegMetric.ASSD, SegMetric.CV]
+
+    def __init__(self, class_names: Collection[str], metrics=__METRICS):
+        self.scan_names = []
+        self.class_names = class_names
+
+        self.__seg_metrics_processor = SegMetricsProcessor(metrics, class_names)
+        self.runtimes = []
+
+    def analyze(self, scan_name: str,  y_true: np.ndarray, y_pred: np.ndarray, voxel_spacing: tuple,
+                runtime: float=np.nan):
+        self.scan_names.append(scan_name)
+        summary = self.__seg_metrics_processor.compute_metrics(scan_name, y_true, y_pred, voxel_spacing)
+
+        self.runtimes.append(runtime)
+
+        return summary
+
+    @property
+    def data(self):
+        return {'scan_ids': self.scan_names,
+                'runtimes': self.runtimes,
+                'seg_metrics': self.__seg_metrics_processor.data}
+
+    @property
+    def seg_metrics_processor(self):
+        return self.__seg_metrics_processor
+
 class SegMetricsProcessor():
     # Default is to capitalize all metric names. If another name is, please specify here
     __METRICS_DISPLAY_NAMES = {SegMetric.DSC: SegMetric.DSC.name,
@@ -117,7 +170,11 @@ class SegMetricsProcessor():
                                SegMetric.SPECIFICITY: 'Specificity',
                                SegMetric.PPV: SegMetric.PPV.name}
 
-    def __init__(self, metrics, class_names):
+    __DEFAULT_METRICS_BASE_TYPE = {SegMetric.CV: BaseMetric.RMS}
+
+    def __init__(self, metrics, class_names,
+                 metrics_to_base_type = __DEFAULT_METRICS_BASE_TYPE,
+                 error_metric = ErrorMetric.STANDARD_DEVIATION):
         """Constructor
 
         :param metrics: Metrics to analyze. Default is all supported metrics
@@ -128,7 +185,8 @@ class SegMetricsProcessor():
 
         self.__scan_ids = []
         self.__scan_seg_data = dict()
-        self.__data_xr = None
+        self.__data = dict()
+        self.__is_data_stale = False
 
     def compute_metrics(self, scan_id, y_true: np.ndarray, y_pred: np.ndarray, voxel_spacing: tuple):
         """
@@ -154,7 +212,7 @@ class SegMetricsProcessor():
         metrics_data = []
         metrics_names = []
         for m in self.metrics:
-            metrics_names.append(m.name)
+            metrics_names.append(self.__METRICS_DISPLAY_NAMES[m])
             metrics_data.append(m.func(y_true[..., c], y_pred[..., c], voxel_spacing) for c in range(num_classes))
 
         metrics_data = pd.DataFrame(metrics_data, index=metrics_names, columns=self.class_names)
@@ -165,55 +223,67 @@ class SegMetricsProcessor():
 
         self.__scan_ids.append(scan_id)
         self.__scan_seg_data[scan_id] = metrics_data
+        self.__is_data_stale = True
 
-    def rms(self, metric):
-        data = np.asarray(self.metrics[metric])
-        return np.sqrt(np.mean(data ** 2))
+        return self.__scan_summary(scan_id)
 
-    def mean(self, metric):
-        data = np.asarray(self.metrics[metric])
-        return float(np.mean(data))
+    def __scan_summary(self, scan_id):
+        ind = self.__scan_ids.index(scan_id)
+        scan_data = self.scan_id_data[ind]
+        avg_data = scan_data.mean(axis=1)
 
-    def std(self, metric):
-        data = np.asarray(self.metrics[metric])
-        return float(np.std(data))
+        metrics = avg_data.index.tolist()
 
-    def median(self, metric):
-        data = np.asarray(self.metrics[metric])
-        return float(np.median(data))
+        summary_str_format = '%s: %0.3f, ' * len(metrics)
+        summary_str_format = summary_str_format[:-2]
+
+        data = []
+        for name in avg_data.index.tolist():
+            data.extend([name, avg_data[name]])
+
+        return summary_str_format % (tuple(data))
 
     def summary(self):
-        s = 'Format: Mean +/- Std, Median'
-        s += 'DSC: %0.4f +/- %0.3f, %0.4f\n' % (self.mean('dsc'),
-                                                self.std('dsc'),
-                                                self.median('dsc'))
+        data = self.data
+        arr = []
+        names = []
+        for metric_name in data.keys():
+            names.append(metric_name)
+            arr.append(np.asarray(data[metric_name].mean()).flatten())
 
-        s += 'VOE: %0.4f +/- %0.3f, %0.4f\n' % (self.mean('voe'),
-                                                self.std('voe'),
-                                                self.median('voe'))
-
-        s += 'CV (RMS):  %0.4f +/- %0.3f, %0.4f\n' % (self.rms('cv'),
-                                                      self.std('cv'),
-                                                      self.median('cv'))
-
-        s += 'ASSD (mm): %0.4f +/- %0.3f, %0.4f\n' % (self.mean('assd'),
-                                                      self.std('assd'),
-                                                      self.median('assd'))
-
-        s += 'Precision: %0.4f +/- %0.3f, %0.4f\n' % (self.mean('precision'),
-                                                      self.std('precision'),
-                                                      self.median('precision'))
-
-        s += 'Recall: %0.4f +/- %0.3f, %0.4f\n' % (self.mean('recall'),
-                                                   self.std('recall'),
-                                                   self.median('recall'))
-        return s
+        df = pd.DataFrame(arr, index=names, columns=self.class_names)
+        return tabulate.tabulate(df)
 
     @property
     def scan_id_data(self):
         return self.__scan_seg_data
 
     @property
-    def data_xr(self):
-        ds = xr.concat([xr.DataArray(self.__scan_seg_data[scan_id]) for scan_id in self.__scan_ids])
-        return ds
+    def data(self):
+        if self.__is_data_stale:
+            self.__refresh_data()
+
+        return self.__data
+
+    def __refresh_data(self):
+        # create array with dimensions subjects, classes, metrics
+        arr = np.stack([np.asarray(self.__scan_seg_data[scan_id]) for scan_id in self.__scan_ids], axis=-1)
+        arr = arr.transpose((2, 1, 0))
+
+        data = dict()
+        for ind, m in enumerate(self.metrics):
+            data[self.__METRICS_DISPLAY_NAMES[m]] = pd.DataFrame(arr[..., ind],
+                                                                 index=self.__scan_ids,
+                                                                 columns=self.class_names)
+
+        self.__data = data
+
+
+if __name__ == '__main__':
+    a = np.asarray([[1,2,3,4], [5,7,9,11]])
+    print(__sem__(a, axis=0))
+    print(np.std(a, axis=0) / np.sqrt(2))
+
+    df = pd.DataFrame(a, index=['aplha', 'b'])
+    print(df)
+    print(df.mean(axis=1)['b'])

@@ -21,7 +21,7 @@ from keras import backend as K
 
 import utils.utils as utils
 from utils import io_utils, dl_utils
-from utils.metric_utils import SegMetricsProcessor
+from utils.metric_utils import SegMetricsProcessor, MetricsManager
 from utils import im_utils
 
 import config as MCONFIG
@@ -144,9 +144,11 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
     y_interp = []
     x_total = []
     y_total = []
-    
-    fnames = []
-    mw = SegMetricsProcessor()
+
+    # TODO (arjundd): fix getting class names
+    class_names = [str(x) for x in config.TISSUES]
+    metrics_manager = MetricsManager(class_names=class_names)
+    seg_metrics_processor = metrics_manager.seg_metrics_processor
     voxel_spacing = None
     # # Iterature through the files to be segmented
     for x_test, y_test, recon, fname in test_gen.img_generator_test(model):
@@ -163,18 +165,11 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
         num_slices = x_test.shape[0]
 
         voxel_spacing = get_voxel_spacing(num_slices)
-        mw.compute_metrics(np.transpose(np.squeeze(y_test), axes=[1, 2, 0]),
-                           np.transpose(np.squeeze(labels), axes=[1, 2, 0]),
-                           voxel_spacing=voxel_spacing)
-        fnames.append(fname)
+        summary = metrics_manager.analyze(fname, np.transpose(np.squeeze(y_test), axes=[1, 2, 0]),
+                                          np.transpose(np.squeeze(labels), axes=[1, 2, 0]),
+                                          voxel_spacing=voxel_spacing)
 
-        print_str = 'Scan #%03d (name = %s, %d slices) = DSC: %0.3f, VOE: %0.3f, CV: %0.3f, ASSD (mm): %0.3f' % (
-        img_cnt, fname,
-        num_slices,
-        mw.metrics['dsc'][-1],
-        mw.metrics['voe'][-1],
-        mw.metrics['cv'][-1],
-        mw.metrics['assd'][-1])
+        print_str = 'Scan #%03d (name = %s, %d slices) = %s' % (img_cnt, fname, num_slices, summary)
         pids_str = pids_str + print_str + '\n'
         print(print_str)
 
@@ -208,13 +203,10 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
             #                               np.squeeze(y_test), np.squeeze(labels))
 
         img_cnt += 1
-        #
-        # if img_cnt == ntest:
-        #     break
 
     end = time.time()
 
-    stats_string = get_stats_string(mw, skipped_count, end - start)
+    stats_string = get_stats_string(seg_metrics_processor, skipped_count, end - start)
     # Print some summary statistics
     print('--' * 20)
     print(stats_string)
@@ -237,8 +229,7 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
 
     # Save metrics in dat format using pickle
     results_dat = os.path.join(test_result_path, 'metrics.dat')
-    io_utils.save_pik(mw.metrics, results_dat)
-    io_utils.save_pik(fnames, os.path.join(test_result_path, 'fnames.dat'))
+    io_utils.save_pik(metrics_manager.data, results_dat)
 
     x_interp = np.asarray(x_interp)
     y_interp = np.asarray(y_interp)
