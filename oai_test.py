@@ -156,17 +156,18 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
         # Threshold at 0.5
         
         if config.INCLUDE_BACKGROUND:
-            y_test = y_test[..., 1]
-            recon = recon[..., 1]
-            y_test = y_test[..., np.newaxis]
-            recon = recon[..., np.newaxis]
+            y_test = y_test[..., 1:]
+            recon = recon[..., 1:]
+            # TODO (arjundd): figure out when new axis should be added
+            #y_test = y_test[..., np.newaxis]
+            #recon = recon[..., np.newaxis]
 
         labels = (recon > 0.5).astype(np.float32)
         num_slices = x_test.shape[0]
 
         voxel_spacing = get_voxel_spacing(num_slices)
-        summary = metrics_manager.analyze(fname, np.transpose(np.squeeze(y_test), axes=[1, 2, 0]),
-                                          np.transpose(np.squeeze(labels), axes=[1, 2, 0]),
+        summary = metrics_manager.analyze(fname, np.transpose(y_test, axes=[1, 2, 0, 3]),
+                                          np.transpose(labels, axes=[1, 2, 0, 3]),
                                           voxel_spacing=voxel_spacing)
 
         print_str = 'Scan #%03d (name = %s, %d slices) = %s' % (img_cnt, fname, num_slices, summary)
@@ -194,11 +195,11 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
             x_write = x_test[..., x_test.shape[-1] // 2]
 
             # Save mask overlap
-            ovlps = im_utils.write_ovlp_masks(os.path.join(test_result_path, 'ovlp', fname), y_test, labels)
-            im_utils.write_mask(os.path.join(test_result_path, 'gt', fname), y_test)
-            im_utils.write_mask(os.path.join(test_result_path, 'labels', fname), labels)
-            im_utils.write_prob_map(os.path.join(test_result_path, 'prob_map', fname), recon)
-            im_utils.write_im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write, ovlps)
+        #    ovlps = im_utils.write_ovlp_masks(os.path.join(test_result_path, 'ovlp', fname), y_test, labels)
+         #   im_utils.write_mask(os.path.join(test_result_path, 'gt', fname), y_test)
+         #   im_utils.write_mask(os.path.join(test_result_path, 'labels', fname), labels)
+         #   im_utils.write_prob_map(os.path.join(test_result_path, 'prob_map', fname), recon)
+         #   im_utils.write_im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write, ovlps)
             # im_utils.write_sep_im_overlay(os.path.join(test_result_path, 'im_ovlp_sep', fname), x_write,
             #                               np.squeeze(y_test), np.squeeze(labels))
 

@@ -4,7 +4,6 @@ import numpy as np
 import scipy.stats as spstats
 import pandas as pd
 import tabulate
-import xarray as xr
 
 from medpy.metric import dc, assd, recall, precision, sensitivity, specificity, positive_predictive_value
 from typing import Collection
@@ -69,15 +68,15 @@ def volumetric_overlap_error(y_pred, y_true):
 
 
 class SegMetric(Enum):
-    DSC = 1, 'Dice Score Coefficient', dc
-    VOE = 2, 'Volumetric Overlap Error', volumetric_overlap_error
-    CV = 3, 'Coefficient of Variation', cv
+    DSC = 1, 'Dice Score Coefficient', dc, False
+    VOE = 2, 'Volumetric Overlap Error', volumetric_overlap_error, False
+    CV = 3, 'Coefficient of Variation', cv, False
     ASSD = 4, 'Average Symmetric Surface Distance', assd, True
-    PRECISION = 5, 'Precision', precision
-    RECALL = 6, 'Recall', recall
-    SENSITIVITY = 7, 'Sensitivity', sensitivity
-    SPECIFICITY = 8, 'Specificity', specificity
-    PPV = 9, "Positive Predictive Value", positive_predictive_value
+    PRECISION = 5, 'Precision', precision, False
+    RECALL = 6, 'Recall', recall, False
+    SENSITIVITY = 7, 'Sensitivity', sensitivity, False
+    SPECIFICITY = 8, 'Specificity', specificity, False
+    PPV = 9, "Positive Predictive Value", positive_predictive_value, False
 
     def __new__(cls, keycode, full_name, func, use_voxel_spacing=False):
         obj = object.__new__(cls)
@@ -213,10 +212,10 @@ class SegMetricsProcessor():
         metrics_names = []
         for m in self.metrics:
             metrics_names.append(self.__METRICS_DISPLAY_NAMES[m])
-            metrics_data.append(m.func(y_true[..., c], y_pred[..., c], voxel_spacing) for c in range(num_classes))
+            metrics_data.append(m.compute(y_true[..., c], y_pred[..., c], voxel_spacing) for c in range(num_classes))
 
         metrics_data = pd.DataFrame(metrics_data, index=metrics_names, columns=self.class_names)
-        metrics_data = metrics_data.T
+        #metrics_data = metrics_data.T
 
         if scan_id in self.__scan_ids:
             raise ValueError('Scan id already exists, use different id')
@@ -228,8 +227,7 @@ class SegMetricsProcessor():
         return self.__scan_summary(scan_id)
 
     def __scan_summary(self, scan_id):
-        ind = self.__scan_ids.index(scan_id)
-        scan_data = self.scan_id_data[ind]
+        scan_data = self.__scan_seg_data[scan_id]
         avg_data = scan_data.mean(axis=1)
 
         metrics = avg_data.index.tolist()
