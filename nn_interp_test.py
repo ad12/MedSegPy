@@ -10,7 +10,7 @@ from generators import im_gens
 import config
 from utils import dl_utils, io_utils
 from models.models import get_model
-from utils.metric_utils import MetricWrapper
+from utils.metric_utils import SegMetricsProcessor
 from config import Config
 from scipy import ndimage
 from oai_test import interp_slice, get_stats_string, TEST_SET_MD
@@ -156,7 +156,7 @@ class InterpolationTest():
         y_pred_prob_maps = self.lr_prob_maps
 
         test_gen = im_gens.get_generator(c_hr)
-        mw = MetricWrapper()
+        mw = SegMetricsProcessor()
 
         pids_str = ''
         x_interp = []
@@ -245,7 +245,7 @@ class InterpolationTest():
         cp_save_tag = config.get_cp_save_tag(config_filepath)
         return config.get_config(cp_save_tag, create_dirs=False)
 
-    def analysis(self, x_test, y_test, recon, labels, mw: MetricWrapper, voxel_spacing,
+    def analysis(self, x_test, y_test, recon, labels, mw: SegMetricsProcessor, voxel_spacing,
                  img_cnt, fname, test_set_md,
                  x_interp, y_interp, x_total, y_total,
                  save_file, save_h5_data, test_result_path):

@@ -21,7 +21,7 @@ from keras import backend as K
 
 import utils.utils as utils
 from utils import io_utils, dl_utils
-from utils.metric_utils import MetricWrapper
+from utils.metric_utils import SegMetricsProcessor
 from utils import im_utils
 
 import config as MCONFIG
@@ -31,7 +31,6 @@ from models.models import get_model
 from keras.utils import plot_model
 from scan_metadata import ScanMetadata
 from generators.im_gens import get_generator
-from stat import S_IREAD, S_IRGRP, S_IROTH
 
 
 DATE_THRESHOLD = strptime('2018-09-01-22-39-39', '%Y-%m-%d-%H-%M-%S')
@@ -147,7 +146,7 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
     y_total = []
     
     fnames = []
-    mw = MetricWrapper()
+    mw = SegMetricsProcessor()
     voxel_spacing = None
     # # Iterature through the files to be segmented
     for x_test, y_test, recon, fname in test_gen.img_generator_test(model):
@@ -263,7 +262,7 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
     #plt.savefig(os.path.join(test_result_path, 'interp_slices.png'))
 
 
-def get_stats_string(mw: MetricWrapper, skipped_count, testing_time):
+def get_stats_string(mw: SegMetricsProcessor, skipped_count, testing_time):
     """
     Return string detailing statistics
     :param mw:
