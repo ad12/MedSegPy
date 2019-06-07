@@ -153,8 +153,6 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
     voxel_spacing = None
 
     # image writer
-    print('aadfasdfasfafa')
-    print(len(class_names))
     mc_overlay = MultiClassOverlay(config.get_num_classes())
 
     # # Iterature through the files to be segmented

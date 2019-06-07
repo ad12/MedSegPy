@@ -36,5 +36,7 @@ def parse_tissues(vargin: dict):
         tissues.append(MASK_TIBIAL_CARTILAGE)
     if 'pc' in str_tissues:
         tissues.append(MASK_PATELLAR_CARTILAGE)
+    if 'men' in str_tissues:
+        tissues.append(MASK_MENISCUS)
 
     return tissues
