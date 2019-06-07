@@ -219,7 +219,9 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
 
             # Save mask overlap
             # TODO (arjundd): fix writing
-            mc_overlay.im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write, recon_o)
+            x_write_o = np.transpose(x_write, (1,2,0))
+            recon_oo = np.transpose(recon_o, (1,2,0,3))
+            mc_overlay.im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write_o, recon_oo)
             #ovlps = im_utils.write_ovlp_masks(os.path.join(test_result_path, 'ovlp', fname), y_test[...,0], labels[...,0])
             #im_utils.write_mask(os.path.join(test_result_path, 'gt', fname), y_test)
             #im_utils.write_mask(os.path.join(test_result_path, 'labels', fname), labels)
