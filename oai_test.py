@@ -201,11 +201,11 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
             x_write = x_test[..., x_test.shape[-1] // 2]
 
             # Save mask overlap
-        #    ovlps = im_utils.write_ovlp_masks(os.path.join(test_result_path, 'ovlp', fname), y_test, labels)
-         #   im_utils.write_mask(os.path.join(test_result_path, 'gt', fname), y_test)
-         #   im_utils.write_mask(os.path.join(test_result_path, 'labels', fname), labels)
-         #   im_utils.write_prob_map(os.path.join(test_result_path, 'prob_map', fname), recon)
-         #   im_utils.write_im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write, ovlps)
+            ovlps = im_utils.write_ovlp_masks(os.path.join(test_result_path, 'ovlp', fname), y_test, labels)
+            im_utils.write_mask(os.path.join(test_result_path, 'gt', fname), y_test)
+            im_utils.write_mask(os.path.join(test_result_path, 'labels', fname), labels)
+            im_utils.write_prob_map(os.path.join(test_result_path, 'prob_map', fname), recon)
+            im_utils.write_im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write, ovlps)
             # im_utils.write_sep_im_overlay(os.path.join(test_result_path, 'im_ovlp_sep', fname), x_write,
             #                               np.squeeze(y_test), np.squeeze(labels))
 
