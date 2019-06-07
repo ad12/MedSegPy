@@ -60,9 +60,9 @@ if __name__ == '__main__':
         os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
     recursive = args.recursive
-    overwrite = args.force
+    overwrite = args.overwrite
 
-    test_dirpaths = [config_filepath]
+    test_dirpaths = config_filepath
     if recursive:
         test_dirpaths = get_valid_subdirs(config_filepath, not overwrite)
 
