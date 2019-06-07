@@ -166,8 +166,10 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
             labels = (recon > 0.5).astype(np.float32)
         else:
             # softmax
+            print(np.amax(recon, axis=-1))
+            import pdb; pdb.set_trace()
             labels = np.zeros(recon.shape[:-1])
-            labels[..., np.max(recon, axis=-1)] = 1
+            labels[..., np.amax(recon, axis=-1)] = 1
 
         num_slices = x_test.shape[0]
 
