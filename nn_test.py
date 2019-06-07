@@ -51,13 +51,12 @@ if __name__ == '__main__':
 
     gpu = args.gpu
     cpu = args.cpu
-
+    
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
     if not cpu:
         print('Using GPU %s' % gpu)
         os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
-        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
     else:
-
         os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
     recursive = args.recursive
