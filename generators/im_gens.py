@@ -189,6 +189,13 @@ class Generator(ABC):
 
         return base_info
 
+    @staticmethod
+    def logits_to_binary(self, x: np.ndarray):
+        data = np.zeros(x.shape[:-1])
+        data[..., np.max(x, axis=-1)] = 1
+
+        return data
+
 
 class OAIGenerator(Generator):
     """

@@ -158,11 +158,17 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
         if config.INCLUDE_BACKGROUND:
             y_test = y_test[..., 1:]
             recon = recon[..., 1:]
-            # TODO (arjundd): figure out when new axis should be added
-            #y_test = y_test[..., np.newaxis]
-            #recon = recon[..., np.newaxis]
+            if y_test.ndim == 3:
+                y_test = y_test[..., np.newaxis]
+                recon = recon[..., np.newaxis]
 
-        labels = (recon > 0.5).astype(np.float32)
+        if config.LOSS[1] == 'sigmoid':
+            labels = (recon > 0.5).astype(np.float32)
+        else:
+            # softmax
+            labels = np.zeros(recon.shape[:-1])
+            labels[..., np.max(recon, axis=-1)] = 1
+
         num_slices = x_test.shape[0]
 
         voxel_spacing = get_voxel_spacing(num_slices)
