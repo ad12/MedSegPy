@@ -16,7 +16,7 @@ class MultiClassOverlay():
     Class to simplify overlaying images and labels
     """
     def __init__(self, num_classes,
-                 color_palette=sns.color_palette('pastel'),
+                 color_palette=sns.color_palette('bright'),
                  background_label=0,
                  opacity=0.7,
                  dirpath = ''):
