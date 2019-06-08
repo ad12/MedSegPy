@@ -164,17 +164,16 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
         recon_o = np.asarray(recon)
 
         if config.LOSS[1] == 'sigmoid':
+            # sigmoid activation function used
             labels = (recon > 0.5).astype(np.float32)
         else:
-            # softmax
-            #labels = np.zeros(recon.shape[:-1])
-            #import pdb; pdb.set_trace()
-            #labels[..., np.argmax(recon, axis=-1)] = 1
-            # print(np.amax(recon, axis=-1))
-            #labels = np.zeros(recon.shape[:-1])
-            #labels[..., np.argmax(recon, axis=-1)] = 1
-            labels = (recon > 0.5).astype(np.float32)
+            # else, softmax used
+            labels = np.zeros(recon.shape)
+            l_argmax = np.argmax(recon, axis=-1)
+            for c in range(labels.shape[-1]):
+                labels[l_argmax == c, c] = 1
 
+        # background is always excluded from analysis
         if config.INCLUDE_BACKGROUND:
             y_test = y_test[..., 1:]
             recon = recon[..., 1:]
@@ -217,8 +216,8 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
 
             # Save mask overlap
             # TODO (arjundd): fix writing
-            x_write_o = np.transpose(x_write, (1,2,0))
-            recon_oo = np.transpose(recon_o, (1,2,0,3))
+            x_write_o = np.transpose(x_write, (1, 2, 0))
+            recon_oo = np.transpose(recon_o, (1, 2, 0, 3))
             mc_overlay.im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write_o, recon_oo)
             #ovlps = im_utils.write_ovlp_masks(os.path.join(test_result_path, 'ovlp', fname), y_test[...,0], labels[...,0])
             #im_utils.write_mask(os.path.join(test_result_path, 'gt', fname), y_test)
