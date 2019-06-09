@@ -127,7 +127,7 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
     plot_model(model, os.path.join(config.TEST_RESULT_PATH, 'model.png'), show_shapes=True)
     model.load_weights(config.TEST_WEIGHT_PATH)
 
-    img_cnt = 0
+    img_cnt = 1
 
     start = time.time()
     skipped_count = 0
@@ -156,7 +156,7 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
     mc_overlay = MultiClassOverlay(config.get_num_classes())
 
     # # Iterature through the files to be segmented
-    for x_test, y_test, recon, fname in test_gen.img_generator_test(model):
+    for x_test, y_test, recon, fname, seg_time in test_gen.img_generator_test(model):
         # Perform the actual segmentation using pre-loaded model
         # Threshold at 0.5
         x_test_o = np.asarray(x_test)
@@ -188,7 +188,8 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
         voxel_spacing = get_voxel_spacing(num_slices)
         summary = metrics_manager.analyze(fname, np.transpose(y_test, axes=[1, 2, 0, 3]),
                                           np.transpose(labels, axes=[1, 2, 0, 3]),
-                                          voxel_spacing=voxel_spacing)
+                                          voxel_spacing=voxel_spacing,
+                                          runtime=seg_time)
 
         print_str = 'Scan #%03d (name = %s, %d slices) = %s' % (img_cnt, fname, num_slices, summary)
         pids_str = pids_str + print_str + '\n'

@@ -66,7 +66,6 @@ def volumetric_overlap_error(y_pred, y_true):
     return voe
 
 
-
 class SegMetric(Enum):
     DSC = 1, 'Dice Score Coefficient', dc, False
     VOE = 2, 'Volumetric Overlap Error', volumetric_overlap_error, False
@@ -157,6 +156,7 @@ class MetricsManager():
     def seg_metrics_processor(self):
         return self.__seg_metrics_processor
 
+
 class SegMetricsProcessor():
     # Default is to capitalize all metric names. If another name is, please specify here
     __METRICS_DISPLAY_NAMES = {SegMetric.DSC: SegMetric.DSC.name,
@@ -169,10 +169,10 @@ class SegMetricsProcessor():
                                SegMetric.SPECIFICITY: 'Specificity',
                                SegMetric.PPV: SegMetric.PPV.name}
 
-    __DEFAULT_METRICS_BASE_TYPE = {SegMetric.CV: BaseMetric.RMS}
+    __DEFAULT_METRICS_OPERATIONS = {SegMetric.CV: BaseMetric.RMS}
 
     def __init__(self, metrics, class_names,
-                 metrics_to_base_type = __DEFAULT_METRICS_BASE_TYPE,
+                 metrics_to_base_type = __DEFAULT_METRICS_OPERATIONS,
                  error_metric = ErrorMetric.STANDARD_DEVIATION):
         """Constructor
 
@@ -215,7 +215,6 @@ class SegMetricsProcessor():
             metrics_data.append(m.compute(y_true[..., c], y_pred[..., c], voxel_spacing) for c in range(num_classes))
 
         metrics_data = pd.DataFrame(metrics_data, index=metrics_names, columns=self.class_names)
-        #metrics_data = metrics_data.T
 
         if scan_id in self.__scan_ids:
             raise ValueError('Scan id already exists, use different id')

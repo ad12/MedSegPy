@@ -295,12 +295,14 @@ class OAIGenerator(Generator):
 
             recon = None
             if model:
+                start_time = time.time()
                 recon = model.predict(x, batch_size=batch_size)
+                time_elapsed = time.time() - start_time
                 x, y, recon = self.__reformat_testing_scans__((x, y, recon))
             else:
                 x, y = self.__reformat_testing_scans__((x, y))
 
-            yield (x, y, recon, scan_id)
+            yield (x, y, recon, scan_id, time_elapsed)
     
     def __reformat_testing_scans__(self, vols):
         """
@@ -1073,12 +1075,14 @@ class OAI3DBlockGenerator(OAI3DGenerator):
             ytrue_vol = np.transpose(ytrue_vol, [2, 0, 1, 3])
 
             if model:
+                start_time = time.time()
                 recon = model.predict(x, batch_size=batch_size)
+                time_elapsed = time.time() - start_time
                 ypred_blocks = [(np.squeeze(x[b, ...]), recon[b, ...]) for b in range(num_blocks)]
                 _, recon_vol = self.unify_blocks(ypred_blocks, scan_to_im_size[vol_id])
                 recon_vol = np.transpose(recon_vol, [2, 0, 1, 3])
 
-            yield (im_vol, ytrue_vol, recon_vol, vol_id)
+            yield (im_vol, ytrue_vol, recon_vol, vol_id, time_elapsed)
 
     def img_generator(self, state):
         accepted_states = [GeneratorState.TRAINING, GeneratorState.VALIDATION]
