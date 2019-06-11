@@ -212,7 +212,7 @@ class SegMetricsProcessor():
         metrics_names = []
         for m in self.metrics:
             metrics_names.append(self.__METRICS_DISPLAY_NAMES[m])
-            metrics_data.append(m.compute(y_true[..., c], y_pred[..., c], voxel_spacing) for c in range(num_classes))
+            metrics_data.append([m.compute(y_true[..., c], y_pred[..., c], voxel_spacing) for c in range(num_classes)])
 
         metrics_data = pd.DataFrame(metrics_data, index=metrics_names, columns=self.class_names)
         #metrics_data = metrics_data.T
@@ -238,7 +238,7 @@ class SegMetricsProcessor():
         data = []
         for name in avg_data.index.tolist():
             data.extend([name, avg_data[name]])
-
+        
         return summary_str_format % (tuple(data))
 
     def summary(self):
@@ -250,7 +250,7 @@ class SegMetricsProcessor():
             arr.append(np.asarray(data[metric_name].mean()).flatten())
 
         df = pd.DataFrame(arr, index=names, columns=self.class_names)
-        return tabulate.tabulate(df)
+        return tabulate.tabulate(df, headers=self.class_names) + "\n"
 
     @property
     def scan_id_data(self):

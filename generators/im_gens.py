@@ -611,8 +611,8 @@ class OAI3DGenerator(OAIGenerator):
         o_seg = []
 
         for t_inds in tissues:
-            c_seg = seg[..., 0, t_inds]
-            if c_seg.ndim == 3:
+            c_seg = seg[..., t_inds, 0]
+            if c_seg.ndim == 4:
                 c_seg = np.sum(c_seg, axis=-1)
             o_seg.append(c_seg)
 
