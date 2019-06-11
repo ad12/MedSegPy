@@ -15,6 +15,7 @@ pc = PC = MASK_PATELLAR_CARTILAGE
 men = MEN = MASK_MENISCUS
 
 SUPPORTED_TISSUES = ['fc', 'tc', 'pc', 'men']
+__TISSUES_TO_INDS = {0: 'fc', [1, 2]: 'tc', 3: 'pc', [4,5]: 'men'}
 
 
 def init_cmd_line(parser: argparse.ArgumentParser):
@@ -40,3 +41,14 @@ def parse_tissues(vargin: dict):
         tissues.append(MASK_MENISCUS)
 
     return tissues
+
+
+def get_tissue_name(inds: list):
+    names = []
+    for ind in inds:
+        try:
+            names.append(__TISSUES_TO_INDS[ind])
+        except KeyError:
+            names.append(ind)
+
+    return names

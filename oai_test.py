@@ -7,7 +7,7 @@ from __future__ import print_function, division
 import matplotlib
 
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 import argparse
 import os
@@ -19,6 +19,7 @@ import numpy as np
 import scipy.io as sio
 from keras import backend as K
 
+import mri_utils
 import utils.utils as utils
 from utils import io_utils, dl_utils
 from utils.metric_utils import SegMetricsProcessor, MetricsManager
@@ -31,7 +32,6 @@ from models.models import get_model
 from keras.utils import plot_model
 from scan_metadata import ScanMetadata
 from generators.im_gens import get_generator
-
 
 DATE_THRESHOLD = strptime('2018-09-01-22-39-39', '%Y-%m-%d-%H-%M-%S')
 TEST_SET_METADATA_PIK = '/bmrNAS/people/arjun/msk_seg_networks/oai_metadata/oai_data.dat'
@@ -47,6 +47,7 @@ def get_voxel_spacing(num_slices):
     elif num_slices == 160:
         return (0.3125, 0.3125, 0.7)
     raise ValueError('num_slices %d unknown' % num_slices)
+
 
 def find_start_and_end_slice(y_true):
     for i in range(y_true.shape[0]):
@@ -127,7 +128,7 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
     plot_model(model, os.path.join(config.TEST_RESULT_PATH, 'model.png'), show_shapes=True)
     model.load_weights(config.TEST_WEIGHT_PATH)
 
-    img_cnt = 0
+    img_cnt = 1
 
     start = time.time()
     skipped_count = 0
@@ -145,8 +146,8 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
     x_total = []
     y_total = []
 
-    # TODO (arjundd): fix getting class names
-    class_names = [str(x) for x in config.TISSUES]
+    # TODO (arjundd): remove when tissue names added to config
+    class_names = mri_utils.get_tissue_name(config.TISSUES)
 
     metrics_manager = MetricsManager(class_names=class_names)
     seg_metrics_processor = metrics_manager.seg_metrics_processor
@@ -156,11 +157,9 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
     mc_overlay = MultiClassOverlay(config.get_num_classes())
 
     # # Iterature through the files to be segmented
-    for x_test, y_test, recon, fname in test_gen.img_generator_test(model):
+    for x_test, y_test, recon, fname, seg_time in test_gen.img_generator_test(model):
         # Perform the actual segmentation using pre-loaded model
         # Threshold at 0.5
-        x_test_o = np.asarray(x_test)
-        y_test_o = np.asarray(y_test)
         recon_o = np.asarray(recon)
 
         if config.LOSS[1] == 'sigmoid':
@@ -189,7 +188,8 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
         voxel_spacing = get_voxel_spacing(num_slices)
         summary = metrics_manager.analyze(fname, np.transpose(y_test, axes=[1, 2, 0, 3]),
                                           np.transpose(labels, axes=[1, 2, 0, 3]),
-                                          voxel_spacing=voxel_spacing)
+                                          voxel_spacing=voxel_spacing,
+                                          runtime=seg_time)
 
         print_str = 'Scan #%03d (name = %s, %d slices) = %s' % (img_cnt, fname, num_slices, summary)
         pids_str = pids_str + print_str + '\n'
@@ -220,11 +220,11 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
             x_write_o = np.transpose(x_write, (1, 2, 0))
             recon_oo = np.transpose(recon_o, (1, 2, 0, 3))
             mc_overlay.im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write_o, recon_oo)
-            #ovlps = im_utils.write_ovlp_masks(os.path.join(test_result_path, 'ovlp', fname), y_test[...,0], labels[...,0])
-            #im_utils.write_mask(os.path.join(test_result_path, 'gt', fname), y_test)
-            #im_utils.write_mask(os.path.join(test_result_path, 'labels', fname), labels)
-            #im_utils.write_prob_map(os.path.join(test_result_path, 'prob_map', fname), recon)
-            #im_utils.write_im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write, ovlps)
+            # ovlps = im_utils.write_ovlp_masks(os.path.join(test_result_path, 'ovlp', fname), y_test[...,0], labels[...,0])
+            # im_utils.write_mask(os.path.join(test_result_path, 'gt', fname), y_test)
+            # im_utils.write_mask(os.path.join(test_result_path, 'labels', fname), labels)
+            # im_utils.write_prob_map(os.path.join(test_result_path, 'prob_map', fname), recon)
+            # im_utils.write_im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write, ovlps)
             # im_utils.write_sep_im_overlay(os.path.join(test_result_path, 'im_ovlp_sep', fname), x_write,
             #                               np.squeeze(y_test), np.squeeze(labels))
 
@@ -251,7 +251,7 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
         f.write('\n')
         f.write(stats_string)
 
-    #os.chmod(test_results_summary_path, S_IREAD | S_IRGRP | S_IROTH)
+    # os.chmod(test_results_summary_path, S_IREAD | S_IRGRP | S_IROTH)
 
     # Save metrics in dat format using pickle
     results_dat = os.path.join(test_result_path, 'metrics.dat')
@@ -271,12 +271,12 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
     y_interp_mean = np.mean(y_interp, 0)
     y_interp_sem = np.std(y_interp, 0) / np.sqrt(y_interp.shape[0])
 
-    #plt.clf()
-    #plt.plot(x_interp_mean, y_interp_mean, 'b-')
-    #plt.fill_between(x_interp_mean, y_interp_mean - y_interp_sem, y_interp_mean + y_interp_sem, alpha=0.35)
-    #plt.xlabel('FOV (%)')
-    #plt.ylabel('Dice')
-    #plt.savefig(os.path.join(test_result_path, 'interp_slices.png'))
+    # plt.clf()
+    # plt.plot(x_interp_mean, y_interp_mean, 'b-')
+    # plt.fill_between(x_interp_mean, y_interp_mean - y_interp_sem, y_interp_mean + y_interp_sem, alpha=0.35)
+    # plt.xlabel('FOV (%)')
+    # plt.ylabel('Dice')
+    # plt.savefig(os.path.join(test_result_path, 'interp_slices.png'))
 
 
 def get_stats_string(mw: SegMetricsProcessor, skipped_count, testing_time):
@@ -407,7 +407,7 @@ def test_dir(dirpath, config=None, vals_dict=None, best_weight_path=None, save_h
     config_filepath = os.path.join(dirpath, 'config.ini')
     if not config:
         config = MCONFIG.get_config(MCONFIG.get_cp_save_tag(config_filepath), create_dirs=False)
-    
+
     print('Config: %s' % config_filepath)
     config.load_config(config_filepath)
     config.TEST_WEIGHT_PATH = best_weight_path
