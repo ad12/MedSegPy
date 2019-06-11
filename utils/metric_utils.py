@@ -92,7 +92,7 @@ class SegMetric(Enum):
             return self.func(y_pred, y_true)
 
 
-class BaseMetric(Enum):
+class MetricOperation(Enum):
     MEAN = 1, lambda x, **kwargs: np.mean(x, **kwargs)
     MEDIAN = 2, lambda x, **kwargs: np.median(x, **kwargs)
     RMS = 3, lambda x, **kwargs: np.sqrt(np.mean(x ** 2, **kwargs))
@@ -107,7 +107,7 @@ class BaseMetric(Enum):
         return self.func(np.asarray(x), **kwargs)
 
 
-class ErrorMetric(Enum):
+class MetricError(Enum):
     STANDARD_DEVIATION = 1, lambda x, **kwargs: np.std(x, **kwargs)
     STANDARD_ERROR = 2, lambda x, **kwargs: __sem__(x, **kwargs)
 
@@ -169,11 +169,11 @@ class SegMetricsProcessor():
                                SegMetric.SPECIFICITY: 'Specificity',
                                SegMetric.PPV: SegMetric.PPV.name}
 
-    __DEFAULT_METRICS_OPERATIONS = {SegMetric.CV: BaseMetric.RMS}
+    __DEFAULT_METRICS_OPERATIONS = {SegMetric.CV: MetricOperation.RMS}
 
     def __init__(self, metrics, class_names,
-                 metrics_to_base_type = __DEFAULT_METRICS_OPERATIONS,
-                 error_metric = ErrorMetric.STANDARD_DEVIATION):
+                 metrics_to_operations = __DEFAULT_METRICS_OPERATIONS,
+                 error_metric = MetricError.STANDARD_DEVIATION):
         """Constructor
 
         :param metrics: Metrics to analyze. Default is all supported metrics
@@ -186,6 +186,10 @@ class SegMetricsProcessor():
         self.__scan_seg_data = dict()
         self.__data = dict()
         self.__is_data_stale = False
+
+        # Default operations (mean, RMS, Median, etc) and error (std. dev., SEM, etc.) to use per metric
+        self.metrics_to_operations = metrics_to_operations
+        self.error_metric = error_metric
 
     def compute_metrics(self, scan_id, y_true: np.ndarray, y_pred: np.ndarray, voxel_spacing: tuple):
         """
@@ -223,9 +227,9 @@ class SegMetricsProcessor():
         self.__scan_seg_data[scan_id] = metrics_data
         self.__is_data_stale = True
 
-        return self.__scan_summary(scan_id)
+        return self.scan_summary(scan_id)
 
-    def __scan_summary(self, scan_id):
+    def scan_summary(self, scan_id):
         scan_data = self.__scan_seg_data[scan_id]
         avg_data = scan_data.mean(axis=1)
 
