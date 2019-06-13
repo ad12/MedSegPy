@@ -1,5 +1,3 @@
-from enum import Enum
-
 import numpy as np
 import scipy.stats as spstats
 import pandas as pd
@@ -9,7 +7,7 @@ from medpy.metric import dc, assd, recall, precision, sensitivity, specificity, 
 from typing import Collection
 
 
-def cv(y_pred, y_true):
+def cv(y_true, y_pred):
     """
     Coefficient of Variation
     :param y_true:
@@ -42,7 +40,7 @@ def dice_score_coefficient(y_true, y_pred):
     return dice
 
 
-def volumetric_overlap_error(y_pred, y_true):
+def volumetric_overlap_error(y_true, y_pred):
     """
     Volumetric overlap error
     :param y_true:
