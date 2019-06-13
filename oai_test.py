@@ -171,6 +171,7 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
             l_argmax = np.argmax(recon, axis=-1)
             for c in range(labels.shape[-1]):
                 labels[l_argmax == c, c] = 1
+            labels = labels.astype(np.float32)
 
         # background is always excluded from analysis
         if config.INCLUDE_BACKGROUND:

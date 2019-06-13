@@ -90,7 +90,7 @@ class MultiClassOverlay():
         overlap_img = cv2.addWeighted(x_rgb, 1, c_label, self.opacity, 0)
 
         if filepath:
-            cv2.imwrite(filepath, overlap_img.transpose())
+            cv2.imwrite(filepath, overlap_img)
 
 
 def write_im_overlay(dir_path, xs, im_overlay):
