@@ -131,7 +131,6 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
     img_cnt = 1
 
     start = time.time()
-    skipped_count = 0
 
     # Read the files that will be segmented
     test_gen.summary()
@@ -216,7 +215,7 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
             x_write = x_test[..., x_test.shape[-1] // 2]
 
             # Save mask overlap
-            # TODO (arjundd): fix writing
+            # TODO (arjundd): fix writing masks to files
             x_write_o = np.transpose(x_write, (1, 2, 0))
             recon_oo = np.transpose(recon_o, (1, 2, 0, 3))
             mc_overlay.im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write_o, recon_oo)
@@ -232,7 +231,7 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
 
     end = time.time()
 
-    stats_string = get_stats_string(seg_metrics_processor, skipped_count, end - start)
+    stats_string = get_stats_string(seg_metrics_processor, end - start)
     # Print some summary statistics
     print('--' * 20)
     print(stats_string)
@@ -267,19 +266,8 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
                                                                           'xt': x_total,
                                                                           'yt': y_total})
 
-    x_interp_mean = np.mean(x_interp, 0)
-    y_interp_mean = np.mean(y_interp, 0)
-    y_interp_sem = np.std(y_interp, 0) / np.sqrt(y_interp.shape[0])
 
-    # plt.clf()
-    # plt.plot(x_interp_mean, y_interp_mean, 'b-')
-    # plt.fill_between(x_interp_mean, y_interp_mean - y_interp_sem, y_interp_mean + y_interp_sem, alpha=0.35)
-    # plt.xlabel('FOV (%)')
-    # plt.ylabel('Dice')
-    # plt.savefig(os.path.join(test_result_path, 'interp_slices.png'))
-
-
-def get_stats_string(mw: SegMetricsProcessor, skipped_count, testing_time):
+def get_stats_string(mw: MetricsManager, testing_time):
     """
     Return string detailing statistics
     :param mw:
@@ -287,12 +275,14 @@ def get_stats_string(mw: SegMetricsProcessor, skipped_count, testing_time):
     :param testing_time:
     :return:
     """
-    s = 'Overall Summary:\n'
-    s += '%d Skipped\n' % skipped_count
+    seg_metrics_processor = mw.seg_metrics_processor
+    inference_runtimes = np.asarray(mw.runtimes)
 
-    s += mw.summary()
-
-    s += 'Time required = %0.1f seconds.\n' % testing_time
+    s = '============Overall Summary============\n'
+    s += 'Time elapsed: %0.1f seconds.\n' % testing_time
+    s += '%s\n' % seg_metrics_processor.summary()
+    s += 'Inference time (Mean +/- Std. Dev.): %0.2f +/- %0.2f seconds.\n' % (np.mean(inference_runtimes),
+                                                                              np.std(inference_runtimes))
     return s
 
 
