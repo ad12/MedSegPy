@@ -280,6 +280,8 @@ EXP_DIR_MAP = {'arch': 'architecture_limited',
                }
 
 if __name__ == '__main__':
+    raise DeprecationWarning('This file is deprecated. Use nn_train')
+
     base_parser = argparse.ArgumentParser(description='Train OAI dataset')
     arg_subparser = base_parser.add_subparsers(help='supported configs for different architectures', dest='config')
     subparsers = MCONFIG.init_cmd_line_parser(arg_subparser)

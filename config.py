@@ -4,12 +4,13 @@ import warnings
 from itertools import groupby
 from time import localtime, strftime
 
-import glob_constants as glc
 import mri_utils
 import utils.utils as utils
 from cross_validation import cv_util
 from losses import DICE_LOSS, CMD_LINE_SUPPORTED_LOSSES, get_training_loss_from_str
 from utils import io_utils
+
+import defaults
 
 # Do not change this constant unless version upgrades are done and keys are deprecated
 DEPRECATED_KEYS = ['NUM_CLASSES', 'TRAIN_FILES_CV', 'VALID_FILES_CV', 'TEST_FILES_CV']
@@ -20,7 +21,7 @@ UNET_NAME = 'unet_2d'
 ENSEMBLE_UDS_NAME = 'ensemble_uds'
 
 # This is the default save path prefix - please change if you desire something else
-SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/oai_data'
+SAVE_PATH_PREFIX = defaults.SAVE_PATH
 
 SUPPORTED_CONFIGS_NAMES = [DEEPLABV3_NAME, SEGNET_NAME, UNET_NAME]
 
@@ -80,9 +81,9 @@ class Config():
     INIT_WEIGHT_PATH = ''
 
     # Dataset Paths
-    TRAIN_PATH = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/train_aug/'
-    VALID_PATH = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/valid/'
-    TEST_PATH = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/test'
+    TRAIN_PATH = defaults.TRAIN_PATH
+    VALID_PATH = defaults.VALID_PATH
+    TEST_PATH = defaults.TEST_PATH
 
     # Cross-Validation-Parameters
     USE_CROSS_VALIDATION = False
@@ -118,9 +119,9 @@ class Config():
 
     # Initializer
     KERNEL_INITIALIZER = 'he_normal'
+    SEED = None
 
     def __init__(self, cp_save_tag, state='training', create_dirs=True):
-        self.SEED = glc.SEED
         if state not in ['testing', 'training']:
             raise ValueError('state must either be \'training\' or \'testing\'')
 
@@ -331,7 +332,8 @@ class Config():
                 'EARLY_STOPPING_PATIENCE' if self.USE_EARLY_STOPPING else '',
                 'EARLY_STOPPING_CRITERION' if self.USE_EARLY_STOPPING else '', '',
 
-                'KERNEL_INITIALIZER', '',
+                'KERNEL_INITIALIZER',
+                'SEED' if self.SEED else '', ''
 
                 'FINE_TUNE',
                 'INIT_WEIGHT_PATH' if self.FINE_TUNE else ''])
@@ -459,6 +461,10 @@ class Config():
         subcommand_parser.add_argument('--kernel_initializer', type=str, default=cls.KERNEL_INITIALIZER, nargs='?',
                                        help='kernel initializer. Default: %s' % str(cls.KERNEL_INITIALIZER))
 
+        subcommand_parser.add_argument('-s', '--seed', metavar='S', type=int, default=cls.SEED, nargs='?',
+                                       dest='seed',
+                                       help='python seed to initialize filter weights. Default: %s' % cls.SEED)
+
         return subcommand_parser
 
     @classmethod
@@ -471,7 +477,8 @@ class Config():
                 'early_stopping_criterion',
                 'train_batch_size', 'valid_batch_size', 'test_batch_size',
                 'loss', 'include_background',
-                'img_size']
+                'img_size',
+                'kernel_initializer', 'seed']
 
     @classmethod
     def parse_cmd_line(cls, vargin):
