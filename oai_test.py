@@ -22,7 +22,7 @@ from keras import backend as K
 import mri_utils
 import utils.utils as utils
 from utils import io_utils, dl_utils
-from utils.metric_utils import SegMetricsProcessor, MetricsManager
+from utils.metric_utils import MetricsManager
 from utils.im_utils import MultiClassOverlay
 
 

@@ -1,4 +1,5 @@
-import os, sys
+import os
+import sys
 
 from keras import Model
 from keras.initializers import glorot_uniform
@@ -8,8 +9,8 @@ from keras.utils import plot_model
 sys.path.append('../')
 import glob_constants as glc
 from config import DeeplabV3Config, SegnetConfig, UNetConfig, \
-    UNetMultiContrastConfig, UNet2_5DConfig, DeeplabV3_2_5DConfig, ResidualUNet, AnisotropicUNetConfig, RefineNetConfig, UNet3DConfig
-from glob_constants import SEED
+    UNetMultiContrastConfig, UNet2_5DConfig, DeeplabV3_2_5DConfig, ResidualUNet, AnisotropicUNetConfig, RefineNetConfig, \
+    UNet3DConfig
 
 from models.deeplab_2d.deeplab_model import DeeplabModel
 from models.segnet_2d.segnet import Segnet_v2
@@ -26,17 +27,17 @@ def get_model(config):
     :param config: Config object with specific architecture configurations
     :return: a Keras model
     """
-    if (type(config) is DeeplabV3Config):
+    if type(config) is DeeplabV3Config:
         model = deeplabv3_2d(config)
-    elif (type(config) is SegnetConfig):
+    elif type(config) is SegnetConfig:
         model = segnet_2d(config)
-    elif (type(config) is UNetConfig):
+    elif type(config) is UNetConfig:
         model = unet_2d(config)
-    elif (type(config) is UNetMultiContrastConfig):
+    elif type(config) is UNetMultiContrastConfig:
         model = unet_2d_multi_contrast(config)
-    elif (type(config) is UNet2_5DConfig):
+    elif type(config) is UNet2_5DConfig:
         model = unet_2_5d(config)
-    elif (type(config) is DeeplabV3_2_5DConfig):
+    elif type(config) is DeeplabV3_2_5DConfig:
         model = deeplabv3_2_5d(config)
     elif type(config) is ResidualUNet:
         model = residual_unet(config)
@@ -65,6 +66,7 @@ def basic_refinenet(config):
 
     return model
 
+
 def anisotropic_unet(config):
     input_shape = config.IMG_SIZE
     activation = config.LOSS[1]
@@ -80,6 +82,7 @@ def anisotropic_unet(config):
     model = Model(inputs=model.input, outputs=x)
 
     return model
+
 
 def residual_unet(config):
     """
@@ -105,6 +108,7 @@ def residual_unet(config):
 
     return model
 
+
 def unet_3d(config):
     """
      Returns Unet3D model
@@ -122,9 +126,11 @@ def unet_3d(config):
     model = unet_3d_model(input_size=input_shape,
                           depth=DEPTH,
                           num_filters=NUM_FILTERS, num_classes=num_classes,
-                          activation=activation)
+                          activation=activation,
+                          seed=config.SEED)
 
     return model
+
 
 def unet_2d(config):
     """
@@ -172,7 +178,7 @@ def deeplabv3_2d(config):
     activation = config.LOSS[1]
     dropout_rate = config.DROPOUT_RATE
     num_classes = config.get_num_classes()
-    m = DeeplabModel(kernel_initializer=config.KERNEL_INITIALIZER, seed=glc.SEED)
+    m = DeeplabModel(kernel_initializer=config.KERNEL_INITIALIZER, seed=config.SEED)
     model = m.Deeplabv3(weights=None,
                         input_shape=input_shape,
                         classes=num_classes,
@@ -213,7 +219,8 @@ def segnet_2d(config):
                       num_filters=config.NUM_FILTERS,
                       single_bn=config.SINGLE_BN,
                       conv_act_bn=config.CONV_ACT_BN,
-                      output_mode=output_mode)
+                      output_mode=output_mode,
+                      seed=config.SEED)
 
     model_name = config.CP_SAVE_TAG + '_%d' + '_%s' + '_%s'
     bn_str = 'xbn'
@@ -259,7 +266,7 @@ def unet_2d_multi_contrast(config):
     model = Model(inputs=model.input, outputs=x)
 
     # only load weights for layers that share the same name
-    if (config.INIT_UNET_2D):
+    if config.INIT_UNET_2D:
         model.load_weights(config.INIT_UNET_2D_WEIGHTS, by_name=True)
 
     return model
@@ -315,7 +322,7 @@ def deeplabv3_2_5d(config):
     activation = config.LOSS[1]
     dropout_rate = config.DROPOUT_RATE
     num_classes = config.get_num_classes()
-    m = DeeplabModel(kernel_initializer=config.KERNEL_INITIALIZER, seed=glc.SEED)
+    m = DeeplabModel(kernel_initializer=config.KERNEL_INITIALIZER, seed=config.SEED)
     model = m.Deeplabv3(weights=None,
                         input_shape=input_shape,
                         classes=num_classes,

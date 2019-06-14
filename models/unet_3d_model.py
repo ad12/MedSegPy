@@ -12,14 +12,11 @@ DEFAULT_INPUT_SIZE = (288, 288, 64, 1)
 
 def unet_3d_model(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, num_classes=1, activation='sigmoid',
                   output_mode=None, num_filters=None, depth=6,
-                  filter_size=(3, 3, 3), in_plane_pool_size=(2, 2)):
+                  filter_size=(3, 3, 3), in_plane_pool_size=(2, 2), seed=None):
     # input size is a tuple of the size of the image
     # assuming channel last
     # input_size = (dim1, dim2, dim3, ch)
     # unet begins
-    import glob_constants
-    print('Initializing unet with seed: %s' % str(glob_constants.SEED))
-    SEED = glob_constants.SEED
     if input_tensor is None and (type(input_size) is not tuple or len(input_size) != 4):
         raise ValueError('input_size must be a tuple of size (height, width, slices, 1)')
 
@@ -48,11 +45,11 @@ def unet_3d_model(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, num_classes=
 
         conv = Conv3D(nfeatures[depth_cnt], filter_size,
                       padding='same',
-                      kernel_initializer=he_normal(seed=SEED))(pool)
+                      kernel_initializer=he_normal(seed=seed))(pool)
         conv = Activation('relu')(conv)
         conv = Conv3D(nfeatures[depth_cnt], filter_size,
                       padding='same',
-                      kernel_initializer=he_normal(seed=SEED))(conv)
+                      kernel_initializer=he_normal(seed=seed))(conv)
         conv = Activation('relu')(conv)
 
         conv = BN(axis=-1, momentum=0.95, epsilon=0.001)(conv)
@@ -78,7 +75,7 @@ def unet_3d_model(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, num_classes=
                                               padding='same',
                                               strides=in_plane_pool_size + (2,),
                                               #output_shape=deconv_shape,
-                                              kernel_initializer=he_normal(seed=SEED))(conv),
+                                              kernel_initializer=he_normal(seed=seed))(conv),
                               conv_ptr[depth_cnt]],
                              axis=4)
 
@@ -87,24 +84,24 @@ def unet_3d_model(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, num_classes=
                                               padding='same',
                                               strides=in_plane_pool_size + (1,),
                                               #output_shape=deconv_shape,
-                                              kernel_initializer=he_normal(seed=SEED))(conv),
+                                              kernel_initializer=he_normal(seed=seed))(conv),
                               conv_ptr[depth_cnt]],
                              axis=4)
 
         conv = Conv3D(nfeatures[depth_cnt], filter_size,
                       padding='same',
-                      kernel_initializer=he_normal(seed=SEED))(up)
+                      kernel_initializer=he_normal(seed=seed))(up)
         conv = Activation('relu')(conv)
         conv = Conv3D(nfeatures[depth_cnt], filter_size,
                       padding='same',
-                      kernel_initializer=he_normal(seed=SEED))(conv)
+                      kernel_initializer=he_normal(seed=seed))(conv)
         conv = Activation('relu')(conv)
 
         conv = BN(axis=-1, momentum=0.95, epsilon=0.001)(conv)
         conv = Dropout(rate=0.00)(conv)
 
     # combine features
-    recon = Conv3D(num_classes, (1, 1, 1), padding='same', kernel_initializer=he_normal(seed=SEED))(conv)
+    recon = Conv3D(num_classes, (1, 1, 1), padding='same', kernel_initializer=he_normal(seed=seed))(conv)
     recon = Activation(activation)(recon)
 
     model = Model(inputs=[inputs], outputs=[recon])
