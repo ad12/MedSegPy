@@ -52,6 +52,7 @@ class CommandLineInterface(ABC):
         pass
 
     def parse(self):
+        print('Parsing')
         args = self.base_parser.parse_args()
         self.__args = vars(args)
 
@@ -83,6 +84,8 @@ class CommandLineInterface(ABC):
 
 
 class NNTrain(CommandLineInterface):
+    __DESCRIPTION__ = 'Train networks for segmentation'
+
     # Argument Parser
     __ARG_KEY_CONFIG__ = 'config'
     __ARG_KEY_K_FOLD_CROSS_VALIDATION__ = 'k_fold_cross_validation'
@@ -275,6 +278,7 @@ class NNTrain(CommandLineInterface):
         n_epochs = config.N_EPOCHS
         pik_save_path = config.PIK_SAVE_PATH
         loss = config.LOSS
+        class_weights = self.class_weights
 
         if model is None:
             model = get_model(config)
@@ -441,9 +445,7 @@ class NNTrain(CommandLineInterface):
         return step_decay
 
     def parse(self):
-        args = self.base_parser.parse_args()
-        self.__args = vars(args)
-
+        super().parse()
         if len(self.gpu.split(',')) > 1 and self.save_model:
             raise ValueError('Model cannot be saved when using multiple gpus for training.')
 
@@ -468,6 +470,5 @@ class LossHistory(kc.Callback):
 
 if __name__ == '__main__':
     nn_train = NNTrain()
-    nn_train.init_parser()
     nn_train.parse()
     nn_train.run()

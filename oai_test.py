@@ -233,7 +233,7 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
 
     end = time.time()
 
-    stats_string = get_stats_string(seg_metrics_processor, end - start)
+    stats_string = get_stats_string(metrics_manager, end - start)
     # Print some summary statistics
     print('--' * 20)
     print(stats_string)
