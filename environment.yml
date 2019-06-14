@@ -10,6 +10,7 @@ dependencies:
   - pyqt=5.9.2
   - python=3.6.8
   - pip:
+    - cached-property==1.5.1
     - configparser==3.5.0
     - cython==0.29
     - dicom2nifti==2.0.3
