@@ -61,7 +61,7 @@ def basic_refinenet(config):
     model = refinenet_model(input_shape=input_shape)
 
     # Add activation
-    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation)
+    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation, seed=config.SEED)
     model = Model(inputs=model.input, outputs=x)
 
     return model
@@ -78,7 +78,7 @@ def anisotropic_unet(config):
                                 kernel_size=config.KERNEL_SIZE)
 
     # Add activation
-    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation)
+    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation, seed=config.SEED)
     model = Model(inputs=model.input, outputs=x)
 
     return model
@@ -103,7 +103,7 @@ def residual_unet(config):
                              squeeze_excitation_ratio=config.SE_RATIO)
 
     # Add activation
-    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation)
+    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation, seed=config.SEED)
     model = Model(inputs=model.input, outputs=x)
 
     return model
@@ -155,7 +155,7 @@ def unet_2d(config):
         model = unet_2d_model_v2(input_size=input_shape, depth=DEPTH, num_filters=NUM_FILTERS)
 
         # Add activation
-        x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation)
+        x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation, seed=config.SEED)
         model = Model(inputs=model.input, outputs=x)
 
     return model
@@ -188,7 +188,7 @@ def deeplabv3_2d(config):
                         dropout_rate=dropout_rate)
 
     # Add sigmoid activation layer -
-    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation)
+    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation, seed=config.SEED)
     model = Model(inputs=model.input, outputs=x)
 
     # Save image
@@ -262,7 +262,7 @@ def unet_2d_multi_contrast(config):
     model = unet_2d_model(input_tensor=x)
 
     # Add activation
-    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation)
+    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation, seed=config.SEED)
     model = Model(inputs=model.input, outputs=x)
 
     # only load weights for layers that share the same name
@@ -294,7 +294,7 @@ def unet_2_5d(config):
     model = unet_2d_model(input_tensor=x)
 
     # Add activation
-    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation)
+    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation, seed=config.SEED)
     model = Model(inputs=model.input, outputs=x)
 
     # only load weights for layers that share the same name
@@ -332,7 +332,7 @@ def deeplabv3_2_5d(config):
                         dropout_rate=dropout_rate)
 
     # Add sigmoid activation layer -
-    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation)
+    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation, seed=config.SEED)
     model = Model(inputs=model.input, outputs=x)
 
     # Save image
@@ -353,7 +353,7 @@ def __softmax_activation_layer(output, num_classes):
     return
 
 
-def __add_activation_layer(output, num_classes, activation='sigmoid'):
+def __add_activation_layer(output, num_classes, activation='sigmoid', seed=None):
     """
     Return sigmoid activation layer
     :param: output: The output of the previous layer
@@ -362,7 +362,7 @@ def __add_activation_layer(output, num_classes, activation='sigmoid'):
     # Initializing kernel weights to 1 and bias to 0.
     # i.e. without training, the output would be a sigmoid activation on each pixel of the input
     return Conv2D(num_classes, (1, 1), activation=activation,
-                  kernel_initializer=glorot_uniform(seed=SEED),
+                  kernel_initializer=glorot_uniform(seed=seed),
                   name='output_activation')(output)
 
 
