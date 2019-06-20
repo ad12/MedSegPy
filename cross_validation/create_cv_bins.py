@@ -5,12 +5,10 @@ Data is stored in Pickle format
 """
 
 import argparse
-
+import defaults
 from cv_util import CrossValidationFileGenerator, DATASET_NAME
 
-DATA_PATHS = ['/bmrNAS/people/akshay/dl/oai_data/unet_2d/train_aug/',
-              '/bmrNAS/people/akshay/dl/oai_data/unet_2d/valid/',
-              '/bmrNAS/people/akshay/dl/oai_data/unet_2d/test']
+DATA_PATHS = [defaults.TRAIN_PATH, defaults.VALID_PATH, defaults.TEST_PATH]
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate bins for k-fold cross-validation')
