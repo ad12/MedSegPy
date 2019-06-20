@@ -278,7 +278,7 @@ class NNTrain(CommandLineInterface):
         n_epochs = config.N_EPOCHS
         pik_save_path = config.PIK_SAVE_PATH
         loss = config.LOSS
-        class_weights = self.class_weights
+        class_weights = self.get_arg(self.__ARG_KEY_CLASS_WEIGHTS__)
 
         if model is None:
             model = get_model(config)
