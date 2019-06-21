@@ -185,7 +185,7 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
                 labels = labels[..., np.newaxis]
 
         num_slices = x_test.shape[0]
-
+        import pdb; pdb.set_trace()
         voxel_spacing = get_voxel_spacing(num_slices)
         summary = metrics_manager.analyze(fname, np.transpose(y_test, axes=[1, 2, 0, 3]),
                                           np.transpose(labels, axes=[1, 2, 0, 3]),
