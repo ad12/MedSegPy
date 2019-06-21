@@ -1071,7 +1071,9 @@ class OAI3DBlockGenerator(OAI3DGenerator):
                 _, recon_vol = self.unify_blocks(ypred_blocks, scan_to_im_size[vol_id])
                 recon_vol = np.transpose(recon_vol, [2, 0, 1, 3])
 
-            yield (im_vol, ytrue_vol, recon_vol, vol_id)
+            # TODO (arjundd): resolve for scan_id processing
+            scan_id = vol_id.split('-')[0]
+            yield (im_vol, ytrue_vol, recon_vol, scan_id)
 
     def img_generator(self, state):
         accepted_states = [GeneratorState.TRAINING, GeneratorState.VALIDATION]
