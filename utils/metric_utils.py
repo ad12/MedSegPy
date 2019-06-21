@@ -5,7 +5,7 @@ import tabulate
 
 from medpy.metric import dc, assd, recall, precision, sensitivity, specificity, positive_predictive_value
 from typing import Collection
-
+from enum import Enum
 
 def cv(y_true, y_pred):
     """
