@@ -38,7 +38,8 @@ cpal = sns.color_palette("pastel", 8)
 SAVE_PATH = io_utils.check_dir('/bmrNAS/people/arjun/msk_seg_networks/analysis/exp_graphs')
 
 
-def graph_slice_exp(exp_dict, show_plot=False, ax=None, title='', ylim=[0.6, 1], show_error=True, legend_loc='side'):
+def graph_slice_exp(exp_dict, show_plot=False, ax=None, title='', ylim=[0.6, 1], show_error=True, legend_loc='side',
+                    working_dir=SAVE_PATH, **kwargs):
     """
     Compute %FOV vs Dice Accuracy using data saved in 'total_interp_data.mat'" for multiple test result files
     
@@ -50,7 +51,7 @@ def graph_slice_exp(exp_dict, show_plot=False, ax=None, title='', ylim=[0.6, 1],
                                          'No aug': ['/no_aug/seed1/test_results', '/no_aug/seed2/test_results'])
     """
     data_keys = exp_dict['keys']
-    filename = exp_dict['filename']
+    filename = exp_dict['filename'] if 'filename' in exp_dict.keys() else None
 
     if ax is None:
         plt.figure()
@@ -58,7 +59,9 @@ def graph_slice_exp(exp_dict, show_plot=False, ax=None, title='', ylim=[0.6, 1],
 
     legend_keys = []
     c = 0
-    cpal = sns.color_palette("muted", len(data_keys))
+    
+    cpal = kwargs.get('cpal') if 'cpal' in kwargs else sns.color_palette("muted", len(data_keys))
+    
     for data_key in data_keys:
         data_dirpaths = exp_dict[data_key]
         if type(data_dirpaths) is str:
@@ -98,16 +101,21 @@ def graph_slice_exp(exp_dict, show_plot=False, ax=None, title='', ylim=[0.6, 1],
     ax.autoscale_view()
     # plt.legend(legend_keys)
     # txt = fig.text(0.49, -0.04, 'FOV (%)', fontsize=13)
-    if legend_loc == 'side':
-        lgd = ax.legend(legend_keys, loc='center left', bbox_to_anchor=(1.0, 0.5),
-                        fancybox=True, shadow=True, ncol=1)
-    else:
-        lgd = ax.legend(legend_keys, loc='upper center', bbox_to_anchor=(0.5, -0.15),
-                        fancybox=True, shadow=True, ncol=len(exp_dict['keys']))
-    plt.savefig(os.path.join(SAVE_PATH, '%s.png' % filename), format='png', dpi=1000, bbox_inches='tight')
+    if legend_loc:
+        if legend_loc == 'side':
+            lgd = ax.legend(legend_keys, loc='center left', bbox_to_anchor=(1.0, 0.5),
+                            fancybox=True, shadow=True, ncol=1)
+        else:
+            lgd = ax.legend(legend_keys, loc='upper center', bbox_to_anchor=(0.5, -0.15),
+                            fancybox=True, shadow=True, ncol=len(exp_dict['keys']))
+    
+    if filename:
+        plt.savefig(os.path.join(working_dir, '%s.png' % filename), format='png', dpi=1000, bbox_inches='tight')
 
     if show_plot:
         plt.show()
+    
+    return ax
 
 
 def graph_data_limitation(data, filename, decay_exp_fit=False):
@@ -150,8 +158,9 @@ def graph_data_limitation(data, filename, decay_exp_fit=False):
     # txt = fig.text(0.49, -0.04, '#Patients', fontsize=13)
     lgd = ax_center.legend(loc='lower center', bbox_to_anchor=(0.5, -0.5),
                            fancybox=True, shadow=True, ncol=3)
-    plt.savefig(os.path.join(SAVE_PATH, '%s.png' % filename), format='png', dpi=1000, bbox_extra_artists=(lgd,),
-                bbox_inches='tight')
+    if filename:
+        plt.savefig(os.path.join(SAVE_PATH, '%s.png' % filename), format='png', dpi=1000, bbox_extra_artists=(lgd,),
+                    bbox_inches='tight')
 
 
 def get_data_limitation(multi_data, metric_id, decay_exp_fit=False, asymtote=0):

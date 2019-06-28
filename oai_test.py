@@ -162,7 +162,7 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
 
         labels = (recon > 0.5).astype(np.float32)
         num_slices = x_test.shape[0]
-
+        
         voxel_spacing = get_voxel_spacing(num_slices)
         mw.compute_metrics(np.transpose(np.squeeze(y_test), axes=[1, 2, 0]),
                            np.transpose(np.squeeze(labels), axes=[1, 2, 0]),
