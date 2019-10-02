@@ -19,7 +19,7 @@ All data should be written to h5 files slice-wise, meaning each slice is its own
 
 **Readable format:** `PatientID_Timepoint-AugmentationNumber_SliceNumber`
 
-**String format:** `%07d_V01-Aug%02d_%03d`
+**String format:** `%07d_V%02d-Aug%02d_%03d`
 
 **Regex:** `([\d]+)_V([\d]+)-Aug([\d]+)_([\d]+)`
 
