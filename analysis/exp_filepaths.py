@@ -17,6 +17,11 @@ ARCH_UNET = '/bmrNAS/people/arjun/msk_seg_networks/augment_limited/unet_2d/2018-
 ARCH_SEGNET = '/bmrNAS/people/arjun/msk_seg_networks/architecture_limit/segnet_2d/2018-11-30-21-13-14/fine_tune/test_results'
 ARCH_DEEPLAB = '/bmrNAS/people/arjun/msk_seg_networks/architecture_limit/deeplabv3_2d/2018-11-30-05-49-49/fine_tune/test_results/16_2-4-6'
 
+# Architecture experiments (not fine-tuned)
+ARCH_UNET_NFT = '/bmrNAS/people/arjun/msk_seg_networks/augment_limited/unet_2d/2018-11-07-16-05-15/test_results'
+ARCH_SEGNET_NFT = '/bmrNAS/people/arjun/msk_seg_networks/architecture_limit/segnet_2d/2018-11-30-21-13-14/test_results'
+ARCH_DEEPLAB_NFT = '/bmrNAS/people/arjun/msk_seg_networks/architecture_limit/deeplabv3_2d/2018-11-30-05-49-49/test_results/16_2-4-6'
+
 # loss functions experiments
 LOSS_DSC = BASELINE_UNET
 LOSS_WCE = '/bmrNAS/people/arjun/msk_seg_networks/loss_limit/unet_2d/2018-12-11-21-59-16/test_results/'

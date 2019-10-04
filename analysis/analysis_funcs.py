@@ -320,6 +320,6 @@ def print_metrics_summary(dir_paths):
         with open(test_file) as search:
             for line in search:
                 line = line.rstrip()  # remove '\n' at end of line
-                if 'MEAN +/- STD' in line.upper():
+                if 'MEAN +/- STD' in line.upper() or 'RMS +/- STD' in line.upper():
                     print(line)
         print('')
