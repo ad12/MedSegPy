@@ -26,6 +26,8 @@ from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS, dice_loss, fo
 from models.models import get_model
 from utils import io_utils, parallel_utils as putils, utils, dl_utils
 
+import defaults
+
 CLASS_WEIGHTS = np.asarray([100, 1])
 SAVE_BEST_WEIGHTS = True
 FREEZE_LAYERS = None
@@ -184,7 +186,7 @@ class NNTrain(CommandLineInterface):
             raise ValueError('--%s or --%s must be specified' % (self.__ARG_KEY_EXPERIMENT__,
                                                                  self.__ARG_KEY_FINE_TUNE_PATH__))
 
-        MCONFIG.SAVE_PATH_PREFIX = os.path.join('/bmrNAS/people/arjun/msk_seg_networks', experiment_dir)
+        MCONFIG.SAVE_PATH_PREFIX = os.path.join(defaults.SAVE_PATH, experiment_dir)
 
         # Initialize GPUs that are visible.
         print('Using GPU %s' % gpu)
@@ -288,8 +290,8 @@ class NNTrain(CommandLineInterface):
                    to_file=os.path.join(cp_save_path, 'model.png'),
                    show_shapes=True)
 
-        # If fine-tune, initialize model with weights.
-        if config.FINE_TUNE:
+        # If initial weight path specified, initialize model with weights.
+        if config.INIT_WEIGHT_PATH:
             print('Loading weights for fine-tuning')
             model.load_weights(config.INIT_WEIGHT_PATH)
             frozen_layers = self.frozen_layers

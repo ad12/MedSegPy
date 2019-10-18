@@ -336,7 +336,7 @@ class Config():
                 'SEED' if self.SEED else '', ''
 
                 'FINE_TUNE',
-                'INIT_WEIGHT_PATH' if self.FINE_TUNE else ''])
+                'INIT_WEIGHT_PATH'])
         else:
             summary_vals.extend(['TEST_RESULT_PATH', 'TEST_WEIGHT_PATH', 'TEST_BATCH_SIZE'])
 
@@ -465,6 +465,13 @@ class Config():
                                        dest='seed',
                                        help='python seed to initialize filter weights. Default: %s' % cls.SEED)
 
+        # Initialize weight path.
+        subcommand_parser.add_argument('-init_weight_path', '--init_weight_path', metavar='P', type=str,
+                                       default=cls.INIT_WEIGHT_PATH,
+                                       nargs='?',
+                                       dest='init_weight_path',
+                                       help='Path to weights file to initialize. Default: %s' % cls.INIT_WEIGHT_PATH)
+
         return subcommand_parser
 
     @classmethod
@@ -478,7 +485,8 @@ class Config():
                 'train_batch_size', 'valid_batch_size', 'test_batch_size',
                 'loss', 'include_background',
                 'img_size',
-                'kernel_initializer', 'seed']
+                'kernel_initializer', 'seed',
+                'init_weight_path']
 
     @classmethod
     def parse_cmd_line(cls, vargin):
