@@ -39,7 +39,7 @@ DATE_THRESHOLD = strptime('2018-09-01-22-39-39', '%Y-%m-%d-%H-%M-%S')
 TEST_SET_METADATA_PIK = '/bmrNAS/people/arjun/msk_seg_networks/oai_metadata/oai_data.dat'
 TEST_SET_MD = io_utils.load_pik(TEST_SET_METADATA_PIK)
 
-VOXEL_SPACING = (0.3125, 0.3125, 1.5)
+VOXEL_SPACING = (0.3125, 0.3125, 0.7)
 SAVE_H5_DATA = False
 
 
