@@ -187,7 +187,8 @@ class NNTrain(CommandLineInterface):
                                                                  self.__ARG_KEY_FINE_TUNE_PATH__))
 
         MCONFIG.SAVE_PATH_PREFIX = os.path.join(defaults.SAVE_PATH, experiment_dir)
-
+        print('OUTPUT_DIR: %s' % MCONFIG.SAVE_PATH_PREFIX)
+        
         # Initialize GPUs that are visible.
         print('Using GPU %s' % gpu)
         os.environ["CUDA_VISIBLE_DEVICES"] = gpu

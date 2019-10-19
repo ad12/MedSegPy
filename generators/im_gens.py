@@ -360,6 +360,9 @@ class OAIGenerator(Generator):
             seg_tissues = self.__compress_multi_class_mask__(seg, tissues)
         else:
             seg_tissues = seg[..., 0, tissues]
+            if isinstance(tissues[0], list):  # if tissues are supposed to be summed (like tibial cartilage and patellar cartilage)
+                seg_tissues = np.sum(seg_tissues, axis=-1)
+
         seg_total = seg_tissues
 
         # if considering background, add class
@@ -600,6 +603,8 @@ class OAI3DGenerator(OAIGenerator):
             seg_tissues = self.__compress_multi_class_mask__(seg, tissues)
         else:
             seg_tissues = seg[..., 0, tissues]
+            if isinstance(tissues[0], list):  # if tissues are supposed to be summed (like tibial cartilage and patellar cartilage)
+                seg_tissues = np.sum(seg_tissues, axis=-1)
         seg_total = seg_tissues
 
         # if considering background, add class
