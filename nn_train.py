@@ -286,9 +286,9 @@ class NNTrain(CommandLineInterface):
             model = get_model(config)
 
         # Plot model to png file.
-        plot_model(model,
-                   to_file=os.path.join(cp_save_path, 'model.png'),
-                   show_shapes=True)
+        #plot_model(model,
+        #           to_file=os.path.join(cp_save_path, 'model.png'),
+        #           show_shapes=True)
 
         # If initial weight path specified, initialize model with weights.
         if config.INIT_WEIGHT_PATH:
