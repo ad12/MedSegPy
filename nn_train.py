@@ -293,7 +293,7 @@ class NNTrain(CommandLineInterface):
 
         # If initial weight path specified, initialize model with weights.
         if config.INIT_WEIGHT_PATH:
-            print('Loading weights for fine-tuning')
+            print('Initializing with weights: %s' % config.INIT_WEIGHT_PATH)
             model.load_weights(config.INIT_WEIGHT_PATH)
             frozen_layers = self.frozen_layers
             if frozen_layers:
