@@ -95,6 +95,7 @@ class NNTrain(CommandLineInterface):
     __ARG_KEY_HO_VALID__ = 'ho_valid'
     __ARG_KEY_CLASS_WEIGHTS__ = 'class_weights'
     __ARG_KEY_EXPERIMENT__ = 'experiment'
+    __ARG_KEY_ABS_SAVE_PATH__ = 'save_path'
     __ARG_KEY_FINE_TUNE_PATH__ = 'fine_tune_path'
     __ARG_KEY_FREEZE_LAYERS__ = 'freeze_layers'
     __ARG_KEY_SAVE_ALL_WEIGHTS__ = 'save_all_weights'
@@ -155,6 +156,10 @@ class NNTrain(CommandLineInterface):
                                   type=str, nargs='?', default='',
                                   dest=self.__ARG_KEY_EXPERIMENT__,
                                   help='Experiment to run.')
+            s_parser.add_argument('--%s' % self.__ARG_KEY_ABS_SAVE_PATH__,
+                                  type=str, nargs='?', default='',
+                                  dest=self.__ARG_KEY_ABS_SAVE_PATH__,
+                                  help='Save path. Must be absolute path.')
             s_parser.add_argument('--%s' % self.__ARG_KEY_FINE_TUNE_PATH__,
                                   type=str, default='', nargs='?',
                                   dest=self.__ARG_KEY_FINE_TUNE_PATH__,
@@ -177,16 +182,21 @@ class NNTrain(CommandLineInterface):
 
     def run(self):
         gpu = self.gpu
+        abs_save_path = self.args[self.__ARG_KEY_ABS_SAVE_PATH__]
         experiment_dir = self.args[self.__ARG_KEY_EXPERIMENT__]
         fine_tune_dirpath = self.args[self.__ARG_KEY_FINE_TUNE_PATH__]
         k_fold_cross_validation = self.args[self.__ARG_KEY_K_FOLD_CROSS_VALIDATION__]
 
         # Validate either fine-tune or experiment type selected
-        if not fine_tune_dirpath and not experiment_dir:
-            raise ValueError('--%s or --%s must be specified' % (self.__ARG_KEY_EXPERIMENT__,
-                                                                 self.__ARG_KEY_FINE_TUNE_PATH__))
+        if not fine_tune_dirpath and not experiment_dir and not abs_save_path:
+            raise ValueError('--%s,  --%s, or --%s must be specified' % (self.__ARG_KEY_EXPERIMENT__,
+                                                                         self.__ARG_KEY_FINE_TUNE_PATH__,
+                                                                         self.__ARG_KEY_ABS_SAVE_PATH__))
 
-        MCONFIG.SAVE_PATH_PREFIX = os.path.join(defaults.SAVE_PATH, experiment_dir)
+        if abs_save_path:
+            MCONFIG.SAVE_PATH_PREFIX = abs_save_path
+        else:
+            MCONFIG.SAVE_PATH_PREFIX = os.path.join(defaults.SAVE_PATH, experiment_dir)
         print('OUTPUT_DIR: %s' % MCONFIG.SAVE_PATH_PREFIX)
         
         # Initialize GPUs that are visible.
