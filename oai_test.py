@@ -21,7 +21,7 @@ from keras import backend as K
 
 import mri_utils
 import utils.utils as utils
-from utils import io_utils, dl_utils
+from utils import io_utils, im_utils, dl_utils
 from utils.metric_utils import MetricsManager
 from utils.im_utils import MultiClassOverlay
 
@@ -106,7 +106,7 @@ def interp_slice(y_true, y_pred, orientation='M'):
     return xs, ys, xt, yt
 
 
-def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
+def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA, voxel_spacing=None):
     """
     Test model
     :param config: a Config object
@@ -127,7 +127,7 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
 
     # Load weights into Deeplabv3 model
     model = get_model(config)
-    plot_model(model, os.path.join(config.TEST_RESULT_PATH, 'model.png'), show_shapes=True)
+    #plot_model(model, os.path.join(config.TEST_RESULT_PATH, 'model.png'), show_shapes=True)
     model.load_weights(config.TEST_WEIGHT_PATH)
 
     img_cnt = 1
@@ -152,7 +152,6 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
 
     metrics_manager = MetricsManager(class_names=class_names)
     seg_metrics_processor = metrics_manager.seg_metrics_processor
-    voxel_spacing = None
 
     # image writer
     mc_overlay = MultiClassOverlay(config.get_num_classes())
@@ -185,7 +184,13 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
                 labels = labels[..., np.newaxis]
 
         num_slices = x_test.shape[0]
-        voxel_spacing = get_voxel_spacing(num_slices)
+        
+        if not voxel_spacing:
+            voxel_spacing = get_voxel_spacing(num_slices)
+        else:
+            if not isinstance(voxel_spacing, tuple) or len(voxel_spacing) != 3:
+                raise ValueError('voxel_spacing %s not supported.' % str(voxel_spacing))
+        
         summary = metrics_manager.analyze(fname, np.transpose(y_test, axes=[1, 2, 0, 3]),
                                           np.transpose(labels, axes=[1, 2, 0, 3]),
                                           voxel_spacing=voxel_spacing,
@@ -217,15 +222,15 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
 
             # Save mask overlap
             # TODO (arjundd): fix writing masks to files
-            x_write_o = np.transpose(x_write, (1, 2, 0))
-            recon_oo = np.transpose(recon_o, (1, 2, 0, 3))
-            mc_overlay.im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write_o, recon_oo)
-            # ovlps = im_utils.write_ovlp_masks(os.path.join(test_result_path, 'ovlp', fname), y_test[...,0], labels[...,0])
-            # im_utils.write_mask(os.path.join(test_result_path, 'gt', fname), y_test)
-            # im_utils.write_mask(os.path.join(test_result_path, 'labels', fname), labels)
-            # im_utils.write_prob_map(os.path.join(test_result_path, 'prob_map', fname), recon)
-            # im_utils.write_im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write, ovlps)
-            # im_utils.write_sep_im_overlay(os.path.join(test_result_path, 'im_ovlp_sep', fname), x_write,
+            #x_write_o = np.transpose(x_write, (1, 2, 0))
+            #recon_oo = np.transpose(recon_o, (1, 2, 0, 3))
+            #mc_overlay.im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write_o, recon_oo)
+            #ovlps = im_utils.write_ovlp_masks(os.path.join(test_result_path, 'ovlp', fname), y_test[...,0], labels[...,0])
+            #im_utils.write_mask(os.path.join(test_result_path, 'gt', fname), y_test)
+            #im_utils.write_mask(os.path.join(test_result_path, 'labels', fname), labels)
+            #im_utils.write_prob_map(os.path.join(test_result_path, 'prob_map', fname), recon)
+            #im_utils.write_im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write, ovlps)
+            #im_utils.write_sep_im_overlay(os.path.join(test_result_path, 'im_ovlp_sep', fname), x_write,
             #                               np.squeeze(y_test), np.squeeze(labels))
 
         img_cnt += 1
@@ -379,7 +384,7 @@ def find_best_test_dir(base_folder):
     print(max_dsc_details)
 
 
-def test_dir(dirpath, config=None, vals_dict=None, best_weight_path=None, save_h5_data=False):
+def test_dir(dirpath, config=None, vals_dict=None, best_weight_path=None, save_h5_data=False, voxel_spacing=None):
     """
     Run testing experiment
     By default, save all data
@@ -410,7 +415,7 @@ def test_dir(dirpath, config=None, vals_dict=None, best_weight_path=None, save_h
 
     config.change_to_test()
 
-    test_model(config, save_file=1, save_h5_data=save_h5_data)
+    test_model(config, save_file=1, save_h5_data=save_h5_data, voxel_spacing=voxel_spacing)
 
     K.clear_session()
 
