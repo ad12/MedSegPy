@@ -197,7 +197,7 @@ class CTTrain(NNTrain):
                                create_dirs=not fine_tune_dirpath)
         config_dict = c.parse_cmd_line(self.args)
         # Parse tissue (classes) to segment.
-        config_dict['TISSUES'] = self.args.classes
+        config_dict['TISSUES'] = self.args["classes"]
 
         # Initialize logger.
         setup_logger(c.CP_SAVE_PATH, name=__name__)
