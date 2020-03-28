@@ -772,7 +772,7 @@ class UNet2_5DConfig(UNetConfig):
     DROP_FACTOR = 0.8
 
     # Train path - volumetric augmentation
-    TRAIN_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/vol_aug/train_sag/'
+    #TRAIN_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/vol_aug/train_sag/'
 
     def num_neighboring_slices(self):
         return self.IMG_SIZE[2]
@@ -796,7 +796,7 @@ class UNet3DConfig(UNetConfig):
     NUM_FILTERS = [32, 64, 128, 256, 512, 1024]
 
     # Train path - volumetric augmentation
-    TRAIN_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/vol_aug/train_sag/'
+    #TRAIN_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/vol_aug/train_sag/'
 
     def num_neighboring_slices(self):
         return self.IMG_SIZE[2]
@@ -843,7 +843,7 @@ class DeeplabV3_2_5DConfig(DeeplabV3Config):
     N_EPOCHS = 100
 
     # Train path - volumetric augmentation
-    TRAIN_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/vol_aug/train_sag/'
+    #TRAIN_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/vol_aug/train_sag/'
 
     def num_neighboring_slices(self):
         return self.IMG_SIZE[2]
@@ -910,7 +910,7 @@ class RefineNetConfig(Config):
 
 
 SUPPORTED_CONFIGS = [UNetConfig, SegnetConfig, DeeplabV3Config, ResidualUNet, AnisotropicUNetConfig, RefineNetConfig,
-                     UNet3DConfig, UNet2_5DConfig]
+                     UNet3DConfig, UNet2_5DConfig, DeeplabV3_2_5DConfig]
 
 
 def get_config(config_cp_save_tag: str, create_dirs: bool=True):
