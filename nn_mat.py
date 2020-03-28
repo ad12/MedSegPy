@@ -16,6 +16,8 @@ import config as MCONFIG
 from models.models import get_model
 from generators.im_gens import get_generator
 
+_EXPECTED_SHAPE = (288, 288, 72)
+
 
 def add_testing_arguments(parser: argparse.ArgumentParser):
     parser.add_argument('--dirpath', metavar='dp', type=str, nargs=1,
@@ -118,20 +120,26 @@ def test_model(config, save_gt=False):
             recon = recon[..., 1]
             y_test = y_test[..., np.newaxis]
             recon = recon[..., np.newaxis]
+        labels = (recon > 0.5).astype(np.float32)
+
+        # Format masks in (Y,X,Z) format.
+        labels = np.squeeze(labels)
+        y_test = np.squeeze(y_test)
+        labels = np.transpose(labels, (1, 2, 0))
+        y_test = np.transpose(y_test, (1, 2, 0))
 
         fnames.append(fname)
 
-        labels = (recon > 0.5).astype(np.float32)
-        assert labels.ndim == 3
-        assert labels.shape == (512, 512, 72), "Shape: {}".format(labels.shape)
+        assert labels.ndim == 3, "Shape: {}".format(labels.shape)
+        #assert labels.shape == _EXPECTED_SHAPE, "Shape: {}".format(labels.shape)
         save_name = os.path.join(test_result_path, "pred_mat", "{}.mat".format(fname))
         io_utils.check_dir(os.path.dirname(save_name))
         sio.savemat(save_name, {"fcMask": labels})
 
         # Save ground truth masks.
         if save_gt:
-            assert y_test.ndim == 3
-            assert y_test.shape == (512, 512, 72), "Shape: {}".format(labels.shape)
+            assert y_test.ndim == 3, "Shape: {}".format(y_test.shape)
+            #assert y_test.shape == _EXPECTED_SHAPE, "Shape: {}".format(y_test.shape)
             save_name = os.path.join(test_result_path, "gt_mat", "{}.mat".format(fname))
             io_utils.check_dir(os.path.dirname(save_name))
             sio.savemat(save_name, {"fcMask": y_test})
