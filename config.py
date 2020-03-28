@@ -3,14 +3,18 @@ import os
 import warnings
 from itertools import groupby
 from time import localtime, strftime
+import logging
 
 import mri_utils
 import utils.utils as utils
 from cross_validation import cv_util
 from losses import DICE_LOSS, CMD_LINE_SUPPORTED_LOSSES, get_training_loss_from_str
 from utils import io_utils
+from utils.logger import setup_logger
 
 import defaults
+
+logger = logging.getLogger("msk_seg.{}".format(__name__))
 
 # Do not change this constant unless version upgrades are done and keys are deprecated
 DEPRECATED_KEYS = ['NUM_CLASSES', 'TRAIN_FILES_CV', 'VALID_FILES_CV', 'TEST_FILES_CV']
@@ -243,7 +247,7 @@ class Config():
             # all data is of type string, but we need to cast back to original data type
             data_type = type(getattr(self, upper_case_key))
 
-            # print(upper_case_key + ': ' + str(vars_dict[key]) + ' (' + str(data_type) + ')')
+            # logger.info(upper_case_key + ': ' + str(vars_dict[key]) + ' (' + str(data_type) + ')')
             var_converted = utils.convert_data_type(vars_dict[key], data_type)
 
             # Loading config
@@ -345,19 +349,19 @@ class Config():
         # Remove consecutive elements in summary vals that are the same
         summary_vals = [x[0] for x in groupby(summary_vals)]
 
-        print('')
-        print('==' * 40)
-        print("Config Summary")
-        print('==' * 40)
+        logger.info('')
+        logger.info('==' * 40)
+        logger.info("Config Summary")
+        logger.info('==' * 40)
 
         for attr in summary_vals:
             if attr == '':
-                print('')
+                logger.info('')
                 continue
-            print(attr + ": " + str(self.__getattribute__(attr)))
+            logger.info(attr + ": " + str(self.__getattribute__(attr)))
 
-        print('==' * 40)
-        print('')
+        logger.info('==' * 40)
+        logger.info('')
 
     def get_num_classes(self):
         if self.INCLUDE_BACKGROUND:

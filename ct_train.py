@@ -1,132 +1,105 @@
-from __future__ import print_function, division
-
-from abc import ABC, abstractmethod
-import argparse
-import os
-
-import argparse
 import os
 import pickle
-from copy import deepcopy
-
-import keras.callbacks as kc
 import numpy as np
+import h5py
+
+import logging
+import keras.callbacks as kc
 from keras import backend as K
 from keras.callbacks import LearningRateScheduler as lrs
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.callbacks import TensorBoard as tfb
 from keras.optimizers import Adam
-from keras.utils import plot_model
 
-import config as MCONFIG
 import mri_utils
 from cross_validation import cv_util
 from generators import im_gens
 from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS, dice_loss, focal_loss
 from models.models import get_model
 from utils import io_utils, parallel_utils as putils, utils, dl_utils
+from utils.logger import setup_logger
 
 import defaults
+
+import config as MCONFIG
+from nn_train import LossHistory, NNTrain
+
+from config import Config
 
 CLASS_WEIGHTS = np.asarray([100, 1])
 SAVE_BEST_WEIGHTS = True
 FREEZE_LAYERS = None
 
 
-class CommandLineInterface(ABC):
-    __DESCRIPTION__ = ''  # To override in subclasses.
+class CTGenerator(im_gens.OAIGenerator):
+    """
+        Generator to be used with files where training/testing data is written as 2D slices
+        Filename: PATIENTID_VISIT_AUGMENTATION-NUMBER_SLICE-NUMBER
+        Filename Format: '%07d_V%02d_Aug%02d_%03d' (e.g. '0000001_V00_Aug00_001.h5
+    """
+    SUPPORTED_TAGS = ['abct', 'ct']
+    __EXPECTED_IMG_SIZE_DIMS__ = 2
 
-    # Argument keys.
-    __ARG_KEY_GPU__ = 'GPU'
+    def __init__(self, config: Config, windows=None):
+        if windows and config.num_neighboring_slices() != len(windows):
+            raise ValueError("Expected {} windows".format(config.num_neighboring_slices()))
+        self.windows = windows
+        super().__init__(config)
 
-    def __init__(self):
-        if not self.__DESCRIPTION__:
-            raise ValueError('__DESCRIPTION__ must be set for all subclasses')
+    def __load_inputs__(self, data_path: str, file: str):
+        im, seg = self._load_inputs_basic(data_path, file)
+        im = self._preprocess(im, self.windows[0] if self.windows else None)
+        return im, seg
 
-        self.__args = None
-        self.base_parser = argparse.ArgumentParser(description=self.__DESCRIPTION__)
+    def _load_inputs_basic(self, data_path: str, file: str):
+        im_path = '%s/%s.im' % (data_path, file)
+        with h5py.File(im_path, 'r') as f:
+            im = f['data'][:]
+            if len(im.shape) == 2:
+                im = im[..., np.newaxis]
 
-        # Initialize argument parser.
-        self.init_parser()
+        seg_path = '%s/%s.seg' % (data_path, file)
+        with h5py.File(seg_path, 'r') as f:
+            seg = f['data'][:].astype('float32')
 
-    @abstractmethod
-    def init_parser(self):
-        pass
+        assert len(im.shape) == 3
+        assert len(seg.shape) == 4 and seg.shape[-2] == 1
 
-    def parse(self):
-        print('Parsing')
-        args = self.base_parser.parse_args()
-        self.__args = vars(args)
+        return im, seg
 
-    @abstractmethod
-    def run(self):
-        pass
+    def _preprocess(self, im, window):
+        # Apply windowing.
+        if window:
+            im = np.clip(im, window[0], window[1])
 
-    @property
-    def args(self):
-        return self.__args
+        # Preprocess by max normalizing.
+        im -= np.min(im)
+        im /= np.max(im)
 
-    def get_arg(self, key):
-        return self.args[key]
+        return im
 
-    def __add_gpu__argument__(self, parser):
-        parser.add_argument('-g', '--%s' % self.__ARG_KEY_GPU__,
-                            metavar='G', type=str, nargs='?', default='-1',
-                            dest=self.__ARG_KEY_GPU__,
-                            help='gpu id to use. default=0')
+    def __load_neighboring_slices__(self, num_slices, filepath, max_slice):
+        """Stacks 2D CT slices from single patient clipped at different window levels.
 
-    @property
-    def gpu(self):
-        self.verify_args()
-        return self.args[self.__ARG_KEY_GPU__]
+        Overloads traditional 2.5D networks that look at neighboring slices.
+        """
+        data_path, filename = os.path.dirname(filepath), os.path.basename(filepath)
+        im, seg = self._load_inputs_basic(data_path, filename)
+        h, w = im.shape[:2]
 
-    def verify_args(self):
-        if not self.__args:
-            raise ValueError('Run parse() before calling method')
+        ims = []
+        for window in self.windows:
+            ims.append(np.squeeze(self._preprocess(np.copy(im), window)))
+        im = np.stack(ims, axis=-1)
+
+        assert im.shape == (h, w, self.config.num_neighboring_slices())
+        return im, seg
 
 
-class NNTrain(CommandLineInterface):
-    __DESCRIPTION__ = 'Train networks for segmentation'
+class CTTrain(NNTrain):
+    __DESCRIPTION__ = 'Train networks for ct segmentation'
 
-    # Argument Parser
-    _ARG_KEY_CONFIG = 'config'
-    _ARG_KEY_K_FOLD_CROSS_VALIDATION = 'k_fold_cross_validation'
-    _ARG_KEY_HO_TEST = 'ho_test'
-    _ARG_KEY_HO_VALID = 'ho_valid'
-    _ARG_KEY_CLASS_WEIGHTS = 'class_weights'
-    _ARG_KEY_EXPERIMENT = 'experiment'
-    _ARG_KEY_ABS_SAVE_PATH = 'save_path'
-    _ARG_KEY_FINE_TUNE_PATH = 'fine_tune_path'
-    _ARG_KEY_FREEZE_LAYERS = 'freeze_layers'
-    _ARG_KEY_SAVE_ALL_WEIGHTS = 'save_all_weights'
-    _ARG_KEY_SAVE_MODEL = 'save_model'
-
-    @property
-    def config(self):
-        self.verify_args()
-        return self.args[self._ARG_KEY_CONFIG]
-
-    @property
-    def save_best_weights(self):
-        self.verify_args()
-        return not self.args[self._ARG_KEY_SAVE_ALL_WEIGHTS]
-
-    @property
-    def save_model(self):
-        return self.args[self._ARG_KEY_SAVE_MODEL]
-
-    @property
-    def frozen_layers(self):
-        frozen_layers = self.get_arg(self._ARG_KEY_FREEZE_LAYERS)
-        return utils.convert_data_type(frozen_layers, tuple) if frozen_layers else None
-
-    @property
-    def write_grads(self):
-        return False
-
-    @property
-    def write_images(self):
-        return False
+    _ARG_KEY_WINDOWS = "windows"
 
     def init_parser(self):
         arg_subparser = self.base_parser.add_subparsers(help='supported configs for different architectures',
@@ -176,9 +149,14 @@ class NNTrain(CommandLineInterface):
                                   default=False, action='store_const', const=True,
                                   dest=self._ARG_KEY_SAVE_MODEL,
                                   help="Save model as h5 file. Default: False")
+            s_parser.add_argument('--%s' % self._ARG_KEY_WINDOWS,
+                                  metavar='W', default=None, nargs='*',
+                                  dest=self._ARG_KEY_WINDOWS,
+                                  help='(min, max) windows for clipping data')
 
             # add support for specifying tissues
-            mri_utils.init_cmd_line(s_parser)
+            s_parser.add_argument("--classes", type=int, nargs="+", required=True,
+                                  help="tissue indices to segment")
 
     def run(self):
         gpu = self.gpu
@@ -197,20 +175,24 @@ class NNTrain(CommandLineInterface):
             MCONFIG.SAVE_PATH_PREFIX = abs_save_path
         else:
             MCONFIG.SAVE_PATH_PREFIX = os.path.join(defaults.SAVE_PATH, experiment_dir)
-        print('OUTPUT_DIR: %s' % MCONFIG.SAVE_PATH_PREFIX)
-        
-        # Initialize GPUs that are visible.
-        print('Using GPU %s' % gpu)
-        os.environ["CUDA_VISIBLE_DEVICES"] = gpu
-        os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
         # Load config and corresponding config dictionary
         c = MCONFIG.get_config(config_cp_save_tag=self.args[self._ARG_KEY_CONFIG],
                                create_dirs=not fine_tune_dirpath)
         config_dict = c.parse_cmd_line(self.args)
-
         # Parse tissue (classes) to segment.
-        config_dict['TISSUES'] = mri_utils.parse_tissues(self.args)
+        config_dict['TISSUES'] = self.args.classes
+
+        # Initialize logger.
+        setup_logger(c.CP_SAVE_PATH, name=__name__)
+        logger = logging.getLogger(__name__)
+        logger.info("Args:\n{}".format(self.args))
+        logger.info('OUTPUT_DIR: %s' % c.CP_SAVE_PATH)
+
+        # Initialize GPUs that are visible.
+        logger.info('Using GPU %s' % gpu)
+        os.environ["CUDA_VISIBLE_DEVICES"] = gpu
+        os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
         if fine_tune_dirpath:
             # parse freeze layers
@@ -224,59 +206,7 @@ class NNTrain(CommandLineInterface):
         self.__train(c, config_dict)
 
     def __train_cross_validation(self, c, config_dict):
-        k_fold_cross_validation = self.get_arg(self._ARG_KEY_K_FOLD_CROSS_VALIDATION)
-        if k_fold_cross_validation.isdigit():
-            k_fold_cross_validation = int(k_fold_cross_validation)
-
-        ho_valid = self.get_arg(self._ARG_KEY_HO_VALID)
-        ho_test = self.get_arg(self._ARG_KEY_HO_TEST)
-
-        # Initialize CrossValidation wrapper
-        cv_wrapper = cv_util.CrossValidationProcessor(k_fold_cross_validation,
-                                                      num_valid_bins=ho_valid,
-                                                      num_test_bins=ho_test)
-
-        print('Loading %d-fold cross-validation data from %s...' % (cv_wrapper.k, cv_wrapper.filepath))
-
-        cv_file = cv_wrapper.filepath
-        cv_k = cv_wrapper.k
-
-        cv_exp_id = 1
-
-        base_save_path = c.CP_SAVE_PATH
-        for tr_f, val_f, test_f, tr_bins, val_bins, test_bins in cv_wrapper.run():
-            c.init_cross_validation(train_files=tr_f,
-                                    valid_files=val_f,
-                                    test_files=test_f,
-                                    train_bins=tr_bins,
-                                    valid_bins=val_bins,
-                                    test_bins=test_bins,
-                                    cv_k=cv_k,
-                                    cv_file=cv_file,
-                                    cp_save_path=os.path.join(base_save_path, 'cv-exp-%03d' % cv_exp_id))
-            cv_exp_id += 1
-
-            self.__train(c, config_dict)
-
-    def __train(self, config, config_param_dict=None):
-        """
-        Train model specified by config
-        :param config: a Config object
-        :param config_param_dict: a dictionary of config parameters to change (default = None)
-                                  e.g. {'INITIAL_LEARNING_RATE': 1e-6, 'USE_STEP_DECAY': True}
-        """
-
-        if config_param_dict is not None:
-            for key in config_param_dict.keys():
-                val = config_param_dict[key]
-                config.set_attr(key, val)
-
-        config.save_config()
-        config.summary()
-
-        self.__train_model(config)
-
-        K.clear_session()
+        raise NotImplementedError("Cross validation not supported for CT training")
 
     def __train_model(self, config, optimizer=None, model=None):
         """
@@ -284,7 +214,7 @@ class NNTrain(CommandLineInterface):
         :param config: a Config object
         :param optimizer: a Keras optimizer (default = None)
         """
-
+        logger = logging.getLogger(__name__)
         # Load data from config.
         cp_save_path = config.CP_SAVE_PATH
         cp_save_tag = config.CP_SAVE_TAG
@@ -296,14 +226,9 @@ class NNTrain(CommandLineInterface):
         if model is None:
             model = get_model(config)
 
-        # Plot model to png file.
-        #plot_model(model,
-        #           to_file=os.path.join(cp_save_path, 'model.png'),
-        #           show_shapes=True)
-
         # If initial weight path specified, initialize model with weights.
         if config.INIT_WEIGHT_PATH:
-            print('Initializing with weights: %s' % config.INIT_WEIGHT_PATH)
+            logger.info('Initializing with weights: %s' % config.INIT_WEIGHT_PATH)
             model.load_weights(config.INIT_WEIGHT_PATH)
             frozen_layers = self.frozen_layers
             if frozen_layers:
@@ -311,14 +236,14 @@ class NNTrain(CommandLineInterface):
                     fl = range(FREEZE_LAYERS[0], len(model.layers))
                 else:
                     fl = range(frozen_layers[0], frozen_layers[1])
-                print('freezing layers %s' % fl)
+                logger.info('freezing layers %s' % fl)
                 for i in fl:
                     model.layers[i].trainable = False
 
         # Replicate model on multiple gpus - note this does not solve issue of having too large of a model
         num_gpus = len(os.environ["CUDA_VISIBLE_DEVICES"].split(','))
         if num_gpus > 1:
-            print('Running multi gpu model')
+            logger.info('Running multi gpu model')
             model = putils.ModelMGPU(model, gpus=num_gpus)
 
         # If no optimizer is provided, default to Adam
@@ -360,7 +285,7 @@ class NNTrain(CommandLineInterface):
                                   patience=config.EARLY_STOPPING_PATIENCE)
             callbacks_list.append(es_cb)
 
-        generator = im_gens.get_generator(config)
+        generator = self.build_generator(config, self.get_arg(self._ARG_KEY_WINDOWS))
         generator.summary()
 
         train_nbatches, valid_nbatches = generator.num_steps()
@@ -393,95 +318,12 @@ class NNTrain(CommandLineInterface):
         if self.save_model:
             model.save(filepath=os.path.join(config.CP_SAVE_PATH, 'model.h5'), overwrite=True)
 
-    def __train_fine_tune(self, config, vals_dict=None):
-        dirpath = self.get_arg(self._ARG_KEY_FINE_TUNE_PATH)
-
-        # Initialize for fine tuning.
-        config.load_config(os.path.join(dirpath, 'config.ini'))
-
-        # Get best weight path.
-        best_weight_path = dl_utils.get_weights(dirpath)
-        print('Best weight path: %s' % best_weight_path)
-
-        config.init_fine_tune(best_weight_path)
-
-        # Only load command line arguments that are not the default.
-        temp_config = type(config)(create_dirs=False)
-        if vals_dict is not None:
-            for key in vals_dict.keys():
-                val = vals_dict[key]
-                val_default = getattr(temp_config, key)
-                if val != val_default:
-                    config.set_attr(key, val)
-
-        config.save_config()
-        config.summary()
-
-        self.__train_model(config)
-
-        K.clear_session()
-
-    def __learning_rate_callback(self, optimizer):
-        """
-        Wrapper for learning rate tensorflow metric
-        :param optimizer: a Keras optimizer
-        :return: a Tensorflow callback
-        """
-
-        def lr(y_true, y_pred):
-            return optimizer.lr
-
-        return lr
-
-    def __step_decay_callback(self, initial_lr, min_lr, drop_factor, drop_rate):
-        """
-        Wrapper for learning rate step decay
-        :param initial_lr: initial learning rate (default = 1e-4)
-        :param min_lr: minimum learning rate (default = None)
-        :param drop_factor: factor to drop (default = 0.8)
-        :param drop_rate: rate of learning rate drop (default = 1.0 epochs)
-        :return: a Tensorflow callback
-        """
-        initial_lr = initial_lr
-        drop_factor = drop_factor
-        drop_rate = drop_rate
-        min_lr = min_lr
-
-        def step_decay(epoch):
-            import math
-            lrate = initial_lr * math.pow(drop_factor, math.floor((1 + epoch) / drop_rate))
-            if lrate < min_lr:
-                lrate = min_lr
-
-            return lrate
-
-        return step_decay
-
-    def parse(self):
-        super().parse()
-        if len(self.gpu.split(',')) > 1 and self.save_model:
-            raise ValueError('Model cannot be saved when using multiple gpus for training.')
-
-
-class LossHistory(kc.Callback):
-    """
-    A Keras callback to log training history
-    """
-
-    def on_train_begin(self, logs={}):
-        self.val_losses = []
-        self.losses = []
-        # self.lr = []
-        self.epoch = []
-
-    def on_epoch_end(self, batch, logs={}):
-        self.val_losses.append(logs.get('val_loss'))
-        self.losses.append(logs.get('loss'))
-        # self.lr.append(step_decay(len(self.losses)))
-        self.epoch.append(len(self.losses))
+    @classmethod
+    def build_generator(cls, cfg, windows):
+        return CTGenerator(cfg, windows)
 
 
 if __name__ == '__main__':
-    nn_train = NNTrain()
+    nn_train = CTTrain()
     nn_train.parse()
     nn_train.run()
