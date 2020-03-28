@@ -69,7 +69,7 @@ class CommandLineInterface(ABC):
     def get_arg(self, key):
         return self.args[key]
 
-    def __add_gpu__argument__(self, parser):
+    def _add_gpu_argument(self, parser):
         parser.add_argument('-g', '--%s' % self.__ARG_KEY_GPU__,
                             metavar='G', type=str, nargs='?', default='-1',
                             dest=self.__ARG_KEY_GPU__,
@@ -134,7 +134,7 @@ class NNTrain(CommandLineInterface):
         subparsers = MCONFIG.init_cmd_line_parser(arg_subparser)
 
         for s_parser in subparsers:
-            self.__add_gpu__argument__(s_parser)
+            self._add_gpu_argument(s_parser)
             s_parser.add_argument('-k', '--%s' % self._ARG_KEY_K_FOLD_CROSS_VALIDATION,
                                   metavar='K', default=None, nargs='?',
                                   dest=self._ARG_KEY_K_FOLD_CROSS_VALIDATION,
@@ -214,16 +214,16 @@ class NNTrain(CommandLineInterface):
 
         if fine_tune_dirpath:
             # parse freeze layers
-            self.__train_fine_tune(c, config_dict)
+            self._train_fine_tune(c, config_dict)
             exit(0)
 
         if k_fold_cross_validation:
-            self.__train_cross_validation(c, config_dict)
+            self._train_cross_validation(c, config_dict)
             exit(0)
 
-        self.__train(c, config_dict)
+        self._train(c, config_dict)
 
-    def __train_cross_validation(self, c, config_dict):
+    def _train_cross_validation(self, c, config_dict):
         k_fold_cross_validation = self.get_arg(self._ARG_KEY_K_FOLD_CROSS_VALIDATION)
         if k_fold_cross_validation.isdigit():
             k_fold_cross_validation = int(k_fold_cross_validation)
@@ -256,9 +256,9 @@ class NNTrain(CommandLineInterface):
                                     cp_save_path=os.path.join(base_save_path, 'cv-exp-%03d' % cv_exp_id))
             cv_exp_id += 1
 
-            self.__train(c, config_dict)
+            self._train(c, config_dict)
 
-    def __train(self, config, config_param_dict=None):
+    def _train(self, config, config_param_dict=None):
         """
         Train model specified by config
         :param config: a Config object
@@ -274,11 +274,11 @@ class NNTrain(CommandLineInterface):
         config.save_config()
         config.summary()
 
-        self.__train_model(config)
+        self._train_model(config)
 
         K.clear_session()
 
-    def __train_model(self, config, optimizer=None, model=None):
+    def _train_model(self, config, optimizer=None, model=None):
         """
         Train model
         :param config: a Config object
@@ -329,7 +329,7 @@ class NNTrain(CommandLineInterface):
 
         # Track learning rate on tensorboard.
         loss_func = get_training_loss(loss, weights=class_weights)
-        lr_metric = self.__learning_rate_callback(optimizer)
+        lr_metric = self._learning_rate_callback(optimizer)
         model.compile(optimizer=optimizer, loss=loss_func, metrics=[lr_metric, dice_loss])
 
         # Set image format to be (N, dim1, dim2, dim3, channel).
@@ -347,10 +347,10 @@ class NNTrain(CommandLineInterface):
 
         # Step decay for learning rate
         if config.USE_STEP_DECAY:
-            lr_cb = lrs(self.__step_decay_callback(config.INITIAL_LEARNING_RATE,
-                                                   config.MIN_LEARNING_RATE,
-                                                   config.DROP_FACTOR,
-                                                   config.DROP_RATE))
+            lr_cb = lrs(self._step_decay_callback(config.INITIAL_LEARNING_RATE,
+                                                  config.MIN_LEARNING_RATE,
+                                                  config.DROP_FACTOR,
+                                                  config.DROP_RATE))
             callbacks_list.append(lr_cb)
 
         # use early stopping
@@ -393,7 +393,7 @@ class NNTrain(CommandLineInterface):
         if self.save_model:
             model.save(filepath=os.path.join(config.CP_SAVE_PATH, 'model.h5'), overwrite=True)
 
-    def __train_fine_tune(self, config, vals_dict=None):
+    def _train_fine_tune(self, config, vals_dict=None):
         dirpath = self.get_arg(self._ARG_KEY_FINE_TUNE_PATH)
 
         # Initialize for fine tuning.
@@ -417,11 +417,11 @@ class NNTrain(CommandLineInterface):
         config.save_config()
         config.summary()
 
-        self.__train_model(config)
+        self._train_model(config)
 
         K.clear_session()
 
-    def __learning_rate_callback(self, optimizer):
+    def _learning_rate_callback(self, optimizer):
         """
         Wrapper for learning rate tensorflow metric
         :param optimizer: a Keras optimizer
@@ -433,7 +433,7 @@ class NNTrain(CommandLineInterface):
 
         return lr
 
-    def __step_decay_callback(self, initial_lr, min_lr, drop_factor, drop_rate):
+    def _step_decay_callback(self, initial_lr, min_lr, drop_factor, drop_rate):
         """
         Wrapper for learning rate step decay
         :param initial_lr: initial learning rate (default = 1e-4)

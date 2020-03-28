@@ -123,7 +123,7 @@ class CTTrain(NNTrain):
         subparsers = MCONFIG.init_cmd_line_parser(arg_subparser)
 
         for s_parser in subparsers:
-            self.__add_gpu__argument__(s_parser)
+            self._add_gpu_argument(s_parser)
             s_parser.add_argument('-k', '--%s' % self._ARG_KEY_K_FOLD_CROSS_VALIDATION,
                                   metavar='K', default=None, nargs='?',
                                   dest=self._ARG_KEY_K_FOLD_CROSS_VALIDATION,
@@ -212,19 +212,19 @@ class CTTrain(NNTrain):
 
         if fine_tune_dirpath:
             # parse freeze layers
-            self.__train_fine_tune(c, config_dict)
+            self._train_fine_tune(c, config_dict)
             exit(0)
 
         if k_fold_cross_validation:
-            self.__train_cross_validation(c, config_dict)
+            self._train_cross_validation(c, config_dict)
             exit(0)
 
-        self.__train(c, config_dict)
+        self._train(c, config_dict)
 
-    def __train_cross_validation(self, c, config_dict):
+    def _train_cross_validation(self, c, config_dict):
         raise NotImplementedError("Cross validation not supported for CT training")
 
-    def __train_model(self, config, optimizer=None, model=None):
+    def _train_model(self, config, optimizer=None, model=None):
         """
         Train model
         :param config: a Config object
@@ -270,7 +270,7 @@ class CTTrain(NNTrain):
 
         # Track learning rate on tensorboard.
         loss_func = get_training_loss(loss, weights=class_weights)
-        lr_metric = self.__learning_rate_callback(optimizer)
+        lr_metric = self._learning_rate_callback(optimizer)
         model.compile(optimizer=optimizer, loss=loss_func, metrics=[lr_metric, dice_loss])
 
         # Set image format to be (N, dim1, dim2, dim3, channel).
@@ -288,10 +288,10 @@ class CTTrain(NNTrain):
 
         # Step decay for learning rate
         if config.USE_STEP_DECAY:
-            lr_cb = lrs(self.__step_decay_callback(config.INITIAL_LEARNING_RATE,
-                                                   config.MIN_LEARNING_RATE,
-                                                   config.DROP_FACTOR,
-                                                   config.DROP_RATE))
+            lr_cb = lrs(self._step_decay_callback(config.INITIAL_LEARNING_RATE,
+                                                  config.MIN_LEARNING_RATE,
+                                                  config.DROP_FACTOR,
+                                                  config.DROP_RATE))
             callbacks_list.append(lr_cb)
 
         # use early stopping
