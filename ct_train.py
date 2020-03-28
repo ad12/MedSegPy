@@ -4,15 +4,12 @@ import numpy as np
 import h5py
 
 import logging
-import keras.callbacks as kc
 from keras import backend as K
 from keras.callbacks import LearningRateScheduler as lrs
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.callbacks import TensorBoard as tfb
 from keras.optimizers import Adam
 
-import mri_utils
-from cross_validation import cv_util
 from generators import im_gens
 from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS, dice_loss, focal_loss
 from models.models import get_model
@@ -101,6 +98,25 @@ class CTTrain(NNTrain):
 
     _ARG_KEY_WINDOWS = "windows"
 
+    def parse_windows(self, windows):
+        windowing = {"soft": (400, 50),
+                     "bone": (1800, 400),
+                     "liver": (150, 30),
+                     "spine": (250, 50),
+                     "custom": (500, 50)}
+        vals = []
+        for w in windows:
+            if w not in windowing:
+                raise KeyError("Window {} not found".format(w))
+            window_width = windowing[w][0]
+            window_level = windowing[w][1]
+            upper = window_level + window_width / 2
+            lower = window_level - window_width / 2
+
+            vals.append((lower, upper))
+
+        return vals
+
     def init_parser(self):
         arg_subparser = self.base_parser.add_subparsers(help='supported configs for different architectures',
                                                         dest=self._ARG_KEY_CONFIG)
@@ -150,7 +166,7 @@ class CTTrain(NNTrain):
                                   dest=self._ARG_KEY_SAVE_MODEL,
                                   help="Save model as h5 file. Default: False")
             s_parser.add_argument('--%s' % self._ARG_KEY_WINDOWS,
-                                  metavar='W', default=None, nargs='*',
+                                  metavar='W', type=str, nargs='*',
                                   dest=self._ARG_KEY_WINDOWS,
                                   help='(min, max) windows for clipping data')
 
@@ -285,7 +301,8 @@ class CTTrain(NNTrain):
                                   patience=config.EARLY_STOPPING_PATIENCE)
             callbacks_list.append(es_cb)
 
-        generator = self.build_generator(config, self.get_arg(self._ARG_KEY_WINDOWS))
+        windows = self.parse_windows(self.get_arg(self._ARG_KEY_WINDOWS))
+        generator = self.build_generator(config, windows)
         generator.summary()
 
         train_nbatches, valid_nbatches = generator.num_steps()
