@@ -20,10 +20,7 @@ https://github.com/JonathanCMitchell/mobilenet_v2_keras
 - [Inverted Residuals and Linear Bottlenecks: Mobile Networks for
     Classification, Detection and Segmentation](https://arxiv.org/abs/1801.04381)
 """
-
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+import logging
 
 import numpy as np
 from keras import backend as K
@@ -47,6 +44,8 @@ from keras.utils import conv_utils
 from keras.utils.data_utils import get_file
 
 from models import initializer_utils as init_utils
+
+logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 
 WEIGHTS_PATH_X = "https://github.com/bonlime/keras-deeplab-v3-plus/releases/download/1.1/deeplabv3_xception_tf_dim_ordering_tf_kernels.h5"
 WEIGHTS_PATH_MOBILE = "https://github.com/bonlime/keras-deeplab-v3-plus/releases/download/1.1/deeplabv3_mobilenetv2_tf_dim_ordering_tf_kernels.h5"
@@ -321,7 +320,7 @@ class DeeplabModel():
             ValueError: in case of invalid argument for `weights` or `backbone`
 
         """
-        print('Initializing deeplab model')
+        logger.info('Initializing deeplab model')
 
         if not (weights in {'pascal_voc', None}):
             raise ValueError('The `weights` argument should be either '

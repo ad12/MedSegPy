@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 import scipy.stats as spstats
 import pandas as pd
@@ -6,6 +7,9 @@ import tabulate
 from medpy.metric import dc, assd, recall, precision, sensitivity, specificity, positive_predictive_value
 from typing import Collection
 from enum import Enum
+
+logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
+
 
 def cv(y_true, y_pred):
     """
@@ -280,9 +284,9 @@ class SegMetricsProcessor():
 
 if __name__ == '__main__':
     a = np.asarray([[1,2,3,4], [5,7,9,11]])
-    print(__sem__(a, axis=0))
-    print(np.std(a, axis=0) / np.sqrt(2))
+    logger.info(__sem__(a, axis=0))
+    logger.info(np.std(a, axis=0) / np.sqrt(2))
 
     df = pd.DataFrame(a, index=['aplha', 'b'])
-    print(df)
-    print(df.mean(axis=1)['b'])
+    logger.info(df)
+    logger.info(df.mean(axis=1)['b'])

@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 
@@ -19,6 +20,8 @@ from models.unet_2d.anisotropic_unet_model import anisotropic_unet_2d
 from models.unet_2d.unet_model import unet_2d_model, unet_2d_model_v2
 from models.refinenet.refinenet_model import refinenet_model
 from models.unet_3d_model import unet_3d_model
+
+logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 
 
 def get_model(config):
@@ -254,7 +257,7 @@ def unet_2d_multi_contrast(config):
     num_classes = config.get_num_classes()
     input_shape = config.IMG_SIZE
 
-    print('Initializing multi contrast 2d unet: input size - ' + str(input_shape))
+    logger.info('Initializing multi contrast 2d unet: input size - ' + str(input_shape))
 
     x = Input(input_shape)
     x = Conv2D(1, (1, 1), name='conv_mc_comp')(x)
@@ -287,7 +290,7 @@ def unet_2_5d(config):
     num_classes = config.get_num_classes()
     input_shape = config.IMG_SIZE
 
-    print('Initializing 2.5d unet: input size - ' + str(input_shape))
+    logger.info('Initializing 2.5d unet: input size - ' + str(input_shape))
 
     x = Input(input_shape)
 
@@ -314,7 +317,7 @@ def deeplabv3_2_5d(config):
     """
     if (type(config) is not DeeplabV3_2_5DConfig):
         raise ValueError('config must be instance of DeeplabV3_2_5DConfig')
-    print('Initializing 2.5d deeplab: input size - ' + str(config.IMG_SIZE))
+    logger.info('Initializing 2.5d deeplab: input size - ' + str(config.IMG_SIZE))
 
     input_shape = config.IMG_SIZE
     OS = config.OS

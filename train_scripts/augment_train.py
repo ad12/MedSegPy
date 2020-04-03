@@ -1,10 +1,13 @@
 import argparse
+import logging
 import os
 
 import config as MCONFIG
 import glob_constants
 import oai_train
 from config import UNetConfig
+
+logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 
 SUPPORTED_MODELS = ['unet']
 
@@ -21,7 +24,7 @@ if __name__ == '__main__':
     parser.add_argument('-ft', nargs='?', metavar='PATH', type=str, default=None, help='fine tune model from path')
 
     args = parser.parse_args()
-    print(args)
+    logger.info(args)
     gpu = args.gpu
 
     fine_tune_path = args.ft
@@ -32,9 +35,9 @@ if __name__ == '__main__':
 
     glob_constants.SEED = args.seed
 
-    print(glob_constants.SEED)
+    logger.info(glob_constants.SEED)
 
-    print('Using GPU %s' % gpu)
+    logger.info('Using GPU %s' % gpu)
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 

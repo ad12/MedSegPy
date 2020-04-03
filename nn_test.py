@@ -1,10 +1,13 @@
-from __future__ import print_function, division
-
 import argparse
 import ast
+import logging
 import os
 
+os.environ["MSK_SEG_NETWORKS_PROJECT"] = "tech-considerations_v3"
+
 from oai_test import test_dir, get_valid_subdirs
+
+logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 
 
 def add_testing_arguments(parser: argparse.ArgumentParser):
@@ -56,7 +59,7 @@ if __name__ == '__main__':
     
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
     if not cpu:
-        print('Using GPU %s' % gpu)
+        logger.info('Using GPU %s' % gpu)
         os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
     else:
         os.environ["CUDA_VISIBLE_DEVICES"] = ""

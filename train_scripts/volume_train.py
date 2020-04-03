@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 
 import config as MCONFIG
@@ -6,10 +7,12 @@ import glob_constants
 import oai_train
 from config import UNet2_5DConfig
 
+logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
+
 SUPPORTED_MODELS = ['unet']
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     MCONFIG.SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/volume_limited'
 
     parser = argparse.ArgumentParser(description='Train OAI dataset')
@@ -21,7 +24,7 @@ if __name__ == '__main__':
     parser.add_argument('-ft', nargs='?', metavar='PATH', type=str, default=None, help='fine tune model from path')
 
     args = parser.parse_args()
-    print(args)
+    logger.info(args)
     gpu = args.gpu
 
     fine_tune_path = args.ft
@@ -32,9 +35,9 @@ if __name__ == '__main__':
 
     glob_constants.SEED = args.seed
 
-    print(glob_constants.SEED)
+    logger.info(glob_constants.SEED)
 
-    print('Using GPU %s' % gpu)
+    logger.info('Using GPU %s' % gpu)
     os.environ["CUDA_VISIBLE_DEVICES"] = gpu
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 

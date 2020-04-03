@@ -1,5 +1,4 @@
-from __future__ import print_function, division
-
+import logging
 import os
 
 import numpy as np
@@ -8,6 +7,8 @@ from keras.initializers import he_normal
 from keras.layers import BatchNormalization as BN
 from keras.layers import Input, Conv2D, MaxPooling2D, Conv2DTranspose, Dropout, Concatenate
 from keras.models import Model
+
+logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 
 # List of tissues that can be segmented
 FEMORAL_CARTILAGE_STR = 'fc'
@@ -38,7 +39,7 @@ def unet_2d_model(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, output_mode=
     :raise ValueError if input_size is not tuple or dimensions of input_size do not match (height, width, 1)
     """
     import glob_constants
-    print('Initializing unet with seed: %s' % str(glob_constants.SEED))
+    logger.info('Initializing unet with seed: %s' % str(glob_constants.SEED))
     SEED = glob_constants.SEED
     if input_tensor is None and (type(input_size) is not tuple or len(input_size) != 3):
         raise ValueError('input_size must be a tuple of size (height, width, 1)')
@@ -137,7 +138,7 @@ def unet_2d_model_v2(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, output_mo
     :raise ValueError if input_size is not tuple or dimensions of input_size do not match (height, width, 1)
     """
     import glob_constants
-    print('Initializing unet with seed: %s' % str(glob_constants.SEED))
+    logger.info('Initializing unet with seed: %s' % str(glob_constants.SEED))
     SEED = glob_constants.SEED
     if input_tensor is None and (type(input_size) is not tuple or len(input_size) != 3):
         raise ValueError('input_size must be a tuple of size (height, width, 1)')

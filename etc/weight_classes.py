@@ -1,3 +1,4 @@
+import logging
 import os
 from os import listdir
 from os.path import splitext
@@ -7,6 +8,8 @@ import numpy as np
 
 from generators.im_generator import add_file
 from utils import io_utils
+
+logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 
 TRAIN_PATH = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/train_aug'
 CLASS_FREQ_DAT_FOLDER = io_utils.check_dir('/bmrNAS/people/arjun/msk_seg_networks/class_weights')
@@ -50,15 +53,15 @@ def get_class_freq(data_path, class_id=[0], pids=None, augment_data=True):
         count += 1
 
         if count % 1000 == 0:
-            print('%d/%d' % (count, len(files)))
+            logger.info('%d/%d' % (count, len(files)))
     return freqs
 
 
 if __name__ == '__main__':
     freq = get_class_freq(TRAIN_PATH)
-    print(freq)
+    logger.info(freq)
     io_utils.save_pik(freq, CLASS_FREQ_DAT_WEIGHTS_AUG)
 
     freq = get_class_freq(TRAIN_PATH, augment_data=False)
-    print(freq)
+    logger.info(freq)
     io_utils.save_pik(freq, CLASS_FREQ_DAT_WEIGHTS_NO_AUG)
