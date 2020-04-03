@@ -58,6 +58,7 @@ class CTGenerator(im_gens.OAIGenerator):
         seg_path = '%s/%s.seg' % (data_path, file)
         with h5py.File(seg_path, 'r') as f:
             seg = f['data'][:].astype('float32')
+        seg = np.expand_dims(seg, axis=2)  # legacy purposes
 
         assert len(im.shape) == 3
         assert len(seg.shape) == 4 and seg.shape[-2] == 1
@@ -301,7 +302,8 @@ class CTTrain(NNTrain):
                                   patience=config.EARLY_STOPPING_PATIENCE)
             callbacks_list.append(es_cb)
 
-        windows = self.parse_windows(self.get_arg(self._ARG_KEY_WINDOWS))
+        window_keys = self.get_arg(self._ARG_KEY_WINDOWS)
+        windows = self.parse_windows(window_keys) if window_keys else None
         generator = self.build_generator(config, windows)
         generator.summary()
 
