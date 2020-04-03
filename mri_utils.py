@@ -1,6 +1,6 @@
 import argparse
 
-# TODO: discuss if we should assume that the user has properly preprocessed the .seg file (i.e. summed the masks beforehand)
+# TODO (arjundd): discuss if we should assume that the user has properly preprocessed the .seg file (i.e. summed the masks beforehand)
 # Mask Channels in .seg files
 # Indices where masks occur in .seg files
 # Currently assuming that the user has preprocessed the .seg file
@@ -36,5 +36,24 @@ def parse_tissues(vargin: dict):
         tissues.append(MASK_TIBIAL_CARTILAGE)
     if 'pc' in str_tissues:
         tissues.append(MASK_PATELLAR_CARTILAGE)
+    if 'men' in str_tissues:
+        tissues.append(MASK_MENISCUS)
 
     return tissues
+
+
+def get_tissue_name(inds: list):
+    names_to_val = {'fc': MASK_FEMORAL_CARTILAGE,
+                    'tc': MASK_TIBIAL_CARTILAGE,
+                    'pc': MASK_PATELLAR_CARTILAGE,
+                    'men': MASK_MENISCUS}
+    names = []
+    for ind in inds:
+        tissue = ind
+        for t in names_to_val.keys():
+            if ind == names_to_val[t]:
+                tissue = t
+                break
+        names.append(tissue)
+
+    return names

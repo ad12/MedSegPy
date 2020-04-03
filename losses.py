@@ -1,7 +1,10 @@
+import logging
 import numpy as np
 import tensorflow as tf
 from keras import backend as K
 from keras.losses import binary_crossentropy
+
+logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 
 DICE_LOSS = ('dice', 'sigmoid')
 
@@ -23,6 +26,7 @@ CMD_LINE_SUPPORTED_LOSSES = ['DICE_LOSS', 'WEIGHTED_CROSS_ENTROPY_LOSS', 'WEIGHT
                              'DICE_FOCAL_LOSS', 'DICE_MEDIAN_LOSS']
 
 
+# TODO (arjundd): Add ability to exclude specific indices from loss function computation
 def get_training_loss_from_str(loss_str: str):
     loss_str = loss_str.upper()
     if loss_str == 'DICE_LOSS':
@@ -45,23 +49,19 @@ def get_training_loss_from_str(loss_str: str):
         raise ValueError('%s not supported' % loss_str)
 
 
-def get_training_loss(loss, weights=None):
+def get_training_loss(loss, **kwargs):
     if loss == DICE_LOSS:
         return dice_loss
     elif loss == WEIGHTED_CROSS_ENTROPY_LOSS:
-        if weights is None:
-            raise ValueError("Weights must be specified to initialize weighted_cross_entropy")
-        return weighted_categorical_crossentropy(weights)
+        return weighted_categorical_crossentropy(**kwargs)
     elif loss == BINARY_CROSS_ENTROPY_LOSS:
         return binary_crossentropy
     elif loss == BINARY_CROSS_ENTROPY_SIG_LOSS:
         return binary_crossentropy
     elif loss == FOCAL_LOSS:
-        return focal_loss(FOCAL_LOSS_GAMMA)
+        return focal_loss(**kwargs)
     elif loss == WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS:
-        if weights is None:
-            raise ValueError("Weights must be specified to initialize weighted_cross_entropy")
-        return weighted_categorical_crossentropy_sigmoid(weights)
+        return weighted_categorical_crossentropy_sigmoid(**kwargs)
     elif loss == DICE_FOCAL_LOSS:
         return dice_focal_loss
     elif loss == DICE_MEDIAN_LOSS:
@@ -118,7 +118,11 @@ def dice_median_loss(y_true, y_pred):
     return loss
 
 
-def multi_class_dice_loss_softmax():
+def multi_class_dice_loss_softmax(**kwargs):
+    """Dice loss for multiple classes in softmax layer
+
+    :return:
+    """
     def d_loss(y_true, y_pred):
         # remove background pixels from dice_calculation
         # background class is slice 0 in the true and pred
@@ -130,16 +134,16 @@ def multi_class_dice_loss_softmax():
     return d_loss
 
 
-def weighted_categorical_crossentropy(weights):
-    """
-    A weighted version of Keras categorical_crossentropy
+def weighted_categorical_crossentropy(weights, **kwargs):
+    """A weighted version of Keras categorical_crossentropy
 
-    @:param: weights: numpy array of shape (C,) where C is the number of classes
+    :param: weights: Numpy array of shape (C,) where C is the number of classes
 
     Use Case:
         weights = np.array([0.5, 2]) # Class one at 0.5, class 2 2x the normal weights
-        loss = weighted_categorical_crossentropy(weights)
-        model.compile(loss=loss,optimizer='adam')
+        exclude_ind = 0  # exclude background from computation
+        loss = weighted_categorical_crossentropy(weights=weights, exclude=exclude_ind)
+        model.compile(loss=loss, optimizer='adam')
     """
 
     weights = K.variable(weights)
@@ -238,7 +242,7 @@ def wasserstein_disagreement_map(prediction, ground_truth, M):
     ground_truth = tf.cast(ground_truth, dtype=tf.float64)
     # unstack_pred = tf.unstack(prediction, axis=-1)
     prediction = tf.cast(prediction, dtype=tf.float64)
-    # print("shape of M", M.shape, "unstacked labels", unstack_labels,
+    # logger.info("shape of M", M.shape, "unstacked labels", unstack_labels,
     #       "unstacked pred" ,unstack_pred)
     # W is a weighting sum of all pairwise correlations (pred_ci x labels_cj)
     pairwise_correlations = []
@@ -276,7 +280,7 @@ def generalised_wasserstein_dice_loss(y_true, y_predicted):
     # M = tf.cast(M, dtype=tf.float64)
     # compute disagreement map (delta)
     M = M_tree_4
-    # print("M shape is ", M.shape, pred_proba, one_hot)
+    # logger.info("M shape is ", M.shape, pred_proba, one_hot)
     delta = wasserstein_disagreement_map(pred_proba, ground_truth, M)
     # compute generalisation of all error for multi-class seg
     all_error = tf.reduce_sum(delta)

@@ -1,3 +1,4 @@
+import logging
 import os
 import time
 from time import strftime
@@ -15,6 +16,8 @@ import matplotlib.pyplot as plt
 import oai_test
 from utils.metric_utils import dice_score_coefficient, volumetric_overlap_error
 from scan_metadata import ScanMetadata
+
+logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 
 UNET_3D_TEST_PATH = '/bmrNAS/people/arjun/msk_seg_networks/volume_limited/unet_3d_asc/test'
 UNET_3D_TEST_RESULT_PATH = '/bmrNAS/people/arjun/msk_seg_networks/volume_limited/unet_3d_asc/test_results'
@@ -103,9 +106,9 @@ def test_model():
     skipped_count = 0
 
     # Read the files that will be segmented
-    # print('INFO: Test size: %d, batch size: %d, # subjects: %d' % (len(test_files), test_batch_size, len(scans_data)))
-    print('Save path: %s' % (test_result_path))
-    print('Test path: %s' % test_path)
+    # logger.info('INFO: Test size: %d, batch size: %d, # subjects: %d' % (len(test_files), test_batch_size, len(scans_data)))
+    logger.info('Save path: %s' % (test_result_path))
+    logger.info('Test path: %s' % test_path)
 
     pids_str = ''
 
@@ -132,10 +135,10 @@ def test_model():
         voes = np.append(voes, voe)
         cv_values = np.append(cv_values, cv)
 
-        print_str = 'DSC, VOE, CV for image #%d (name = %s, %d slices) = %0.3f, %0.3f, %0.3f' % (
+        logger.info_str = 'DSC, VOE, CV for image #%d (name = %s, %d slices) = %0.3f, %0.3f, %0.3f' % (
             img_cnt, fname, num_slices, dl, voe, cv)
-        pids_str = pids_str + print_str + '\n'
-        print(print_str)
+        pids_str = pids_str + logger.info_str + '\n'
+        logger.info(logger.info_str)
 
         slice_dir = test_set_md[fname].slice_dir
 
@@ -165,10 +168,10 @@ def test_model():
     end = time.time()
 
     stats_string = oai_test.get_stats_string(dice_losses, voes, cv_values, skipped_count, end - start)
-    # Print some summary statistics
-    print('--' * 20)
-    print(stats_string)
-    print('--' * 20)
+    # Log some summary statistics
+    logger.info('--' * 20)
+    logger.info(stats_string)
+    logger.info('--' * 20)
 
     # Write details to test file
     with open(os.path.join(test_result_path, 'results.txt'), 'w+') as f:
@@ -219,4 +222,4 @@ if __name__ == '__main__':
     # B2 = utils.load_h5('data_visualization/9905863_V00_2.seg')['data'][:]
     # B3 = utils.load_h5('data_visualization/9905863_V00_2.pred')['pred'][:]
     #
-    # print('hello')
+    # logger.info('hello')

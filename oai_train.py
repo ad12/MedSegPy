@@ -1,11 +1,6 @@
-# Author: Arjun Desai, arjun.desai@duke.edu, 2018 June
-
-from __future__ import print_function, division
-
-import argparse
+import logging
 import os
 import pickle
-from copy import deepcopy
 
 import keras.callbacks as kc
 import numpy as np
@@ -24,6 +19,9 @@ from generators import im_gens
 from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS, dice_loss, focal_loss
 from models.models import get_model
 from utils import io_utils, parallel_utils as putils, utils, dl_utils
+from utils.logger import setup_logger
+
+logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 
 CLASS_WEIGHTS = np.asarray([100, 1])
 SAVE_BEST_WEIGHTS = True
@@ -44,29 +42,35 @@ def train_model(config, optimizer=None, model=None, class_weights=None):
     pik_save_path = config.PIK_SAVE_PATH
     loss = config.LOSS
 
+    # Initialize logger.
+    setup_logger(config.CP_SAVE_PATH)
+    logger.info('OUTPUT_DIR: %s' % config.CP_SAVE_PATH)
+
     if model is None:
         model = get_model(config)
 
     # plot model
-    plot_model(model, to_file=os.path.join(cp_save_path, 'model.png'), show_shapes=True)
+    plot_model(model,
+               to_file=os.path.join(cp_save_path, 'model.png'),
+               show_shapes=True)
 
     # Fine tune - initialize with weights
     if config.FINE_TUNE:
-        print('loading weights')
+        logger.info('loading weights')
         model.load_weights(config.INIT_WEIGHT_PATH)
         if FREEZE_LAYERS:
             if len(FREEZE_LAYERS) == 1:
                 fl = range(FREEZE_LAYERS[0], len(model.layers))
             else:
                 fl = range(FREEZE_LAYERS[0], FREEZE_LAYERS[1])
-            print('freezing layers %s' % fl)
+            logger.info('freezing layers %s' % fl)
             for i in fl:
                 model.layers[i].trainable = False
 
     # Replicate model on multiple gpus - note this does not solve issue of having too large of a model
     num_gpus = len(os.environ["CUDA_VISIBLE_DEVICES"].split(','))
     if num_gpus > 1:
-        print('Running multi gpu model')
+        logger.info('Running multi gpu model')
         model = putils.ModelMGPU(model, gpus=num_gpus)
 
     # If no optimizer is provided, default to Adam
@@ -77,13 +81,13 @@ def train_model(config, optimizer=None, model=None, class_weights=None):
     # Load loss function
     # if weighted cross entropy, load weights
     if loss == WEIGHTED_CROSS_ENTROPY_LOSS and class_weights is None:
-        # print('calculating freq')
+        # logger.info('calculating freq')
         # freq_file = CLASS_FREQ_DAT_WEIGHTS_AUG if config.AUGMENT_DATA else CLASS_FREQ_DAT_WEIGHTS_NO_AUG
-        # print('Weighting with file: %s' % freq_file)
+        # logger.info('Weighting with file: %s' % freq_file)
         # class_freqs = utils.load_pik(freq_file)
         # class_weights = get_class_weights(class_freqs)
         # class_weights = np.reshape(class_weights, (1, 2))
-        print(class_weights)
+        logger.info(class_weights)
 
     loss_func = get_training_loss(loss, weights=class_weights)
     lr_metric = get_lr_metric(optimizer)
@@ -221,14 +225,14 @@ class LossHistory(kc.Callback):
 def fine_tune(dirpath, config, vals_dict=None, class_weights=None):
     # # If a fine-tune directory already exits, skip this directory
     # if (os.path.isdir(os.path.join(dirpath, 'fine_tune'))):
-    #     print('Skipping %s - fine_tune folder exists' % dirpath)
+    #     logger.info('Skipping %s - fine_tune folder exists' % dirpath)
 
     # Initialize for fine tuning
     config.load_config(os.path.join(dirpath, 'config.ini'))
 
     # Get best weight path
     best_weight_path = dl_utils.get_weights(dirpath)
-    print('Best weight path: %s' % best_weight_path)
+    logger.info('Best weight path: %s' % best_weight_path)
 
     config.init_fine_tune(best_weight_path)
 
@@ -280,6 +284,8 @@ EXP_DIR_MAP = {'arch': 'architecture_limited',
                }
 
 if __name__ == '__main__':
+    raise DeprecationWarning('This file is deprecated. Use nn_train')
+
     base_parser = argparse.ArgumentParser(description='Train OAI dataset')
     arg_subparser = base_parser.add_subparsers(help='supported configs for different architectures', dest='config')
     subparsers = MCONFIG.init_cmd_line_parser(arg_subparser)
@@ -329,9 +335,9 @@ if __name__ == '__main__':
     glob_constants.SEED = args.seed
     k_fold_cross_validation = args.k_fold_cross_validation
 
-    print(glob_constants.SEED)
+    logger.info(glob_constants.SEED)
 
-    print('Using GPU %s' % gpu)
+    logger.info('Using GPU %s' % gpu)
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
     SAVE_BEST_WEIGHTS = not args.save_all_weights
@@ -361,7 +367,7 @@ if __name__ == '__main__':
                                                       num_valid_bins=ho_valid,
                                                       num_test_bins=ho_test)
 
-        print('Loading %d-fold cross-validation data from %s...' % (cv_wrapper.k, cv_wrapper.filepath))
+        logger.info('Loading %d-fold cross-validation data from %s...' % (cv_wrapper.k, cv_wrapper.filepath))
 
         cv_file = cv_wrapper.filepath
         cv_k = cv_wrapper.k

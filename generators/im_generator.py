@@ -1,9 +1,4 @@
-# Author: Zhongnan Fang, zhongnanf@gmail.com, 2017 July
-# Modified: Akshay Chaudhari, akshaysc@stanford.edu 2017 August
-#           Arjun Desai, arjundd@stanford.edu, 2018 June
-
-from __future__ import print_function, division
-
+import logging
 from os import listdir
 from os.path import splitext
 from random import shuffle
@@ -11,6 +6,8 @@ from re import split
 
 import h5py
 import numpy as np
+
+logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 
 
 # find unique data regardless of the file prefix
@@ -279,7 +276,7 @@ def img_generator_test(data_path, batch_size, img_size, tag, tissue_inds, shuffl
 
 
 def inspect_vals(x):
-    print('0: %0.2f, 1: %0.2f' % (np.sum(x == 0), np.sum(x == 1)))
+    logger.info('0: %0.2f, 1: %0.2f' % (np.sum(x == 0), np.sum(x == 1)))
 
 
 def img_generator_oai(data_path, batch_size, config, state='training', shuffle_epoch=True):
@@ -421,7 +418,7 @@ def img_generator_oai_test(data_path, batch_size, config):
     files = sort_files(files, tag)
 
     num_neighboring = config.num_neighboring_slices()
-    print(num_neighboring)
+    logger.info(num_neighboring)
     # img_size must be 3D
     assert (len(img_size) == 3)
     total_classes = config.get_num_classes()
@@ -504,8 +501,8 @@ def sort_files(files, tag):
 if __name__ == '__main__':
     filename = '9967358_V01-Aug00_072'
     tmp = split('_', filename)
-    print(tmp)
+    logger.info(tmp)
 
     # tmp = int(tmp[0] + tmp[1][2:3])
 
-    print(tmp[1][2:3])
+    logger.info(tmp[1][2:3])

@@ -1,5 +1,4 @@
-from __future__ import print_function, division
-
+import logging
 import os
 
 import numpy as np
@@ -10,6 +9,8 @@ from keras.layers import Input, Conv2D, MaxPooling2D, Conv2DTranspose, Dropout, 
 from keras.models import Model
 from keras.utils import plot_model
 import warnings
+
+logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 
 
 def anisotropic_unet_2d(input_size=None, input_tensor=None, output_mode=None, num_filters=None, depth=6,
@@ -23,7 +24,7 @@ def anisotropic_unet_2d(input_size=None, input_tensor=None, output_mode=None, nu
     :raise ValueError if input_size is not tuple or dimensions of input_size do not match (height, width, 1)
     """
     import glob_constants
-    print('Initializing unet with seed: %s' % str(glob_constants.SEED))
+    logger.info('Initializing unet with seed: %s' % str(glob_constants.SEED))
     SEED = glob_constants.SEED
     if input_tensor is None and (type(input_size) is not tuple or len(input_size) != 3):
         raise ValueError('input_size must be a tuple of size (height, width, 1)')

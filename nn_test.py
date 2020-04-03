@@ -1,15 +1,20 @@
-from __future__ import print_function, division
-
 import argparse
+import ast
+import logging
 import os
 
+os.environ["MSK_SEG_NETWORKS_PROJECT"] = "tech-considerations_v3"
+
 from oai_test import test_dir, get_valid_subdirs
+
+logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 
 
 def add_testing_arguments(parser: argparse.ArgumentParser):
     parser.add_argument('--dirpath', metavar='dp', type=str, nargs=1,
                         help='path to config to test')
-
+    parser.add_argument('--voxel_spacing', type=str, nargs='?', default=None,
+                        help='voxel spacing. eg. \'(0.5, 0.5, 2)\'')
     parser.add_argument('-g', '--gpu', metavar='G', type=str, nargs='?', default='0',
                         help='gpu id to use. default=0')
     parser.add_argument('--cpu', action='store_const', default=False, const=True,
@@ -54,17 +59,21 @@ if __name__ == '__main__':
     
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
     if not cpu:
-        print('Using GPU %s' % gpu)
+        logger.info('Using GPU %s' % gpu)
         os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
     else:
         os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
     recursive = args.recursive
     overwrite = args.force
+    voxel_spacing = args.voxel_spacing
 
     test_dirpaths = [config_filepath]
     if recursive:
         test_dirpaths = get_valid_subdirs(config_filepath, not overwrite)
 
+    if voxel_spacing:
+        voxel_spacing = ast.literal_eval(voxel_spacing)
+    
     for dp in test_dirpaths:
-        test_dir(dp, vals_dict=create_config_dict(vargin), save_h5_data=vargin['save_h5_data'])
+        test_dir(dp, vals_dict=create_config_dict(vargin), save_h5_data=vargin['save_h5_data'], voxel_spacing=voxel_spacing)

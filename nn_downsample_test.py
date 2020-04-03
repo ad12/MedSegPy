@@ -1,8 +1,9 @@
 """
 Use 3d models to run inference on full dataset, but ground truth should be downsampled masks
 """
-
-import os, sys
+import logging
+import os
+import sys
 from copy import deepcopy
 import numpy as np
 
@@ -23,6 +24,7 @@ import scipy.io as sio
 import argparse
 import keras.backend as K
 
+logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 
 DOWNSAMPLED_TEST_PATH = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/test'
 
@@ -86,10 +88,10 @@ class InterpolationTest():
         if not weights_path:
             weights_path = dl_utils.get_weights(dirpath)
 
-        print('Weights selected: %s' % weights_path)
+        logger.info('Weights selected: %s' % weights_path)
 
         config_filepath = os.path.join(dirpath, 'config.ini')
-        print('Config: %s' % config_filepath)
+        logger.info('Config: %s' % config_filepath)
         c = self.load_config(config_filepath)
 
         c.load_config(config_filepath)
@@ -156,9 +158,9 @@ class InterpolationTest():
         stats_string = get_stats_string(mw, skipped_count=0, testing_time=(time.time() - self.start_time))
 
         # Print some summary statistics
-        print('--' * 20)
-        print(stats_string)
-        print('--' * 20)
+        logger.info('--' * 20)
+        logger.info(stats_string)
+        logger.info('--' * 20)
 
         # Write details to test file
         with open(os.path.join(test_result_path, 'results.txt'), 'w+') as f:
@@ -209,7 +211,7 @@ class InterpolationTest():
             mw.metrics['voe'][-1],
             mw.metrics['cv'][-1],
             mw.metrics['assd'][-1])
-        print(print_str)
+        logger.info(print_str)
 
         if fname in test_set_md.keys():
             slice_dir = test_set_md[fname].slice_dir
@@ -292,7 +294,7 @@ if __name__ == '__main__':
     cpu = args.cpu
 
     if not cpu:
-        print('Using GPU %s' % gpu)
+        logger.info('Using GPU %s' % gpu)
         os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
         os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
     else:

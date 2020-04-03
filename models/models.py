@@ -1,4 +1,6 @@
-import os, sys
+import logging
+import os
+import sys
 
 from keras import Model
 from keras.initializers import glorot_uniform
@@ -8,8 +10,8 @@ from keras.utils import plot_model
 sys.path.append('../')
 import glob_constants as glc
 from config import DeeplabV3Config, SegnetConfig, UNetConfig, \
-    UNetMultiContrastConfig, UNet2_5DConfig, DeeplabV3_2_5DConfig, ResidualUNet, AnisotropicUNetConfig, RefineNetConfig, UNet3DConfig
-from glob_constants import SEED
+    UNetMultiContrastConfig, UNet2_5DConfig, DeeplabV3_2_5DConfig, ResidualUNet, AnisotropicUNetConfig, RefineNetConfig, \
+    UNet3DConfig
 
 from models.deeplab_2d.deeplab_model import DeeplabModel
 from models.segnet_2d.segnet import Segnet_v2
@@ -19,6 +21,8 @@ from models.unet_2d.unet_model import unet_2d_model, unet_2d_model_v2
 from models.refinenet.refinenet_model import refinenet_model
 from models.unet_3d_model import unet_3d_model
 
+logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
+
 
 def get_model(config):
     """
@@ -26,17 +30,17 @@ def get_model(config):
     :param config: Config object with specific architecture configurations
     :return: a Keras model
     """
-    if (type(config) is DeeplabV3Config):
+    if type(config) is DeeplabV3Config:
         model = deeplabv3_2d(config)
-    elif (type(config) is SegnetConfig):
+    elif type(config) is SegnetConfig:
         model = segnet_2d(config)
-    elif (type(config) is UNetConfig):
+    elif type(config) is UNetConfig:
         model = unet_2d(config)
-    elif (type(config) is UNetMultiContrastConfig):
+    elif type(config) is UNetMultiContrastConfig:
         model = unet_2d_multi_contrast(config)
-    elif (type(config) is UNet2_5DConfig):
+    elif type(config) is UNet2_5DConfig:
         model = unet_2_5d(config)
-    elif (type(config) is DeeplabV3_2_5DConfig):
+    elif type(config) is DeeplabV3_2_5DConfig:
         model = deeplabv3_2_5d(config)
     elif type(config) is ResidualUNet:
         model = residual_unet(config)
@@ -60,10 +64,11 @@ def basic_refinenet(config):
     model = refinenet_model(input_shape=input_shape)
 
     # Add activation
-    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation)
+    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation, seed=config.SEED)
     model = Model(inputs=model.input, outputs=x)
 
     return model
+
 
 def anisotropic_unet(config):
     input_shape = config.IMG_SIZE
@@ -76,10 +81,11 @@ def anisotropic_unet(config):
                                 kernel_size=config.KERNEL_SIZE)
 
     # Add activation
-    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation)
+    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation, seed=config.SEED)
     model = Model(inputs=model.input, outputs=x)
 
     return model
+
 
 def residual_unet(config):
     """
@@ -100,10 +106,11 @@ def residual_unet(config):
                              squeeze_excitation_ratio=config.SE_RATIO)
 
     # Add activation
-    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation)
+    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation, seed=config.SEED)
     model = Model(inputs=model.input, outputs=x)
 
     return model
+
 
 def unet_3d(config):
     """
@@ -122,9 +129,11 @@ def unet_3d(config):
     model = unet_3d_model(input_size=input_shape,
                           depth=DEPTH,
                           num_filters=NUM_FILTERS, num_classes=num_classes,
-                          activation=activation)
+                          activation=activation,
+                          seed=config.SEED)
 
     return model
+
 
 def unet_2d(config):
     """
@@ -149,7 +158,7 @@ def unet_2d(config):
         model = unet_2d_model_v2(input_size=input_shape, depth=DEPTH, num_filters=NUM_FILTERS)
 
         # Add activation
-        x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation)
+        x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation, seed=config.SEED)
         model = Model(inputs=model.input, outputs=x)
 
     return model
@@ -172,7 +181,7 @@ def deeplabv3_2d(config):
     activation = config.LOSS[1]
     dropout_rate = config.DROPOUT_RATE
     num_classes = config.get_num_classes()
-    m = DeeplabModel(kernel_initializer=config.KERNEL_INITIALIZER, seed=glc.SEED)
+    m = DeeplabModel(kernel_initializer=config.KERNEL_INITIALIZER, seed=config.SEED)
     model = m.Deeplabv3(weights=None,
                         input_shape=input_shape,
                         classes=num_classes,
@@ -182,7 +191,7 @@ def deeplabv3_2d(config):
                         dropout_rate=dropout_rate)
 
     # Add sigmoid activation layer -
-    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation)
+    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation, seed=config.SEED)
     model = Model(inputs=model.input, outputs=x)
 
     # Save image
@@ -213,7 +222,8 @@ def segnet_2d(config):
                       num_filters=config.NUM_FILTERS,
                       single_bn=config.SINGLE_BN,
                       conv_act_bn=config.CONV_ACT_BN,
-                      output_mode=output_mode)
+                      output_mode=output_mode,
+                      seed=config.SEED)
 
     model_name = config.CP_SAVE_TAG + '_%d' + '_%s' + '_%s'
     bn_str = 'xbn'
@@ -247,7 +257,7 @@ def unet_2d_multi_contrast(config):
     num_classes = config.get_num_classes()
     input_shape = config.IMG_SIZE
 
-    print('Initializing multi contrast 2d unet: input size - ' + str(input_shape))
+    logger.info('Initializing multi contrast 2d unet: input size - ' + str(input_shape))
 
     x = Input(input_shape)
     x = Conv2D(1, (1, 1), name='conv_mc_comp')(x)
@@ -255,11 +265,11 @@ def unet_2d_multi_contrast(config):
     model = unet_2d_model(input_tensor=x)
 
     # Add activation
-    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation)
+    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation, seed=config.SEED)
     model = Model(inputs=model.input, outputs=x)
 
     # only load weights for layers that share the same name
-    if (config.INIT_UNET_2D):
+    if config.INIT_UNET_2D:
         model.load_weights(config.INIT_UNET_2D_WEIGHTS, by_name=True)
 
     return model
@@ -280,14 +290,14 @@ def unet_2_5d(config):
     num_classes = config.get_num_classes()
     input_shape = config.IMG_SIZE
 
-    print('Initializing 2.5d unet: input size - ' + str(input_shape))
+    logger.info('Initializing 2.5d unet: input size - ' + str(input_shape))
 
     x = Input(input_shape)
 
     model = unet_2d_model(input_tensor=x)
 
     # Add activation
-    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation)
+    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation, seed=config.SEED)
     model = Model(inputs=model.input, outputs=x)
 
     # only load weights for layers that share the same name
@@ -307,7 +317,7 @@ def deeplabv3_2_5d(config):
     """
     if (type(config) is not DeeplabV3_2_5DConfig):
         raise ValueError('config must be instance of DeeplabV3_2_5DConfig')
-    print('Initializing 2.5d deeplab: input size - ' + str(config.IMG_SIZE))
+    logger.info('Initializing 2.5d deeplab: input size - ' + str(config.IMG_SIZE))
 
     input_shape = config.IMG_SIZE
     OS = config.OS
@@ -315,7 +325,7 @@ def deeplabv3_2_5d(config):
     activation = config.LOSS[1]
     dropout_rate = config.DROPOUT_RATE
     num_classes = config.get_num_classes()
-    m = DeeplabModel(kernel_initializer=config.KERNEL_INITIALIZER, seed=glc.SEED)
+    m = DeeplabModel(kernel_initializer=config.KERNEL_INITIALIZER, seed=config.SEED)
     model = m.Deeplabv3(weights=None,
                         input_shape=input_shape,
                         classes=num_classes,
@@ -325,7 +335,7 @@ def deeplabv3_2_5d(config):
                         dropout_rate=dropout_rate)
 
     # Add sigmoid activation layer -
-    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation)
+    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation, seed=config.SEED)
     model = Model(inputs=model.input, outputs=x)
 
     # Save image
@@ -346,7 +356,7 @@ def __softmax_activation_layer(output, num_classes):
     return
 
 
-def __add_activation_layer(output, num_classes, activation='sigmoid'):
+def __add_activation_layer(output, num_classes, activation='sigmoid', seed=None):
     """
     Return sigmoid activation layer
     :param: output: The output of the previous layer
@@ -355,7 +365,7 @@ def __add_activation_layer(output, num_classes, activation='sigmoid'):
     # Initializing kernel weights to 1 and bias to 0.
     # i.e. without training, the output would be a sigmoid activation on each pixel of the input
     return Conv2D(num_classes, (1, 1), activation=activation,
-                  kernel_initializer=glorot_uniform(seed=SEED),
+                  kernel_initializer=glorot_uniform(seed=seed),
                   name='output_activation')(output)
 
 

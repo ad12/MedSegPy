@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 
 import config as MCONFIG
@@ -7,6 +8,8 @@ import losses
 import oai_train
 from config import DeeplabV3Config, SegnetConfig, UNetConfig
 from losses import WEIGHTED_CROSS_ENTROPY_LOSS, BINARY_CROSS_ENTROPY_LOSS, BINARY_CROSS_ENTROPY_SIG_LOSS, FOCAL_LOSS
+
+logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 
 SUPPORTED_MODELS = ['unet', 'segnet', 'deeplab']
 
@@ -25,7 +28,7 @@ if __name__ == '__main__':
     parser.add_argument('-a', action='store_const', default=False, const=True)
 
     args = parser.parse_args()
-    print(args)
+    logger.info(args)
     gpu = args.gpu
 
     models = args.model
@@ -34,9 +37,9 @@ if __name__ == '__main__':
 
     glob_constants.SEED = args.seed
 
-    print(glob_constants.SEED)
+    logger.info(glob_constants.SEED)
 
-    print('Using GPU %s' % gpu)
+    logger.info('Using GPU %s' % gpu)
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
     include_background = True
@@ -49,7 +52,7 @@ if __name__ == '__main__':
         loss_func = FOCAL_LOSS
         include_background = False
         losses.FOCAL_LOSS_GAMMA = args.focal
-        print(losses.FOCAL_LOSS_GAMMA)
+        logger.info(losses.FOCAL_LOSS_GAMMA)
 
     for model in models:
         # Data limitation experiment: Train Unet, Deeplab, and Segnet with limited data

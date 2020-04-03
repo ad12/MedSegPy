@@ -3,13 +3,18 @@ import os
 import warnings
 from itertools import groupby
 from time import localtime, strftime
+import logging
 
-import glob_constants as glc
 import mri_utils
 import utils.utils as utils
 from cross_validation import cv_util
 from losses import DICE_LOSS, CMD_LINE_SUPPORTED_LOSSES, get_training_loss_from_str
 from utils import io_utils
+from utils.logger import setup_logger
+
+import defaults
+
+logger = logging.getLogger("msk_seg.{}".format(__name__))
 
 # Do not change this constant unless version upgrades are done and keys are deprecated
 DEPRECATED_KEYS = ['NUM_CLASSES', 'TRAIN_FILES_CV', 'VALID_FILES_CV', 'TEST_FILES_CV']
@@ -20,7 +25,7 @@ UNET_NAME = 'unet_2d'
 ENSEMBLE_UDS_NAME = 'ensemble_uds'
 
 # This is the default save path prefix - please change if you desire something else
-SAVE_PATH_PREFIX = '/bmrNAS/people/arjun/msk_seg_networks/oai_data'
+SAVE_PATH_PREFIX = defaults.SAVE_PATH
 
 SUPPORTED_CONFIGS_NAMES = [DEEPLABV3_NAME, SEGNET_NAME, UNET_NAME]
 
@@ -80,9 +85,9 @@ class Config():
     INIT_WEIGHT_PATH = ''
 
     # Dataset Paths
-    TRAIN_PATH = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/train_aug/'
-    VALID_PATH = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/valid/'
-    TEST_PATH = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/test'
+    TRAIN_PATH = defaults.TRAIN_PATH
+    VALID_PATH = defaults.VALID_PATH
+    TEST_PATH = defaults.TEST_PATH
 
     # Cross-Validation-Parameters
     USE_CROSS_VALIDATION = False
@@ -118,9 +123,9 @@ class Config():
 
     # Initializer
     KERNEL_INITIALIZER = 'he_normal'
+    SEED = None
 
     def __init__(self, cp_save_tag, state='training', create_dirs=True):
-        self.SEED = glc.SEED
         if state not in ['testing', 'training']:
             raise ValueError('state must either be \'training\' or \'testing\'')
 
@@ -242,7 +247,7 @@ class Config():
             # all data is of type string, but we need to cast back to original data type
             data_type = type(getattr(self, upper_case_key))
 
-            # print(upper_case_key + ': ' + str(vars_dict[key]) + ' (' + str(data_type) + ')')
+            # logger.info(upper_case_key + ': ' + str(vars_dict[key]) + ' (' + str(data_type) + ')')
             var_converted = utils.convert_data_type(vars_dict[key], data_type)
 
             # Loading config
@@ -331,10 +336,11 @@ class Config():
                 'EARLY_STOPPING_PATIENCE' if self.USE_EARLY_STOPPING else '',
                 'EARLY_STOPPING_CRITERION' if self.USE_EARLY_STOPPING else '', '',
 
-                'KERNEL_INITIALIZER', '',
+                'KERNEL_INITIALIZER',
+                'SEED' if self.SEED else '', ''
 
                 'FINE_TUNE',
-                'INIT_WEIGHT_PATH' if self.FINE_TUNE else ''])
+                'INIT_WEIGHT_PATH'])
         else:
             summary_vals.extend(['TEST_RESULT_PATH', 'TEST_WEIGHT_PATH', 'TEST_BATCH_SIZE'])
 
@@ -343,19 +349,19 @@ class Config():
         # Remove consecutive elements in summary vals that are the same
         summary_vals = [x[0] for x in groupby(summary_vals)]
 
-        print('')
-        print('==' * 40)
-        print("Config Summary")
-        print('==' * 40)
+        logger.info('')
+        logger.info('==' * 40)
+        logger.info("Config Summary")
+        logger.info('==' * 40)
 
         for attr in summary_vals:
             if attr == '':
-                print('')
+                logger.info('')
                 continue
-            print(attr + ": " + str(self.__getattribute__(attr)))
+            logger.info(attr + ": " + str(self.__getattribute__(attr)))
 
-        print('==' * 40)
-        print('')
+        logger.info('==' * 40)
+        logger.info('')
 
     def get_num_classes(self):
         if self.INCLUDE_BACKGROUND:
@@ -459,6 +465,17 @@ class Config():
         subcommand_parser.add_argument('--kernel_initializer', type=str, default=cls.KERNEL_INITIALIZER, nargs='?',
                                        help='kernel initializer. Default: %s' % str(cls.KERNEL_INITIALIZER))
 
+        subcommand_parser.add_argument('-s', '--seed', metavar='S', type=int, default=cls.SEED, nargs='?',
+                                       dest='seed',
+                                       help='python seed to initialize filter weights. Default: %s' % cls.SEED)
+
+        # Initialize weight path.
+        subcommand_parser.add_argument('-init_weight_path', '--init_weight_path', metavar='P', type=str,
+                                       default=cls.INIT_WEIGHT_PATH,
+                                       nargs='?',
+                                       dest='init_weight_path',
+                                       help='Path to weights file to initialize. Default: %s' % cls.INIT_WEIGHT_PATH)
+
         return subcommand_parser
 
     @classmethod
@@ -471,7 +488,9 @@ class Config():
                 'early_stopping_criterion',
                 'train_batch_size', 'valid_batch_size', 'test_batch_size',
                 'loss', 'include_background',
-                'img_size']
+                'img_size',
+                'kernel_initializer', 'seed',
+                'init_weight_path']
 
     @classmethod
     def parse_cmd_line(cls, vargin):
@@ -753,7 +772,7 @@ class UNet2_5DConfig(UNetConfig):
     DROP_FACTOR = 0.8
 
     # Train path - volumetric augmentation
-    TRAIN_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/vol_aug/train_sag/'
+    #TRAIN_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/vol_aug/train_sag/'
 
     def num_neighboring_slices(self):
         return self.IMG_SIZE[2]
@@ -777,7 +796,7 @@ class UNet3DConfig(UNetConfig):
     NUM_FILTERS = [32, 64, 128, 256, 512, 1024]
 
     # Train path - volumetric augmentation
-    TRAIN_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/vol_aug/train_sag/'
+    #TRAIN_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/vol_aug/train_sag/'
 
     def num_neighboring_slices(self):
         return self.IMG_SIZE[2]
@@ -824,7 +843,7 @@ class DeeplabV3_2_5DConfig(DeeplabV3Config):
     N_EPOCHS = 100
 
     # Train path - volumetric augmentation
-    TRAIN_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/vol_aug/train_sag/'
+    #TRAIN_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/vol_aug/train_sag/'
 
     def num_neighboring_slices(self):
         return self.IMG_SIZE[2]
@@ -891,7 +910,7 @@ class RefineNetConfig(Config):
 
 
 SUPPORTED_CONFIGS = [UNetConfig, SegnetConfig, DeeplabV3Config, ResidualUNet, AnisotropicUNetConfig, RefineNetConfig,
-                     UNet3DConfig, UNet2_5DConfig]
+                     UNet3DConfig, UNet2_5DConfig, DeeplabV3_2_5DConfig]
 
 
 def get_config(config_cp_save_tag: str, create_dirs: bool=True):

@@ -2,12 +2,11 @@
 # Modified: Akshay Chaudhari, akshaysc@stanford.edu 2017 August
 #           Arjun Desai, arjundd@stanford.edu, 2018 June
 
-from __future__ import print_function, division
-
+import logging
 import matplotlib
 
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 import argparse
 import os
@@ -19,26 +18,30 @@ import numpy as np
 import scipy.io as sio
 from keras import backend as K
 
+import mri_utils
 import utils.utils as utils
-from utils import io_utils, dl_utils
-from utils.metric_utils import MetricWrapper
-from utils import im_utils
+from utils import io_utils, im_utils, dl_utils
+from utils.metric_utils import MetricsManager
+from utils.im_utils import MultiClassOverlay
+
 
 import config as MCONFIG
 from config import DeeplabV3Config, SegnetConfig, UNetConfig, UNet2_5DConfig, ResidualUNet
 from utils.metric_utils import dice_score_coefficient
+from utils.logger import setup_logger
 from models.models import get_model
 from keras.utils import plot_model
 from scan_metadata import ScanMetadata
 from generators.im_gens import get_generator
 from stat import S_IREAD, S_IRGRP, S_IROTH
 
+logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 
 DATE_THRESHOLD = strptime('2018-09-01-22-39-39', '%Y-%m-%d-%H-%M-%S')
 TEST_SET_METADATA_PIK = '/bmrNAS/people/arjun/msk_seg_networks/oai_metadata/oai_data.dat'
 TEST_SET_MD = io_utils.load_pik(TEST_SET_METADATA_PIK)
 
-VOXEL_SPACING = (0.3125, 0.3125, 1.5)
+VOXEL_SPACING = (0.3125, 0.3125, 0.7)
 SAVE_H5_DATA = False
 
 
@@ -48,6 +51,7 @@ def get_voxel_spacing(num_slices):
     elif num_slices == 160:
         return (0.3125, 0.3125, 0.7)
     raise ValueError('num_slices %d unknown' % num_slices)
+
 
 def find_start_and_end_slice(y_true):
     for i in range(y_true.shape[0]):
@@ -104,7 +108,7 @@ def interp_slice(y_true, y_pred, orientation='M'):
     return xs, ys, xt, yt
 
 
-def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
+def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA, voxel_spacing=None):
     """
     Test model
     :param config: a Config object
@@ -125,17 +129,16 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
 
     # Load weights into Deeplabv3 model
     model = get_model(config)
-    plot_model(model, os.path.join(config.TEST_RESULT_PATH, 'model.png'), show_shapes=True)
+    #plot_model(model, os.path.join(config.TEST_RESULT_PATH, 'model.png'), show_shapes=True)
     model.load_weights(config.TEST_WEIGHT_PATH)
 
-    img_cnt = 0
+    img_cnt = 1
 
     start = time.time()
-    skipped_count = 0
 
     # Read the files that will be segmented
     test_gen.summary()
-    print('Save path: %s' % (test_result_path))
+    logger.info('Save path: %s' % (test_result_path))
 
     # test_gen = img_generator_oai_test(test_path, test_batch_size, config)
 
@@ -145,39 +148,59 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
     y_interp = []
     x_total = []
     y_total = []
-    
-    fnames = []
-    mw = MetricWrapper()
-    voxel_spacing = None
+
+    # TODO (arjundd): remove when tissue names added to config
+    class_names = mri_utils.get_tissue_name(config.TISSUES)
+
+    metrics_manager = MetricsManager(class_names=class_names)
+    seg_metrics_processor = metrics_manager.seg_metrics_processor
+
+    # image writer
+    mc_overlay = MultiClassOverlay(config.get_num_classes())
+
     # # Iterature through the files to be segmented
-    for x_test, y_test, recon, fname in test_gen.img_generator_test(model):
+    for x_test, y_test, recon, fname, seg_time in test_gen.img_generator_test(model):
         # Perform the actual segmentation using pre-loaded model
         # Threshold at 0.5
-        
+        recon_o = np.asarray(recon)
+
+        if config.LOSS[1] == 'sigmoid':
+            # sigmoid activation function used
+            labels = (recon > 0.5).astype(np.float32)
+        else:
+            # else, softmax used
+            labels = np.zeros(recon.shape)
+            l_argmax = np.argmax(recon, axis=-1)
+            for c in range(labels.shape[-1]):
+                labels[l_argmax == c, c] = 1
+            labels = labels.astype(np.float32)
+
+        # background is always excluded from analysis
         if config.INCLUDE_BACKGROUND:
-            y_test = y_test[..., 1]
-            recon = recon[..., 1]
-            y_test = y_test[..., np.newaxis]
-            recon = recon[..., np.newaxis]
+            y_test = y_test[..., 1:]
+            recon = recon[..., 1:]
+            labels = labels[..., 1:]
+            if y_test.ndim == 3:
+                y_test = y_test[..., np.newaxis]
+                recon = recon[..., np.newaxis]
+                labels = labels[..., np.newaxis]
 
-        labels = (recon > 0.5).astype(np.float32)
         num_slices = x_test.shape[0]
-        
-        voxel_spacing = get_voxel_spacing(num_slices)
-        mw.compute_metrics(np.transpose(np.squeeze(y_test), axes=[1, 2, 0]),
-                           np.transpose(np.squeeze(labels), axes=[1, 2, 0]),
-                           voxel_spacing=voxel_spacing)
-        fnames.append(fname)
 
-        print_str = 'Scan #%03d (name = %s, %d slices) = DSC: %0.3f, VOE: %0.3f, CV: %0.3f, ASSD (mm): %0.3f' % (
-        img_cnt, fname,
-        num_slices,
-        mw.metrics['dsc'][-1],
-        mw.metrics['voe'][-1],
-        mw.metrics['cv'][-1],
-        mw.metrics['assd'][-1])
-        pids_str = pids_str + print_str + '\n'
-        print(print_str)
+        if not voxel_spacing:
+            voxel_spacing = get_voxel_spacing(num_slices)
+        else:
+            if not isinstance(voxel_spacing, tuple) or len(voxel_spacing) != 3:
+                raise ValueError('voxel_spacing %s not supported.' % str(voxel_spacing))
+        
+        summary = metrics_manager.analyze(fname, np.transpose(y_test, axes=[1, 2, 0, 3]),
+                                          np.transpose(labels, axes=[1, 2, 0, 3]),
+                                          voxel_spacing=voxel_spacing,
+                                          runtime=seg_time)
+
+        logger.info_str = 'Scan #%03d (name = %s, %d slices) = %s' % (img_cnt, fname, num_slices, summary)
+        pids_str = pids_str + logger.info_str + '\n'
+        logger.info(logger.info_str)
 
         if fname in test_set_md.keys():
             slice_dir = test_set_md[fname].slice_dir
@@ -200,26 +223,27 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
             x_write = x_test[..., x_test.shape[-1] // 2]
 
             # Save mask overlap
-            ovlps = im_utils.write_ovlp_masks(os.path.join(test_result_path, 'ovlp', fname), y_test, labels)
-            im_utils.write_mask(os.path.join(test_result_path, 'gt', fname), y_test)
-            im_utils.write_mask(os.path.join(test_result_path, 'labels', fname), labels)
-            im_utils.write_prob_map(os.path.join(test_result_path, 'prob_map', fname), recon)
-            im_utils.write_im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write, ovlps)
-            # im_utils.write_sep_im_overlay(os.path.join(test_result_path, 'im_ovlp_sep', fname), x_write,
+            # TODO (arjundd): fix writing masks to files
+            #x_write_o = np.transpose(x_write, (1, 2, 0))
+            #recon_oo = np.transpose(recon_o, (1, 2, 0, 3))
+            #mc_overlay.im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write_o, recon_oo)
+            #ovlps = im_utils.write_ovlp_masks(os.path.join(test_result_path, 'ovlp', fname), y_test[...,0], labels[...,0])
+            #im_utils.write_mask(os.path.join(test_result_path, 'gt', fname), y_test)
+            #im_utils.write_mask(os.path.join(test_result_path, 'labels', fname), labels)
+            #im_utils.write_prob_map(os.path.join(test_result_path, 'prob_map', fname), recon)
+            #im_utils.write_im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write, ovlps)
+            #im_utils.write_sep_im_overlay(os.path.join(test_result_path, 'im_ovlp_sep', fname), x_write,
             #                               np.squeeze(y_test), np.squeeze(labels))
 
         img_cnt += 1
-        #
-        # if img_cnt == ntest:
-        #     break
 
     end = time.time()
 
-    stats_string = get_stats_string(mw, skipped_count, end - start)
-    # Print some summary statistics
-    print('--' * 20)
-    print(stats_string)
-    print('--' * 20)
+    stats_string = get_stats_string(metrics_manager, end - start)
+    # Log some summary statistics
+    logger.info('--' * 20)
+    logger.info(stats_string)
+    logger.info('--' * 20)
 
     test_results_summary_path = os.path.join(test_result_path, 'results.txt')
     # Write details to test file
@@ -234,12 +258,11 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
         f.write('\n')
         f.write(stats_string)
 
-    #os.chmod(test_results_summary_path, S_IREAD | S_IRGRP | S_IROTH)
+    # os.chmod(test_results_summary_path, S_IREAD | S_IRGRP | S_IROTH)
 
     # Save metrics in dat format using pickle
     results_dat = os.path.join(test_result_path, 'metrics.dat')
-    io_utils.save_pik(mw.metrics, results_dat)
-    io_utils.save_pik(fnames, os.path.join(test_result_path, 'fnames.dat'))
+    io_utils.save_pik(metrics_manager.data, results_dat)
 
     x_interp = np.asarray(x_interp)
     y_interp = np.asarray(y_interp)
@@ -251,19 +274,8 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA):
                                                                           'xt': x_total,
                                                                           'yt': y_total})
 
-    x_interp_mean = np.mean(x_interp, 0)
-    y_interp_mean = np.mean(y_interp, 0)
-    y_interp_sem = np.std(y_interp, 0) / np.sqrt(y_interp.shape[0])
 
-    #plt.clf()
-    #plt.plot(x_interp_mean, y_interp_mean, 'b-')
-    #plt.fill_between(x_interp_mean, y_interp_mean - y_interp_sem, y_interp_mean + y_interp_sem, alpha=0.35)
-    #plt.xlabel('FOV (%)')
-    #plt.ylabel('Dice')
-    #plt.savefig(os.path.join(test_result_path, 'interp_slices.png'))
-
-
-def get_stats_string(mw: MetricWrapper, skipped_count, testing_time):
+def get_stats_string(mw: MetricsManager, testing_time):
     """
     Return string detailing statistics
     :param mw:
@@ -271,12 +283,14 @@ def get_stats_string(mw: MetricWrapper, skipped_count, testing_time):
     :param testing_time:
     :return:
     """
-    s = 'Overall Summary:\n'
-    s += '%d Skipped\n' % skipped_count
+    seg_metrics_processor = mw.seg_metrics_processor
+    inference_runtimes = np.asarray(mw.runtimes)
 
-    s += mw.summary()
-
-    s += 'Time required = %0.1f seconds.\n' % testing_time
+    s = '============Overall Summary============\n'
+    s += 'Time elapsed: %0.1f seconds.\n' % testing_time
+    s += '%s\n' % seg_metrics_processor.summary()
+    s += 'Inference time (Mean +/- Std. Dev.): %0.2f +/- %0.2f seconds.\n' % (np.mean(inference_runtimes),
+                                                                              np.std(inference_runtimes))
     return s
 
 
@@ -345,9 +359,9 @@ def batch_test(base_folder, config_name, vals_dicts=[None], overwrite=False):
     subdirs = get_valid_subdirs(base_folder, not overwrite)
 
     for subdir in subdirs:
-        print(subdir)
+        logger.info(subdir)
 
-    print('')
+    logger.info('')
     for subdir in subdirs:
         for vals_dict in vals_dicts:
             config = get_config(config_name)
@@ -365,14 +379,14 @@ def find_best_test_dir(base_folder):
         for results_file in results_files:
             mean = utils.parse_results_file(results_file)
             potential_data = (mean, results_file)
-            print(potential_data)
+            logger.info(potential_data)
             if mean > max_dsc_details[0]:
                 max_dsc_details = potential_data
-    print('\nMAX')
-    print(max_dsc_details)
+    logger.info('\nMAX')
+    logger.info(max_dsc_details)
 
 
-def test_dir(dirpath, config=None, vals_dict=None, best_weight_path=None, save_h5_data=False):
+def test_dir(dirpath, config=None, vals_dict=None, best_weight_path=None, save_h5_data=False, voxel_spacing=None):
     """
     Run testing experiment
     By default, save all data
@@ -383,16 +397,22 @@ def test_dir(dirpath, config=None, vals_dict=None, best_weight_path=None, save_h
     :param best_weight_path: path to best weights (default = None)
                                 if None, automatically search dirpath for the best weight path
     """
+    # Create config, if not provided.
+    config_filepath = os.path.join(dirpath, 'config.ini')
+    if not config:
+        config = MCONFIG.get_config(MCONFIG.get_cp_save_tag(config_filepath),
+                                    create_dirs=False)
+
+    # Initialize logger.
+    setup_logger(config.CP_SAVE_PATH)
+    logger.info('OUTPUT_DIR: %s' % config.CP_SAVE_PATH)
+
     # Get best weight path
     if best_weight_path is None:
         best_weight_path = dl_utils.get_weights(dirpath)
-    print('Best weights: %s' % best_weight_path)
+    logger.info('Best weights: %s' % best_weight_path)
 
-    config_filepath = os.path.join(dirpath, 'config.ini')
-    if not config:
-        config = MCONFIG.get_config(MCONFIG.get_cp_save_tag(config_filepath), create_dirs=False)
-    
-    print('Config: %s' % config_filepath)
+    logger.info('Config: %s' % config_filepath)
     config.load_config(config_filepath)
     config.TEST_WEIGHT_PATH = best_weight_path
 
@@ -403,7 +423,7 @@ def test_dir(dirpath, config=None, vals_dict=None, best_weight_path=None, save_h
 
     config.change_to_test()
 
-    test_model(config, save_file=1, save_h5_data=save_h5_data)
+    test_model(config, save_file=1, save_h5_data=save_h5_data, voxel_spacing=voxel_spacing)
 
     K.clear_session()
 

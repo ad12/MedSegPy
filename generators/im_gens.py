@@ -7,12 +7,15 @@ from enum import Enum
 from os import listdir
 from random import shuffle
 from typing import Tuple
+import logging
 
 import h5py
 import numpy as np
 
 from config import Config
 from generators.fname_parsers import OAISliceWise
+
+logger = logging.getLogger("msk_seg.{}".format(__name__))
 
 
 class GeneratorState(Enum):
@@ -189,6 +192,13 @@ class Generator(ABC):
 
         return base_info
 
+    @staticmethod
+    def logits_to_binary(self, x: np.ndarray):
+        data = np.zeros(x.shape[:-1])
+        data[..., np.max(x, axis=-1)] = 1
+
+        return data
+
 
 class OAIGenerator(Generator):
     """
@@ -288,12 +298,14 @@ class OAIGenerator(Generator):
 
             recon = None
             if model:
+                start_time = time.time()
                 recon = model.predict(x, batch_size=batch_size)
+                time_elapsed = time.time() - start_time
                 x, y, recon = self.__reformat_testing_scans__((x, y, recon))
             else:
                 x, y = self.__reformat_testing_scans__((x, y))
 
-            yield (x, y, recon, scan_id)
+            yield (x, y, recon, scan_id, time_elapsed)
     
     def __reformat_testing_scans__(self, vols):
         """
@@ -351,6 +363,9 @@ class OAIGenerator(Generator):
             seg_tissues = self.__compress_multi_class_mask__(seg, tissues)
         else:
             seg_tissues = seg[..., 0, tissues]
+            if isinstance(tissues[0], list):  # if tissues are supposed to be summed (like tibial cartilage and patellar cartilage)
+                seg_tissues = np.sum(seg_tissues, axis=-1)
+
         seg_total = seg_tissues
 
         # if considering background, add class
@@ -487,23 +502,23 @@ class OAIGenerator(Generator):
             num_train_subjects = len(set(train_pids))
             num_valid_subjects = len(set(valid_pids))
 
-            print('INFO: Train size: %d slices (%d subjects), batch size: %d' % (
+            logger.info('INFO: Train size: %d slices (%d subjects), batch size: %d' % (
                 len(train_files), num_train_subjects, self.config.TRAIN_BATCH_SIZE))
-            print('INFO: Valid size: %d slices (%d subjects), batch size: %d' % (
+            logger.info('INFO: Valid size: %d slices (%d subjects), batch size: %d' % (
                 len(valid_files), num_valid_subjects, self.config.VALID_BATCH_SIZE))
-            print('INFO: Image size: %s' % (self.config.IMG_SIZE,))
-            print('INFO: Image types included in training: %s' % (self.config.FILE_TYPES,))
+            logger.info('INFO: Image size: %s' % (self.config.IMG_SIZE,))
+            logger.info('INFO: Image types included in training: %s' % (self.config.FILE_TYPES,))
         else:  # config in Testing state
             test_files, test_batches_per_epoch, _ = self.__calc_generator_info__(GeneratorState.TESTING)
             scanset_info = self.__get_scanset_data__(test_files)
 
-            print('INFO: Test size: %d slices, batch size: %d, # subjects: %d, # scans: %d' % (len(test_files),
+            logger.info('INFO: Test size: %d slices, batch size: %d, # subjects: %d, # scans: %d' % (len(test_files),
                                                                                                config.TEST_BATCH_SIZE,
                                                                                                len(scanset_info['pid']),
                                                                                                len(scanset_info[
                                                                                                        'scanid'])))
             if not config.USE_CROSS_VALIDATION:
-                print('Test path: %s' % config.TEST_PATH)
+                logger.info('Test path: %s' % config.TEST_PATH)
 
     def __get_scanset_data__(self, files, keys=['pid', 'scanid']):
         info_dict = dict()
@@ -591,6 +606,8 @@ class OAI3DGenerator(OAIGenerator):
             seg_tissues = self.__compress_multi_class_mask__(seg, tissues)
         else:
             seg_tissues = seg[..., 0, tissues]
+            if isinstance(tissues[0], list):  # if tissues are supposed to be summed (like tibial cartilage and patellar cartilage)
+                seg_tissues = np.sum(seg_tissues, axis=-1)
         seg_total = seg_tissues
 
         # if considering background, add class
@@ -604,8 +621,8 @@ class OAI3DGenerator(OAIGenerator):
         o_seg = []
 
         for t_inds in tissues:
-            c_seg = seg[..., 0, t_inds]
-            if c_seg.ndim == 3:
+            c_seg = seg[..., t_inds, 0]
+            if c_seg.ndim == 4:
                 c_seg = np.sum(c_seg, axis=-1)
             o_seg.append(c_seg)
 
@@ -795,9 +812,9 @@ class OAI3DBlockGenerator(OAI3DGenerator):
     def cached_data(self, state: GeneratorState):
         if state not in self._cached_data.keys():
             start_time = time.time()
-            print('Computing %s blocks' % state.name)
+            logger.info('Computing %s blocks' % state.name)
             self._cached_data[state] = self.__calc_generator_info__(state)
-            print('%0.2f seconds' % (time.time() - start_time))
+            logger.info('%0.2f seconds' % (time.time() - start_time))
 
         return self._cached_data[state]
 
@@ -1066,14 +1083,14 @@ class OAI3DBlockGenerator(OAI3DGenerator):
             ytrue_vol = np.transpose(ytrue_vol, [2, 0, 1, 3])
 
             if model:
+                start_time = time.time()
                 recon = model.predict(x, batch_size=batch_size)
+                time_elapsed = time.time() - start_time
                 ypred_blocks = [(np.squeeze(x[b, ...]), recon[b, ...]) for b in range(num_blocks)]
                 _, recon_vol = self.unify_blocks(ypred_blocks, scan_to_im_size[vol_id])
                 recon_vol = np.transpose(recon_vol, [2, 0, 1, 3])
 
-            # TODO (arjundd): resolve for scan_id processing
-            scan_id = vol_id.split('-')[0]
-            yield (im_vol, ytrue_vol, recon_vol, scan_id)
+            yield (im_vol, ytrue_vol, recon_vol, vol_id, time_elapsed)
 
     def img_generator(self, state):
         accepted_states = [GeneratorState.TRAINING, GeneratorState.VALIDATION]
@@ -1158,12 +1175,12 @@ class OAI3DBlockGenerator(OAI3DGenerator):
             self.__state_summary(GeneratorState.TRAINING)
             self.__state_summary(GeneratorState.VALIDATION)
 
-            print('INFO: Image size: %s' % (self.config.IMG_SIZE,))
-            print('INFO: Image types included in training: %s' % (self.config.FILE_TYPES,))
+            logger.info('INFO: Image size: %s' % (self.config.IMG_SIZE,))
+            logger.info('INFO: Image types included in training: %s' % (self.config.FILE_TYPES,))
         else:  # config in Testing state
             self.__state_summary(GeneratorState.TESTING)
             if not config.USE_CROSS_VALIDATION:
-                print('Test path: %s' % config.TEST_PATH)
+                logger.info('Test path: %s' % config.TEST_PATH)
 
     def __state_summary(self, state: GeneratorState):
         scan_to_blocks, batches_per_epoch, _ = self.cached_data(state)
@@ -1177,7 +1194,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         base_info = self.__img_generator_base_info__(state)
         batch_size = base_info['batch_size']
 
-        print('INFO: %s size: %d blocks (%d volumes), batch size: %d, # subjects: %d' % (state.name,
+        logger.info('INFO: %s size: %d blocks (%d volumes), batch size: %d, # subjects: %d' % (state.name,
                                                                                          num_blocks,
                                                                                          num_volumes,
                                                                                          batch_size,

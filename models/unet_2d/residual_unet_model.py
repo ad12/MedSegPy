@@ -1,5 +1,4 @@
-from __future__ import print_function, division
-
+import logging
 import os
 
 import keras.backend as K
@@ -11,6 +10,8 @@ from keras.layers import Input, Conv2D, MaxPooling2D, Conv2DTranspose, Dropout, 
     GlobalAveragePooling2D, Dense, Reshape, Permute, multiply
 from keras.models import Model
 from keras.utils import plot_model
+
+logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 
 # List of tissues that can be segmented
 FEMORAL_CARTILAGE_STR = 'fc'
@@ -93,7 +94,7 @@ def residual_unet_2d(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, output_mo
     :raise ValueError if input_size is not tuple or dimensions of input_size do not match (height, width, 1)
     """
     import glob_constants
-    print('Initializing unet with seed: %s' % str(glob_constants.SEED))
+    logger.info('Initializing unet with seed: %s' % str(glob_constants.SEED))
     SEED = glob_constants.SEED
     if input_tensor is None and (type(input_size) is not tuple or len(input_size) != 3):
         raise ValueError('input_size must be a tuple of size (height, width, 1)')
