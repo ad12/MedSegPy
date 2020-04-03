@@ -3,6 +3,8 @@ import ast
 import logging
 import os
 
+os.environ["MSK_SEG_NETWORKS_PROJECT"] = "tech-considerations_v3"
+
 from oai_test import test_dir, get_valid_subdirs
 
 logger = logging.getLogger("msk_seg_networks.{}".format(__name__))

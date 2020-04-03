@@ -3,6 +3,8 @@ import argparse
 import logging
 import os
 
+os.environ["MSK_SEG_NETWORKS_PROJECT"] = "tech-considerations_v3"
+
 import argparse
 import os
 import pickle

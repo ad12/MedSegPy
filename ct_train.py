@@ -1,4 +1,6 @@
 import os
+os.environ["MSK_SEG_NETWORKS_PROJECT"] = "abCT"
+
 import pickle
 import numpy as np
 import h5py
