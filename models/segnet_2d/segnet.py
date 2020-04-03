@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
-
+import logging
 from cached_property import cached_property
+
 from keras.initializers import glorot_uniform, he_normal
 from keras.layers import Input
 from keras.layers.convolutional import Convolution2D
@@ -9,6 +10,8 @@ from keras.layers.normalization import BatchNormalization
 from keras.models import Model
 
 from models.segnet_2d.Mylayers import MaxPoolingWithArgmax2D, MaxUnpooling2D
+
+logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 
 
 class KModel(ABC):
@@ -19,7 +22,7 @@ class KModel(ABC):
 
     @abstractmethod
     def build_model(self):
-        print('Initializing segnet with seed: %s' % str(self.__seed__))
+        logger.info('Initializing segnet with seed: %s' % str(self.__seed__))
 
     @cached_property
     def model(self):
@@ -71,7 +74,7 @@ class SegNet(KModel):
             eff_pool_sizes.append(eff_pool_size)
 
         # encoder
-        print('Building Encoder...')
+        logger.info('Building Encoder...')
         for i in range(depth):
             eff_pool_size = eff_pool_sizes[i]
             if conv_act_bn:
@@ -92,7 +95,7 @@ class SegNet(KModel):
 
             mask_layers.append(l_mask)
 
-        print('Building decoder...')
+        logger.info('Building decoder...')
         # decoder
         for i in reversed(range(depth)):
             l_mask = mask_layers[i]

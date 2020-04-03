@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 import random
 
@@ -11,6 +12,8 @@ import oai_train
 import parse_pids
 import utils
 from config import DeeplabV3Config, SegnetConfig, UNetConfig
+
+logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 
 
 def get_config(name):
@@ -42,7 +45,7 @@ def data_limitation_train(config_name, vals_dict=None, pc=None):
                       '9352437', '9357137', '9357383', '9369649', '9444401',
                       '9493245', '9567704', '9597990', '9279291', '9596610'],
                  60: random.sample(pids, 60)}
-    print('Data limitation......')
+    logger.info('Data limitation......')
     import math
     num_pids = len(pids)
 
@@ -68,7 +71,7 @@ def data_limitation_train(config_name, vals_dict=None, pc=None):
         config.DROP_FACTOR = config.DROP_FACTOR ** (1 / s_ratio)
         config.PIDS = pids_sampled if pid_count != num_pids else None
 
-        print('# Subjects: %d' % pid_count)
+        logger.info('# Subjects: %d' % pid_count)
 
         if vals_dict is not None:
             for key in vals_dict.keys():
@@ -80,7 +83,7 @@ def data_limitation_train(config_name, vals_dict=None, pc=None):
 
         oai_train.train_model(config)
 
-        print('Epochs: %d' % config.N_EPOCHS)
+        logger.info('Epochs: %d' % config.N_EPOCHS)
         K.clear_session()
 
 
@@ -102,7 +105,7 @@ if __name__ == '__main__':
                         help='specific number of patients to do experiment')
 
     args = parser.parse_args()
-    print(args)
+    logger.info(args)
     gpu = args.gpu
 
     models = args.model
@@ -117,19 +120,19 @@ if __name__ == '__main__':
 
     patient_count = args.pc
 
-    print(glob_constants.SEED)
+    logger.info(glob_constants.SEED)
 
-    print('Using GPU %s' % gpu)
+    logger.info('Using GPU %s' % gpu)
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
-    print(models)
+    logger.info(models)
 
     vals_dict = {'AUGMENT_DATA': False, 'DROP_FACTOR': 0.8 ** (1 / 5)}
     vals_dict = None
 
     for c in range(repeat_count):
         for model in models:
-            print(model)
+            logger.info(model)
             # Data limitation experiment: Train Unet, Deeplab, and Segnet with limited data
             if model == 'unet':
                 data_limitation_train(model, vals_dict=vals_dict, pc=patient_count)

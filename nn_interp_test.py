@@ -1,8 +1,11 @@
 """
 Compare interpolating masks on downsampled scans
 """
-import os,sys
 from copy import deepcopy
+import logging
+import os
+import sys
+
 import numpy as np
 
 sys.path.append('../')
@@ -23,6 +26,8 @@ import argparse
 import keras.backend as K
 from scipy.misc import imresize
 from keras.utils import plot_model
+
+logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 
 # EXP_PATH = '/bmrNAS/people/arjun/msk_seg_networks/architecture_limit/deeplabv3_2d/2018-11-30-05-49-49/fine_tune/'
 HR_TEST_PATH = 'us'
@@ -96,10 +101,10 @@ class InterpolationTest():
         if not weights_path:
             weights_path = dl_utils.get_weights(dirpath)
 
-        print('Weights selected: %s' % weights_path)
+        logger.info('Weights selected: %s' % weights_path)
 
         config_filepath = os.path.join(dirpath, 'config.ini')
-        print('Config: %s' % config_filepath)
+        logger.info('Config: %s' % config_filepath)
         c = self.load_config(config_filepath)
 
         c.load_config(config_filepath)
@@ -124,7 +129,7 @@ class InterpolationTest():
         test_gen = im_gens.get_generator(c)
 
         y_pred_dict = {}
-        print(c.TEST_WEIGHT_PATH)
+        logger.info(c.TEST_WEIGHT_PATH)
         # Iterate through the files to be segmented
         for x_test, y_test, recon, fname in test_gen.img_generator_test(model):
             if c.INCLUDE_BACKGROUND:
@@ -207,9 +212,9 @@ class InterpolationTest():
         stats_string = get_stats_string(mw, skipped_count=0, testing_time=(time.time() - self.start_time))
 
         # Print some summary statistics
-        print('--' * 20)
-        print(stats_string)
-        print('--' * 20)
+        logger.info('--' * 20)
+        logger.info(stats_string)
+        logger.info('--' * 20)
 
         # Write details to test file
         with open(os.path.join(test_result_path, 'results.txt'), 'w+') as f:
@@ -261,7 +266,7 @@ class InterpolationTest():
             mw.metrics['voe'][-1],
             mw.metrics['cv'][-1],
             mw.metrics['assd'][-1])
-        print(print_str)
+        logger.info(print_str)
 
         if fname in test_set_md.keys():
             slice_dir = test_set_md[fname].slice_dir
@@ -345,7 +350,7 @@ if __name__ == '__main__':
     cpu = args.cpu
 
     if not cpu:
-        print('Using GPU %s' % gpu)
+        logger.info('Using GPU %s' % gpu)
         os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
         os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
     else:

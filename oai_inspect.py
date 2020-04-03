@@ -1,9 +1,4 @@
-# Author: Zhongnan Fang, zhongnanf@gmail.com, 2017 July
-# Modified: Akshay Chaudhari, akshaysc@stanford.edu 2017 August
-#           Arjun Desai, arjun.desai@duke.edu, 2018 June
-
-from __future__ import print_function, division
-
+import logging
 import os
 import time
 
@@ -16,6 +11,8 @@ from config import SegnetConfig
 from generators.im_generator import img_generator_test, calc_generator_info
 from models import get_model
 from utils.metric_utils import dice_score_coefficient
+
+logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 
 
 def test_model(config, save_file=1):
@@ -39,8 +36,8 @@ def test_model(config, save_file=1):
 
     # Read the files that will be segmented
     test_files, ntest = calc_generator_info(test_path, test_batch_size)
-    print('INFO: Test size: %d, batch size: %d, # subjects: %d' % (len(test_files), test_batch_size, ntest))
-    print('Save path: %s' % (test_result_path))
+    logger.info('INFO: Test size: %d, batch size: %d, # subjects: %d' % (len(test_files), test_batch_size, ntest))
+    logger.info('Save path: %s' % (test_result_path))
 
     # # Iterature through the files to be segmented
     for x_test, y_test, fname in img_generator_test(test_path, test_batch_size,
@@ -54,9 +51,9 @@ def test_model(config, save_file=1):
         # TODO: Define multi-class dice loss during testing
         dl = dice_score_coefficient(labels, y_test)
         dice_losses = np.append(dice_losses, dl)
-        # print(dl)
+        # logger.info(dl)
 
-        print('Dice score for image #%d (name = %s) = %0.3f' % (img_cnt, fname, np.mean(dl)))
+        logger.info('Dice score for image #%d (name = %s) = %0.3f' % (img_cnt, fname, np.mean(dl)))
 
         if (save_file == 1):
             save_name = '%s/%s_recon.pred' % (test_result_path, fname)
@@ -75,13 +72,13 @@ def test_model(config, save_file=1):
 
     end = time.time()
 
-    # Print some summary statistics
-    print('--' * 20)
-    print('Overall Summary:')
-    print('Mean= %0.4f Std = %0.3f' % (np.mean(dice_losses), np.std(dice_losses)))
-    print('Median = %0.4f' % np.median(dice_losses))
-    print('Time required = %0.1f seconds.' % (end - start))
-    print('--' * 20)
+    # Log some summary statistics
+    logger.info('--' * 20)
+    logger.info('Overall Summary:')
+    logger.info('Mean= %0.4f Std = %0.3f' % (np.mean(dice_losses), np.std(dice_losses)))
+    logger.info('Median = %0.4f' % np.median(dice_losses))
+    logger.info('Time required = %0.1f seconds.' % (end - start))
+    logger.info('--' * 20)
 
 
 local_testing_test_path = '../sample_data/test_data'

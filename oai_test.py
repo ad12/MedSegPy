@@ -2,8 +2,7 @@
 # Modified: Akshay Chaudhari, akshaysc@stanford.edu 2017 August
 #           Arjun Desai, arjundd@stanford.edu, 2018 June
 
-from __future__ import print_function, division
-
+import logging
 import matplotlib
 
 matplotlib.use('Agg')
@@ -29,11 +28,14 @@ from utils.im_utils import MultiClassOverlay
 import config as MCONFIG
 from config import DeeplabV3Config, SegnetConfig, UNetConfig, UNet2_5DConfig, ResidualUNet
 from utils.metric_utils import dice_score_coefficient
+from utils.logger import setup_logger
 from models.models import get_model
 from keras.utils import plot_model
 from scan_metadata import ScanMetadata
 from generators.im_gens import get_generator
 from stat import S_IREAD, S_IRGRP, S_IROTH
+
+logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 
 DATE_THRESHOLD = strptime('2018-09-01-22-39-39', '%Y-%m-%d-%H-%M-%S')
 TEST_SET_METADATA_PIK = '/bmrNAS/people/arjun/msk_seg_networks/oai_metadata/oai_data.dat'
@@ -136,7 +138,7 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA, voxel_spacing=Non
 
     # Read the files that will be segmented
     test_gen.summary()
-    print('Save path: %s' % (test_result_path))
+    logger.info('Save path: %s' % (test_result_path))
 
     # test_gen = img_generator_oai_test(test_path, test_batch_size, config)
 
@@ -196,9 +198,9 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA, voxel_spacing=Non
                                           voxel_spacing=voxel_spacing,
                                           runtime=seg_time)
 
-        print_str = 'Scan #%03d (name = %s, %d slices) = %s' % (img_cnt, fname, num_slices, summary)
-        pids_str = pids_str + print_str + '\n'
-        print(print_str)
+        logger.info_str = 'Scan #%03d (name = %s, %d slices) = %s' % (img_cnt, fname, num_slices, summary)
+        pids_str = pids_str + logger.info_str + '\n'
+        logger.info(logger.info_str)
 
         if fname in test_set_md.keys():
             slice_dir = test_set_md[fname].slice_dir
@@ -238,10 +240,10 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA, voxel_spacing=Non
     end = time.time()
 
     stats_string = get_stats_string(metrics_manager, end - start)
-    # Print some summary statistics
-    print('--' * 20)
-    print(stats_string)
-    print('--' * 20)
+    # Log some summary statistics
+    logger.info('--' * 20)
+    logger.info(stats_string)
+    logger.info('--' * 20)
 
     test_results_summary_path = os.path.join(test_result_path, 'results.txt')
     # Write details to test file
@@ -357,9 +359,9 @@ def batch_test(base_folder, config_name, vals_dicts=[None], overwrite=False):
     subdirs = get_valid_subdirs(base_folder, not overwrite)
 
     for subdir in subdirs:
-        print(subdir)
+        logger.info(subdir)
 
-    print('')
+    logger.info('')
     for subdir in subdirs:
         for vals_dict in vals_dicts:
             config = get_config(config_name)
@@ -377,11 +379,11 @@ def find_best_test_dir(base_folder):
         for results_file in results_files:
             mean = utils.parse_results_file(results_file)
             potential_data = (mean, results_file)
-            print(potential_data)
+            logger.info(potential_data)
             if mean > max_dsc_details[0]:
                 max_dsc_details = potential_data
-    print('\nMAX')
-    print(max_dsc_details)
+    logger.info('\nMAX')
+    logger.info(max_dsc_details)
 
 
 def test_dir(dirpath, config=None, vals_dict=None, best_weight_path=None, save_h5_data=False, voxel_spacing=None):
@@ -395,16 +397,22 @@ def test_dir(dirpath, config=None, vals_dict=None, best_weight_path=None, save_h
     :param best_weight_path: path to best weights (default = None)
                                 if None, automatically search dirpath for the best weight path
     """
+    # Create config, if not provided.
+    config_filepath = os.path.join(dirpath, 'config.ini')
+    if not config:
+        config = MCONFIG.get_config(MCONFIG.get_cp_save_tag(config_filepath),
+                                    create_dirs=False)
+
+    # Initialize logger.
+    setup_logger(config.CP_SAVE_PATH)
+    logger.info('OUTPUT_DIR: %s' % config.CP_SAVE_PATH)
+
     # Get best weight path
     if best_weight_path is None:
         best_weight_path = dl_utils.get_weights(dirpath)
-    print('Best weights: %s' % best_weight_path)
+    logger.info('Best weights: %s' % best_weight_path)
 
-    config_filepath = os.path.join(dirpath, 'config.ini')
-    if not config:
-        config = MCONFIG.get_config(MCONFIG.get_cp_save_tag(config_filepath), create_dirs=False)
-
-    print('Config: %s' % config_filepath)
+    logger.info('Config: %s' % config_filepath)
     config.load_config(config_filepath)
     config.TEST_WEIGHT_PATH = best_weight_path
 

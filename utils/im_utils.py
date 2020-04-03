@@ -277,18 +277,3 @@ def save_ims(filepath):
 
     # save segs
     cv2.imwrite(os.path.join(filepath, 'seg.png'), scale_img(seg))
-
-#
-# if __name__ == '__main__':
-#     import matplotlib.pyplot as plt
-#     num_classes = 4
-#     a = np.argmax(np.random.rand(100, 100, num_classes), axis=-1)
-#     plt.imshow(a, cmap='gray')
-#     plt.show()
-#
-#     mco = MultiClassOverlay(num_classes=num_classes)
-#     l = mco.arr_to_label_img(a)
-#     print(l.shape)
-#     plt.imshow(np.squeeze(l), cmap='gray')
-#     plt.show()
-#

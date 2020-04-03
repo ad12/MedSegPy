@@ -1,7 +1,10 @@
+import logging
 import numpy as np
 import tensorflow as tf
 from keras import backend as K
 from keras.losses import binary_crossentropy
+
+logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 
 DICE_LOSS = ('dice', 'sigmoid')
 
@@ -239,7 +242,7 @@ def wasserstein_disagreement_map(prediction, ground_truth, M):
     ground_truth = tf.cast(ground_truth, dtype=tf.float64)
     # unstack_pred = tf.unstack(prediction, axis=-1)
     prediction = tf.cast(prediction, dtype=tf.float64)
-    # print("shape of M", M.shape, "unstacked labels", unstack_labels,
+    # logger.info("shape of M", M.shape, "unstacked labels", unstack_labels,
     #       "unstacked pred" ,unstack_pred)
     # W is a weighting sum of all pairwise correlations (pred_ci x labels_cj)
     pairwise_correlations = []
@@ -277,7 +280,7 @@ def generalised_wasserstein_dice_loss(y_true, y_predicted):
     # M = tf.cast(M, dtype=tf.float64)
     # compute disagreement map (delta)
     M = M_tree_4
-    # print("M shape is ", M.shape, pred_proba, one_hot)
+    # logger.info("M shape is ", M.shape, pred_proba, one_hot)
     delta = wasserstein_disagreement_map(pred_proba, ground_truth, M)
     # compute generalisation of all error for multi-class seg
     all_error = tf.reduce_sum(delta)

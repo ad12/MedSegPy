@@ -1,7 +1,6 @@
-from __future__ import print_function, division
-
 from abc import ABC, abstractmethod
 import argparse
+import logging
 import os
 
 import argparse
@@ -25,8 +24,11 @@ from generators import im_gens
 from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS, dice_loss, focal_loss
 from models.models import get_model
 from utils import io_utils, parallel_utils as putils, utils, dl_utils
+from utils.logger import setup_logger
 
 import defaults
+
+logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 
 CLASS_WEIGHTS = np.asarray([100, 1])
 SAVE_BEST_WEIGHTS = True
@@ -54,7 +56,7 @@ class CommandLineInterface(ABC):
         pass
 
     def parse(self):
-        print('Parsing')
+        logger.info('Parsing')
         args = self.base_parser.parse_args()
         self.__args = vars(args)
 
@@ -197,10 +199,10 @@ class NNTrain(CommandLineInterface):
             MCONFIG.SAVE_PATH_PREFIX = abs_save_path
         else:
             MCONFIG.SAVE_PATH_PREFIX = os.path.join(defaults.SAVE_PATH, experiment_dir)
-        print('OUTPUT_DIR: %s' % MCONFIG.SAVE_PATH_PREFIX)
+        logger.info('OUTPUT_DIR: %s' % MCONFIG.SAVE_PATH_PREFIX)
         
         # Initialize GPUs that are visible.
-        print('Using GPU %s' % gpu)
+        logger.info('Using GPU %s' % gpu)
         os.environ["CUDA_VISIBLE_DEVICES"] = gpu
         os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
@@ -211,6 +213,11 @@ class NNTrain(CommandLineInterface):
 
         # Parse tissue (classes) to segment.
         config_dict['TISSUES'] = mri_utils.parse_tissues(self.args)
+
+        # Initialize logger.
+        setup_logger(c.CP_SAVE_PATH)
+        logger.info("Args:\n{}".format(self.args))
+        logger.info('OUTPUT_DIR: %s' % c.CP_SAVE_PATH)
 
         if fine_tune_dirpath:
             # parse freeze layers
@@ -236,7 +243,7 @@ class NNTrain(CommandLineInterface):
                                                       num_valid_bins=ho_valid,
                                                       num_test_bins=ho_test)
 
-        print('Loading %d-fold cross-validation data from %s...' % (cv_wrapper.k, cv_wrapper.filepath))
+        logger.info('Loading %d-fold cross-validation data from %s...' % (cv_wrapper.k, cv_wrapper.filepath))
 
         cv_file = cv_wrapper.filepath
         cv_k = cv_wrapper.k
@@ -303,7 +310,7 @@ class NNTrain(CommandLineInterface):
 
         # If initial weight path specified, initialize model with weights.
         if config.INIT_WEIGHT_PATH:
-            print('Initializing with weights: %s' % config.INIT_WEIGHT_PATH)
+            logger.info('Initializing with weights: %s' % config.INIT_WEIGHT_PATH)
             model.load_weights(config.INIT_WEIGHT_PATH)
             frozen_layers = self.frozen_layers
             if frozen_layers:
@@ -311,14 +318,14 @@ class NNTrain(CommandLineInterface):
                     fl = range(FREEZE_LAYERS[0], len(model.layers))
                 else:
                     fl = range(frozen_layers[0], frozen_layers[1])
-                print('freezing layers %s' % fl)
+                logger.info('freezing layers %s' % fl)
                 for i in fl:
                     model.layers[i].trainable = False
 
         # Replicate model on multiple gpus - note this does not solve issue of having too large of a model
         num_gpus = len(os.environ["CUDA_VISIBLE_DEVICES"].split(','))
         if num_gpus > 1:
-            print('Running multi gpu model')
+            logger.info('Running multi gpu model')
             model = putils.ModelMGPU(model, gpus=num_gpus)
 
         # If no optimizer is provided, default to Adam
@@ -401,7 +408,7 @@ class NNTrain(CommandLineInterface):
 
         # Get best weight path.
         best_weight_path = dl_utils.get_weights(dirpath)
-        print('Best weight path: %s' % best_weight_path)
+        logger.info('Best weight path: %s' % best_weight_path)
 
         config.init_fine_tune(best_weight_path)
 

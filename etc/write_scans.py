@@ -1,4 +1,6 @@
-import os, sys
+import logging
+import os
+import sys
 import SimpleITK as sitk
 import numpy as np
 import pandas as pd
@@ -15,9 +17,11 @@ from generators.im_generator import img_generator_oai_test
 from config import UNetConfig
 from utils import io_utils
 
+logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
+
 
 def write_tiff(x, filepath):
-    print('Saving %s' % filepath)
+    logger.info('Saving %s' % filepath)
     x = np.squeeze(x)
     x_img = sitk.GetImageFromArray(normalize_im(x))
     x_img = sitk.Cast(x_img, sitk.sitkFloat32)
@@ -26,7 +30,7 @@ def write_tiff(x, filepath):
 
 
 def write_subplot(x, filepath):
-    print('Saving %s' % filepath)
+    logger.info('Saving %s' % filepath)
     x = np.squeeze(x)
     x = normalize_im(x)
 
@@ -72,4 +76,4 @@ if __name__ == '__main__':
     df.to_excel(writer)
     writer.save()
 
-    print('Time Elapsed: %0.2f seconds' % (time.time() - start_time))
+    logger.info('Time Elapsed: %0.2f seconds' % (time.time() - start_time))

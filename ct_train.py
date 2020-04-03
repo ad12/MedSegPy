@@ -200,7 +200,7 @@ class CTTrain(NNTrain):
         config_dict['TISSUES'] = self.args["classes"]
 
         # Initialize logger.
-        setup_logger(c.CP_SAVE_PATH, name=__name__)
+        setup_logger(c.CP_SAVE_PATH)
         logger = logging.getLogger(__name__)
         logger.info("Args:\n{}".format(self.args))
         logger.info('OUTPUT_DIR: %s' % c.CP_SAVE_PATH)
