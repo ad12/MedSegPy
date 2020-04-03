@@ -186,7 +186,7 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA, voxel_spacing=Non
                 labels = labels[..., np.newaxis]
 
         num_slices = x_test.shape[0]
-        
+
         if not voxel_spacing:
             voxel_spacing = get_voxel_spacing(num_slices)
         else:
