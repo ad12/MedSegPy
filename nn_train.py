@@ -20,6 +20,7 @@ from keras.optimizers import Adam
 from keras.utils import plot_model
 
 import config as MCONFIG
+import glob_constants
 import mri_utils
 from cross_validation import cv_util
 from generators import im_gens
@@ -41,7 +42,8 @@ class CommandLineInterface(ABC):
     __DESCRIPTION__ = ''  # To override in subclasses.
 
     # Argument keys.
-    __ARG_KEY_GPU__ = 'GPU'
+    __ARG_KEY_GPU__ = 'gpu_id'
+    __ARG_KEY_NUM_GPU__ = 'num_gpus'
 
     def __init__(self):
         if not self.__DESCRIPTION__:
@@ -74,15 +76,31 @@ class CommandLineInterface(ABC):
         return self.args[key]
 
     def _add_gpu_argument(self, parser):
-        parser.add_argument('-g', '--%s' % self.__ARG_KEY_GPU__,
-                            metavar='G', type=str, nargs='?', default='-1',
+        parser.add_argument('--{}'.format(self.__ARG_KEY_NUM_GPU__),
+                            default=1,
+                            dest=self.__ARG_KEY_NUM_GPU__,
+                            help="number of gpus to use. defaults to 1")
+        parser.add_argument('--%s' % self.__ARG_KEY_GPU__,
+                            metavar='G', type=int, nargs='*', default=[],
                             dest=self.__ARG_KEY_GPU__,
-                            help='gpu id to use. default=0')
+                            help='gpu id to use. defaults to []')
 
     @property
     def gpu(self):
+        """GPU ids in str format - eg. `'0,1'` (gpus 0 and 1), '-1' (cpu), etc."""
         self.verify_args()
-        return self.args[self.__ARG_KEY_GPU__]
+        
+        args_gpu_ids = self.args[self.__ARG_KEY_GPU__]
+        args_num_gpus = self.args[self.__ARG_KEY_NUM_GPU__]
+        gpu_ids = args_gpu_ids if args_gpu_ids else dl_utils.get_available_gpus(args_num_gpus)
+        gpu_ids_tf_str = ",".join([str(g_id) for g_id in gpu_ids])
+
+        return gpu_ids_tf_str
+
+    @property
+    def num_gpus(self):
+        return self.args[self.__ARG_KEY_NUM_GPU__]
+    
 
     def verify_args(self):
         if not self.__args:
@@ -201,10 +219,8 @@ class NNTrain(CommandLineInterface):
             MCONFIG.SAVE_PATH_PREFIX = abs_save_path
         else:
             MCONFIG.SAVE_PATH_PREFIX = os.path.join(defaults.SAVE_PATH, experiment_dir)
-        logger.info('OUTPUT_DIR: %s' % MCONFIG.SAVE_PATH_PREFIX)
         
         # Initialize GPUs that are visible.
-        logger.info('Using GPU %s' % gpu)
         os.environ["CUDA_VISIBLE_DEVICES"] = gpu
         os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
@@ -219,7 +235,8 @@ class NNTrain(CommandLineInterface):
         # Initialize logger.
         setup_logger(c.CP_SAVE_PATH)
         logger.info("Args:\n{}".format(self.args))
-        logger.info('OUTPUT_DIR: %s' % c.CP_SAVE_PATH)
+        logger.info("Using {} GPU(s): {}".format(self.num_gpus, gpu))
+        logger.info("OUTPUT_DIR: {}".format(c.CP_SAVE_PATH))
 
         if fine_tune_dirpath:
             # parse freeze layers
@@ -300,7 +317,11 @@ class NNTrain(CommandLineInterface):
         n_epochs = config.N_EPOCHS
         pik_save_path = config.PIK_SAVE_PATH
         loss = config.LOSS
+        num_workers = config.NUM_WORKERS
         class_weights = self.get_arg(self._ARG_KEY_CLASS_WEIGHTS)
+
+        # Set global constants.
+        glob_constants.SEED = config.SEED
 
         if model is None:
             model = get_model(config)
@@ -384,6 +405,9 @@ class NNTrain(CommandLineInterface):
                             validation_data=val_gen,
                             validation_steps=valid_nbatches,
                             callbacks=callbacks_list,
+                            workers=num_workers,
+                            use_multiprocessing=False,  # keras issue: setting to true duplicates data
+                            max_queue_size=train_nbatches,
                             verbose=1)
 
         # Save optimizer state

@@ -14,7 +14,7 @@ from utils.logger import setup_logger
 
 import defaults
 
-logger = logging.getLogger("msk_seg.{}".format(__name__))
+logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 
 # Do not change this constant unless version upgrades are done and keys are deprecated
 DEPRECATED_KEYS = ['NUM_CLASSES', 'TRAIN_FILES_CV', 'VALID_FILES_CV', 'TEST_FILES_CV']
@@ -124,6 +124,9 @@ class Config():
     # Initializer
     KERNEL_INITIALIZER = 'he_normal'
     SEED = None
+
+    # System params
+    NUM_WORKERS = 1
 
     def __init__(self, cp_save_tag, state='training', create_dirs=True):
         if state not in ['testing', 'training']:
@@ -337,10 +340,12 @@ class Config():
                 'EARLY_STOPPING_CRITERION' if self.USE_EARLY_STOPPING else '', '',
 
                 'KERNEL_INITIALIZER',
-                'SEED' if self.SEED else '', ''
+                'SEED' if self.SEED else '', '' 
 
                 'FINE_TUNE',
-                'INIT_WEIGHT_PATH'])
+                'INIT_WEIGHT_PATH', '',
+
+                'NUM_WORKERS', ''])
         else:
             summary_vals.extend(['TEST_RESULT_PATH', 'TEST_WEIGHT_PATH', 'TEST_BATCH_SIZE'])
 
@@ -476,6 +481,11 @@ class Config():
                                        dest='init_weight_path',
                                        help='Path to weights file to initialize. Default: %s' % cls.INIT_WEIGHT_PATH)
 
+        # System parameters
+        subcommand_parser.add_argument('--num_workers', metavar='W', type=int, default=1, nargs='?',
+                                       dest='num_workers',
+                                       help='number of workers for data loading. Default: %s' % cls.NUM_WORKERS)
+
         return subcommand_parser
 
     @classmethod
@@ -490,7 +500,9 @@ class Config():
                 'loss', 'include_background',
                 'img_size',
                 'kernel_initializer', 'seed',
-                'init_weight_path']
+                'init_weight_path',
+                'num_workers',
+               ]
 
     @classmethod
     def parse_cmd_line(cls, vargin):

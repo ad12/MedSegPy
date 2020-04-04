@@ -41,10 +41,14 @@ def train_model(config, optimizer=None, model=None, class_weights=None):
     n_epochs = config.N_EPOCHS
     pik_save_path = config.PIK_SAVE_PATH
     loss = config.LOSS
+    num_workers = config.NUM_WORKERS
 
     # Initialize logger.
     setup_logger(config.CP_SAVE_PATH)
     logger.info('OUTPUT_DIR: %s' % config.CP_SAVE_PATH)
+
+    # Initialize global params.
+    glob_constants.SEED = config.SEED
 
     if model is None:
         model = get_model(config)
@@ -138,6 +142,9 @@ def train_model(config, optimizer=None, model=None, class_weights=None):
                         validation_data=val_gen,
                         validation_steps=valid_nbatches,
                         callbacks=callbacks_list,
+                        workers=num_workers,
+                        use_multiprocessing=num_workers>1,
+                        max_queue_size=train_nbatches,
                         verbose=1)
 
     # Save optimizer state
