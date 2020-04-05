@@ -78,6 +78,7 @@ class CommandLineInterface(ABC):
     def _add_gpu_argument(self, parser):
         parser.add_argument('--{}'.format(self.__ARG_KEY_NUM_GPU__),
                             default=1,
+                            type=int,
                             dest=self.__ARG_KEY_NUM_GPU__,
                             help="number of gpus to use. defaults to 1")
         parser.add_argument('--%s' % self.__ARG_KEY_GPU__,

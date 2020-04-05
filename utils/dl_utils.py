@@ -48,6 +48,7 @@ def get_available_gpus(num_gpus: int=None):
             will equal `num_gpus`, if specified.
     """
     # Built-in tensorflow gpu id.
+    assert isinstance(num_gpus, (type(None), int))
     if num_gpus == 0:
         return [-1]
 

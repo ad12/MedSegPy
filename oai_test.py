@@ -21,7 +21,7 @@ from keras import backend as K
 import mri_utils
 import utils.utils as utils
 from utils import io_utils, im_utils, dl_utils
-from utils.metric_utils import MetricsManager
+from utils.metric_utils import MetricsManager, SegMetric
 from utils.im_utils import MultiClassOverlay
 
 
@@ -152,7 +152,8 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA, voxel_spacing=Non
     # TODO (arjundd): remove when tissue names added to config
     class_names = mri_utils.get_tissue_name(config.TISSUES)
 
-    metrics_manager = MetricsManager(class_names=class_names)
+    # TODO: Remove `metrics=...`.
+    metrics_manager = MetricsManager(metrics=[SegMetric.DSC], class_names=class_names)
     seg_metrics_processor = metrics_manager.seg_metrics_processor
 
     # image writer
@@ -403,18 +404,18 @@ def test_dir(dirpath, config=None, vals_dict=None, best_weight_path=None, save_h
         config = MCONFIG.get_config(MCONFIG.get_cp_save_tag(config_filepath),
                                     create_dirs=False)
 
-    # Initialize logger.
-    setup_logger(config.CP_SAVE_PATH)
-    logger.info('OUTPUT_DIR: %s' % config.CP_SAVE_PATH)
-
     # Get best weight path
     if best_weight_path is None:
         best_weight_path = dl_utils.get_weights(dirpath)
-    logger.info('Best weights: %s' % best_weight_path)
 
-    logger.info('Config: %s' % config_filepath)
     config.load_config(config_filepath)
     config.TEST_WEIGHT_PATH = best_weight_path
+
+    # Initialize logger.
+    setup_logger(config.CP_SAVE_PATH)
+    logger.info('OUTPUT_DIR: %s' % config.CP_SAVE_PATH)
+    logger.info('Config: %s' % config_filepath)
+    logger.info('Best weights: %s' % best_weight_path)
 
     if vals_dict is not None:
         for key in vals_dict.keys():
