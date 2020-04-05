@@ -57,6 +57,7 @@ class Config():
     MIN_LEARNING_RATE = 1e-8
     DROP_FACTOR = 0.7
     DROP_RATE = 1.0
+    NUM_GRAD_STEPS = 1
 
     # ADAM optimizer decay
     ADAM_DECAY = 0.0
@@ -328,6 +329,8 @@ class Config():
                                                                      
                 'TRAIN_BATCH_SIZE', 'VALID_BATCH_SIZE', '',
 
+                "NUM_GRAD_STEPS", "",
+
                 'INITIAL_LEARNING_RATE',
                 'USE_STEP_DECAY',
                 'DROP_FACTOR' if self.USE_STEP_DECAY else '',
@@ -427,6 +430,12 @@ class Config():
         subcommand_parser.add_argument('--drop_rate', metavar='DR', type=float, default=cls.DROP_RATE, nargs='?',
                                        help='drop rate for learning rate decay. Default: %s' % cls.DROP_RATE)
 
+        # Number of gradient steps
+        subcommand_parser.add_argument('--num_grad_steps', metavar='S', type=int,
+                               default=cls.NUM_GRAD_STEPS,
+                               nargs='?',
+                               help='number of gradient accumulation steps. Default: %s' % cls.NUM_GRAD_STEPS)
+
         # Early stopping
         subcommand_parser.add_argument('--use_early_stopping', default=False, action='store_const',
                                        const=True,
@@ -493,6 +502,7 @@ class Config():
         return ['tag',
                 'train_path', 'valid_path', 'test_path',
                 'n_epochs', 'augment_data',
+                'num_grad_steps',
                 'use_step_decay', 'initial_learning_rate', 'min_learning_rate', 'drop_factor', 'drop_rate',
                 'use_early_stopping', 'early_stopping_min_delta', 'early_stopping_patience',
                 'early_stopping_criterion',

@@ -18,6 +18,7 @@ from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.callbacks import TensorBoard as tfb
 from keras.optimizers import Adam
 from keras.utils import plot_model
+#import runai.ga
 
 import config as MCONFIG
 import glob_constants
@@ -29,6 +30,7 @@ from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS, dice_loss, fo
 from models.models import get_model
 from utils import io_utils, parallel_utils as putils, utils, dl_utils
 from utils.logger import setup_logger
+from solver.optimizer import AdamAccumulate
 
 import defaults
 
@@ -356,8 +358,15 @@ class NNTrain(CommandLineInterface):
         # If no optimizer is provided, default to Adam
         # TODO (arjundd): Add support for addtional optimizers
         if optimizer is None:
-            optimizer = Adam(lr=config.INITIAL_LEARNING_RATE, beta_1=0.99, beta_2=0.995, epsilon=1e-8,
-                             decay=config.ADAM_DECAY, amsgrad=config.USE_AMSGRAD)
+            if config.NUM_GRAD_STEPS == 1:
+                optimizer = Adam(lr=config.INITIAL_LEARNING_RATE, beta_1=0.99, beta_2=0.995, epsilon=1e-8,
+                                 decay=config.ADAM_DECAY, amsgrad=config.USE_AMSGRAD)
+            elif config.NUM_GRAD_STEPS > 1:
+                logger.info("Accumulating gradient over {} steps".format(config.NUM_GRAD_STEPS))
+                optimizer = AdamAccumulate(lr=config.INITIAL_LEARNING_RATE, beta_1=0.99, beta_2=0.995, epsilon=1e-8,
+                             decay=config.ADAM_DECAY, amsgrad=config.USE_AMSGRAD, accum_iters=config.NUM_GRAD_STEPS)
+            else:
+                raise ValueError("config.NUM_GRAD_STEPS must be >= 1")
 
         # Track learning rate on tensorboard.
         loss_func = get_training_loss(loss, weights=class_weights)
@@ -393,37 +402,37 @@ class NNTrain(CommandLineInterface):
             callbacks_list.append(es_cb)
 
         generator = im_gens.get_generator(config)
-        try:
-            train_gen = data_loader.get_data_loader(
-                config,
-                state=im_gens.GeneratorState.TRAINING,
-                shuffle=True,
-                drop_last=True,
-                generator=generator,
-            )
-            val_gen = data_loader.get_data_loader(
-                config,
-                state=im_gens.GeneratorState.VALIDATION,
-                shuffle=False,
-                drop_last=False,
-                generator=generator,
-            )
-            train_nbatches, valid_nbatches = None, None
-            use_multiprocessing = num_workers > 1
-            logging.info("Training Summary:\n" + train_gen.summary())
-            logging.info("Validation Summary:\n" + val_gen.summary())
-        except ValueError as e:
-            logger.info("{}\nDefaulting to traditional generator".format(e))
+        # try:
+        #     train_gen = data_loader.get_data_loader(
+        #         config,
+        #         state=im_gens.GeneratorState.TRAINING,
+        #         shuffle=True,
+        #         drop_last=True,
+        #         generator=generator,
+        #     )
+        #     val_gen = data_loader.get_data_loader(
+        #         config,
+        #         state=im_gens.GeneratorState.VALIDATION,
+        #         shuffle=False,
+        #         drop_last=False,
+        #         generator=generator,
+        #     )
+        #     train_nbatches, valid_nbatches = None, None
+        #     use_multiprocessing = False
+        #     logging.info("Training Summary:\n" + train_gen.summary())
+        #     logging.info("Validation Summary:\n" + val_gen.summary())
+        # except ValueError as e:
+        #logger.info("{}\nDefaulting to traditional generator".format(e))
 
-            train_nbatches, valid_nbatches = generator.num_steps()
-            train_gen = generator.img_generator(
-                state=im_gens.GeneratorState.TRAINING
-            )
-            val_gen = generator.img_generator(
-                state=im_gens.GeneratorState.VALIDATION
-            )
-            use_multiprocessing = False
-            generator.summary()
+        train_nbatches, valid_nbatches = generator.num_steps()
+        train_gen = generator.img_generator(
+            state=im_gens.GeneratorState.TRAINING
+        )
+        val_gen = generator.img_generator(
+            state=im_gens.GeneratorState.VALIDATION
+        )
+        use_multiprocessing = False
+        generator.summary()
 
         # Start training
         model.fit_generator(train_gen,

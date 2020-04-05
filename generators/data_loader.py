@@ -59,9 +59,8 @@ class DataLoader(k_utils.Sequence, ABC):
     def __len__(self):
         """Number of batches."""
         num_examples = self._generator.num_examples(self._state)
-        return num_examples // self._batch_size if self.drop_last else int(math.ceil(num_examples / self._batch_size))
+        return num_examples // self._batch_size if self.drop_last else math.ceil(num_examples / self._batch_size)
 
-    @abstractmethod
     def summary(self) -> str:
         s = ""
         s += "State: {}\n".format(self._state)
@@ -83,8 +82,15 @@ class OAIDataLoader(DataLoader):
     _GENERATOR_TYPE = OAIGenerator
 
     def __init__(self, config: Config, state: GeneratorState,
-                 shuffle: bool = None, drop_last: bool = False):
-        super().__init__(config, state, shuffle=shuffle, drop_last=drop_last)
+                 shuffle: bool = None, drop_last: bool = False,
+                 generator: Generator = None):
+        super().__init__(
+            config, 
+            state, 
+            shuffle=shuffle, 
+            drop_last=drop_last,
+            generator=generator,
+        )
 
         self._files, _, self._max_slice_num = self._generator._calc_generator_info(
             self._state)
@@ -121,7 +127,7 @@ class OAIDataLoader(DataLoader):
         generator: OAIGenerator = self._generator
 
         start = idx * batch_size
-        stop = min(idx * (batch_size + 1), len(self))
+        stop = min(idx * (batch_size + 1), len(files))
         images = []
         masks = []
         for file_idx in range(start, stop):

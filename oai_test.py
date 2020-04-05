@@ -153,7 +153,7 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA, voxel_spacing=Non
     class_names = mri_utils.get_tissue_name(config.TISSUES)
 
     # TODO: Remove `metrics=...`.
-    metrics_manager = MetricsManager(metrics=[SegMetric.DSC], class_names=class_names)
+    metrics_manager = MetricsManager(class_names=class_names)
     seg_metrics_processor = metrics_manager.seg_metrics_processor
 
     # image writer
