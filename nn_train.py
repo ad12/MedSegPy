@@ -31,7 +31,8 @@ from models.models import get_model
 from utils import io_utils, parallel_utils as putils, utils, dl_utils
 from utils.logger import setup_logger
 from solver.optimizer import AdamAccumulate
-
+from . import nn_test
+from .oai_test import test_dir
 import defaults
 
 logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
@@ -104,7 +105,6 @@ class CommandLineInterface(ABC):
     @property
     def num_gpus(self):
         return self.args[self.__ARG_KEY_NUM_GPU__]
-    
 
     def verify_args(self):
         if not self.__args:
@@ -305,6 +305,26 @@ class NNTrain(CommandLineInterface):
         config.summary()
 
         self._train_model(config)
+
+        K.clear_session()
+
+        self._test(config)
+
+    def _test(self, config):
+        config = deepcopy(config)  # will be modified below.
+        dirpath = os.path.dirname(config.CP_SAVE_PATH)
+
+        # By default, h5 data is not saved and voxel spacing is automatically
+        # determined.
+        test_params = {
+            "batch_size": config.TEST_BATCH_SIZE,
+        }
+        test_dir(
+            dirpath,
+            vals_dict=nn_test.create_config_dict(test_params),
+            save_h5_data=False,
+            voxel_spacing=None,
+        )
 
         K.clear_session()
 
