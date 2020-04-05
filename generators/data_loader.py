@@ -1,21 +1,12 @@
-import multiprocessing as mp
 import math
-import os
-import time
-import warnings
 from abc import ABC, abstractmethod
-from enum import Enum
-from os import listdir
 import random
-from typing import Tuple
 import logging
 
-import h5py
 from keras import utils as k_utils
 import numpy as np
 
 from config import Config
-from generators.fname_parsers import OAISliceWise
 from .im_gens import GeneratorState, Generator, OAIGenerator
 
 logger = logging.getLogger("msk_seg.{}".format(__name__))
@@ -157,9 +148,6 @@ class OAIDataLoader(DataLoader):
         """Shuffle (if applicable) on epoch end."""
         if self.shuffle:
             random.shuffle(self._files)
-
-    def summary(self):
-
 
 
 def get_data_loader(
