@@ -311,10 +311,11 @@ class NNTrain(CommandLineInterface):
         self._test(config)
 
     def _test(self, config):
+        logger.info("Beginning testing...")
         config = deepcopy(config)  # will be modified below.
         dirpath = os.path.dirname(config.CP_SAVE_PATH)
 
-        # By default, h5 data is not saved and voxel spacing is automatically
+        # By default, h5 data is saved and voxel spacing is automatically
         # determined.
         test_params = {
             "batch_size": config.TEST_BATCH_SIZE,
@@ -322,7 +323,7 @@ class NNTrain(CommandLineInterface):
         test_dir(
             dirpath,
             vals_dict=nn_test.create_config_dict(test_params),
-            save_h5_data=False,
+            save_h5_data=True,
             voxel_spacing=None,
         )
 
@@ -341,8 +342,8 @@ class NNTrain(CommandLineInterface):
         n_epochs = config.N_EPOCHS
         pik_save_path = config.PIK_SAVE_PATH
         loss = config.LOSS
+        class_weights = config.LOSS_CLASS_WEIGHTS
         num_workers = config.NUM_WORKERS
-        class_weights = self.get_arg(self._ARG_KEY_CLASS_WEIGHTS)
 
         # Set global constants.
         glob_constants.SEED = config.SEED

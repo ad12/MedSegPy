@@ -35,6 +35,7 @@ class Config():
 
     # Loss function in form (id, output_mode)
     LOSS = DICE_LOSS
+    CLASS_WEIGHTS = None
 
     # PIDS to include, None = all pids
     PIDS = None
@@ -318,7 +319,11 @@ class Config():
 
                 'IMG_SIZE', '',
 
-                'N_EPOCHS', 'AUGMENT_DATA', 'LOSS', '',
+                'N_EPOCHS',
+                'AUGMENT_DATA',
+                'LOSS',
+                "CLASS_WEIGHTS",
+                "",
 
                 'USE_CROSS_VALIDATION',
                 'CV_K' if self.USE_CROSS_VALIDATION else '',

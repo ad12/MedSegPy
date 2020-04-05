@@ -143,15 +143,16 @@ def multi_class_dice_loss(
     def d_loss(y_true, y_pred):
         start = 1 if remove_background else 0
         stop = K.get_variable_shape(y_pred)[-1]
+        num_classes = len(range(start, stop))
         losses = []
         for i in range(start, stop):
             losses.append(dice_loss(y_true[..., i], y_pred[..., i]))
 
         losses = K.variable(losses)
         if weights:
-            loss = K.sum(weights * losses)
+            loss = K.sum(weights * losses) / K.sum(weights)
         else:
-            loss = K.sum(losses)
+            loss = K.sum(losses) / num_classes
 
         return loss
 
