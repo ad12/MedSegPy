@@ -15,7 +15,7 @@ import numpy as np
 from config import Config
 from generators.fname_parsers import OAISliceWise
 
-logger = logging.getLogger("msk_seg.{}".format(__name__))
+logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 
 
 class GeneratorState(Enum):
@@ -49,7 +49,7 @@ class Generator(ABC):
         self.fname_parser = OAISliceWise()
 
     @abstractmethod
-    def __load_inputs__(self, data_path, file):
+    def _load_inputs(self, data_path, file):
         """
         Load inputs and ground truth from os.path.join(data_path, file)
         :param data_path: A path specifying the directory where data is
@@ -95,6 +95,11 @@ class Generator(ABC):
         """
         return 0, 0
 
+    @abstractmethod
+    def num_examples(self, state: GeneratorState):
+        """Number of examples in this training set."""
+        pass
+
     def sort_files(self, files):
         """
         Sort files by name
@@ -112,7 +117,7 @@ class Generator(ABC):
 
         return [files[cnt1] for cnt1 in order]
 
-    def __add_file__(self, file: str, unique_filenames, pids, augment_data: bool):
+    def _add_file(self, file: str, unique_filenames, pids, augment_data: bool):
         """
         Check if file should be added to list of files
         :param file: a string (filename or filepath accepted)
@@ -142,7 +147,7 @@ class Generator(ABC):
 
         return should_add_file
 
-    def __add_background_labels__(self, segs: np.ndarray):
+    def _add_background_labels(self, segs: np.ndarray):
         """
         Generate background labels based on segmentations
         :param segs: a binary ndarray with last dimension corresponding to different classes
@@ -156,7 +161,7 @@ class Generator(ABC):
 
         return seg_total
 
-    def __img_generator_base_info__(self, state: GeneratorState):
+    def _img_generator_base_info(self, state: GeneratorState):
         """
         Get base info for either TRAINING, VALIDATION, or TESTING generator states
         :param state: A GeneratorState
@@ -218,10 +223,10 @@ class OAIGenerator(Generator):
         include_background = config.INCLUDE_BACKGROUND
         num_neighboring_slices = config.num_neighboring_slices()
 
-        base_info = self.__img_generator_base_info__(state)
+        base_info = self._img_generator_base_info(state)
         batch_size = base_info['batch_size']
         shuffle_epoch = base_info['shuffle_epoch']
-        files, batches_per_epoch, max_slice_num = self.__calc_generator_info__(state)
+        files, batches_per_epoch, max_slice_num = self._calc_generator_info(state)
 
         total_classes = config.get_num_classes()
         mask_size = img_size[:-1] + (total_classes,)
@@ -239,11 +244,11 @@ class OAIGenerator(Generator):
                     file_ind = batch_cnt * batch_size + file_cnt
                     filepath = files[file_ind]
 
-                    im, seg = self.__load_input_helper__(filepath=filepath,
-                                                         tissues=tissues,
-                                                         num_neighboring_slices=num_neighboring_slices,
-                                                         max_slice_num=max_slice_num,
-                                                         include_background=include_background)
+                    im, seg = self._load_input_helper(filepath=filepath,
+                                                      tissues=tissues,
+                                                      num_neighboring_slices=num_neighboring_slices,
+                                                      max_slice_num=max_slice_num,
+                                                      include_background=include_background)
 
                     assert im.shape == img_size, "Input shape mismatch. Expected %s, got %s" % (img_size, im.shape)
                     assert seg.shape == mask_size, "Ouput shape mismatch. Expected %s, got %s" % (mask_size, seg.shape)
@@ -260,7 +265,7 @@ class OAIGenerator(Generator):
         include_background = config.INCLUDE_BACKGROUND
         num_neighboring_slices = config.num_neighboring_slices()
 
-        base_info = self.__img_generator_base_info__(GeneratorState.TESTING)
+        base_info = self._img_generator_base_info(GeneratorState.TESTING)
         batch_size = base_info['batch_size']
 
         if len(img_size) != self.__EXPECTED_IMG_SIZE_DIMS__:
@@ -269,7 +274,7 @@ class OAIGenerator(Generator):
         total_classes = config.get_num_classes()
         mask_size = img_size[:-1] + (total_classes,)
 
-        files, batches_per_epoch, _ = self.__calc_generator_info__(GeneratorState.TESTING)
+        files, batches_per_epoch, _ = self._calc_generator_info(GeneratorState.TESTING)
         files = self.sort_files(files)
         scan_id_to_files = self.__map_files_to_scan_id__(files)
         scan_ids = sorted(scan_id_to_files.keys())
@@ -287,11 +292,11 @@ class OAIGenerator(Generator):
                 # Make sure that this pid is actually in the filename
                 assert scan_id in filepath, "scan_id missing: id %s not in %s" % (scan_id, filepath)
 
-                im, seg_total = self.__load_input_helper__(filepath=filepath,
-                                                           tissues=tissues,
-                                                           num_neighboring_slices=num_neighboring_slices,
-                                                           max_slice_num=num_slices,
-                                                           include_background=include_background)
+                im, seg_total = self._load_input_helper(filepath=filepath,
+                                                        tissues=tissues,
+                                                        num_neighboring_slices=num_neighboring_slices,
+                                                        max_slice_num=num_slices,
+                                                        include_background=include_background)
 
                 x[fcount, ...] = im
                 y[fcount, ...] = seg_total
@@ -338,7 +343,7 @@ class OAIGenerator(Generator):
 
         return scan_id_files
 
-    def __load_input_helper__(self, filepath, tissues, num_neighboring_slices, max_slice_num, include_background):
+    def _load_input_helper(self, filepath, tissues, num_neighboring_slices, max_slice_num, include_background):
         """
 
         :param filepath:
@@ -356,7 +361,8 @@ class OAIGenerator(Generator):
                                                        filepath=filepath,
                                                        max_slice=max_slice_num)
         else:
-            im, seg = self.__load_inputs__(os.path.dirname(filepath), os.path.basename(filepath))
+            im, seg = self._load_inputs(os.path.dirname(filepath),
+                                        os.path.basename(filepath))
 
         # support multi class
         if len(tissues) > 1:
@@ -371,7 +377,7 @@ class OAIGenerator(Generator):
         # if considering background, add class
         # background should mark every other pixel that is not already accounted for in segmentation
         if include_background:
-            seg_total = self.__add_background_labels__(seg_tissues)
+            seg_total = self._add_background_labels(seg_tissues)
 
         return im, seg_total
 
@@ -413,7 +419,7 @@ class OAIGenerator(Generator):
             slice_no = slice_nos[i]
             slice_filename = base_filename % slice_no
 
-            im, seg = self.__load_inputs__(data_path, slice_filename)
+            im, seg = self._load_inputs(data_path, slice_filename)
             ims.append(im)
             segs.append(seg)
 
@@ -424,7 +430,7 @@ class OAIGenerator(Generator):
 
         return im, seg
 
-    def __load_inputs__(self, data_path: str, file: str):
+    def _load_inputs(self, data_path: str, file: str):
         im_path = '%s/%s.im' % (data_path, file)
         with h5py.File(im_path, 'r') as f:
             im = f['data'][:]
@@ -440,8 +446,8 @@ class OAIGenerator(Generator):
 
         return im, seg
 
-    def __calc_generator_info__(self, state: GeneratorState):
-        base_info = self.__img_generator_base_info__(state)
+    def _calc_generator_info(self, state: GeneratorState):
+        base_info = self._img_generator_base_info(state)
         data_path_or_files = base_info['data_path_or_files']
         batch_size = base_info['batch_size']
         pids = base_info['pids']
@@ -465,7 +471,7 @@ class OAIGenerator(Generator):
             fp, _ = os.path.splitext(fp)
             dirpath, filename = os.path.dirname(fp), os.path.basename(fp)
 
-            if self.__add_file__(fp, unique_filepaths, pids, augment_data):
+            if self._add_file(fp, unique_filepaths, pids, augment_data):
                 file_info = self.fname_parser.get_file_info(filename)
                 if max_slice_num < file_info['slice']:
                     max_slice_num = file_info['slice']
@@ -485,8 +491,8 @@ class OAIGenerator(Generator):
         config = self.config
 
         if config.STATE == 'training':
-            train_files, train_batches_per_epoch, _ = self.__calc_generator_info__(GeneratorState.TRAINING)
-            valid_files, valid_batches_per_epoch, _ = self.__calc_generator_info__(GeneratorState.VALIDATION)
+            train_files, train_batches_per_epoch, _ = self._calc_generator_info(GeneratorState.TRAINING)
+            valid_files, valid_batches_per_epoch, _ = self._calc_generator_info(GeneratorState.VALIDATION)
 
             # Get number of subjects training and validation sets
             train_pids = []
@@ -509,7 +515,7 @@ class OAIGenerator(Generator):
             logger.info('INFO: Image size: %s' % (self.config.IMG_SIZE,))
             logger.info('INFO: Image types included in training: %s' % (self.config.FILE_TYPES,))
         else:  # config in Testing state
-            test_files, test_batches_per_epoch, _ = self.__calc_generator_info__(GeneratorState.TESTING)
+            test_files, test_batches_per_epoch, _ = self._calc_generator_info(GeneratorState.TESTING)
             scanset_info = self.__get_scanset_data__(test_files)
 
             logger.info('INFO: Test size: %d slices, batch size: %d, # subjects: %d, # scans: %d' % (len(test_files),
@@ -541,10 +547,14 @@ class OAIGenerator(Generator):
         if config.STATE != 'training':
             raise ValueError('Method is only active when config is in training state')
 
-        _, train_batches_per_epoch, _ = self.__calc_generator_info__(GeneratorState.TRAINING)
-        _, valid_batches_per_epoch, _ = self.__calc_generator_info__(GeneratorState.VALIDATION)
+        _, train_batches_per_epoch, _ = self._calc_generator_info(GeneratorState.TRAINING)
+        _, valid_batches_per_epoch, _ = self._calc_generator_info(GeneratorState.VALIDATION)
 
         return train_batches_per_epoch, valid_batches_per_epoch
+
+    def num_examples(self, state: GeneratorState):
+        files, _, _ = self._calc_generator_info(state)
+        return len(files)
 
 
 class OAI3DGenerator(OAIGenerator):
@@ -592,7 +602,7 @@ class OAI3DGenerator(OAIGenerator):
 
         return slice_fnames
 
-    def __load_input_helper__(self, filepath, tissues, num_neighboring_slices, max_slice_num, include_background):
+    def _load_input_helper(self, filepath, tissues, num_neighboring_slices, max_slice_num, include_background):
         # check that fname contains a dirpath
         assert os.path.dirname(filepath) is not ''
 
@@ -613,7 +623,7 @@ class OAI3DGenerator(OAIGenerator):
         # if considering background, add class
         # background should mark every other pixel that is not already accounted for in segmentation
         if include_background:
-            seg_total = self.__add_background_labels__(seg_tissues)
+            seg_total = self._add_background_labels(seg_tissues)
 
         return im, seg_total
 
@@ -642,7 +652,7 @@ class OAI3DGenerator(OAIGenerator):
         ims = []
         segs = []
         for f in corresponding_files:
-            im, seg = self.__load_inputs__(data_path, f)
+            im, seg = self._load_inputs(data_path, f)
             ims.append(im)
             segs.append(seg)
 
@@ -658,8 +668,8 @@ class OAI3DGenerator(OAIGenerator):
 
         return im_vol, seg_vol
 
-    def __calc_generator_info__(self, state: GeneratorState):
-        base_info = self.__img_generator_base_info__(state)
+    def _calc_generator_info(self, state: GeneratorState):
+        base_info = self._img_generator_base_info(state)
         data_path_or_files = base_info['data_path_or_files']
         batch_size = base_info['batch_size']
         pids = base_info['pids']
@@ -683,7 +693,7 @@ class OAI3DGenerator(OAIGenerator):
             fp, _ = os.path.splitext(fp)
             dirpath, filename = os.path.dirname(fp), os.path.basename(fp)
 
-            if self.__add_file__(fp, unique_filepaths, pids, augment_data):
+            if self._add_file(fp, unique_filepaths, pids, augment_data):
                 file_info = self.fname_parser.get_file_info(filename)
                 slice_ids.append(file_info['slice'])
 
@@ -717,8 +727,8 @@ class OAI3DGenerator(OAIGenerator):
 
         return files, batches_per_epoch, max_slice_id
 
-    def __add_file__(self, file: str, unique_filenames, pids, augment_data: bool):
-        add_file = super().__add_file__(file, unique_filenames, pids, augment_data)
+    def _add_file(self, file: str, unique_filenames, pids, augment_data: bool):
+        add_file = super()._add_file(file, unique_filenames, pids, augment_data)
 
         # If only subset of slices should be selected, then return
         if hasattr(self.config, 'SLICE_SUBSET') and self.config.SLICE_SUBSET is not None:
@@ -742,12 +752,12 @@ class OAI3DGeneratorFullVolume(OAI3DGenerator):
         assert len(img_size) == 3, "Loaded image size must be a tuple of 3 integers (y, x, #slices)"
         self.config.IMG_SIZE = img_size + self.config.IMG_SIZE[3:]
 
-    def __img_generator_base_info__(self, state: GeneratorState):
+    def _img_generator_base_info(self, state: GeneratorState):
         assert state == GeneratorState.TESTING, "Only testing state is supported for this generator"
-        return super().__img_generator_base_info__(state)
+        return super()._img_generator_base_info(state)
 
     def __get_img_dims__(self, state: GeneratorState):
-        base_info = self.__img_generator_base_info__(state)
+        base_info = self._img_generator_base_info(state)
         data_path_or_files = base_info['data_path_or_files']
         batch_size = base_info['batch_size']
         pids = base_info['pids']
@@ -771,7 +781,7 @@ class OAI3DGeneratorFullVolume(OAI3DGenerator):
             fp, _ = os.path.splitext(fp)
             dirpath, filename = os.path.dirname(fp), os.path.basename(fp)
 
-            if self.__add_file__(fp, unique_filepaths, pids, augment_data):
+            if self._add_file(fp, unique_filepaths, pids, augment_data):
                 file_info = self.fname_parser.get_file_info(filename)
                 slice_ids.append(file_info['slice'])
 
@@ -783,7 +793,8 @@ class OAI3DGeneratorFullVolume(OAI3DGenerator):
 
         # load 1 file to get inplane resolution
         filepath = list(unique_filepaths.keys())[0]
-        im_vol, _ = self.__load_inputs__(os.path.dirname(filepath), os.path.basename(filepath))
+        im_vol, _ = self._load_inputs(os.path.dirname(filepath),
+                                      os.path.basename(filepath))
         return im_vol.shape[:2] + (num_slices,)
     
     def __reformat_testing_scans__(self, vols):
@@ -813,7 +824,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         if state not in self._cached_data.keys():
             start_time = time.time()
             logger.info('Computing %s blocks' % state.name)
-            self._cached_data[state] = self.__calc_generator_info__(state)
+            self._cached_data[state] = self._calc_generator_info(state)
             logger.info('%0.2f seconds' % (time.time() - start_time))
 
         return self._cached_data[state]
@@ -822,7 +833,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         dirpath = os.path.dirname(fp)
         fname = os.path.basename(fp)
 
-        im, seg = self.__load_inputs__(data_path=dirpath, file=fname)
+        im, seg = self._load_inputs(data_path=dirpath, file=fname)
         im = np.squeeze(im)
         seg = np.squeeze(seg)
         assert im.ndim == 2 and seg.ndim == 3, "image must be 2D (Y,X) and segmentation must be 3D (Y,X,#masks)"
@@ -971,8 +982,8 @@ class OAI3DBlockGenerator(OAI3DGenerator):
 
         return int(num_blocks)
 
-    def __calc_generator_info__(self, state: GeneratorState) -> Tuple[dict, int, dict]:
-        base_info = self.__img_generator_base_info__(state)
+    def _calc_generator_info(self, state: GeneratorState) -> Tuple[dict, int, dict]:
+        base_info = self._img_generator_base_info(state)
         data_path_or_files = base_info['data_path_or_files']
         batch_size = base_info['batch_size']
         pids = base_info['pids']
@@ -996,7 +1007,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
             fp, _ = os.path.splitext(fp)
             dirpath, filename = os.path.dirname(fp), os.path.basename(fp)
 
-            if self.__add_file__(fp, unique_filepaths, pids, augment_data):
+            if self._add_file(fp, unique_filepaths, pids, augment_data):
                 file_info = self.fname_parser.get_file_info(filename)
                 slice_ids.append(file_info['slice'])
 
@@ -1038,7 +1049,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
 
     def img_generator_test(self, model=None):
         state = GeneratorState.TESTING
-        base_info = self.__img_generator_base_info__(state)
+        base_info = self._img_generator_base_info(state)
         batch_size = base_info['batch_size']
 
         config = self.config
@@ -1097,7 +1108,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         if state not in accepted_states:
             raise ValueError('state must be either %s' % accepted_states)
 
-        base_info = self.__img_generator_base_info__(state)
+        base_info = self._img_generator_base_info(state)
         batch_size = base_info['batch_size']
         shuffle_epoch = base_info['shuffle_epoch']
 
@@ -1153,7 +1164,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         # if considering background, add class
         # background should mark every other pixel that is not already accounted for in segmentation
         if include_background:
-            seg_total = self.__add_background_labels__(seg_tissues)
+            seg_total = self._add_background_labels(seg_tissues)
 
         return seg_total
 
@@ -1191,7 +1202,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         pids = [self.fname_parser.get_pid_from_volume_id(vol_id) for vol_id in volume_ids]
         num_pids = len(pids)
 
-        base_info = self.__img_generator_base_info__(state)
+        base_info = self._img_generator_base_info(state)
         batch_size = base_info['batch_size']
 
         logger.info('INFO: %s size: %d blocks (%d volumes), batch size: %d, # subjects: %d' % (state.name,
@@ -1211,4 +1222,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
 
         return train_batches_per_epoch, valid_batches_per_epoch
 
-
+    def num_examples(self, state: GeneratorState):
+        scan_to_blocks, batches_per_epoch, _ = self.cached_data(state)
+        num_blocks = self.__get_num_blocks__(scan_to_blocks)
+        return num_blocks

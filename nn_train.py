@@ -23,6 +23,7 @@ import config as MCONFIG
 import glob_constants
 import mri_utils
 from cross_validation import cv_util
+from generators import data_loader
 from generators import im_gens
 from losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS, dice_loss, focal_loss
 from models.models import get_model
@@ -392,12 +393,37 @@ class NNTrain(CommandLineInterface):
             callbacks_list.append(es_cb)
 
         generator = im_gens.get_generator(config)
-        generator.summary()
+        try:
+            train_gen = data_loader.get_data_loader(
+                config,
+                state=im_gens.GeneratorState.TRAINING,
+                shuffle=True,
+                drop_last=True,
+                generator=generator,
+            )
+            val_gen = data_loader.get_data_loader(
+                config,
+                state=im_gens.GeneratorState.VALIDATION,
+                shuffle=False,
+                drop_last=False,
+                generator=generator,
+            )
+            train_nbatches, valid_nbatches = None, None
+            use_multiprocessing = num_workers > 1
+            logging.info("Training Summary:\n" + train_gen.summary())
+            logging.info("Validation Summary:\n" + val_gen.summary())
+        except ValueError as e:
+            logger.info("{}\nDefaulting to traditional generator".format(e))
 
-        train_nbatches, valid_nbatches = generator.num_steps()
-
-        train_gen = generator.img_generator(state=im_gens.GeneratorState.TRAINING)
-        val_gen = generator.img_generator(state=im_gens.GeneratorState.VALIDATION)
+            train_nbatches, valid_nbatches = generator.num_steps()
+            train_gen = generator.img_generator(
+                state=im_gens.GeneratorState.TRAINING
+            )
+            val_gen = generator.img_generator(
+                state=im_gens.GeneratorState.VALIDATION
+            )
+            use_multiprocessing = False
+            generator.summary()
 
         # Start training
         model.fit_generator(train_gen,
@@ -407,8 +433,7 @@ class NNTrain(CommandLineInterface):
                             validation_steps=valid_nbatches,
                             callbacks=callbacks_list,
                             workers=num_workers,
-                            use_multiprocessing=False,  # keras issue: setting to true duplicates data
-                            max_queue_size=train_nbatches,
+                            use_multiprocessing=use_multiprocessing,
                             verbose=1)
 
         # Save optimizer state

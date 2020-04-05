@@ -45,7 +45,7 @@ class CTGenerator(im_gens.OAIGenerator):
         self.windows = windows
         super().__init__(config)
 
-    def __load_inputs__(self, data_path: str, file: str):
+    def _load_inputs(self, data_path: str, file: str):
         im, seg = self._load_inputs_basic(data_path, file)
         im = self._preprocess(im, self.windows[0] if self.windows else None)
         return im, seg
