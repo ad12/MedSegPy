@@ -7,6 +7,7 @@ from keras.losses import binary_crossentropy
 logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 
 DICE_LOSS = ('dice', 'sigmoid')
+MULTI_CLASS_DICE_LOSS = ("multi_class_dice", "sigmoid")
 
 WEIGHTED_CROSS_ENTROPY_LOSS = ('weighted_cross_entropy', 'softmax')
 WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS = ('weighted_cross_entropy_sigmoid', 'sigmoid')
@@ -21,9 +22,16 @@ FOCAL_LOSS_GAMMA = 3.0
 DICE_FOCAL_LOSS = ('dice_focal_loss', 'sigmoid')
 DICE_MEDIAN_LOSS = ('dice_median_loss', 'sigmoid')
 
-CMD_LINE_SUPPORTED_LOSSES = ['DICE_LOSS', 'WEIGHTED_CROSS_ENTROPY_LOSS', 'WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS',
-                             'BINARY_CROSS_ENTROPY_LOSS', 'BINARY_CROSS_ENTROPY_SIG_LOSS', 'FOCAL_LOSS',
-                             'DICE_FOCAL_LOSS', 'DICE_MEDIAN_LOSS']
+CMD_LINE_SUPPORTED_LOSSES = ['DICE_LOSS',
+                             "MULTI_CLASS_DICE_LOSS",
+                             'WEIGHTED_CROSS_ENTROPY_LOSS',
+                             'WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS',
+                             'BINARY_CROSS_ENTROPY_LOSS',
+                             'BINARY_CROSS_ENTROPY_SIG_LOSS',
+                             'FOCAL_LOSS',
+                             'DICE_FOCAL_LOSS',
+                             'DICE_MEDIAN_LOSS',
+                             ]
 
 
 # TODO (arjundd): Add ability to exclude specific indices from loss function computation
@@ -31,6 +39,8 @@ def get_training_loss_from_str(loss_str: str):
     loss_str = loss_str.upper()
     if loss_str == 'DICE_LOSS':
         return DICE_LOSS
+    elif loss_str == "MULTI_CLASS_DICE_LOSS":
+        return MULTI_CLASS_DICE_LOSS
     elif loss_str == 'WEIGHTED_CROSS_ENTROPY_LOSS':
         return WEIGHTED_CROSS_ENTROPY_LOSS
     elif loss_str == 'WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS':
@@ -52,6 +62,8 @@ def get_training_loss_from_str(loss_str: str):
 def get_training_loss(loss, **kwargs):
     if loss == DICE_LOSS:
         return dice_loss
+    if loss == MULTI_CLASS_DICE_LOSS:
+        return multi_class_dice_loss(**kwargs)
     elif loss == WEIGHTED_CROSS_ENTROPY_LOSS:
         return weighted_categorical_crossentropy(**kwargs)
     elif loss == BINARY_CROSS_ENTROPY_LOSS:
@@ -118,18 +130,30 @@ def dice_median_loss(y_true, y_pred):
     return loss
 
 
-def multi_class_dice_loss_softmax(**kwargs):
-    """Dice loss for multiple classes in softmax layer
-
-    :return:
+def multi_class_dice_loss(
+    weights: np.ndarray=None,
+    remove_background: bool=False,
+    **kwargs
+):
+    """Dice loss for multiple classes in softmax layer.
     """
-    def d_loss(y_true, y_pred):
-        # remove background pixels from dice_calculation
-        # background class is slice 0 in the true and pred
-        y_true = y_true[..., 1:]
-        y_pred = y_pred[..., 1:]
+    if weights is not None:
+        weights = K.variable(weights)
 
-        return dice_loss(y_true, y_pred)
+    def d_loss(y_true, y_pred):
+        start = 1 if remove_background else 0
+        stop = K.get_variable_shape(y_pred)[-1]
+        losses = []
+        for i in range(start, stop):
+            losses.append(dice_loss(y_true[..., i], y_pred[..., i]))
+
+        losses = K.variable(losses)
+        if weights:
+            loss = K.sum(weights * losses)
+        else:
+            loss = K.sum(losses)
+
+        return loss
 
     return d_loss
 
