@@ -470,6 +470,10 @@ class Config():
         subcommand_parser.add_argument('--loss', metavar='L', type=str, default='DICE_LOSS', nargs='?',
                                        choices=CMD_LINE_SUPPORTED_LOSSES,
                                        help='loss function. Choose from %s' % CMD_LINE_SUPPORTED_LOSSES)
+        subcommand_parser.add_argument('--class_weights', metavar="W", type=float, default=cls.CLASS_WEIGHTS,
+                                       nargs="*",
+                                       help="class weights (if applicable). Defaults to equal weighting",
+                                      )
 
         # Include background
         subcommand_parser.add_argument('--include_background', default=False, action='store_const',
@@ -512,7 +516,7 @@ class Config():
                 'use_early_stopping', 'early_stopping_min_delta', 'early_stopping_patience',
                 'early_stopping_criterion',
                 'train_batch_size', 'valid_batch_size', 'test_batch_size',
-                'loss', 'include_background',
+                'loss', 'class_weights', 'include_background',
                 'img_size',
                 'kernel_initializer', 'seed',
                 'init_weight_path',

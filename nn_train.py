@@ -31,8 +31,8 @@ from models.models import get_model
 from utils import io_utils, parallel_utils as putils, utils, dl_utils
 from utils.logger import setup_logger
 from solver.optimizer import AdamAccumulate
-from . import nn_test
-from .oai_test import test_dir
+import nn_test
+from oai_test import test_dir
 import defaults
 
 logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
@@ -119,7 +119,6 @@ class NNTrain(CommandLineInterface):
     _ARG_KEY_K_FOLD_CROSS_VALIDATION = 'k_fold_cross_validation'
     _ARG_KEY_HO_TEST = 'ho_test'
     _ARG_KEY_HO_VALID = 'ho_valid'
-    _ARG_KEY_CLASS_WEIGHTS = 'class_weights'
     _ARG_KEY_EXPERIMENT = 'experiment'
     _ARG_KEY_ABS_SAVE_PATH = 'save_path'
     _ARG_KEY_FINE_TUNE_PATH = 'fine_tune_path'
@@ -174,10 +173,6 @@ class NNTrain(CommandLineInterface):
                                   metavar='V', type=int, default=1, nargs='?',
                                   dest=self._ARG_KEY_HO_VALID,
                                   help='Number of hold-out validation bins.')
-            s_parser.add_argument('--%s' % self._ARG_KEY_CLASS_WEIGHTS,
-                                  type=tuple, nargs='?', default=None,
-                                  dest=self._ARG_KEY_CLASS_WEIGHTS,
-                                  help='Weight classes in order.')
             s_parser.add_argument('--%s' % self._ARG_KEY_EXPERIMENT,
                                   type=str, nargs='?', default='',
                                   dest=self._ARG_KEY_EXPERIMENT,
@@ -342,7 +337,7 @@ class NNTrain(CommandLineInterface):
         n_epochs = config.N_EPOCHS
         pik_save_path = config.PIK_SAVE_PATH
         loss = config.LOSS
-        class_weights = config.LOSS_CLASS_WEIGHTS
+        class_weights = config.CLASS_WEIGHTS
         num_workers = config.NUM_WORKERS
 
         # Set global constants.

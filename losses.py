@@ -137,24 +137,28 @@ def multi_class_dice_loss(
 ):
     """Dice loss for multiple classes in softmax layer.
     """
-    if weights is not None:
+    use_weights = False
+    if weights:
         weights = K.variable(weights)
+        use_weights = True
 
     def d_loss(y_true, y_pred):
-        start = 1 if remove_background else 0
-        stop = K.get_variable_shape(y_pred)[-1]
-        num_classes = len(range(start, stop))
-        losses = []
-        for i in range(start, stop):
-            losses.append(dice_loss(y_true[..., i], y_pred[..., i]))
+        szp = K.get_variable_shape(y_pred)
 
-        losses = K.variable(losses)
-        if weights:
-            loss = K.sum(weights * losses) / K.sum(weights)
+        ovlp = K.sum(y_true * y_pred, axis=(0,1,2))
+
+        mu = K.epsilon()
+        dice = (2.0 * ovlp + mu) / (K.sum(y_true, axis=(0,1,2)) + K.sum(y_pred, axis=(0,1,2)) + mu)
+        loss = 1 - dice
+
+        if use_weights:
+            loss = weights * loss
+            loss = K.sum(loss) / K.sum(weights)
         else:
-            loss = K.sum(losses) / num_classes
+            loss = K.mean(loss)
 
         return loss
+
 
     return d_loss
 
