@@ -2,7 +2,7 @@ import sys
 
 sys.path.insert(0, '../')
 
-import utils
+from medsegpy import utils
 
 if __name__ == '__main__':
     files = ['/Users/arjundesai/Desktop/roma_data/ismrm-data/edge/9993833_V01-Aug00_012',

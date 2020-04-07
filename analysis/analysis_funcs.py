@@ -22,10 +22,8 @@ from scipy import optimize as sop
 from matplotlib.ticker import ScalarFormatter
 import pandas as pd
 
-from pystats.pystats.graph import bar
-
 sys.path.append('../')
-from utils import io_utils
+from medsegpy.utils import io_utils
 
 # Define some custom color palettes
 american_palette = ['#ffeaa7', '#00cec9', '#0984e3', '#6c5ce7', '#b2bec3']  # yellow too pale

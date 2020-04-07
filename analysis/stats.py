@@ -1,18 +1,8 @@
-import sys
-
-import matplotlib.pyplot as plt
-
-import os
 import numpy as np
-import pandas as pd
-from scipy import stats
-import scikit_posthocs as sp
 
-from utils import io_utils
+from medsegpy.utils import io_utils
 
 from analysis_utils import get_metrics
-from analysis_funcs import cpal
-import analysis_funcs as af
 
 from pystats.pystats import stats as pyss
 

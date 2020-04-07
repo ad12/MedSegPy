@@ -4,11 +4,9 @@ import os
 
 import numpy as np
 
-import config as MCONFIG
-import glob_constants
-import oai_train
-from config import DeeplabV3Config
-from losses import WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS
+from medsegpy import glob_constants, oai_train, config as MCONFIG
+from medsegpy.config import DeeplabV3Config
+from medsegpy.modeling.losses import WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS
 
 logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 

@@ -2,10 +2,8 @@ import argparse
 import logging
 import os
 
-import config as MCONFIG
-import glob_constants
-import oai_train
-from config import UNet2_5DConfig
+from medsegpy import glob_constants, oai_train, config as MCONFIG
+from medsegpy.config import UNet2_5DConfig
 
 logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 

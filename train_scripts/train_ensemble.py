@@ -8,12 +8,12 @@ from keras.initializers import Constant
 from keras.layers import Conv2D, Concatenate
 from keras.utils import plot_model
 
-from config import EnsembleUDSConfig
-from models.deeplab_2d import Deeplabv3
-from models.segnet_2d.segnet import Segnet_v2
-from models.unet_2d import unet_2d_model
+from medsegpy.config import EnsembleUDSConfig
+from medsegpy.modeling import Deeplabv3
+from medsegpy.modeling import Segnet_v2
+from medsegpy.modeling import unet_2d_model
 
-from oai_train import train_model
+from medsegpy.oai_train import train_model
 
 DEEPLAB_WEIGHTS = '/bmrNAS/people/arjun/msk_seg_networks/architecture_limit/deeplabv3_2d/2018-11-30-05-49-49/fine_tune/deeplabv3_2d_weights.057-0.1163.h5'
 SEGNET_WEIGHTS = '/bmrNAS/people/arjun/msk_seg_networks/architecture_limit/segnet_2d/2018-11-30-21-13-14/fine_tune/segnet_2d_weights.051-0.1195.h5'

@@ -1,11 +1,10 @@
 import os
 import re
-import sys
 
 import numpy as np
 import pandas as pd
 
-from utils import io_utils
+from medsegpy.utils import io_utils
 from pystats.pystats.graph import bar
 
 def parse_results_file(dirpath):

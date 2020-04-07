@@ -6,12 +6,9 @@ import random
 from keras import backend as K
 from natsort import natsorted
 
-import config as MCONFIG
-import glob_constants
-import oai_train
-import parse_pids
-import utils
-from config import DeeplabV3Config, SegnetConfig, UNetConfig
+from medsegpy import glob_constants, oai_train, parse_pids, config as MCONFIG, \
+    utils
+from medsegpy.config import DeeplabV3Config, SegnetConfig, UNetConfig
 
 logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 

@@ -2,12 +2,10 @@ import argparse
 import logging
 import os
 
-import config as MCONFIG
-import glob_constants
-import losses
-import oai_train
-from config import DeeplabV3Config, SegnetConfig, UNetConfig
-from losses import WEIGHTED_CROSS_ENTROPY_LOSS, BINARY_CROSS_ENTROPY_LOSS, BINARY_CROSS_ENTROPY_SIG_LOSS, FOCAL_LOSS
+from medsegpy import glob_constants, oai_train, config as MCONFIG
+from medsegpy.modeling import losses
+from medsegpy.config import DeeplabV3Config, SegnetConfig, UNetConfig
+from medsegpy.modeling.losses import WEIGHTED_CROSS_ENTROPY_LOSS, BINARY_CROSS_ENTROPY_LOSS, BINARY_CROSS_ENTROPY_SIG_LOSS, FOCAL_LOSS
 
 logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 

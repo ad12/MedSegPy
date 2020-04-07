@@ -5,8 +5,7 @@ sys.path.insert(0, '../')
 import os
 import argparse
 
-import utils
-import oai_test as tst
+from medsegpy import utils, oai_test as tst
 
 
 def find_best_test_dir(base_folder):
