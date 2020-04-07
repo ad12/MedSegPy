@@ -9,7 +9,7 @@ from keras.layers.core import Activation
 from keras.layers.normalization import BatchNormalization
 from keras.models import Model
 
-from medsegpy.modeling import MaxPoolingWithArgmax2D, MaxUnpooling2D
+from .Mylayers import MaxPoolingWithArgmax2D, MaxUnpooling2D
 
 logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 

@@ -7,18 +7,17 @@ from keras.initializers import glorot_uniform
 from keras.layers import Input, Conv2D
 from keras.utils import plot_model
 
-sys.path.append('../')
 from medsegpy.config import DeeplabV3Config, SegnetConfig, UNetConfig, \
     UNetMultiContrastConfig, UNet2_5DConfig, DeeplabV3_2_5DConfig, ResidualUNet, AnisotropicUNetConfig, RefineNetConfig, \
     UNet3DConfig
 
-from medsegpy.modeling import DeeplabModel
-from medsegpy.modeling import Segnet_v2
-from medsegpy.modeling import residual_unet_2d
-from medsegpy.modeling import anisotropic_unet_2d
-from medsegpy.modeling import unet_2d_model, unet_2d_model_v2
-from medsegpy.modeling import refinenet_model
-from medsegpy.modeling import unet_3d_model
+from .deeplab_2d.deeplab_model import DeeplabModel
+from .segnet_2d.segnet import Segnet_v2
+from .unet_2d.residual_unet_model import residual_unet_2d
+from .unet_2d.anisotropic_unet_model import anisotropic_unet_2d
+from .unet_2d.unet_model import unet_2d_model, unet_2d_model_v2
+from .refinenet.refinenet_model import refinenet_model
+from .unet_3d_model import unet_3d_model
 
 logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 

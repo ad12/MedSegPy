@@ -18,7 +18,7 @@ from medsegpy import glob_constants, config as MCONFIG, solver, \
     nn_test
 from medsegpy.cross_validation import cv_util
 from medsegpy.data import im_gens, data_loader
-from medsegpy.modeling.losses import get_training_loss, dice_loss
+from medsegpy.losses import get_training_loss, dice_loss
 from medsegpy.modeling import get_model
 from medsegpy.utils import dl_utils, mri_utils
 from medsegpy.utils import utils, io_utils, parallel_utils as putils

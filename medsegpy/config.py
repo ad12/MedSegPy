@@ -8,7 +8,7 @@ import logging
 from fvcore.common.file_io import PathManager
 from medsegpy.utils import utils as utils, io_utils, mri_utils
 from medsegpy.cross_validation import cv_util
-from medsegpy.modeling.losses import DICE_LOSS, CMD_LINE_SUPPORTED_LOSSES, get_training_loss_from_str
+from medsegpy.losses import DICE_LOSS, CMD_LINE_SUPPORTED_LOSSES, get_training_loss_from_str
 from medsegpy.data.datasets import convert_path_to_dataset
 
 logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
@@ -17,6 +17,7 @@ logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 DEPRECATED_KEYS = ['NUM_CLASSES', 'TRAIN_FILES_CV', 'VALID_FILES_CV',
                    'TEST_FILES_CV', "USE_STEP_DECAY",
                    "PIK_SAVE_PATH_DIR", "PIK_SAVE_PATH", "TF_LOG_DIR",
+                   "TRAIN_PATH", "VALID_PATH", "TEST_PATH",
                    ]
 RENAMED_KEYS = {
     "CP_SAVE_PATH": "OUTPUT_DIR",
@@ -255,6 +256,9 @@ class Config(object):
                     "VALID_PATH": "VAL_DATASET",
                     "TEST_PATH": "TEST_DATASET",
                 }
+                # Ignore empty values.
+                if vars_dict[key] == "":
+                    continue
                 vars_dict[key] = convert_path_to_dataset(upper_case_key)
                 upper_case_key = mapping[upper_case_key]
 
@@ -333,7 +337,7 @@ class Config(object):
 
         if self.STATE == 'training':
             summary_vals.extend([
-                'TRAIN_DATASET', 'VAL_DATASET', 'TEST_PATH', '',
+                'TRAIN_DATASET', 'VAL_DATASET', 'TEST_DATASET', '',
 
                 'TISSUES', '',
 
@@ -462,8 +466,8 @@ class Config(object):
         subcommand_parser.add_argument(
             '--lr_scheduler_name',
             default=cls.LR_SCHEDULER_NAME,
-            action='store_const',
-            const=True,
+            nargs="?",
+            type=str,
             help='learning rate scheduler. Default: {}'.format(
                 None if not cls.LR_SCHEDULER_NAME else cls.LR_SCHEDULER_NAME),
         )

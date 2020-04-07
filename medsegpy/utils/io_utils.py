@@ -107,7 +107,7 @@ class GeneralPathHandler(PathHandler, ABC):
     PREFIX = ""
 
     def _get_supported_prefixes(self):
-        return self.PREFIX
+        return [self.PREFIX]
 
     def _get_local_path(self, path: str, **kwargs: Any):
         name = path[len(self.PREFIX):]

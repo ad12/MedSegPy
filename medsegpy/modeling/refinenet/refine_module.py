@@ -5,9 +5,7 @@ from typing import List
 from keras.layers import Layer, Activation, Conv2D, Add, MaxPooling2D
 from keras.layers import BatchNormalization as BN
 
-
-sys.path.append('../../')
-from medsegpy.modeling import BilinearUpsampling
+from medsegpy.modeling.deeplab_2d.deeplab_model import BilinearUpsampling
 
 
 def refine_module(xs_in: List[Layer], num_filters_in: int, num_filters_out: int, name_prefix: str):
