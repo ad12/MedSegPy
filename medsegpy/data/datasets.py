@@ -16,6 +16,12 @@ if CLUSTER in (Cluster.ROMA, Cluster.VIGATA):
         "oai_3d_val": "/bmrNAS/people/arjun/data/oai_data/h5_files_3d/val",
         "oai_3d_test": "/bmrNAS/people/arjun/data/oai_data/h5_files_3d/test",
     }
+elif CLUSTER == CLUSTER.NERO:
+    DATA_CATALOG = {
+        "oai_2d_train": "/share/pi/bah/data/oai_data/h5_files_2d/train",
+        "oai_2d_val": "/share/pi/bah/data/oai_data/h5_files_2d/val",
+        "oai_2d_test": "/share/pi/bah/data/oai_data/h5_files_2d/test",
+    }
 else:
     raise ValueError("Data not found on cluster {}".format(CLUSTER))
 

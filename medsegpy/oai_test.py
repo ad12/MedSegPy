@@ -21,6 +21,7 @@ from keras import backend as K
 from medsegpy.utils import utils as utils, io_utils, mri_utils
 from medsegpy.utils import dl_utils
 from medsegpy.utils import MetricsManager
+from medsegpy.utils import cluster
 from medsegpy.utils.im_utils import MultiClassOverlay
 
 from medsegpy import config as MCONFIG
@@ -34,7 +35,13 @@ from medsegpy.data.im_gens import get_generator
 logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 
 DATE_THRESHOLD = strptime('2018-09-01-22-39-39', '%Y-%m-%d-%H-%M-%S')
-TEST_SET_METADATA_PIK = '/bmrNAS/people/arjun/msk_seg_networks/oai_metadata/oai_data.dat'
+
+if cluster.CLUSTER in (cluster.Cluster.ROMA, cluster.Cluster.VIGATA): 
+    TEST_SET_METADATA_PIK = '/bmrNAS/people/arjun/msk_seg_networks/oai_metadata/oai_data.dat'
+elif cluster.CLUSTER == cluster.Cluster.NERO:
+    TEST_SET_METADATA_PIK = '/share/pi/bah/data/oai_data/oai_data.dat'
+else:
+    raise ValueError("OAI data not on {}".format(cluster.CLUSTER))
 TEST_SET_MD = io_utils.load_pik(TEST_SET_METADATA_PIK)
 
 VOXEL_SPACING = (0.3125, 0.3125, 0.7)
