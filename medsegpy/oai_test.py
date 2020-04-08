@@ -21,7 +21,6 @@ from keras import backend as K
 from medsegpy.utils import utils as utils, io_utils, mri_utils
 from medsegpy.utils import dl_utils
 from medsegpy.utils import MetricsManager
-from medsegpy.utils import cluster
 from medsegpy.utils.im_utils import MultiClassOverlay
 
 from medsegpy import config as MCONFIG
@@ -35,13 +34,7 @@ from medsegpy.data.im_gens import get_generator
 logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 
 DATE_THRESHOLD = strptime('2018-09-01-22-39-39', '%Y-%m-%d-%H-%M-%S')
-
-if cluster.CLUSTER in (cluster.Cluster.ROMA, cluster.Cluster.VIGATA): 
-    TEST_SET_METADATA_PIK = '/bmrNAS/people/arjun/msk_seg_networks/oai_metadata/oai_data.dat'
-elif cluster.CLUSTER == cluster.Cluster.NERO:
-    TEST_SET_METADATA_PIK = '/share/pi/bah/data/oai_data/oai_data.dat'
-else:
-    raise ValueError("OAI data not on {}".format(cluster.CLUSTER))
+TEST_SET_METADATA_PIK = '/bmrNAS/people/arjun/msk_seg_networks/oai_metadata/oai_data.dat'
 TEST_SET_MD = io_utils.load_pik(TEST_SET_METADATA_PIK)
 
 VOXEL_SPACING = (0.3125, 0.3125, 0.7)
@@ -203,9 +196,9 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA, voxel_spacing=Non
                                           voxel_spacing=voxel_spacing,
                                           runtime=seg_time)
 
-        logger.info_str = 'Scan #%03d (name = %s, %d slices) = %s' % (img_cnt, fname, num_slices, summary)
-        pids_str = pids_str + logger.info_str + '\n'
-        logger.info(logger.info_str)
+        logger_info_str = 'Scan #%03d (name = %s, %d slices, %0.2fs) = %s' % (img_cnt, fname, num_slices, seg_time, summary)
+        pids_str = pids_str + logger_info_str + '\n'
+        logger.info(logger_info_str)
 
         if fname in test_set_md.keys():
             slice_dir = test_set_md[fname].slice_dir
@@ -791,3 +784,4 @@ if __name__ == '__main__':
     vargin = vars(args)
     SAVE_H5_DATA = vargin['save_h5_data']
     args.func(vargin)
+                                                                                                                                                                                                                                                                                                             

@@ -417,7 +417,7 @@ class NNTrain(CommandLineInterface):
         #     use_multiprocessing = False
         #     return train_gen, val_gen
         # except ValueError as e:
-        logger.info("{}\nDefaulting to traditional generator".format(e))
+        # logger.info("{}\nDefaulting to traditional generator".format(e))
         return generator, generator
 
     def _train_model(self, config, optimizer = None, model = None):

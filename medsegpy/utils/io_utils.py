@@ -126,6 +126,8 @@ class GeneralPathHandler(PathHandler, ABC):
 class TechConsiderationsHandler(GeneralPathHandler):
     PREFIX = "tcv3://"
 
+    def _project_name(self):
+        return "tech-considerations"
 
 class abCTHandler(GeneralPathHandler):
     PREFIX = "abCT://"
