@@ -221,17 +221,19 @@ class NNTrain(CommandLineInterface):
             output_dir=output_dir,
         )
 
-        # Load from file.
-        if config_file:
-            config.load_config(config_file)
-
         # Load from args.
+        print("Loading config from {}".format(config_file))
         config_dict = config.parse_cmd_line(self.args)
         config_dict['TISSUES'] = self._parse_classes()
         if config_dict is not None:
             for key in config_dict.keys():
                 val = config_dict[key]
                 config.set_attr(key, val)
+
+        # Load from file.
+        if config_file:
+            print("Loading config from {}".format(config_file))
+            config.load_config(config_file)
 
         if not config.OUTPUT_DIR:
             raise ValueError("config.OUTPUT_DIR not defined")
@@ -413,10 +415,9 @@ class NNTrain(CommandLineInterface):
         #     )
         #     train_nbatches, valid_nbatches = None, None
         #     use_multiprocessing = False
-        #     logging.info("Training Summary:\n" + train_gen.summary())
-        #     logging.info("Validation Summary:\n" + val_gen.summary())
+        #     return train_gen, val_gen
         # except ValueError as e:
-        # logger.info("{}\nDefaulting to traditional generator".format(e))
+        logger.info("{}\nDefaulting to traditional generator".format(e))
         return generator, generator
 
     def _train_model(self, config, optimizer = None, model = None):
@@ -504,10 +505,12 @@ class NNTrain(CommandLineInterface):
             val_loader = val_loader.img_generator(
                 state=im_gens.GeneratorState.VALIDATION
             )
+            use_multiprocessing = False
         elif isinstance(train_loader, data_loader.DataLoader):
             train_nbatches, valid_nbatches = None, None
-            train_loader.summary()
-            val_loader.summary()
+            logger.info("Training Summary:\n" + train_loader.summary())
+            logger.info("Validation Summary:\n" + val_loader.summary())
+            use_multiprocessing = True
         else:
             raise ValueError(
                 "Unknown data loader {}".format(type(train_loader))
@@ -522,7 +525,7 @@ class NNTrain(CommandLineInterface):
             validation_steps=valid_nbatches,
             callbacks=callbacks_list,
             workers=num_workers,
-            use_multiprocessing=False,
+            use_multiprocessing=use_multiprocessing,
             verbose=1
         )
 
