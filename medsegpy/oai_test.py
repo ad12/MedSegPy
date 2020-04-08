@@ -135,6 +135,7 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA, voxel_spacing=Non
     # Read the files that will be segmented
     test_gen.summary()
     logger.info('Save path: %s' % (test_result_path))
+    io_utils.check_dir(test_result_path)
 
     # test_gen = img_generator_oai_test(test_path, test_batch_size, config)
 
@@ -408,8 +409,8 @@ def test_dir(dirpath, config=None, vals_dict=None, best_weight_path=None, save_h
     config.TEST_WEIGHT_PATH = best_weight_path
 
     # Initialize logger.
-    setup_logger(config.CP_SAVE_PATH)
-    logger.info('OUTPUT_DIR: %s' % config.CP_SAVE_PATH)
+    setup_logger(config.OUTPUT_DIR)
+    logger.info('OUTPUT_DIR: %s' % config.OUTPUT_DIR)
     logger.info('Config: %s' % config_filepath)
     logger.info('Best weights: %s' % best_weight_path)
 

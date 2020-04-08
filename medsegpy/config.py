@@ -231,7 +231,7 @@ class Config(object):
         if vars_dict['CP_SAVE_TAG'] != self.CP_SAVE_TAG:
             raise ValueError('Wrong config. Expected %s' % str(vars_dict['CP_SAVE_TAG']))
 
-        version = vars_dict["VERSION"] if "VERSION" in vars_dict else self.VERSION
+        version = int(vars_dict["VERSION"]) if "VERSION" in vars_dict else self.VERSION
 
         for key in vars_dict.keys():
             upper_case_key = str(key).upper()
