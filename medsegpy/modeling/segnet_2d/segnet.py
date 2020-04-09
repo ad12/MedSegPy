@@ -37,8 +37,8 @@ class SegNet(KModel):
         self.__depth__ = kwargs.get('depth')
         self.__num_conv_layers__ = kwargs.get('num_conv_layers')
         self.__num_filters__ = kwargs.get('num_filters')
-        self.__kernel__ = kwargs.get('kernel')
-        self.__pool_size__ = kwargs.get('pool_size')
+        self.__kernel__ = kwargs.get('kernel', 3)
+        self.__pool_size__ = kwargs.get("pool_size", (2, 2))
         self.__output_mode__ = kwargs.get('output_mode')
         self.__single_bn__ = kwargs.get('single_bn')
         self.__conv_act_bn__ = kwargs.get('conv_act_bn')
@@ -131,7 +131,6 @@ class SegNet(KModel):
 
     def _encoder_block(self, x, level, num_conv_layers=2, num_filters=64, kernel=3, pool_size=(2, 2), single_bn=False):
         seed = self.__seed__
-
         if num_conv_layers <= 0:
             raise ValueError('Must have at least 1 conv layer')
 
@@ -231,4 +230,4 @@ class SegNet(KModel):
 
 def Segnet_v2(**kwargs):
     m = SegNet(**kwargs)
-    return m.model()
+    return m.model

@@ -441,6 +441,7 @@ class NNTrain(CommandLineInterface):
 
         if model is None:
             model = get_model(config)
+        logger.info(model.summary())
 
         if config.INIT_WEIGHT_PATH:
             self._init_model(config, model)
