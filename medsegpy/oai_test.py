@@ -20,6 +20,7 @@ from keras import backend as K
 
 from medsegpy.utils import utils as utils, io_utils, mri_utils
 from medsegpy.utils import dl_utils
+from medsegpy.utils.metric_utils import SegMetric
 from medsegpy.utils import MetricsManager
 from medsegpy.utils.im_utils import MultiClassOverlay
 
@@ -150,6 +151,7 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA, voxel_spacing=Non
     class_names = mri_utils.get_tissue_name(config.TISSUES)
 
     # TODO: Remove `metrics=...`.
+    # metrics_manager = MetricsManager(metrics=[SegMetric.DSC], class_names=class_names)
     metrics_manager = MetricsManager(class_names=class_names)
     seg_metrics_processor = metrics_manager.seg_metrics_processor
 
@@ -784,4 +786,3 @@ if __name__ == '__main__':
     vargin = vars(args)
     SAVE_H5_DATA = vargin['save_h5_data']
     args.func(vargin)
-                                                                                                                                                                                                                                                                                                             
