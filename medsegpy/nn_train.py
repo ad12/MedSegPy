@@ -441,7 +441,7 @@ class NNTrain(CommandLineInterface):
 
         if model is None:
             model = get_model(config)
-        logger.info(model.summary())
+        model.summary(print_fn=lambda x: logger.info(x))
 
         if config.INIT_WEIGHT_PATH:
             self._init_model(config, model)
@@ -578,14 +578,15 @@ class LossHistory(kc.Callback):
     def on_train_begin(self, logs = {}):
         self.val_losses = []
         self.losses = []
-        # self.lr = []
         self.epoch = []
 
-    def on_epoch_end(self, batch, logs = {}):
+    def on_epoch_end(self, epoch, logs = {}):
         self.val_losses.append(logs.get('val_loss'))
         self.losses.append(logs.get('loss'))
-        # self.lr.append(step_decay(len(self.losses)))
-        self.epoch.append(len(self.losses))
+        self.epoch.append(epoch + 1)
+
+        metrics = " - ".join("{}: {:0.4f}".format(k, v) for k, v in logs.items())
+        logger.info("Epoch {} - {}".format(epoch + 1, metrics))
 
 
 if __name__ == '__main__':
