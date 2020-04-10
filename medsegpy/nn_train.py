@@ -483,7 +483,10 @@ class NNTrain(CommandLineInterface):
             write_images=self.write_images,
         )
         hist_cb = LossHistory()
-        callbacks_list = [tfb_cb, cp_cb, hist_cb]
+        csv_logger = kc.CSVLogger(
+            os.path.join(config.OUTPUT_DIR, "metrics.log")
+        )
+        callbacks_list = [tfb_cb, cp_cb, hist_cb, csv_logger]
 
         if config.LR_SCHEDULER_NAME:
             callbacks_list.append(solver.build_lr_scheduler(config))

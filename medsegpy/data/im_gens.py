@@ -1,3 +1,4 @@
+import json
 import multiprocessing as mp
 import os
 import time
@@ -199,7 +200,7 @@ class Generator(ABC):
         return base_info
 
     @staticmethod
-    def logits_to_binary(self, x: np.ndarray):
+    def logits_to_binary(x: np.ndarray):
         data = np.zeros(x.shape[:-1])
         data[..., np.max(x, axis=-1)] = 1
 
@@ -447,6 +448,40 @@ class OAIGenerator(Generator):
 
         return im, seg
 
+    def _parse_coco_json(self, coco_file: str):
+        with open(coco_file) as f:
+            data = json.load(f)
+        files = [image_data["file_name"] for image_data in data["images"]]
+
+        return files
+
+    def _parse_txt_file(self, txt_file: str):
+        with open(txt_file) as f:
+            files = f.readlines()
+        files = [f.strip() for f in files]
+        return files
+
+    def _parse_filepaths(self, data_path_or_files):
+        if type(data_path_or_files) is str:
+            if os.path.isdir(data_path_or_files):
+                data_path = data_path_or_files
+                files = os.listdir(data_path)
+                filepaths = [os.path.join(data_path, f) for f in files]
+            elif data_path_or_files.endswith(".json"):
+                filepaths = self._parse_coco_json(data_path_or_files)
+            elif data_path_or_files.endswith(".txt"):
+                filepaths = self._parse_txt_file(data_path_or_files)
+            else:
+                raise ValueError(
+                    "Unknown file to parse {}".format(data_path_or_files)
+                )
+        elif type(data_path_or_files) is list:
+            filepaths = data_path_or_files
+        else:
+            raise ValueError('data_path_or_files must be type str or list')
+
+        return filepaths
+
     def _calc_generator_info(self, state: GeneratorState):
         base_info = self._img_generator_base_info(state)
         data_path_or_files = base_info['data_path_or_files']
@@ -454,14 +489,7 @@ class OAIGenerator(Generator):
         pids = base_info['pids']
         augment_data = base_info['augment_data']
 
-        if type(data_path_or_files) is str:
-            data_path = data_path_or_files
-            files = listdir(data_path)
-            filepaths = [os.path.join(data_path, f) for f in files]
-        elif type(data_path_or_files) is list:
-            filepaths = data_path_or_files
-        else:
-            raise ValueError('data_path_or_files must be type str or list')
+        filepaths = self._parse_filepaths(data_path_or_files)
 
         unique_filepaths = {}  # use dict to avoid having to reconstruct set every time
 
@@ -676,14 +704,7 @@ class OAI3DGenerator(OAIGenerator):
         pids = base_info['pids']
         augment_data = base_info['augment_data']
 
-        if type(data_path_or_files) is str:
-            data_path = data_path_or_files
-            files = listdir(data_path)
-            filepaths = [os.path.join(data_path, f) for f in files]
-        elif type(data_path_or_files) is list:
-            filepaths = data_path_or_files
-        else:
-            raise ValueError('data_path_or_files must be type str or list')
+        filepaths = self._parse_filepaths(data_path_or_files)
 
         unique_filepaths = {}  # use dict to avoid having to reconstruct set every time
 
@@ -990,14 +1011,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         pids = base_info['pids']
         augment_data = base_info['augment_data']
 
-        if type(data_path_or_files) is str:
-            data_path = data_path_or_files
-            files = os.listdir(data_path)
-            filepaths = [os.path.join(data_path, f) for f in files]
-        elif type(data_path_or_files) is list:
-            filepaths = data_path_or_files
-        else:
-            raise ValueError('data_path_or_files must be type str or list')
+        filepaths = self._parse_filepaths(data_path_or_files)
 
         unique_filepaths = {}  # use dict to avoid having to reconstruct set every time
 
