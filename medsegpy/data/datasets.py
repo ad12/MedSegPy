@@ -15,6 +15,10 @@ if CLUSTER in (Cluster.ROMA, Cluster.VIGATA):
         "oai_3d_train": "/bmrNAS/people/arjun/data/oai_data/h5_files_3d/train",
         "oai_3d_val": "/bmrNAS/people/arjun/data/oai_data/h5_files_3d/val",
         "oai_3d_test": "/bmrNAS/people/arjun/data/oai_data/h5_files_3d/test",
+
+        "abCT_v0.0.1_train": "/bmrNAS/people/akshay/dl/abct_data/train",
+        "abCT_v0.0.1_val": "/bmrNAS/people/akshay/dl/abct_data/valid",
+        "abCT_v0.0.1_test": "/bmrNAS/people/akshay/dl/abct_data/test",
     }
 elif CLUSTER == CLUSTER.NERO:
     DATA_CATALOG = {

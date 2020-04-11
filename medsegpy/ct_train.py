@@ -90,8 +90,12 @@ class CTTrain(NNTrain):
     @staticmethod
     def _add_classes_parser(parser):
         parser.add_argument("--classes", type=int, nargs="+",
-                            required=True,
+                            required=False,
+                            default=[],
                             help="tissue indices to segment")
+
+    def _parse_classes(self):
+        return self.args["classes"]
 
     def _add_default_args(self, parser):
         super()._add_default_args(parser)
