@@ -34,7 +34,7 @@ def add_testing_arguments(parser: argparse.ArgumentParser):
 
 def create_config_dict(vargin):
     config_dict = {'TEST_BATCH_SIZE': vargin['batch_size']}
-    if vargin['tag']:
+    if "tag" in vargin and vargin['tag']:
         config_dict['TAG'] = vargin['tag']
         config_dict['TEST_RESULTS_FOLDER_NAME'] = 'test_results_%s' % vargin['tag']
 

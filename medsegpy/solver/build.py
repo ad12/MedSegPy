@@ -84,7 +84,8 @@ def build_lr_scheduler(config: Config) -> kc.Callback:
             factor=config.DROP_FACTOR,
             patience=config.LR_PATIENCE,
             min_delta=config.LR_MIN_DELTA,
-            cooldown=config.LR_COOLDOWN
+            cooldown=config.LR_COOLDOWN,
+            min_lr=config.MIN_LEARNING_RATE,
         )
     else:
         raise ValueError(
