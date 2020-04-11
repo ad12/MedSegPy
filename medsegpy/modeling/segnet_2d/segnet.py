@@ -115,7 +115,7 @@ class SegNet(KModel):
                                                  level=i+1,
                                                  num_conv_layers=num_conv_layers[i],
                                                  num_filters=num_filters[i],
-                                                 num_filters_next=1 if i == 0 else num_filters[i - 1],
+                                                 num_filters_next=num_filters[i] if i == 0 else num_filters[i - 1],
                                                  kernel=kernel,
                                                  pool_size=eff_pool_size,
                                                  single_bn=single_bn)
