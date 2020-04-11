@@ -6,7 +6,7 @@ import os
 os.environ["MSK_SEG_NETWORKS_PROJECT"] = "tech-considerations_v3"
 
 from medsegpy.oai_test import test_dir, get_valid_subdirs
-
+from medsegpy.utils import dl_utils
 logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 
 
@@ -15,11 +15,10 @@ def add_testing_arguments(parser: argparse.ArgumentParser):
                         help='path to config to test')
     parser.add_argument('--voxel_spacing', type=str, nargs='?', default=None,
                         help='voxel spacing. eg. \'(0.5, 0.5, 2)\'')
-    parser.add_argument('-g', '--gpu', metavar='G', type=str, nargs='?', default='0',
-                        help='gpu id to use. default=0')
-    parser.add_argument('--cpu', action='store_const', default=False, const=True,
-                        help='use cpu. will overridie `-g` gpu flag')
-
+    parser.add_argument("--num_gpus",
+                        default=1,
+                        type=int,
+                        help="number of gpus to use. defaults to 1")
     parser.add_argument('--batch_size', default=72, type=int, nargs='?')
     parser.add_argument('--save_h5_data', action='store_const', const=True, default=False,
                         help='save h5 data')
@@ -50,17 +49,20 @@ if __name__ == '__main__':
     args = base_parser.parse_args()
     vargin = vars(args)
 
-    config_filepath = vargin['dirpath'][0]
+    config_filepath = vargin["dirpath"][0]
     if not os.path.isdir(config_filepath):
-        raise NotADirectoryError('Directory %s does not exist.' % config_filepath)
+        raise NotADirectoryError(
+            "Directory {} does not exist".format(config_filepath)
+        )
 
-    gpu = args.gpu
-    cpu = args.cpu
+    num_gpus = args.num_gpus
     
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-    if not cpu:
-        logger.info('Using GPU %s' % gpu)
-        os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
+    if num_gpus > 0:
+        gpu_ids = dl_utils.get_available_gpus(num_gpus)
+        gpu_ids_tf_str = ",".join([str(g_id) for g_id in gpu_ids])
+        logger.info("Using {} GPU(s): {}".format(num_gpus, gpu_ids_tf_str))
+        os.environ["CUDA_VISIBLE_DEVICES"] = gpu_ids_tf_str
     else:
         os.environ["CUDA_VISIBLE_DEVICES"] = ""
 

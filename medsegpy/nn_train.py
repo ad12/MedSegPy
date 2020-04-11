@@ -222,7 +222,6 @@ class NNTrain(CommandLineInterface):
         )
 
         # Load from args.
-        print("Loading config from {}".format(config_file))
         config_dict = config.parse_cmd_line(self.args)
         config_dict['TISSUES'] = self._parse_classes()
         if config_dict is not None:
@@ -420,16 +419,13 @@ class NNTrain(CommandLineInterface):
         # logger.info("{}\nDefaulting to traditional generator".format(e))
         return generator, generator
 
-    def _train_model(self, config, optimizer = None, model = None):
+    def _train_model(self, config):
         """Train model
 
         Args:
             config (Config): The config for training.
-            optimizer: A Keras-compatible optimizer.
-            model: If `config.INIT_WEIGHT_PATH` is specified, weights will be
-                loaded into the model.
+            resume (:obj:`bool`, optional): Resume training
         """
-
         # Load data from config.
         n_epochs = config.N_EPOCHS
         loss = config.LOSS
@@ -439,8 +435,7 @@ class NNTrain(CommandLineInterface):
         # Set global constants.
         glob_constants.SEED = config.SEED
 
-        if model is None:
-            model = get_model(config)
+        model = get_model(config)
         logger.info(model.summary())
 
         if config.INIT_WEIGHT_PATH:
@@ -453,8 +448,7 @@ class NNTrain(CommandLineInterface):
             logger.info('Running multi gpu model')
             model = putils.ModelMGPU(model, gpus=num_gpus)
 
-        if optimizer is None:
-            optimizer = solver.build_optimizer(config)
+        optimizer = solver.build_optimizer(config)
 
         # TODO: Add more options for metrics.
         loss_func = get_training_loss(loss, weights=class_weights)
