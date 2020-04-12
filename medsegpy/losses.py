@@ -8,6 +8,7 @@ logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 
 DICE_LOSS = ('dice', 'sigmoid')
 MULTI_CLASS_DICE_LOSS = ("multi_class_dice", "sigmoid")
+AVG_DICE_LOSS = ("avg_dice", "sigmoid")
 
 WEIGHTED_CROSS_ENTROPY_LOSS = ('weighted_cross_entropy', 'softmax')
 WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS = ('weighted_cross_entropy_sigmoid', 'sigmoid')
@@ -24,6 +25,7 @@ DICE_MEDIAN_LOSS = ('dice_median_loss', 'sigmoid')
 
 CMD_LINE_SUPPORTED_LOSSES = ['DICE_LOSS',
                              "MULTI_CLASS_DICE_LOSS",
+                             "AVG_DICE_LOSS",
                              'WEIGHTED_CROSS_ENTROPY_LOSS',
                              'WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS',
                              'BINARY_CROSS_ENTROPY_LOSS',
@@ -41,6 +43,8 @@ def get_training_loss_from_str(loss_str: str):
         return DICE_LOSS
     elif loss_str == "MULTI_CLASS_DICE_LOSS":
         return MULTI_CLASS_DICE_LOSS
+    elif loss_str == "AVG_DICE_LOSS":
+        return AVG_DICE_LOSS
     elif loss_str == 'WEIGHTED_CROSS_ENTROPY_LOSS':
         return WEIGHTED_CROSS_ENTROPY_LOSS
     elif loss_str == 'WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS':
@@ -62,8 +66,10 @@ def get_training_loss_from_str(loss_str: str):
 def get_training_loss(loss, **kwargs):
     if loss == DICE_LOSS:
         return dice_loss
-    if loss == MULTI_CLASS_DICE_LOSS:
+    elif loss == MULTI_CLASS_DICE_LOSS:
         return multi_class_dice_loss(**kwargs)
+    elif loss == AVG_DICE_LOSS:
+        return avg_dice_loss(**kwargs)
     elif loss == WEIGHTED_CROSS_ENTROPY_LOSS:
         return weighted_categorical_crossentropy(**kwargs)
     elif loss == BINARY_CROSS_ENTROPY_LOSS:
@@ -131,7 +137,7 @@ def dice_median_loss(y_true, y_pred):
 
 
 def multi_class_dice_loss(
-    weights: np.ndarray=None,
+    weights=None,
     remove_background: bool=False,
     **kwargs
 ):
@@ -159,6 +165,37 @@ def multi_class_dice_loss(
         if use_weights:
             loss = weights * loss
             loss = K.sum(loss) / K.sum(weights)
+        else:
+            loss = K.mean(loss)
+
+        return loss
+
+    return d_loss
+
+
+def avg_dice_loss(weights=None, **kwargs):
+    use_weights = False
+    if weights:
+        weights = np.asarray(weights)[np.newaxis, ...]
+        weights = K.variable(weights)
+        use_weights = True
+
+    def d_loss(y_true, y_pred):
+        szp = K.get_variable_shape(y_pred)
+
+        # Keep batch and class dimensions.
+        y_true = K.reshape(y_true, (szp[0], -1, szp[-1]))
+        y_pred = K.reshape(y_pred, (szp[0], -1, szp[-1]))
+
+        ovlp = K.sum(y_true * y_pred, axis=1)
+
+        mu = K.epsilon()
+        dice = (2.0 * ovlp + mu) / (K.sum(y_true, axis=1) + K.sum(y_pred, axis=1) + mu)
+        loss = 1 - dice
+
+        if use_weights:
+            loss = weights * loss
+            loss = K.mean(K.sum(loss, axis=-1) / K.sum(weights))
         else:
             loss = K.mean(loss)
 
