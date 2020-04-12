@@ -1241,3 +1241,122 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         scan_to_blocks, batches_per_epoch, _ = self.cached_data(state)
         num_blocks = self.__get_num_blocks__(scan_to_blocks)
         return num_blocks
+
+
+class CTGenerator(OAIGenerator):
+    """
+        Generator to be used with files where training/testing data is written as 2D slices
+        Filename: PATIENTID_VISIT_AUGMENTATION-NUMBER_SLICE-NUMBER
+        Filename Format: '%07d_V%02d_Aug%02d_%03d' (e.g. '0000001_V00_Aug00_001.h5
+    """
+    SUPPORTED_TAGS = ['abct', 'abCT']
+    __EXPECTED_IMG_SIZE_DIMS__ = 2
+
+    def __init__(self, config: Config, windows = None):
+        if windows and config.num_neighboring_slices() != len(windows):
+            raise ValueError(
+                "Expected {} windows".format(config.num_neighboring_slices()))
+        self.windows = windows
+        super().__init__(config)
+
+    def _load_inputs(self, data_path: str, file: str):
+        im, seg = self._load_inputs_basic(data_path, file)
+        im = self._preprocess(im, self.windows[0] if self.windows else None)
+        return im, seg
+
+    def _load_inputs_basic(self, data_path: str, file: str):
+        im_path = '%s/%s.im' % (data_path, file)
+        with h5py.File(im_path, 'r') as f:
+            im = f['data'][:]
+            if len(im.shape) == 2:
+                im = im[..., np.newaxis]
+
+        seg_path = '%s/%s.seg' % (data_path, file)
+        with h5py.File(seg_path, 'r') as f:
+            seg = f['data'][:].astype('float32')
+        seg = np.expand_dims(seg, axis=2)  # legacy purposes
+
+        assert len(im.shape) == 3
+        assert len(seg.shape) == 4 and seg.shape[-2] == 1
+
+        return im, seg
+
+    def _preprocess(self, im, window):
+        # Apply windowing.
+        if window:
+            im = np.clip(im, window[0], window[1])
+
+        # Preprocess by max normalizing.
+        im -= np.min(im)
+        im /= np.max(im)
+
+        return im
+
+    def __load_neighboring_slices__(self, num_slices, filepath, max_slice):
+        """Stacks 2D CT slices from single patient clipped at different window levels.
+
+        Overloads traditional 2.5D networks that look at neighboring slices.
+        """
+        data_path, filename = os.path.dirname(filepath), os.path.basename(
+            filepath)
+        im, seg = self._load_inputs_basic(data_path, filename)
+        h, w = im.shape[:2]
+
+        ims = []
+        for window in self.windows:
+            ims.append(np.squeeze(self._preprocess(np.copy(im), window)))
+        im = np.stack(ims, axis=-1)
+
+        assert im.shape == (h, w, self.config.num_neighboring_slices())
+        return im, seg
+
+    def img_generator_test(self, model=None):
+        config = self.config
+        img_size = config.IMG_SIZE
+        tissues = config.TISSUES
+        include_background = config.INCLUDE_BACKGROUND
+        num_neighboring_slices = config.num_neighboring_slices()
+
+        base_info = self._img_generator_base_info(GeneratorState.TESTING)
+        batch_size = base_info['batch_size']
+
+        if len(img_size) != self.__EXPECTED_IMG_SIZE_DIMS__:
+            raise ValueError('Image size must be {}D'.format(self.__EXPECTED_IMG_SIZE_DIMS__))
+
+        files, batches_per_epoch, _ = self._calc_generator_info(
+            GeneratorState.TESTING
+        )
+        files = self.sort_files(files)
+        scan_id_to_files = self.__map_files_to_scan_id__(files)
+        scan_ids = sorted(scan_id_to_files.keys())
+
+        for scan_id in list(scan_ids):
+            scan_id_files = scan_id_to_files[scan_id]
+            assert len(scan_id_files) == 1, "Expect 1 slice per scan"
+            filepath = scan_id_files[0]
+
+            im, seg_total = self._load_input_helper(
+                filepath=filepath,
+                tissues=tissues,
+                num_neighboring_slices=num_neighboring_slices,
+                max_slice_num=1,
+                include_background=include_background
+            )
+            x = im[np.newaxis, ...]
+            y = seg_total[np.newaxis, ...]
+            x_orig, _ = self._load_inputs_basic(
+                os.path.dirname(filepath),
+                os.path.basename(filepath)
+            )
+
+            recon = None
+            time_elapsed = None
+            if model:
+                start_time = time.time()
+                recon = model.predict(x, batch_size=batch_size)
+                time_elapsed = time.time() - start_time
+                x, y, recon = self.__reformat_testing_scans__((x, y, recon))
+            else:
+                x, y = self.__reformat_testing_scans__((x, y))
+
+            yield (x_orig, x, y, recon, scan_id, time_elapsed)
