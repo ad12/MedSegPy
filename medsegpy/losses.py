@@ -184,8 +184,8 @@ def avg_dice_loss(weights=None, **kwargs):
         szp = K.get_variable_shape(y_pred)
 
         # Keep batch and class dimensions.
-        y_true = K.reshape(y_true, (szp[0], -1, szp[-1]))
-        y_pred = K.reshape(y_pred, (szp[0], -1, szp[-1]))
+        y_true = K.reshape(y_true, (-1, szp[1]*szp[2], szp[3]))
+        y_pred = K.reshape(y_pred, (-1, szp[1]*szp[2], szp[3]))
 
         ovlp = K.sum(y_true * y_pred, axis=1)
 

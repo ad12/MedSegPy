@@ -4,6 +4,7 @@ import numpy as np
 
 os.environ["MSK_SEG_NETWORKS_PROJECT"] = "abCT"
 
+from medsegpy.ct_test import test_dir
 from medsegpy.data.im_gens import CTGenerator
 from medsegpy.nn_train import NNTrain
 from medsegpy.utils import ct_utils
@@ -45,6 +46,20 @@ class CTTrain(NNTrain):
         generator = CTGenerator(config, windows)
 
         return generator, generator
+
+    def _test(self, config):
+        logger.info("Beginning testing...")
+        config = deepcopy(config)  # will be modified below.
+        dirpath = config.OUTPUT_DIR
+
+        window_keys = self.get_arg(self._ARG_KEY_WINDOWS)
+        windows = ct_utils.parse_windows(window_keys) if window_keys else None
+        test_dir(
+            dirpath,
+            windows=windows
+        )
+
+        K.clear_session()
 
 
 if __name__ == '__main__':

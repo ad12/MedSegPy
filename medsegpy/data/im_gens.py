@@ -1250,7 +1250,7 @@ class CTGenerator(OAIGenerator):
         Filename Format: '%07d_V%02d_Aug%02d_%03d' (e.g. '0000001_V00_Aug00_001.h5
     """
     SUPPORTED_TAGS = ['abct', 'abCT']
-    __EXPECTED_IMG_SIZE_DIMS__ = 2
+    __EXPECTED_IMG_SIZE_DIMS__ = 3
 
     def __init__(self, config: Config, windows = None):
         if windows and config.num_neighboring_slices() != len(windows):
