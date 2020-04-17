@@ -582,7 +582,9 @@ class LossHistory(kc.Callback):
         self.losses.append(logs.get('loss'))
         self.epoch.append(epoch + 1)
 
-        metrics = " - ".join("{}: {:0.4f}".format(k, v) for k, v in logs.items())
+        metrics = " - ".join(["{}: {:0.4f}".format(k, v)
+                              if v >= 1e-3 else "{}: {:0.4e}".format(k, v)
+                              for k, v in logs.items()])
         logger.info("Epoch {} - {}".format(epoch + 1, metrics))
 
 
