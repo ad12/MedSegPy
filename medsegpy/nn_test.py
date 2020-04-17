@@ -7,6 +7,8 @@ os.environ["MSK_SEG_NETWORKS_PROJECT"] = "tech-considerations_v3"
 
 from medsegpy.oai_test import test_dir, get_valid_subdirs
 from medsegpy.utils import dl_utils
+from medsegpy.utils.metric_utils import SegMetric
+
 logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 
 
@@ -15,6 +17,10 @@ def add_testing_arguments(parser: argparse.ArgumentParser):
                         help='path to config to test')
     parser.add_argument('--voxel_spacing', type=str, nargs='?', default=None,
                         help='voxel spacing. eg. \'(0.5, 0.5, 2)\'')
+    parser.add_argument("--metrics", nargs="*", default=None,
+                        choices=SegMetric.__members__.keys(),
+                        help="metrics to use for evaluation",
+                        )
     parser.add_argument("--num_gpus",
                         default=1,
                         type=int,
@@ -76,6 +82,15 @@ if __name__ == '__main__':
 
     if voxel_spacing:
         voxel_spacing = ast.literal_eval(voxel_spacing)
-    
+
+    metrics = args.metrics
+    metrics = [SegMetric[m] for m in metrics] if metrics else None
+
     for dp in test_dirpaths:
-        test_dir(dp, vals_dict=create_config_dict(vargin), save_h5_data=vargin['save_h5_data'], voxel_spacing=voxel_spacing)
+        test_dir(
+            dp,
+            vals_dict=create_config_dict(vargin),
+            save_h5_data=vargin['save_h5_data'],
+            voxel_spacing=voxel_spacing,
+            metrics=metrics,
+        )
