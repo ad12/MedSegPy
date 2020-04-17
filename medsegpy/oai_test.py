@@ -105,7 +105,13 @@ def interp_slice(y_true, y_pred, orientation='M'):
     return xs, ys, xt, yt
 
 
-def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA, voxel_spacing=None):
+def test_model(
+    config,
+    save_file=0,
+    save_h5_data=SAVE_H5_DATA,
+    voxel_spacing=None,
+    metrics=None,
+):
     """
     Test model
     :param config: a Config object
@@ -151,8 +157,9 @@ def test_model(config, save_file=0, save_h5_data=SAVE_H5_DATA, voxel_spacing=Non
     class_names = mri_utils.get_tissue_name(config.TISSUES)
 
     # TODO: Remove `metrics=...`.
-    # metrics_manager = MetricsManager(metrics=[SegMetric.DSC], class_names=class_names)
-    metrics_manager = MetricsManager(class_names=class_names)
+    metrics = [SegMetric.DSC, SegMetric.VOE, SegMetric.ASSD, SegMetric.CV] \
+        if not metrics else metrics
+    metrics_manager = MetricsManager(metrics=metrics, class_names=class_names)
     seg_metrics_processor = metrics_manager.seg_metrics_processor
 
     # image writer
@@ -386,7 +393,15 @@ def find_best_test_dir(base_folder):
     logger.info(max_dsc_details)
 
 
-def test_dir(dirpath, config=None, vals_dict=None, best_weight_path=None, save_h5_data=False, voxel_spacing=None):
+def test_dir(
+    dirpath,
+    config=None,
+    vals_dict=None,
+    best_weight_path=None,
+    save_h5_data=False,
+    voxel_spacing=None,
+    metrics=None,
+):
     """
     Run testing experiment
     By default, save all data
@@ -423,7 +438,13 @@ def test_dir(dirpath, config=None, vals_dict=None, best_weight_path=None, save_h
 
     config.change_to_test()
 
-    test_model(config, save_file=1, save_h5_data=save_h5_data, voxel_spacing=voxel_spacing)
+    test_model(
+        config,
+        save_file=1,
+        save_h5_data=save_h5_data,
+        voxel_spacing=voxel_spacing,
+        metrics=metrics,
+    )
 
     K.clear_session()
 
