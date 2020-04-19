@@ -1,5 +1,8 @@
+import copy
+import logging
 import os
 
+import keras.backend as K
 import numpy as np
 
 os.environ["MSK_SEG_NETWORKS_PROJECT"] = "abCT"
@@ -12,6 +15,8 @@ from medsegpy.utils import ct_utils
 CLASS_WEIGHTS = np.asarray([100, 1])
 SAVE_BEST_WEIGHTS = True
 FREEZE_LAYERS = None
+
+logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
 
 
 class CTTrain(NNTrain):
@@ -49,7 +54,7 @@ class CTTrain(NNTrain):
 
     def _test(self, config):
         logger.info("Beginning testing...")
-        config = deepcopy(config)  # will be modified below.
+        config = copy.deepcopy(config)  # will be modified below.
         dirpath = config.OUTPUT_DIR
 
         window_keys = self.get_arg(self._ARG_KEY_WINDOWS)
