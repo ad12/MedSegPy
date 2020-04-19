@@ -8,6 +8,7 @@ from typing import Tuple, Union
 
 os.environ["MSK_SEG_NETWORKS_PROJECT"] = "tech-considerations_v3"
 
+from fvcore.common.file_io import PathManager
 import keras.callbacks as kc
 from keras import backend as K
 from keras.callbacks import ModelCheckpoint, EarlyStopping
@@ -345,6 +346,15 @@ class NNTrain(CommandLineInterface):
         Args:
             config (Config): A config.
         """
+        local_output_dir = PathManager.get_local_path(config.OUTPUT_DIR)
+        if os.path.isfile(os.path.join(local_output_dir, "config.ini")):
+            raise ValueError(
+                "Experiment results exist at {}. "
+                "To re-run the experiment, delete the folder".format(
+                    local_output_dir
+                )
+            )
+
         config.save_config()
         config.summary()
 
