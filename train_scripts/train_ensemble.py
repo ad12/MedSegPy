@@ -57,7 +57,11 @@ def ensemble_uds(config):
     segnet_model.trainable = False
 
     model = combine_models(x, [unet_model, deeplab_model, segnet_model], ensemble_name='ensemble_uds')
-    plot_model(model, os.path.join(config.PLOT_MODEL_PATH, config.CP_SAVE_TAG + '.png'), show_shapes=True)
+    plot_model(
+        model,
+        os.path.join(config.OUTPUT_DIR, config.CP_SAVE_TAG + '.png'),
+        show_shapes=True,
+    )
 
     return model
 

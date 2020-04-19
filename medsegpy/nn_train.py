@@ -13,6 +13,7 @@ import keras.callbacks as kc
 from keras import backend as K
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.callbacks import TensorBoard as tfb
+from keras.utils import plot_model
 import numpy as np
 
 from medsegpy import glob_constants, config as MCONFIG, solver, \
@@ -447,6 +448,11 @@ class NNTrain(CommandLineInterface):
 
         model = get_model(config)
         model.summary(print_fn=lambda x: logger.info(x))
+        plot_model(
+            model,
+            to_file=os.path.join(config.OUTPUT_DIR, 'model.png'),
+            show_shapes=True,
+        )
 
         if config.INIT_WEIGHT_PATH:
             self._init_model(config, model)

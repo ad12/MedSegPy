@@ -1,5 +1,4 @@
 import logging
-import os
 
 from keras import Model
 from keras.initializers import glorot_uniform
@@ -192,11 +191,6 @@ def deeplabv3_2d(config):
     x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation, seed=config.SEED)
     model = Model(inputs=model.input, outputs=x)
 
-    # Save image
-    dil_rates_str = str(dil_rate_input[0]) + '-' + str(dil_rate_input[1]) + '-' + str(dil_rate_input[2])
-    img_name = config.CP_SAVE_TAG + '_' + str(OS) + '_' + dil_rates_str + '.png'
-    plot_model(model, os.path.join(config.PLOT_MODEL_PATH, img_name), show_shapes=True)
-
     return model
 
 
@@ -236,20 +230,6 @@ def segnet_2d(config: SegnetConfig):
                           conv_act_bn=config.CONV_ACT_BN,
                           output_mode=output_mode,
                           seed=config.SEED)
-
-    model_name = config.CP_SAVE_TAG + '_%d' + '_%s' + '_%s'
-    bn_str = 'xbn'
-    conv_act_bn_str = 'cba'
-
-    if config.SINGLE_BN:
-        bn_str = '1bn'
-
-    if config.CONV_ACT_BN:
-        conv_act_bn_str = 'cab'
-
-    model_name = model_name % (config.DEPTH, bn_str, conv_act_bn_str)
-
-    plot_model(model, os.path.join(config.PLOT_MODEL_PATH, model_name + '.png'), show_shapes=True)
 
     return model
 
@@ -350,11 +330,6 @@ def deeplabv3_2_5d(config):
     x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation, seed=config.SEED)
     model = Model(inputs=model.input, outputs=x)
 
-    # Save image
-    dil_rates_str = str(dil_rate_input[0]) + '-' + str(dil_rate_input[1]) + '-' + str(dil_rate_input[2])
-    img_name = config.CP_SAVE_TAG + '_' + str(OS) + '_' + dil_rates_str + '.png'
-    plot_model(model, os.path.join(config.PLOT_MODEL_PATH, img_name), show_shapes=True)
-
     return model
 
 
@@ -379,14 +354,3 @@ def __add_activation_layer(output, num_classes, activation='sigmoid', seed=None)
     return Conv2D(num_classes, (1, 1), activation=activation,
                   kernel_initializer=glorot_uniform(seed=seed),
                   name='output_activation')(output)
-
-
-if __name__ == '__main__':
-    # config = UNetMultiContrastConfig(create_dirs=False)
-    # config.INIT_UNET_2D_WEIGHTS = './test_data/unet_2d_fc_weights.004--0.8968.h5'
-    #
-    # unet_2d_multi_contrast(config)
-    config = RefineNetConfig(create_dirs=False)
-    save_path = '../imgs/refinenet_resnet50.png'
-    m = get_model(config)
-    plot_model(m, to_file=save_path, show_shapes=True)

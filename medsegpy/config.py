@@ -18,6 +18,7 @@ DEPRECATED_KEYS = ['NUM_CLASSES', 'TRAIN_FILES_CV', 'VALID_FILES_CV',
                    'TEST_FILES_CV', "USE_STEP_DECAY",
                    "PIK_SAVE_PATH_DIR", "PIK_SAVE_PATH", "TF_LOG_DIR",
                    "TRAIN_PATH", "VALID_PATH", "TEST_PATH",
+                   "PLOT_MODEL_PATH",
                    ]
 RENAMED_KEYS = {
     "CP_SAVE_PATH": "OUTPUT_DIR",
@@ -42,9 +43,6 @@ class Config(object):
     PIDS = None
 
     DEBUG = False
-
-    # Model architecture path
-    PLOT_MODEL_PATH = io_utils.check_dir('./model_imgs')
 
     # Training and validation image size
     IMG_SIZE = (288, 288, 1)
@@ -261,12 +259,27 @@ class Config(object):
 
             if not hasattr(self, upper_case_key):
                 raise ValueError(
-                    'Key %s does not exist. Please make sure all variable names are fully capitalized' % upper_case_key)
+                    "Key {} does not exist. "
+                    "All variable names should be fully capitalized".format(
+                        upper_case_key
+                    )
+                )
 
             # Data is loaded as a string, cast it back to the original type.
             data_type = type(getattr(self, upper_case_key))
-
-            var_converted = utils.convert_data_type(vars_dict[key], data_type)
+            if upper_case_key == "LOSS":
+                try:
+                    var_converted = utils.convert_data_type(
+                        vars_dict[key],
+                        data_type,
+                    )
+                except ValueError:
+                    var_converted = get_training_loss_from_str(vars_dict[key])
+            else:
+                var_converted = utils.convert_data_type(
+                    vars_dict[key],
+                    data_type,
+                )
 
             if upper_case_key == "OUTPUT_DIR":
                 var_converted = PathManager.get_local_path(var_converted)
