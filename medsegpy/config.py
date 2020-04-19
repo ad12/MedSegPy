@@ -32,7 +32,7 @@ SUPPORTED_CONFIGS_NAMES = [DEEPLABV3_NAME, SEGNET_NAME, UNET_NAME]
 
 
 class Config(object):
-    VERSION = 6
+    VERSION = 7
 
     # Loss function in form (id, output_mode)
     LOSS = DICE_LOSS
@@ -91,9 +91,6 @@ class Config(object):
     INIT_WEIGHT_PATH = ''
 
     # Dataset Paths
-    TRAIN_PATH = ""
-    VALID_PATH = ""
-    TEST_PATH = ""
     TRAIN_DATASET = ""
     VAL_DATASET = ""
     TEST_DATASET = ""
