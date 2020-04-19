@@ -1,5 +1,4 @@
 import argparse
-import ast
 import logging
 import os
 import time
@@ -7,8 +6,6 @@ import time
 import h5py
 import keras.backend as K
 import numpy as np
-
-os.environ["MSK_SEG_NETWORKS_PROJECT"] = "abCT"
 
 from medsegpy import config as MCONFIG
 from medsegpy.data.im_gens import CTGenerator

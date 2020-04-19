@@ -3,8 +3,6 @@ import ast
 import logging
 import os
 
-os.environ["MSK_SEG_NETWORKS_PROJECT"] = "tech-considerations_v3"
-
 from medsegpy.oai_test import test_dir, get_valid_subdirs
 from medsegpy.utils import dl_utils
 from medsegpy.utils.metric_utils import SegMetric

@@ -1,11 +1,8 @@
 import copy
 import logging
-import os
 
 import keras.backend as K
 import numpy as np
-
-os.environ["MSK_SEG_NETWORKS_PROJECT"] = "abCT"
 
 from medsegpy.ct_test import test_dir
 from medsegpy.data.im_gens import CTGenerator

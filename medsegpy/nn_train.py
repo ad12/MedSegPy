@@ -6,8 +6,6 @@ import os
 import pickle
 from typing import Tuple, Union
 
-os.environ["MSK_SEG_NETWORKS_PROJECT"] = "tech-considerations_v3"
-
 from fvcore.common.file_io import PathManager
 import keras.callbacks as kc
 from keras import backend as K
@@ -16,8 +14,10 @@ from keras.callbacks import TensorBoard as tfb
 from keras.utils import plot_model
 import numpy as np
 
-from medsegpy import glob_constants, config as MCONFIG, solver, \
-    nn_test
+from medsegpy import glob_constants
+from medsegpy import config as MCONFIG
+from medsegpy import solver
+from medsegpy import nn_test
 from medsegpy.cross_validation import cv_util
 from medsegpy.data import im_gens, data_loader
 from medsegpy.losses import get_training_loss, dice_loss
