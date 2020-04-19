@@ -27,7 +27,8 @@ elif CLUSTER == CLUSTER.NERO:
         "oai_2d_test": "/share/pi/bah/data/oai_data/h5_files_2d/test",
     }
 else:
-    raise ValueError("Data not found on cluster {}".format(CLUSTER))
+    pass
+    # raise ValueError("Data not found on cluster {}".format(CLUSTER))
 
 
 def convert_path_to_dataset(path):

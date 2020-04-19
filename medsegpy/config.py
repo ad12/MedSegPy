@@ -646,6 +646,8 @@ class SegnetConfig(Config):
 
     SINGLE_BN = False
     CONV_ACT_BN = False
+    USE_BOTTLENECK = False
+
     INITIAL_LEARNING_RATE = 1e-3
 
     def __init__(self, state='training', create_dirs=True):
@@ -665,13 +667,31 @@ class SegnetConfig(Config):
                                help='number of convolutional layers. Default: %s' % str(cls.NUM_CONV_LAYERS))
         subparser.add_argument('--num_filters', type=str, default=str(cls.NUM_FILTERS), nargs='?',
                                help='number of filters at each depth layer. Default: %s' % str(cls.NUM_FILTERS))
+        subparser.add_argument(
+            "--single_bn",
+            default=False,
+            action="store_true",
+            help='use single batch norm per depth. Default: %s' % False,
+        )
+        subparser.add_argument(
+            "--use_bottleneck",
+            default=False,
+            action="store_true",
+            help='use bottleneck w/o pooling. Default: %s' % False,
+        )
 
         return subparser
 
     @classmethod
     def __get_cmd_line_vars__(cls):
         cmd_line_vars = super().__get_cmd_line_vars__()
-        cmd_line_vars.extend(['depth', 'num_conv_layers', 'num_filters'])
+        cmd_line_vars.extend([
+            'depth',
+            'num_conv_layers',
+            'num_filters',
+            "single_bn",
+            "use_bottleneck",
+        ])
         return cmd_line_vars
 
     @classmethod

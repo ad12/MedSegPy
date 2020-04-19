@@ -13,6 +13,7 @@ from medsegpy.config import DeeplabV3Config, SegnetConfig, UNetConfig, \
 
 from .deeplab_2d.deeplab_model import DeeplabModel
 from .segnet_2d.segnet import Segnet_v2
+from .segnet_2d.segnet_bottleneck import SegNetBottleneck
 from .unet_2d.residual_unet_model import residual_unet_2d
 from .unet_2d.anisotropic_unet_model import anisotropic_unet_2d
 from .unet_2d.unet_model import unet_2d_model, unet_2d_model_v2
@@ -200,7 +201,7 @@ def deeplabv3_2d(config):
     return model
 
 
-def segnet_2d(config):
+def segnet_2d(config: SegnetConfig):
     """
     Returns SegnetConfig model
     :param config: a SegnetConfig object
@@ -213,15 +214,29 @@ def segnet_2d(config):
     num_classes = config.get_num_classes()
     input_shape = config.IMG_SIZE
     output_mode = config.LOSS[1]
-    model = Segnet_v2(input_shape=input_shape,
-                      n_labels=num_classes,
-                      depth=config.DEPTH,
-                      num_conv_layers=config.NUM_CONV_LAYERS,
-                      num_filters=config.NUM_FILTERS,
-                      single_bn=config.SINGLE_BN,
-                      conv_act_bn=config.CONV_ACT_BN,
-                      output_mode=output_mode,
-                      seed=config.SEED)
+    if config.USE_BOTTLENECK:
+        model = SegNetBottleneck(
+            input_shape=input_shape,
+            n_labels=num_classes,
+            depth=config.DEPTH,
+            num_conv_layers=config.NUM_CONV_LAYERS,
+            num_filters=config.NUM_FILTERS,
+            single_bn=config.SINGLE_BN,
+            conv_act_bn=config.CONV_ACT_BN,
+            output_mode=output_mode,
+            seed=config.SEED,
+        )
+        model = model.model
+    else:
+        model = Segnet_v2(input_shape=input_shape,
+                          n_labels=num_classes,
+                          depth=config.DEPTH,
+                          num_conv_layers=config.NUM_CONV_LAYERS,
+                          num_filters=config.NUM_FILTERS,
+                          single_bn=config.SINGLE_BN,
+                          conv_act_bn=config.CONV_ACT_BN,
+                          output_mode=output_mode,
+                          seed=config.SEED)
 
     model_name = config.CP_SAVE_TAG + '_%d' + '_%s' + '_%s'
     bn_str = 'xbn'
