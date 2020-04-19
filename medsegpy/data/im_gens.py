@@ -1,14 +1,13 @@
+from abc import ABC, abstractmethod
+from enum import Enum
 import json
+import logging
 import multiprocessing as mp
 import os
 import time
-import warnings
-from abc import ABC, abstractmethod
-from enum import Enum
-from os import listdir
-from random import shuffle
+import random
 from typing import Tuple
-import logging
+import warnings
 
 import h5py
 import numpy as np
@@ -235,9 +234,13 @@ class OAIGenerator(Generator):
         x = np.zeros((batch_size,) + img_size)
         y = np.zeros((batch_size,) + mask_size)
 
+        rand_obj = random.Random(config.SEED)
+        if config.SEED is not None:
+            files = self.sort_files(files)
+
         while True:
             if shuffle_epoch:
-                shuffle(files)
+                rand_obj.shuffle(files)
             else:
                 files = self.sort_files(files)
 
@@ -787,7 +790,7 @@ class OAI3DGeneratorFullVolume(OAI3DGenerator):
 
         if type(data_path_or_files) is str:
             data_path = data_path_or_files
-            files = listdir(data_path)
+            files = os.listdir(data_path)
             filepaths = [os.path.join(data_path, f) for f in files]
         elif type(data_path_or_files) is list:
             filepaths = data_path_or_files
@@ -1141,12 +1144,20 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         y = np.zeros((batch_size,) + mask_size)
 
         blocks = []
-        for k in scan_to_blocks.keys():
+
+        if config.SEED is not None:
+            scan_ids = sorted(scan_to_blocks.keys())
+        else:
+            scan_ids = scan_to_blocks.keys()
+
+        for k in scan_ids:
             blocks.extend(scan_to_blocks[k])
+
+        rand_obj = random.Random(config.SEED)
 
         while True:
             if shuffle_epoch:
-                shuffle(blocks)
+                rand_obj.shuffle(blocks)
 
             for batch_cnt in range(batches_per_epoch):
                 for block_cnt in range(batch_size):
