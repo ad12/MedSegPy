@@ -225,7 +225,7 @@ def segnet_2d(config: SegnetConfig):
             output_mode=output_mode,
             seed=config.SEED,
         )
-        model = model.model
+        model = model.build_model()
     else:
         model = Segnet_v2(input_shape=input_shape,
                           n_labels=num_classes,

@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 import logging
-from cached_property import cached_property
 
 from keras.initializers import glorot_uniform, he_normal
 from keras.layers import Input
@@ -22,11 +21,7 @@ class KModel(ABC):
 
     @abstractmethod
     def build_model(self):
-        logger.info('Initializing segnet with seed: %s' % str(self._seed))
-
-    @cached_property
-    def model(self):
-        return self.build_model()
+        pass
 
 
 class SegNet(KModel):
@@ -57,6 +52,8 @@ class SegNet(KModel):
         output_mode = self._output_mode
         single_bn = self._single_bn
         conv_act_bn = self._conv_act_bn
+
+        logger.info('Initializing SegNet with seed: {}'.format(self._seed))
 
         inputs = input_tensor if input_tensor else Input(shape=input_shape)
 
@@ -292,4 +289,4 @@ class SegNet(KModel):
 
 def Segnet_v2(**kwargs):
     m = SegNet(**kwargs)
-    return m.model
+    return m.build_model()

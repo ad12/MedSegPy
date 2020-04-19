@@ -27,6 +27,8 @@ class SegNetBottleneck(SegNet):
         single_bn = self._single_bn
         conv_act_bn = self._conv_act_bn
 
+        logger.info('Initializing SegNet with seed: {}'.format(self._seed))
+
         inputs = input_tensor if input_tensor else Input(shape=input_shape)
 
         mask_layers = []
