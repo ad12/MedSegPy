@@ -8,7 +8,7 @@ from medpy.metric import dc, assd, recall, precision, sensitivity, specificity, 
 from typing import Collection
 from enum import Enum
 
-logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
+logger = logging.getLogger(__name__)
 
 
 def cv(y_true, y_pred):

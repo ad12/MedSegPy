@@ -19,7 +19,7 @@ from medsegpy.utils.logger import setup_logger
 from medsegpy.utils.metric_utils import MetricsManager, SegMetric
 from medsegpy.utils.im_utils import MultiClassOverlay
 
-logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
+logger = logging.getLogger(__name__)
 
 
 def add_testing_arguments(parser: argparse.ArgumentParser):
@@ -205,6 +205,7 @@ def test_dir(dirpath, windows=None, config = None, vals_dict = None, best_weight
 
 
 if __name__ == '__main__':
+    logger = logging.getLogger("medsegpy.ct_test.{}".format(__name__))
     base_parser = argparse.ArgumentParser(description='Run inference (testing)')
     add_testing_arguments(base_parser)
 

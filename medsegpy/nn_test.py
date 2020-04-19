@@ -9,7 +9,7 @@ from medsegpy.oai_test import test_dir, get_valid_subdirs
 from medsegpy.utils import dl_utils
 from medsegpy.utils.metric_utils import SegMetric
 
-logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
+logger = logging.getLogger(__name__)
 
 
 def add_testing_arguments(parser: argparse.ArgumentParser):
@@ -48,6 +48,7 @@ def create_config_dict(vargin):
 
 
 if __name__ == '__main__':
+    logger = logging.getLogger("medsegpy.nn_test.{}".format(__name__))
     base_parser = argparse.ArgumentParser(description='Run inference (testing)')
     add_testing_arguments(base_parser)
 

@@ -19,7 +19,7 @@ from medsegpy.utils import dl_utils
 from medsegpy.utils import io_utils, parallel_utils as putils
 from medsegpy.utils.logger import setup_logger
 
-logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
+logger = logging.getLogger(__name__)
 
 CLASS_WEIGHTS = np.asarray([100, 1])
 SAVE_BEST_WEIGHTS = True

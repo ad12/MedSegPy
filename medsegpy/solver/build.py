@@ -9,7 +9,7 @@ from .optimizer import AdamAccumulate
 
 __all__ = ["build_lr_scheduler", "build_optimizer"]
 
-logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
+logger = logging.getLogger(__name__)
 
 
 def build_optimizer(config: Config):

@@ -24,7 +24,7 @@ import argparse
 import keras.backend as K
 from keras.utils import plot_model
 
-logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
+logger = logging.getLogger(__name__)
 
 # EXP_PATH = '/bmrNAS/people/arjun/msk_seg_networks/architecture_limit/deeplabv3_2d/2018-11-30-05-49-49/fine_tune/'
 HR_TEST_PATH = 'us'

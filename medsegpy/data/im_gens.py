@@ -16,7 +16,7 @@ from medsegpy.config import Config
 from .fname_parsers import OAISliceWise
 from .datasets import DATA_CATALOG
 
-logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
+logger = logging.getLogger(__name__)
 
 
 class GeneratorState(Enum):

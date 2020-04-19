@@ -11,7 +11,7 @@ from keras.layers import Input, Conv2D, MaxPooling2D, Conv2DTranspose, Dropout, 
 from keras.models import Model
 from keras.utils import plot_model
 
-logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
+logger = logging.getLogger(__name__)
 
 # List of tissues that can be segmented
 FEMORAL_CARTILAGE_STR = 'fc'

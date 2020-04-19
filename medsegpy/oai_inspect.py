@@ -12,7 +12,7 @@ from medsegpy.data.im_generator import img_generator_test, calc_generator_info
 from medsegpy.modeling import get_model
 from medsegpy.utils import dice_score_coefficient
 
-logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
+logger = logging.getLogger(__name__)
 
 
 def test_model(config, save_file=1):

@@ -32,7 +32,7 @@ class _ColorfulFormatter(logging.Formatter):
 
 @functools.lru_cache()  # so that calling setup_logger multiple times won't add many handlers
 def setup_logger(
-    output=None, distributed_rank=0, *, color=True, name="msk_seg_networks", abbrev_name=None
+    output=None, distributed_rank=0, *, color=True, name="medsegpy", abbrev_name=None
 ):
     """
     Initialize the detectron2 logger and set its verbosity level to "INFO".
@@ -55,7 +55,7 @@ def setup_logger(
     logger.propagate = False
 
     if abbrev_name is None:
-        abbrev_name = "msk_seg" if name == "msk_seg_networks" else name
+        abbrev_name = name
 
     plain_formatter = logging.Formatter(
         "[%(asctime)s] %(name)s %(levelname)s: %(message)s", datefmt="%m/%d %H:%M:%S"

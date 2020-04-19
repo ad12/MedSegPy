@@ -1,6 +1,5 @@
 import logging
 import os
-import sys
 
 from keras import Model
 from keras.initializers import glorot_uniform
@@ -20,7 +19,7 @@ from .unet_2d.unet_model import unet_2d_model, unet_2d_model_v2
 from .refinenet.refinenet_model import refinenet_model
 from .unet_3d_model import unet_3d_model
 
-logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
+logger = logging.getLogger(__name__)
 
 
 def get_model(config):

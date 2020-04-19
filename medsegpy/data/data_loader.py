@@ -9,7 +9,7 @@ import numpy as np
 from medsegpy.config import Config
 from .im_gens import GeneratorState, Generator, OAIGenerator
 
-logger = logging.getLogger("msk_seg.{}".format(__name__))
+logger = logging.getLogger(__name__)
 
 
 class DataLoader(k_utils.Sequence, ABC):

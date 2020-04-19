@@ -21,7 +21,7 @@ import scipy.io as sio
 import argparse
 import keras.backend as K
 
-logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
+logger = logging.getLogger(__name__)
 
 DOWNSAMPLED_TEST_PATH = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/test'
 
@@ -276,6 +276,7 @@ def create_config_dict(vargin):
 
 
 if __name__ == '__main__':
+    raise DeprecationWarning("This file is deprecated. Use nn_test.")
     base_parser = argparse.ArgumentParser(description='Run inference (testing)')
     add_testing_arguments(base_parser)
 

@@ -4,7 +4,7 @@ import os
 from medsegpy.utils import io_utils
 from medsegpy.utils.logger import setup_logger
 
-logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
+logger = logging.getLogger(__name__)
 
 TRAIN_PID_PATH = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/train_aug'
 VAL_PID_PATH = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/valid'

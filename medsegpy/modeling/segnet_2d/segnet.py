@@ -11,7 +11,7 @@ from keras.models import Model
 
 from .Mylayers import MaxPoolingWithArgmax2D, MaxUnpooling2D
 
-logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
+logger = logging.getLogger(__name__)
 
 
 class KModel(ABC):

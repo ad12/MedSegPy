@@ -16,7 +16,7 @@ CLASS_WEIGHTS = np.asarray([100, 1])
 SAVE_BEST_WEIGHTS = True
 FREEZE_LAYERS = None
 
-logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
+logger = logging.getLogger(__name__)
 
 
 class CTTrain(NNTrain):
@@ -68,6 +68,7 @@ class CTTrain(NNTrain):
 
 
 if __name__ == '__main__':
+    logger = logging.getLogger("medsegpy.ct_train.{}".format(__name__))
     nn_train = CTTrain()
     nn_train.parse()
     nn_train.run()

@@ -4,7 +4,7 @@ import tensorflow as tf
 from keras import backend as K
 from keras.losses import binary_crossentropy
 
-logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
+logger = logging.getLogger(__name__)
 
 DICE_LOSS = ('dice', 'sigmoid')
 MULTI_CLASS_DICE_LOSS = ("multi_class_dice", "sigmoid")

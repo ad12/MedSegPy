@@ -16,7 +16,7 @@ from medsegpy import oai_test
 from medsegpy.utils import dice_score_coefficient, volumetric_overlap_error
 from medsegpy.scan_metadata import ScanMetadata
 
-logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
+logger = logging.getLogger(__name__)
 
 UNET_3D_TEST_PATH = '/bmrNAS/people/arjun/msk_seg_networks/volume_limited/unet_3d_asc/test'
 UNET_3D_TEST_RESULT_PATH = '/bmrNAS/people/arjun/msk_seg_networks/volume_limited/unet_3d_asc/test_results'
