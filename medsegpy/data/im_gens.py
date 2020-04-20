@@ -28,7 +28,14 @@ class GeneratorState(Enum):
 
 def get_generator(config: Config):
     """Get generator based on config TAG value"""
-    for generator in [OAIGenerator, OAI3DGenerator, OAI3DBlockGenerator, OAI3DGeneratorFullVolume]:
+    for generator in [
+        # OAI supported generators.
+        OAIGenerator, OAI3DGenerator, OAI3DBlockGenerator,
+        OAI3DGeneratorFullVolume,
+
+        # abCT supported generators.
+        CTGenerator,
+    ]:
         try:
             gen = generator(config)
             if gen:

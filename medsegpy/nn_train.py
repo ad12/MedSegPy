@@ -25,12 +25,10 @@ from medsegpy.modeling import get_model
 from medsegpy.utils import dl_utils, mri_utils
 from medsegpy.utils import utils, io_utils, parallel_utils as putils
 from medsegpy.utils.logger import setup_logger
-from medsegpy.oai_test import test_dir
+from medsegpy.nn_test import test_dir
 
 logger = logging.getLogger(__name__)
 
-CLASS_WEIGHTS = np.asarray([100, 1])
-SAVE_BEST_WEIGHTS = True
 FREEZE_LAYERS = None
 
 

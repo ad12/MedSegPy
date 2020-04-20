@@ -6,10 +6,10 @@ https://github.com/facebookresearch/detectron2
 import datetime
 import logging
 import time
-from collections import OrderedDict
-from contextlib import contextmanager
 
 from medsegpy.utils.logger import log_every_n_seconds
+from medsegpy.data.im_gens import Generator
+from medsegpy.data.im_gens import GeneratorState
 
 
 class DatasetEvaluator:
@@ -30,14 +30,16 @@ class DatasetEvaluator:
         """
         pass
 
-    def process(self, input, output):
+    def process(self, inputs, outputs, time_elapsed):
         """
         Process an input/output pair.
 
         Args:
+            scan_id: the scan id corresponding to the input/output
             input: the input that's used to call the model.
             output: the return value of `model(input)`
         """
+
         pass
 
     def evaluate(self):
@@ -56,34 +58,11 @@ class DatasetEvaluator:
         pass
 
 
-class DatasetEvaluators(DatasetEvaluator):
-    def __init__(self, evaluators):
-        assert len(evaluators)
-        super().__init__()
-        self._evaluators = evaluators
-
-    def reset(self):
-        for evaluator in self._evaluators:
-            evaluator.reset()
-
-    def process(self, input, output):
-        for evaluator in self._evaluators:
-            evaluator.process(input, output)
-
-    def evaluate(self):
-        results = OrderedDict()
-        for evaluator in self._evaluators:
-            result = evaluator.evaluate()
-            if is_main_process() and result is not None:
-                for k, v in result.items():
-                    assert (
-                        k not in results
-                    ), "Different evaluators produce results with the same key {}".format(k)
-                    results[k] = v
-        return results
-
-
-def inference_on_dataset(model, data_loader, evaluator):
+def inference_on_dataset(
+    model,
+    generator: Generator,
+    evaluator: DatasetEvaluator,
+):
     """
     Run model on the data_loader and evaluate the metrics with evaluator.
     The model will be used in eval mode.
@@ -94,7 +73,7 @@ def inference_on_dataset(model, data_loader, evaluator):
 
             If you wish to evaluate a model in `training` mode instead, you can
             wrap the given model and override its behavior of `.eval()` and `.train()`.
-        data_loader: an iterable object with a length.
+        generator: an iterable object with a length.
             The elements it generates will be the inputs to the model.
         evaluator (DatasetEvaluator): the evaluator to run. Use
             :class:`DatasetEvaluators([])` if you only want to benchmark, but
@@ -103,56 +82,32 @@ def inference_on_dataset(model, data_loader, evaluator):
     Returns:
         The return value of `evaluator.evaluate()`
     """
-    logger = logging.getLogger(__name__)
-    logger.info("Start inference on {} images".format(len(data_loader)))
-
-    total = len(data_loader)  # inference data loader must have a fixed length
     evaluator.reset()
-
-    num_warmup = min(5, total - 1)
+    num_warmup = 2
     start_time = time.perf_counter()
     total_compute_time = 0
-    with inference_context(model), torch.no_grad():
-        for idx, inputs in enumerate(data_loader):
-            if idx == num_warmup:
-                start_time = time.perf_counter()
-                total_compute_time = 0
+    total = generator.num_scans(GeneratorState.TESTING)
 
-            start_compute_time = time.perf_counter()
-            outputs = model(inputs)
-            if torch.cuda.is_available():
-                torch.cuda.synchronize()
-            total_compute_time += time.perf_counter() - start_compute_time
-            evaluator.process(inputs, outputs)
-
-            iters_after_start = idx + 1 - num_warmup * int(idx >= num_warmup)
-            seconds_per_img = total_compute_time / iters_after_start
-            if idx >= num_warmup * 2 or seconds_per_img > 5:
-                total_seconds_per_img = (time.perf_counter() - start_time) / iters_after_start
-                eta = datetime.timedelta(seconds=int(total_seconds_per_img * (total - idx - 1)))
-                log_every_n_seconds(
-                    logging.INFO,
-                    "Inference done {}/{}. {:.4f} s / img. ETA={}".format(
-                        idx + 1, total, seconds_per_img, str(eta)
-                    ),
-                    n=5,
-                )
-
-    # Measure the time only for this worker (before the synchronization barrier)
-    total_time = time.perf_counter() - start_time
-    total_time_str = str(datetime.timedelta(seconds=total_time))
-    # NOTE this format is parsed by grep
-    logger.info(
-        "Total inference time: {} ({:.6f} s / img per device, on {} devices)".format(
-            total_time_str, total_time / (total - num_warmup), num_devices
+    for idx, (x_test, y_test, recon, fname, time_elapsed) in enumerate(generator.img_generator_test(model)):
+        input = {"scan_id": fname, "y_true": y_test, "scan": x_test}
+        evaluator.process(
+            [input],
+            [recon],
+            [time_elapsed],
         )
-    )
-    total_compute_time_str = str(datetime.timedelta(seconds=int(total_compute_time)))
-    logger.info(
-        "Total inference pure compute time: {} ({:.6f} s / img per device, on {} devices)".format(
-            total_compute_time_str, total_compute_time / (total - num_warmup), num_devices
-        )
-    )
+        iters_after_start = idx + 1 - num_warmup * int(idx >= num_warmup)
+        seconds_per_scan = total_compute_time / iters_after_start
+        if idx >= num_warmup * 2 or seconds_per_scan > 5:
+            total_seconds_per_img = (time.perf_counter() - start_time) / iters_after_start
+            eta = datetime.timedelta(
+                seconds=int(total_seconds_per_img * (total - idx - 1)))
+            log_every_n_seconds(
+                logging.INFO,
+                "Inference done {}/{}. {:.4f} s / scan. ETA={}".format(
+                    idx + 1, total, seconds_per_scan, str(eta)
+                ),
+                n=5,
+            )
 
     results = evaluator.evaluate()
     # An evaluator may return None when not in main process.
@@ -160,18 +115,3 @@ def inference_on_dataset(model, data_loader, evaluator):
     if results is None:
         results = {}
     return results
-
-
-@contextmanager
-def inference_context(model):
-    """
-    A context where the model is temporarily changed to eval mode,
-    and restored to previous mode afterwards.
-
-    Args:
-        model: a torch Module
-    """
-    training_mode = model.training
-    model.eval()
-    yield
-    model.train(training_mode)

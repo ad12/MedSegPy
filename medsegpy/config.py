@@ -130,8 +130,7 @@ class Config(object):
     # System params
     NUM_WORKERS = 1
 
-    # TODO: Uncomment when metrics are parseable from config
-    # TEST_METRICS = ["DSC", "VOE", "ASSD", "CV"]
+    TEST_METRICS = ["DSC", "VOE", "ASSD", "CV"]
 
     def __init__(self, cp_save_tag, state='training', create_dirs=True):
         if state not in ['testing', 'training']:

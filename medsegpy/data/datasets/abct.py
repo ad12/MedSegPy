@@ -29,4 +29,5 @@ def register_abct():
             category_abbreviations=[x["abbrev"] for x in ABCT_CATEGORIES],
             categories=[x["name"] for x in ABCT_CATEGORIES],
             categories_colors=[x["color"] for x in ABCT_CATEGORIES],
+            evaluator_type="SemSegEvaluator",
         )
