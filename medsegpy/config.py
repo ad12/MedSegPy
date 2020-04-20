@@ -6,10 +6,11 @@ from itertools import groupby
 import logging
 
 from fvcore.common.file_io import PathManager
-from medsegpy.utils import utils as utils, io_utils, mri_utils
+
 from medsegpy.cross_validation import cv_util
+from medsegpy.data import MetadataCatalog
 from medsegpy.losses import DICE_LOSS, CMD_LINE_SUPPORTED_LOSSES, get_training_loss_from_str
-from medsegpy.data.datasets import convert_path_to_dataset
+from medsegpy.utils import utils as utils, io_utils, mri_utils
 
 logger = logging.getLogger(__name__)
 
@@ -129,6 +130,9 @@ class Config(object):
     # System params
     NUM_WORKERS = 1
 
+    # TODO: Uncomment when metrics are parseable from config
+    # TEST_METRICS = ["DSC", "VOE", "ASSD", "CV"]
+
     def __init__(self, cp_save_tag, state='training', create_dirs=True):
         if state not in ['testing', 'training']:
             raise ValueError('state must either be \'training\' or \'testing\'')
@@ -232,12 +236,14 @@ class Config(object):
             upper_case_key = str(key).upper()
             
             if upper_case_key in DEPRECATED_KEYS:
-                warnings.warn('Key %s is deprecated, not loading' % upper_case_key)
+                logger.warning(
+                    "Key %s is deprecated, not loading" % upper_case_key
+                )
                 continue
 
             if upper_case_key in RENAMED_KEYS:
                 new_name = RENAMED_KEYS[upper_case_key]
-                warnings.warn(
+                logger.warning(
                     "Key {} has been renamed to {}".format(
                         upper_case_key, new_name
                     )
@@ -254,7 +260,7 @@ class Config(object):
                 # Ignore empty values.
                 if vars_dict[key] == "":
                     continue
-                vars_dict[key] = convert_path_to_dataset(upper_case_key)
+                vars_dict[key] = MetadataCatalog.convert_path_to_dataset(vars_dict[key])
                 upper_case_key = mapping[upper_case_key]
 
             if not hasattr(self, upper_case_key):

@@ -13,8 +13,8 @@ import h5py
 import numpy as np
 
 from medsegpy.config import Config
+from .catalog import MetadataCatalog
 from .fname_parsers import OAISliceWise
-from .datasets import DATA_CATALOG
 
 logger = logging.getLogger(__name__)
 
@@ -97,8 +97,13 @@ class Generator(ABC):
         return 0, 0
 
     @abstractmethod
-    def num_examples(self, state: GeneratorState):
+    def num_examples(self, state: GeneratorState) -> int:
         """Number of examples in this training set."""
+        pass
+
+    @abstractmethod
+    def num_scans(self, state: GeneratorState) -> int:
+        """Number of scans corresponding to given state."""
         pass
 
     def sort_files(self, files):
@@ -171,20 +176,20 @@ class Generator(ABC):
         config = self.config
         if state == GeneratorState.TRAINING:
             # training
-            data_path_or_files = config.__CV_TRAIN_FILES__ if config.USE_CROSS_VALIDATION else DATA_CATALOG[config.TRAIN_DATASET]
+            data_path_or_files = config.__CV_TRAIN_FILES__ if config.USE_CROSS_VALIDATION else MetadataCatalog.get(config.TRAIN_DATASET).scan_root
             batch_size = config.TRAIN_BATCH_SIZE
             shuffle_epoch = True
             pids = config.PIDS
             augment_data = config.AUGMENT_DATA
         elif state == GeneratorState.VALIDATION:
             # validation
-            data_path_or_files = config.__CV_VALID_FILES__ if config.USE_CROSS_VALIDATION else DATA_CATALOG[config.VAL_DATASET]
+            data_path_or_files = config.__CV_VALID_FILES__ if config.USE_CROSS_VALIDATION else MetadataCatalog.get(config.VAL_DATASET).scan_root
             batch_size = config.VALID_BATCH_SIZE
             shuffle_epoch = False
             pids = None
             augment_data = False
         elif state == GeneratorState.TESTING:
-            data_path_or_files = config.__CV_TEST_FILES__ if config.USE_CROSS_VALIDATION else DATA_CATALOG[config.TEST_DATASET]
+            data_path_or_files = config.__CV_TEST_FILES__ if config.USE_CROSS_VALIDATION else MetadataCatalog.get(config.TEST_DATASET).scan_root
             batch_size = config.TEST_BATCH_SIZE
             shuffle_epoch = False
             pids = None
@@ -557,6 +562,13 @@ class OAIGenerator(Generator):
                                                                                                        'scanid'])))
             if not config.USE_CROSS_VALIDATION:
                 logger.info('Test path: %s' % config.TEST_PATH)
+
+    def num_scans(self, state):
+        files, _, _ = self._calc_generator_info(
+            state
+        )
+        scanset_info = self.__get_scanset_data__(files)
+        return len(scanset_info["scan_id"])
 
     def __get_scanset_data__(self, files, keys=['pid', 'scanid']):
         info_dict = dict()
