@@ -21,10 +21,14 @@ DEPRECATED_KEYS = ['NUM_CLASSES', 'TRAIN_FILES_CV', 'VALID_FILES_CV',
                    'TEST_FILES_CV', "USE_STEP_DECAY",
                    "PIK_SAVE_PATH_DIR", "PIK_SAVE_PATH", "TF_LOG_DIR",
                    "TRAIN_PATH", "VALID_PATH", "TEST_PATH",
-                   "PLOT_MODEL_PATH", "FINE_TUNE",
+                   "PLOT_MODEL_PATH", "FINE_TUNE", "LEARN_FILES",
+                   "DEBUG",
+                   "TEST_RESULT_PATH", "TEST_RESULTS_FOLDER_NAME",
                    ]
 RENAMED_KEYS = {
     "CP_SAVE_PATH": "OUTPUT_DIR",
+    "INIT_WEIGHTS": "INIT_WEIGHTS",
+    "TISSUES": "CATEGORIES",
 }
 
 DEEPLABV3_NAME = 'deeplabv3_2d'
@@ -42,8 +46,6 @@ class Config(object):
 
     # PIDS to include, None = all pids
     PIDS = None
-
-    DEBUG = False
 
     # Training and validation image size
     IMG_SIZE = (288, 288, 1)
@@ -78,15 +80,15 @@ class Config(object):
     VALID_BATCH_SIZE = 35
     TEST_BATCH_SIZE = 72
 
-    # Tissues to render
-    TISSUES = []
+    # Categories to segment.
+    CATEGORIES = []
     INCLUDE_BACKGROUND = False
 
     # File Types
     FILE_TYPES = ['im']
 
     # Transfer Learning
-    INIT_WEIGHT_PATH = ''
+    INIT_WEIGHTS = ''
     FREEZE_LAYERS = ()
 
     # Dataset Paths
@@ -105,31 +107,23 @@ class Config(object):
     __CV_VALID_FILES__ = None
     __CV_TEST_FILES__ = None
 
-    # test result folder name
-    TEST_RESULTS_FOLDER_NAME = 'test_results'
-
     # Training Model Paths
     CP_SAVE_TAG = ''
     OUTPUT_DIR = ""
-
-    # Test Result Path
-    TEST_RESULT_PATH = ''
-    TEST_WEIGHT_PATH = ''
 
     # Dataset tag - What dataset are we training on? 'dess' or 'oai'
     # choose from oai_aug, oai_aug_3d
     TAG = 'oai_aug'
 
-    # Restrict number of files learned. Default is all []
-    LEARN_FILES = []
-
-    # Initializer
+    # Weights kernel initializer.
     KERNEL_INITIALIZER = 'he_normal'
-    SEED = None
 
     # System params
     NUM_WORKERS = 1
+    SEED = None
 
+    # Evaluation params
+    TEST_WEIGHT_PATH = ''
     TEST_METRICS = ["DSC", "VOE", "ASSD", "CV"]
 
     # Extra parameters related to different parameters.
@@ -416,12 +410,6 @@ class Config(object):
         Initialize testing state
         """
         self.STATE = 'testing'
-        self.TEST_RESULT_PATH = PathManager.get_local_path(
-            os.path.join(
-                self.OUTPUT_DIR,
-                self.TEST_RESULTS_FOLDER_NAME
-            )
-        )
 
         # if cross validation is enabled, load testing cross validation bin
         if self.USE_CROSS_VALIDATION:
@@ -448,7 +436,7 @@ class Config(object):
             summary_vals.extend([
                 'TRAIN_DATASET', 'VAL_DATASET', 'TEST_DATASET', '',
 
-                'TISSUES', '',
+                'CATEGORIES', '',
 
                 'IMG_SIZE', '',
 
@@ -489,7 +477,7 @@ class Config(object):
                 'SEED' if self.SEED else '', '' 
 
                 'FINE_TUNE',
-                'INIT_WEIGHT_PATH', '',
+                'INIT_WEIGHTS', '',
 
                 'NUM_WORKERS',
                 "OUTPUT_DIR",
@@ -523,9 +511,9 @@ class Config(object):
 
     def get_num_classes(self):
         if self.INCLUDE_BACKGROUND:
-            return len(self.TISSUES) + 1
+            return len(self.CATEGORIES) + 1
 
-        return len(self.TISSUES)
+        return len(self.CATEGORIES)
 
     def num_neighboring_slices(self):
         return None
@@ -644,10 +632,10 @@ class Config(object):
 
         # Initialize weight path.
         subcommand_parser.add_argument('-init_weight_path', '--init_weight_path', metavar='P', type=str,
-                                       default=cls.INIT_WEIGHT_PATH,
+                                       default=cls.INIT_WEIGHTS,
                                        nargs='?',
                                        dest='init_weight_path',
-                                       help='Path to weights file to initialize. Default: %s' % cls.INIT_WEIGHT_PATH)
+                                       help='Path to weights file to initialize. Default: %s' % cls.INIT_WEIGHTS)
 
         # System parameters
         subcommand_parser.add_argument('--num_workers', metavar='W', type=int, default=1, nargs='?',

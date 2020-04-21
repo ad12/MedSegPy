@@ -9,7 +9,8 @@ new dataset loaders, evaluators, etc.
 
 We recommend using medsegpy as a library and use this file as an example of how
 to use the library. If your project requires new dataset loaders, evaluators, or
-other customizations, we suggest writing your own script.
+other customizations, we suggest writing your own script. See `ct_train.py` for
+an example of how to extend to different use cases.
 """
 import logging
 
@@ -19,8 +20,6 @@ from medsegpy.engine.trainer import DefaultTrainer
 from medsegpy.utils import dl_utils
 
 logger = logging.getLogger(__name__)
-
-FREEZE_LAYERS = None
 
 
 def setup(args):
@@ -42,6 +41,8 @@ def main(args, trainer_cls: type = DefaultTrainer):
     assert issubclass(trainer_cls, DefaultTrainer)
     cfg = setup(args)
     if args.eval_only:
+        if not cfg.TEST_DATASET:
+            raise ValueError("TEST_DATASET not specified")
         model = trainer_cls.build_model(cfg)
         return trainer_cls.test(cfg, model, dl_utils.get_weights(cfg.OUTPUT_DIR))
 

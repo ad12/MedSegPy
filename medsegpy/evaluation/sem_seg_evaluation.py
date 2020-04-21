@@ -71,7 +71,7 @@ class SemSegEvaluator(DatasetEvaluator):
 
         meta = MetadataCatalog.get(dataset_name)
         self._meta = meta
-        cat_ids = cfg.TISSUES
+        cat_ids = cfg.CATEGORIES
         contiguous_id_map = meta.get("category_id_to_contiguous_id")
         contiguous_ids = [contiguous_id_map[x] for x in cat_ids]
 

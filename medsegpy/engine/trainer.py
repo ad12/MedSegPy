@@ -14,7 +14,7 @@ from medsegpy.engine.callbacks import LossHistory, lr_callback
 from medsegpy.evaluation import build_evaluator, inference_on_dataset
 from medsegpy.losses import get_training_loss, dice_loss
 from medsegpy.modeling import get_model
-from medsegpy.utils import dl_utils, parallel_utils as putils, io_utils
+from medsegpy.utils import dl_utils, io_utils
 
 logger = logging.getLogger(__name__)
 
@@ -31,14 +31,14 @@ class DefaultTrainer(object):
             to_file=os.path.join(cfg.OUTPUT_DIR, 'model.png'),
             show_shapes=True,
         )
-        if cfg.INIT_WEIGHT_PATH:
+        if cfg.INIT_WEIGHTS:
             self._init_model(model)
         # Replicate model on multiple gpus.
         # Note this does not solve issue of having too large of a model
         num_gpus = dl_utils.num_gpus()
         if num_gpus > 1:
             logger.info('Running multi gpu model')
-            model = putils.ModelMGPU(model, gpus=num_gpus)
+            model = dl_utils.ModelMGPU(model, gpus=num_gpus)
         self._model = model
 
     def train(self):
@@ -55,15 +55,19 @@ class DefaultTrainer(object):
             )
 
         self._train_model()
-        return self.test(cfg, self._model)
+
+        if cfg.TEST_DATASET:
+            return self.test(cfg, self._model)
+        else:
+            return {}
 
     def _init_model(self, model):
         """Initialize model with weights and apply any freezing necessary."""
         cfg = self._cfg
         logger.info(
-            'Loading weights from {}'.format(cfg.INIT_WEIGHT_PATH)
+            'Loading weights from {}'.format(cfg.INIT_WEIGHTS)
         )
-        model.load_weights(cfg.INIT_WEIGHT_PATH)
+        model.load_weights(cfg.INIT_WEIGHTS)
         frozen_layers = cfg.FREEZE_LAYERS
         if frozen_layers:
             fl = range(frozen_layers[0], frozen_layers[1])

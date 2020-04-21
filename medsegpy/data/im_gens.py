@@ -232,7 +232,7 @@ class OAIGenerator(Generator):
 
         config = self.config
         img_size = config.IMG_SIZE
-        tissues = config.TISSUES
+        tissues = config.CATEGORIES
         include_background = config.INCLUDE_BACKGROUND
         num_neighboring_slices = config.num_neighboring_slices()
 
@@ -278,7 +278,7 @@ class OAIGenerator(Generator):
     def img_generator_test(self, model=None):
         config = self.config
         img_size = config.IMG_SIZE
-        tissues = config.TISSUES
+        tissues = config.CATEGORIES
         include_background = config.INCLUDE_BACKGROUND
         num_neighboring_slices = config.num_neighboring_slices()
 
@@ -1091,7 +1091,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
 
         config = self.config
         img_size = config.IMG_SIZE
-        tissues = config.TISSUES
+        tissues = config.CATEGORIES
         include_background = config.INCLUDE_BACKGROUND
 
         scan_to_blocks, batches_per_epoch, scan_to_im_size = self.cached_data(state)
@@ -1151,7 +1151,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
 
         config = self.config
         img_size = config.IMG_SIZE
-        tissues = config.TISSUES
+        tissues = config.CATEGORIES
         include_background = config.INCLUDE_BACKGROUND
 
         scan_to_blocks, batches_per_epoch, _ = self.cached_data(state)
@@ -1343,7 +1343,7 @@ class CTGenerator(OAIGenerator):
     def img_generator_test(self, model=None):
         config = self.config
         img_size = config.IMG_SIZE
-        tissues = config.TISSUES
+        tissues = config.CATEGORIES
         include_background = config.INCLUDE_BACKGROUND
         num_neighboring_slices = config.num_neighboring_slices()
 
