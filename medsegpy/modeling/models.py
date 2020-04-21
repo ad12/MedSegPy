@@ -3,7 +3,6 @@ import logging
 from keras import Model
 from keras.initializers import glorot_uniform
 from keras.layers import Input, Conv2D
-from keras.utils import plot_model
 
 from medsegpy.config import DeeplabV3Config, SegnetConfig, UNetConfig, \
     UNetMultiContrastConfig, UNet2_5DConfig, DeeplabV3_2_5DConfig, ResidualUNet, AnisotropicUNetConfig, RefineNetConfig, \
@@ -33,8 +32,6 @@ def get_model(config):
         model = segnet_2d(config)
     elif type(config) is UNetConfig:
         model = unet_2d(config)
-    elif type(config) is UNetMultiContrastConfig:
-        model = unet_2d_multi_contrast(config)
     elif type(config) is UNet2_5DConfig:
         model = unet_2_5d(config)
     elif type(config) is DeeplabV3_2_5DConfig:
@@ -230,39 +227,6 @@ def segnet_2d(config: SegnetConfig):
                           conv_act_bn=config.CONV_ACT_BN,
                           output_mode=output_mode,
                           seed=config.SEED)
-
-    return model
-
-
-def unet_2d_multi_contrast(config):
-    """
-    Returns unet model corresponding to 3-channel multi-contrast inputs
-    :param config: a UNetMultiContrastConfig object
-    :return: a Keras model
-
-    :raises ValueError: if config not of type UNetMultiContrastConfig
-    """
-    if (type(config) is not UNetMultiContrastConfig):
-        raise ValueError('config must be instance of UNetMultiContrastConfig')
-
-    activation = config.LOSS[1]
-    num_classes = config.get_num_classes()
-    input_shape = config.IMG_SIZE
-
-    logger.info('Initializing multi contrast 2d unet: input size - ' + str(input_shape))
-
-    x = Input(input_shape)
-    x = Conv2D(1, (1, 1), name='conv_mc_comp')(x)
-
-    model = unet_2d_model(input_tensor=x)
-
-    # Add activation
-    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation, seed=config.SEED)
-    model = Model(inputs=model.input, outputs=x)
-
-    # only load weights for layers that share the same name
-    if config.INIT_UNET_2D:
-        model.load_weights(config.INIT_UNET_2D_WEIGHTS, by_name=True)
 
     return model
 

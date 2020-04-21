@@ -595,9 +595,6 @@ class OAIGenerator(Generator):
     def num_steps(self):
         config = self.config
 
-        if config.STATE != 'training':
-            raise ValueError('Method is only active when config is in training state')
-
         _, train_batches_per_epoch, _ = self._calc_generator_info(GeneratorState.TRAINING)
         _, valid_batches_per_epoch, _ = self._calc_generator_info(GeneratorState.VALIDATION)
 
@@ -1258,9 +1255,6 @@ class OAI3DBlockGenerator(OAI3DGenerator):
 
     def num_steps(self):
         config = self.config
-
-        if config.STATE != 'training':
-            raise ValueError('Method is only active when config is in training state')
 
         _, train_batches_per_epoch, _ = self.cached_data(GeneratorState.TRAINING)
         _, valid_batches_per_epoch, _ = self.cached_data(GeneratorState.VALIDATION)

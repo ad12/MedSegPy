@@ -264,12 +264,12 @@ class Config(object):
             if not hasattr(self, full_key):
                 raise ValueError("Key {} does not exist.".format(full_key))
 
+            value = self._decode_cfg_value(value, type(self.__getattribute__(full_key)))
             value = _check_and_coerce_cfg_value_type(
                 value,
                 self.__getattribute__(full_key),
                 full_key
             )
-            self._decode_cfg_value(value, type(self.__getattribute__(full_key)))
 
             # Loading config
             self.__setattr__(full_key, value)
@@ -369,16 +369,19 @@ class Config(object):
 
     @classmethod
     def _load_dict_from_file(cls, cfg_filename):
-        if cfg_filename.endswith(".ini"):
-            config = configparser.ConfigParser()
-            config.read(PathManager.get_local_path(cfg_filename))
-            vars_dict = config['DEFAULT']
-            vars_dict = {k.upper(): v for k, v in vars_dict}
-        elif cfg_filename.endswith(".yaml") or cfg_filename.endswith(".yml"):
-            with open(cfg_filename, "r") as f:
+        filename = PathManager.get_local_path(cfg_filename)
+        if filename.endswith(".ini"):
+            cfg = configparser.ConfigParser()
+            if not os.path.isfile(filename):
+                raise FileNotFoundError("Config file {} not found".format(filename))
+            cfg.read(filename)
+            vars_dict = cfg['DEFAULT']
+            vars_dict = {k.upper(): v for k, v in vars_dict.items()}
+        elif filename.endswith(".yaml") or filename.endswith(".yml"):
+            with open(filename, "r") as f:
                 vars_dict = yaml.load(f)
         else:
-            raise ValueError("file {} not supported".format(cfg_filename))
+            raise ValueError("file {} not supported".format(filename))
 
         return vars_dict
 
@@ -698,7 +701,7 @@ class DeeplabV3Config(Config):
     DROPOUT_RATE = 0.1
 
     def __init__(self, state='training', create_dirs=True):
-        super().__init__(self.CP_SAVE_TAG, state, create_dirs=create_dirs)
+        super().__init__(self.MODEL_NAME, state, create_dirs=create_dirs)
 
     def summary(self, additional_vars=[]):
         summary_attrs = ['OS', 'DIL_RATES', 'DROPOUT_RATE']
@@ -753,7 +756,7 @@ class SegnetConfig(Config):
     INITIAL_LEARNING_RATE = 1e-3
 
     def __init__(self, state='training', create_dirs=True):
-        super().__init__(self.CP_SAVE_TAG, state, create_dirs=create_dirs)
+        super().__init__(self.MODEL_NAME, state, create_dirs=create_dirs)
 
     def summary(self, additional_vars=[]):
         summary_attrs = ['DEPTH', 'NUM_CONV_LAYERS', 'NUM_FILTERS']
@@ -830,7 +833,7 @@ class UNetConfig(Config):
     NUM_FILTERS = None
 
     def __init__(self, state='training', create_dirs=True):
-        super().__init__(self.CP_SAVE_TAG, state, create_dirs=create_dirs)
+        super().__init__(self.MODEL_NAME, state, create_dirs=create_dirs)
 
     @classmethod
     def init_cmd_line_parser(cls, parser):
@@ -883,7 +886,7 @@ class ResidualUNet(Config):
     SE_RATIO = 8
 
     def __init__(self, state='training', create_dirs=True):
-        super().__init__(self.CP_SAVE_TAG, state, create_dirs=create_dirs)
+        super().__init__(self.MODEL_NAME, state, create_dirs=create_dirs)
 
     @classmethod
     def init_cmd_line_parser(cls, parser):
@@ -917,28 +920,6 @@ class ResidualUNet(Config):
 
     def num_neighboring_slices(self):
         return self.IMG_SIZE[-1] if self.IMG_SIZE[-1] != 1 else None
-
-
-class EnsembleUDSConfig(Config):
-    MODEL_NAME = "ensemble_uds"
-    N_EPOCHS = 100
-
-    def __init__(self, state='training', create_dirs=True):
-        raise DeprecationWarning('This config is deprecated')
-        super().__init__(self.CP_SAVE_TAG, state, create_dirs=create_dirs)
-
-
-class UNetMultiContrastConfig(UNetConfig):
-    IMG_SIZE = (288, 288, 3)
-
-    MODEL_NAME = 'unet_2d_multi_contrast'
-
-    # Whether to load weights from original unet model
-    # INIT_UNET_2D = True
-    # INIT_UNET_2D_WEIGHTS = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/select_weights/unet_2d_fc_weights.004--0.8968.h5'
-
-    def __init__(self, state='training', create_dirs=True):
-        super().__init__(state, create_dirs=create_dirs)
 
 
 class UNet2_5DConfig(UNetConfig):
@@ -1057,7 +1038,7 @@ class AnisotropicUNetConfig(Config):
     #POOLING_SIZE = (3, 11)
 
     def __init__(self, state='training', create_dirs=True):
-        super().__init__(self.CP_SAVE_TAG, state, create_dirs=create_dirs)
+        super().__init__(self.MODEL_NAME, state, create_dirs=create_dirs)
 
     @classmethod
     def init_cmd_line_parser(cls, parser):
@@ -1091,7 +1072,7 @@ class RefineNetConfig(Config):
     INITIAL_LEARNING_RATE = 1e-3
 
     def __init__(self, state='training', create_dirs=True):
-        super().__init__(self.CP_SAVE_TAG, state, create_dirs=create_dirs)
+        super().__init__(self.MODEL_NAME, state, create_dirs=create_dirs)
 
 
 def _check_and_coerce_cfg_value_type(replacement, original, full_key):
@@ -1169,7 +1150,7 @@ def get_config(
 
     configs = SUPPORTED_CONFIGS
     for config in configs:
-        if config.CP_SAVE_TAG == config_cp_save_tag:
+        if config.MODEL_NAME == config_cp_save_tag:
             c = config(create_dirs=create_dirs)
             if output_dir:
                 c.OUTPUT_DIR = output_dir
