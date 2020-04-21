@@ -27,18 +27,22 @@ DEPRECATED_KEYS = ['NUM_CLASSES', 'TRAIN_FILES_CV', 'VALID_FILES_CV',
                    ]
 RENAMED_KEYS = {
     "CP_SAVE_PATH": "OUTPUT_DIR",
+    "CP_SAVE_TAG": "MODEL_NAME",
     "INIT_WEIGHTS": "INIT_WEIGHTS",
     "TISSUES": "CATEGORIES",
 }
 
-DEEPLABV3_NAME = 'deeplabv3_2d'
-SEGNET_NAME = 'segnet_2d'
-UNET_NAME = 'unet_2d'
-ENSEMBLE_UDS_NAME = 'ensemble_uds'
-
 
 class Config(object):
+    """A config object that is 1-to-1 with supported models.
+
+    Each subclass of :class:`Config` corresponds to a specific model
+    architecture.
+    """
     VERSION = 7
+
+    # Model name specific to config. Cannot be changed.
+    MODEL_NAME = ""
 
     # Loss function in form (id, output_mode)
     LOSS = DICE_LOSS
@@ -80,7 +84,7 @@ class Config(object):
     VALID_BATCH_SIZE = 35
     TEST_BATCH_SIZE = 72
 
-    # Categories to segment.
+    # Categories
     CATEGORIES = []
     INCLUDE_BACKGROUND = False
 
@@ -91,7 +95,7 @@ class Config(object):
     INIT_WEIGHTS = ''
     FREEZE_LAYERS = ()
 
-    # Dataset Paths
+    # Dataset names
     TRAIN_DATASET = ""
     VAL_DATASET = ""
     TEST_DATASET = ""
@@ -108,7 +112,6 @@ class Config(object):
     __CV_TEST_FILES__ = None
 
     # Training Model Paths
-    CP_SAVE_TAG = ''
     OUTPUT_DIR = ""
 
     # Dataset tag - What dataset are we training on? 'dess' or 'oai'
@@ -133,7 +136,7 @@ class Config(object):
         if state not in ['testing', 'training']:
             raise ValueError('state must either be \'training\' or \'testing\'')
 
-        self.CP_SAVE_TAG = cp_save_tag
+        self.MODEL_NAME = cp_save_tag
         self.STATE = state
 
     def init_cross_validation(self, train_files, valid_files, test_files,
@@ -224,7 +227,7 @@ class Config(object):
     def merge_from_file(self, cfg_filename):
         """Load a ini or yaml config file and merge it with this object.
 
-        "CP_SAVE_TAG" must be specified in the file.
+        "MODEL_NAME" must be specified in the file.
 
         Args:
             cfg_filename: File path to yaml or ini file.
@@ -232,9 +235,9 @@ class Config(object):
         vars_dict = self._load_dict_from_file(cfg_filename)
 
         # TODO: Handle cp save tag as a protected key.
-        if vars_dict['CP_SAVE_TAG'] != self.CP_SAVE_TAG:
+        if vars_dict['MODEL_NAME'] != self.MODEL_NAME:
             raise ValueError(
-                'Wrong config. Expected {}'.format(vars_dict['CP_SAVE_TAG'])
+                'Wrong config. Expected {}'.format(vars_dict['MODEL_NAME'])
             )
 
         for full_key, value in vars_dict.items():
@@ -284,8 +287,8 @@ class Config(object):
         )
 
         for full_key, v in zip(cfg_list[0::2], cfg_list[1::2]):
-            if full_key == "CP_SAVE_TAG":
-                raise ValueError("Cannot change key CP_SAVE_TAG")
+            if full_key == "MODEL_NAME":
+                raise ValueError("Cannot change key MODEL_NAME")
             if self.key_is_deprecated(full_key):
                 continue
 
@@ -379,7 +382,6 @@ class Config(object):
 
         return vars_dict
 
-
     def set_attr(self, attr, val):
         """
         Wrapper method to set attributes of config
@@ -430,7 +432,7 @@ class Config(object):
         :return:
         """
 
-        summary_vals = ['CP_SAVE_TAG', 'TAG', '']
+        summary_vals = ['MODEL_NAME', 'TAG', '']
 
         if self.STATE == 'training':
             summary_vals.extend([
@@ -528,7 +530,7 @@ class Config(object):
 
     @classmethod
     def init_cmd_line_parser(cls, parser):
-        subcommand_parser = parser.add_parser('%s' % cls.CP_SAVE_TAG, description='%s config parameters')
+        subcommand_parser = parser.add_parser('%s' % cls.MODEL_NAME, description='%s config parameters')
 
         # Data format tag
         subcommand_parser.add_argument('--tag', metavar='T', type=str, default=cls.TAG, nargs='?',
@@ -688,7 +690,7 @@ class DeeplabV3Config(Config):
     """
     Configuration for 2D Deeplabv3+ architecture (https://arxiv.org/abs/1802.02611)
     """
-    CP_SAVE_TAG = DEEPLABV3_NAME
+    MODEL_NAME = "deeplabv3_2d"
 
     OS = 16
     DIL_RATES = (2, 4, 6)
@@ -736,7 +738,7 @@ class SegnetConfig(Config):
     """
     Configuration for 2D Segnet architecture (https://arxiv.org/abs/1505.07293)
     """
-    CP_SAVE_TAG = SEGNET_NAME
+    MODEL_NAME = "segnet_2d"
 
     TRAIN_BATCH_SIZE = 15
 
@@ -815,7 +817,7 @@ class UNetConfig(Config):
     """
     Configuration for 2D U-Net architecture (https://arxiv.org/abs/1505.04597)
     """
-    CP_SAVE_TAG = UNET_NAME
+    MODEL_NAME = "unet_2d"
 
     INIT_UNET_2D = False
 
@@ -869,7 +871,7 @@ class ResidualUNet(Config):
     """
     Configuration for 2D Residual U-Net architecture
     """
-    CP_SAVE_TAG = 'res_unet'
+    MODEL_NAME = 'res_unet'
 
     DEPTH = 6
     NUM_FILTERS = None
@@ -918,7 +920,7 @@ class ResidualUNet(Config):
 
 
 class EnsembleUDSConfig(Config):
-    CP_SAVE_TAG = ENSEMBLE_UDS_NAME
+    MODEL_NAME = "ensemble_uds"
     N_EPOCHS = 100
 
     def __init__(self, state='training', create_dirs=True):
@@ -929,7 +931,7 @@ class EnsembleUDSConfig(Config):
 class UNetMultiContrastConfig(UNetConfig):
     IMG_SIZE = (288, 288, 3)
 
-    CP_SAVE_TAG = 'unet_2d_multi_contrast'
+    MODEL_NAME = 'unet_2d_multi_contrast'
 
     # Whether to load weights from original unet model
     # INIT_UNET_2D = True
@@ -946,7 +948,7 @@ class UNet2_5DConfig(UNetConfig):
 
     IMG_SIZE = (288, 288, 7)
 
-    CP_SAVE_TAG = 'unet_2_5d'
+    MODEL_NAME = 'unet_2_5d'
     N_EPOCHS = 20
     AUGMENT_DATA = False
     INITIAL_LEARNING_RATE = 1e-2
@@ -965,7 +967,7 @@ class UNet3DConfig(UNetConfig):
 
     IMG_SIZE = (288, 288, 4, 1)
 
-    CP_SAVE_TAG = 'unet_3d'
+    MODEL_NAME = 'unet_3d'
     N_EPOCHS = 20
     INITIAL_LEARNING_RATE = 1e-2
 
@@ -1022,7 +1024,7 @@ class DeeplabV3_2_5DConfig(DeeplabV3Config):
     """
     IMG_SIZE = (288, 288, 3)
 
-    CP_SAVE_TAG = 'deeplabv3_2_5d'
+    MODEL_NAME = 'deeplabv3_2_5d'
     N_EPOCHS = 100
 
     # Train path - volumetric augmentation
@@ -1036,7 +1038,7 @@ class AnisotropicUNetConfig(Config):
     """
     Configuration for 2D Anisotropic U-Net architecture
     """
-    CP_SAVE_TAG = 'anisotropic_unet'
+    MODEL_NAME = 'anisotropic_unet'
 
     IMG_SIZE = (288, 72, 1)
 
@@ -1084,7 +1086,7 @@ class RefineNetConfig(Config):
     Configuration for RefineNet architecture as suggested by paper below
     http://openaccess.thecvf.com/content_cvpr_2017/papers/Lin_RefineNet_Multi-Path_Refinement_CVPR_2017_paper.pdf
     """
-    CP_SAVE_TAG = 'refinenet'
+    MODEL_NAME = 'refinenet'
 
     INITIAL_LEARNING_RATE = 1e-3
 
@@ -1145,7 +1147,8 @@ def _error_with_logging(cond, msg, error_type=ValueError):
         raise error_type(msg)
 
 
-SUPPORTED_CONFIGS = [UNetConfig, SegnetConfig, DeeplabV3Config, ResidualUNet, AnisotropicUNetConfig, RefineNetConfig,
+SUPPORTED_CONFIGS = [UNetConfig, SegnetConfig, DeeplabV3Config, ResidualUNet,
+                     AnisotropicUNetConfig, RefineNetConfig,
                      UNet3DConfig, UNet2_5DConfig, DeeplabV3_2_5DConfig]
 
 
@@ -1175,16 +1178,16 @@ def get_config(
     raise ValueError('config %s not found' % config_cp_save_tag)
 
 
-def get_cp_save_tag(cfg_filename: str):
-    """Get "CP_SAVE_TAG" from config file.
+def get_model_name(cfg_filename: str):
+    """Get "MODEL_NAME" from config file.
     Args:
         cfg_filename: filepath to INI or YAML file where config is stored
 
     Returns:
-        str: CP_SAVE_TAG
+        str: MODEL_NAME
     """
     vars_dict = Config._load_dict_from_file(cfg_filename)
-    return vars_dict['CP_SAVE_TAG']
+    return vars_dict['MODEL_NAME']
 
 
 def init_cmd_line_parser(parser):

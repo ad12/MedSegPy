@@ -27,7 +27,7 @@ def setup(args):
     Create configs and perform basic setups.
     """
     config_file = args.config_file
-    model_name = config.get_cp_save_tag(config_file)
+    model_name = config.get_model_name(config_file)
     cfg = config.get_config(model_name, create_dirs=False)
 
     cfg.merge_from_file(args.config_file)

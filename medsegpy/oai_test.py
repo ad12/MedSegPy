@@ -415,7 +415,7 @@ def test_dir(
     # Create config, if not provided.
     config_filepath = os.path.join(dirpath, 'config.ini')
     if not config:
-        config = MCONFIG.get_config(MCONFIG.get_cp_save_tag(config_filepath),
+        config = MCONFIG.get_config(MCONFIG.get_model_name(config_filepath),
                                     create_dirs=False)
 
     # Get best weight path

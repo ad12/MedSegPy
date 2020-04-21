@@ -13,7 +13,7 @@ class TestConfig(unittest.TestCase):
             cfg.merge_from_list(["LR_SCHEDULER_NAME", "stepdecay", "N_EPOCHS"])
 
         with self.assertRaises(ValueError):
-            cfg.merge_from_list(["CP_SAVE_TAG", "deeplabv3_2d"])
+            cfg.merge_from_list(["MODEL_NAME", "deeplabv3_2d"])
 
         cfg.merge_from_list(["LR_SCHEDULER_NAME", "StepDecay"])
         assert cfg.LR_SCHEDULER_NAME == "StepDecay"

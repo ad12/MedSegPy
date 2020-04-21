@@ -244,7 +244,7 @@ class InterpolationTest():
 
     def load_config(self, config_filepath):
         # get config
-        cp_save_tag = config.get_cp_save_tag(config_filepath)
+        cp_save_tag = config.get_model_name(config_filepath)
         return config.get_config(cp_save_tag, create_dirs=False)
 
     def analysis(self, x_test, y_test, recon, labels, mw: MetricWrapper, voxel_spacing,
