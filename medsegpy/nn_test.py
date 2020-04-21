@@ -81,7 +81,7 @@ def test_dir(
     if weights_path is None:
         weights_path = dl_utils.get_weights(experiment_dir)
 
-    config.load_config(config_filepath)
+    config.merge_from_file(config_filepath)
     config.TEST_WEIGHT_PATH = weights_path
 
     # Initialize logger.

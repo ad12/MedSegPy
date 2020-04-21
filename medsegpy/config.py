@@ -1,16 +1,18 @@
+import ast
 import configparser
 import copy
 import os
-import warnings
 from itertools import groupby
 import logging
+from typing import Any, Tuple
+import yaml
 
 from fvcore.common.file_io import PathManager
 
 from medsegpy.cross_validation import cv_util
 from medsegpy.data import MetadataCatalog
 from medsegpy.losses import DICE_LOSS, CMD_LINE_SUPPORTED_LOSSES, get_training_loss_from_str
-from medsegpy.utils import utils as utils, io_utils, mri_utils
+from medsegpy.utils import utils as utils, io_utils
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +21,7 @@ DEPRECATED_KEYS = ['NUM_CLASSES', 'TRAIN_FILES_CV', 'VALID_FILES_CV',
                    'TEST_FILES_CV', "USE_STEP_DECAY",
                    "PIK_SAVE_PATH_DIR", "PIK_SAVE_PATH", "TF_LOG_DIR",
                    "TRAIN_PATH", "VALID_PATH", "TEST_PATH",
-                   "PLOT_MODEL_PATH",
+                   "PLOT_MODEL_PATH", "FINE_TUNE",
                    ]
 RENAMED_KEYS = {
     "CP_SAVE_PATH": "OUTPUT_DIR",
@@ -29,8 +31,6 @@ DEEPLABV3_NAME = 'deeplabv3_2d'
 SEGNET_NAME = 'segnet_2d'
 UNET_NAME = 'unet_2d'
 ENSEMBLE_UDS_NAME = 'ensemble_uds'
-
-SUPPORTED_CONFIGS_NAMES = [DEEPLABV3_NAME, SEGNET_NAME, UNET_NAME]
 
 
 class Config(object):
@@ -79,15 +79,15 @@ class Config(object):
     TEST_BATCH_SIZE = 72
 
     # Tissues to render
-    TISSUES = [mri_utils.MASK_FEMORAL_CARTILAGE, mri_utils.MASK_PATELLAR_CARTILAGE]
+    TISSUES = []
     INCLUDE_BACKGROUND = False
 
     # File Types
     FILE_TYPES = ['im']
 
     # Transfer Learning
-    FINE_TUNE = False
     INIT_WEIGHT_PATH = ''
+    FREEZE_LAYERS = ()
 
     # Dataset Paths
     TRAIN_DATASET = ""
@@ -132,34 +132,15 @@ class Config(object):
 
     TEST_METRICS = ["DSC", "VOE", "ASSD", "CV"]
 
+    # Extra parameters related to different parameters.
+    PREPROCESSING_WINDOWS = ()
+
     def __init__(self, cp_save_tag, state='training', create_dirs=True):
         if state not in ['testing', 'training']:
             raise ValueError('state must either be \'training\' or \'testing\'')
 
         self.CP_SAVE_TAG = cp_save_tag
         self.STATE = state
-        self.OUTPUT_DIR = PathManager.get_local_path(self.OUTPUT_DIR)
-
-    def init_fine_tune(self, init_weight_path):
-        """
-        Initialize fine tune state
-        :param init_weight_path: path to initial weights
-        """
-        if not self.training:
-            raise ValueError('Must be in training state')
-
-        self.FINE_TUNE = True
-        self.INIT_WEIGHT_PATH = init_weight_path
-
-        prefix = 'fine_tune'
-
-        # if fine_tune folder already exists, do not overwrite it
-        count = 2
-        while os.path.isdir(os.path.join(self.OUTPUT_DIR, prefix)):
-            prefix = 'fine_tune_%03d' % count
-            count += 1
-
-        self.OUTPUT_DIR = os.path.join(self.OUTPUT_DIR, prefix)
 
     def init_cross_validation(self, train_files, valid_files, test_files,
                               train_bins, valid_bins, test_bins,
@@ -191,8 +172,7 @@ class Config(object):
         return config
 
     def save_config(self):
-        """
-        Save params of config to ini file
+        """Save params of config to ini file.
         """
         members = [
             attr for attr in dir(self)
@@ -211,86 +191,200 @@ class Config(object):
         with PathManager.open(filepath, 'w+') as configfile:
             config.write(configfile)
 
-        # Save as object to make it easy to load
-        filepath = PathManager.get_local_path(
-            os.path.join(self.OUTPUT_DIR, 'config_obj.dat')
-        )
-        io_utils.save_pik(self, filepath)
+        logger.info("Full config saved to {}".format(os.path.abspath(filepath)))
 
-    def load_config(self, ini_filepath):
+    def _parse_special_attributes(
+        self,
+        full_key: str,
+        value: Any
+    ) -> Tuple[str, Any]:
+        """Special parsing values for attributes.
+
+        Used when loading config from a file or from list.
+
+        Args:
+            full_key (str): Upper case attribute representation.
+            value (Any): Corresponding value.
         """
-        Load params of config from ini file
-        :param ini_filepath: path to ini file
+        if full_key in ("TRAIN_PATH", "VALID_PATH", "TEST_PATH"):
+            # Ignore empty values.
+            mapping = {
+                "TRAIN_PATH": "TRAIN_DATASET",
+                "VALID_PATH": "VAL_DATASET",
+                "TEST_PATH": "TEST_DATASET",
+            }
+            if value:
+                prev_key, prev_val = full_key, value
+                value = MetadataCatalog.convert_path_to_dataset(value)
+                full_key = mapping[full_key]
+                logger.info("Converting {} -> {}: {} -> {}".format(
+                    prev_key, full_key, prev_val, value
+                ))
+        elif full_key == "LOSS" and isinstance(value, str):
+            value = get_training_loss_from_str(value)
+        elif full_key == "OUTPUT_DIR":
+            value = PathManager.get_local_path(value)
+
+        return full_key, value
+
+    def merge_from_file(self, cfg_filename):
+        """Load a ini or yaml config file and merge it with this object.
+
+        "CP_SAVE_TAG" must be specified in the file.
+
+        Args:
+            cfg_filename: File path to yaml or ini file.
         """
-        config = configparser.ConfigParser()
-        config.read(PathManager.get_local_path(ini_filepath))
-        vars_dict = config['DEFAULT']
-        
+        vars_dict = self._load_dict_from_file(cfg_filename)
+
+        # TODO: Handle cp save tag as a protected key.
         if vars_dict['CP_SAVE_TAG'] != self.CP_SAVE_TAG:
-            raise ValueError('Wrong config. Expected %s' % str(vars_dict['CP_SAVE_TAG']))
+            raise ValueError(
+                'Wrong config. Expected {}'.format(vars_dict['CP_SAVE_TAG'])
+            )
 
-        version = int(vars_dict["VERSION"]) if "VERSION" in vars_dict else self.VERSION
+        for full_key, value in vars_dict.items():
+            full_key = str(full_key).upper()
+            full_key, value = self._parse_special_attributes(
+                full_key,
+                value
+            )
 
-        for key in vars_dict.keys():
-            upper_case_key = str(key).upper()
-            
-            if upper_case_key in DEPRECATED_KEYS:
+            if full_key in DEPRECATED_KEYS:
                 logger.warning(
-                    "Key %s is deprecated, not loading" % upper_case_key
+                    "Key {} is deprecated, not loading".format(full_key)
                 )
                 continue
-
-            if upper_case_key in RENAMED_KEYS:
-                new_name = RENAMED_KEYS[upper_case_key]
+            if full_key in RENAMED_KEYS:
+                new_name = RENAMED_KEYS[full_key]
                 logger.warning(
                     "Key {} has been renamed to {}".format(
-                        upper_case_key, new_name
+                        full_key, new_name
                     )
                 )
-                upper_case_key = new_name
+                full_key = new_name
 
-            # Hacky way to handle old path versions.
-            if version <= 5 and upper_case_key in ("TRAIN_PATH", "VALID_PATH", "TEST_PATH"):
-                mapping = {
-                    "TRAIN_PATH": "TRAIN_DATASET",
-                    "VALID_PATH": "VAL_DATASET",
-                    "TEST_PATH": "TEST_DATASET",
-                }
-                # Ignore empty values.
-                if vars_dict[key] == "":
-                    continue
-                vars_dict[key] = MetadataCatalog.convert_path_to_dataset(vars_dict[key])
-                upper_case_key = mapping[upper_case_key]
+            if not hasattr(self, full_key):
+                raise ValueError("Key {} does not exist.".format(full_key))
 
-            if not hasattr(self, upper_case_key):
-                raise ValueError(
-                    "Key {} does not exist. "
-                    "All variable names should be fully capitalized".format(
-                        upper_case_key
-                    )
-                )
-
-            # Data is loaded as a string, cast it back to the original type.
-            data_type = type(getattr(self, upper_case_key))
-            if upper_case_key == "LOSS":
-                try:
-                    var_converted = utils.convert_data_type(
-                        vars_dict[key],
-                        data_type,
-                    )
-                except ValueError:
-                    var_converted = get_training_loss_from_str(vars_dict[key])
-            else:
-                var_converted = utils.convert_data_type(
-                    vars_dict[key],
-                    data_type,
-                )
-
-            if upper_case_key == "OUTPUT_DIR":
-                var_converted = PathManager.get_local_path(var_converted)
+            value = _check_and_coerce_cfg_value_type(
+                value,
+                self.__getattribute__(full_key),
+                full_key
+            )
+            self._decode_cfg_value(value, type(self.__getattribute__(full_key)))
 
             # Loading config
-            self.__setattr__(upper_case_key, var_converted)
+            self.__setattr__(full_key, value)
+
+    def merge_from_list(self, cfg_list):
+        """Merge config (keys, values) in a list (e.g. from command line).
+
+        For example, cfg_list = ['FOO_BAR', 0.5, 'BAR_FOO', (0,3,4)]
+        """
+        _error_with_logging(
+            len(cfg_list) % 2 == 0,
+            "Override list has odd length: {}; it must be a list of pairs".format(
+                cfg_list
+            ),
+        )
+
+        for full_key, v in zip(cfg_list[0::2], cfg_list[1::2]):
+            if full_key == "CP_SAVE_TAG":
+                raise ValueError("Cannot change key CP_SAVE_TAG")
+            if self.key_is_deprecated(full_key):
+                continue
+
+            if self.key_is_renamed(full_key):
+                self.raise_key_rename_error(full_key)
+
+            _error_with_logging(
+                hasattr(self, full_key),
+                "Non-existent key: {}".format(full_key),
+                error_type=KeyError,
+            )
+            value = self._decode_cfg_value(
+                v,
+                type(self.__getattribute__(full_key))
+            )
+            value = _check_and_coerce_cfg_value_type(
+                value,
+                self.__getattribute__(full_key),
+                full_key
+            )
+            self.__setattr__(full_key, value)
+
+    @classmethod
+    def _decode_cfg_value(cls, value, data_type):
+        """
+        Decodes a raw config value (e.g., from a yaml config files or command
+        line argument) into a Python object.
+
+        If the value is a dict, it will be interpreted as a new CfgNode.
+        If the value is a str, it will be evaluated as literals.
+        Otherwise it is returned as-is.
+        """
+        # Configs parsed from raw yaml will contain dictionary keys that need to be
+        # converted to CfgNode objects
+        """
+        Convert string to relevant data type
+        :param var_string: variable as a string (e.g.: '[0]', '1', '2.0', 'hellow')
+        :param data_type: the type of the data
+        :return: string converted to data_type
+        """
+        if not isinstance(value, str):
+            return value
+
+        if data_type is str:
+            return str(value)
+        elif data_type is float:
+            return float(value)
+        elif data_type is int:
+            return int(value)
+        else:
+            return ast.literal_eval(value)
+
+    def key_is_deprecated(self, full_key):
+        """Test if a key is deprecated."""
+        if full_key in DEPRECATED_KEYS:
+            logger.warning(
+                "Deprecated config key (ignoring): {}".format(full_key)
+            )
+            return True
+        return False
+
+    def key_is_renamed(self, full_key):
+        """Test if a key is renamed."""
+        return full_key in RENAMED_KEYS
+
+    def raise_key_rename_error(self, full_key):
+        new_key = RENAMED_KEYS[full_key]
+        if isinstance(new_key, tuple):
+            msg = " Note: " + new_key[1]
+            new_key = new_key[0]
+        else:
+            msg = ""
+        raise KeyError(
+            "Key {} was renamed to {}; please update your config.{}".format(
+                full_key, new_key, msg
+            )
+        )
+
+    @classmethod
+    def _load_dict_from_file(cls, cfg_filename):
+        if cfg_filename.endswith(".ini"):
+            config = configparser.ConfigParser()
+            config.read(PathManager.get_local_path(cfg_filename))
+            vars_dict = config['DEFAULT']
+            vars_dict = {k.upper(): v for k, v in vars_dict}
+        elif cfg_filename.endswith(".yaml") or cfg_filename.endswith(".yml"):
+            with open(cfg_filename, "r") as f:
+                vars_dict = yaml.load(f)
+        else:
+            raise ValueError("file {} not supported".format(cfg_filename))
+
+        return vars_dict
+
 
     def set_attr(self, attr, val):
         """
@@ -1010,6 +1104,59 @@ class RefineNetConfig(Config):
         super().__init__(self.CP_SAVE_TAG, state, create_dirs=create_dirs)
 
 
+def _check_and_coerce_cfg_value_type(replacement, original, full_key):
+    """Checks that `replacement`, which is intended to replace `original` is of
+    the right type. The type is correct if it matches exactly or is one of a few
+    cases in which the type can be easily coerced.
+    """
+    original_type = type(original)
+    replacement_type = type(replacement)
+
+    # TODO: Convert all to have non-None values by default.
+    if original_type == type(None):
+        return replacement
+
+    # The types must match (with some exceptions)
+    if replacement_type == original_type:
+        return replacement
+
+    # Cast replacement from from_type to to_type if the replacement and original
+    # types match from_type and to_type
+    def conditional_cast(from_type, to_type):
+        if replacement_type == from_type and original_type == to_type:
+            return True, to_type(replacement)
+        else:
+            return False, None
+
+    # Conditionally casts
+    # list <-> tuple
+    casts = [(tuple, list), (list, tuple)]
+
+    for (from_type, to_type) in casts:
+        converted, converted_value = conditional_cast(from_type, to_type)
+        if converted:
+            return converted_value
+
+    raise ValueError(
+        "Type mismatch ({} vs. {}) with values ({} vs. {}) for config "
+        "key: {}".format(
+            original_type, replacement_type, original, replacement, full_key
+        )
+    )
+
+
+def _assert_with_logging(cond, msg):
+    if not cond:
+        logger.debug(msg)
+    assert cond, msg
+
+
+def _error_with_logging(cond, msg, error_type=ValueError):
+    if not cond:
+        logger.error(msg)
+        raise error_type(msg)
+
+
 SUPPORTED_CONFIGS = [UNetConfig, SegnetConfig, DeeplabV3Config, ResidualUNet, AnisotropicUNetConfig, RefineNetConfig,
                      UNet3DConfig, UNet2_5DConfig, DeeplabV3_2_5DConfig]
 
@@ -1040,15 +1187,15 @@ def get_config(
     raise ValueError('config %s not found' % config_cp_save_tag)
 
 
-def get_cp_save_tag(filepath: str):
+def get_cp_save_tag(cfg_filename: str):
+    """Get "CP_SAVE_TAG" from config file.
+    Args:
+        cfg_filename: filepath to INI or YAML file where config is stored
+
+    Returns:
+        str: CP_SAVE_TAG
     """
-    Get cp_save_tag from a INI file
-    :param filepath: filepath to INI file where config is stored
-    :return: cp_save_tag specified in ini_filepath
-    """
-    config = configparser.ConfigParser()
-    config.read(filepath)
-    vars_dict = config['DEFAULT']
+    vars_dict = Config._load_dict_from_file(cfg_filename)
     return vars_dict['CP_SAVE_TAG']
 
 
@@ -1063,3 +1210,8 @@ def init_cmd_line_parser(parser):
         subparsers.append(config.init_cmd_line_parser(parser))
     return subparsers
 
+
+def config_exists(experiment_dir: str):
+    return os.path.isfile(os.path.join(experiment_dir, "config.ini")) \
+           or os.path.isfile(os.path.join(experiment_dir, "config.yaml")) \
+           or os.path.isfile(os.path.join(experiment_dir, "config.yml"))

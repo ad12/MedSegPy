@@ -91,7 +91,7 @@ class InterpolationTest():
         logger.info('Config: %s' % config_filepath)
         c = self.load_config(config_filepath)
 
-        c.load_config(config_filepath)
+        c.merge_from_file(config_filepath)
         c.TEST_WEIGHT_PATH = weights_path
 
         config_dict = self.config_dict

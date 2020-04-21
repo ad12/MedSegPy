@@ -138,3 +138,11 @@ def get_available_gpus(num_gpus: int=None):
         raise ValueError("Requested {} gpus, only {} are free".format(num_requested_gpus, len(available_gpus)))
 
     return available_gpus[:num_requested_gpus] if num_requested_gpus else available_gpus
+
+
+def num_gpus():
+    if "CUDA_VISIBLE_DEVICES" not in os.environ \
+        or not os.environ["CUDA_VISIBLE_DEVICES"]:
+        return 0
+
+    return len(os.environ["CUDA_VISIBLE_DEVICES"].split(','))

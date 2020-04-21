@@ -17,10 +17,10 @@ The call should return a `nn.Module` object.
 def build_evaluator(
     dataset_name: str,
     cfg: Config,
-    output_dir: str=None,
+    output_folder: str = None,
     save_raw_data: bool = False,
 ):
     name = MetadataCatalog.get(dataset_name).evaluator_type
     evaluator_cls = EVALUATOR_REGISTRY.get(name)
 
-    return evaluator_cls(dataset_name, cfg, output_dir, save_raw_data)
+    return evaluator_cls(dataset_name, cfg, output_folder, save_raw_data)

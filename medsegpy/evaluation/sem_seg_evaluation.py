@@ -48,29 +48,30 @@ class SemSegEvaluator(DatasetEvaluator):
     def __init__(
         self,
         dataset_name,
-        config: Config,
-        output_dir=None,
+        cfg: Config,
+        output_folder=None,
         save_raw_data: bool = False,
     ):
         """
         Args:
             dataset_name (str): name of the dataset to be evaluated.
-            config:
-            output_dir (str): an output directory to dump results.
+            cfg:
+            output_folder (str): an output directory to dump results.
             save_raw_data (:obj:`bool`, optional): Save recon, labels, ground
                 truth masks to h5 file.
         """
-        self._config = config
+        self._config = cfg
         self._dataset_name = dataset_name
-        self._output_dir = output_dir if output_dir else config.TEST_RESULT_PATH
-        self._num_classes = config.get_num_classes()
+        self._output_folder = output_folder \
+            if output_folder else os.path.join(cfg.OUTPUT_DIR, "test_results")
+        self._num_classes = cfg.get_num_classes()
         self._ignore_label = 0
 
         self._logger = logging.getLogger(__name__)
 
         meta = MetadataCatalog.get(dataset_name)
         self._meta = meta
-        cat_ids = config.TISSUES
+        cat_ids = cfg.TISSUES
         contiguous_id_map = meta.get("category_id_to_contiguous_id")
         contiguous_ids = [contiguous_id_map[x] for x in cat_ids]
 
@@ -83,7 +84,7 @@ class SemSegEvaluator(DatasetEvaluator):
             category_colors = sns.color_palette("bright")
         self._categories = categories
         self._category_colors = category_colors
-        self._metrics = [SegMetric[m] for m in config.TEST_METRICS]
+        self._metrics = [SegMetric[m] for m in cfg.TEST_METRICS]
 
         self._metrics_manager = None
         self._predictions = None
@@ -91,8 +92,8 @@ class SemSegEvaluator(DatasetEvaluator):
 
         self._save_raw_data = save_raw_data
 
-        self._output_activation = config.LOSS[1]
-        self._output_includes_background = config.INCLUDE_BACKGROUND
+        self._output_activation = cfg.LOSS[1]
+        self._output_includes_background = cfg.INCLUDE_BACKGROUND
 
     def reset(self):
         self._metrics_manager = MetricsManager(
@@ -157,7 +158,7 @@ class SemSegEvaluator(DatasetEvaluator):
         voxel_spacing = self._voxel_spacing
         logger = self._logger
         save_raw_data = self._save_raw_data
-        output_dir = self._output_dir
+        output_dir = self._output_folder
         PathManager.mkdirs(output_dir)
 
         scan_cnt = 0

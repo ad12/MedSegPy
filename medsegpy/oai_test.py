@@ -422,7 +422,7 @@ def test_dir(
     if best_weight_path is None:
         best_weight_path = dl_utils.get_weights(dirpath)
 
-    config.load_config(config_filepath)
+    config.merge_from_file(config_filepath)
     config.TEST_WEIGHT_PATH = best_weight_path
 
     # Initialize logger.

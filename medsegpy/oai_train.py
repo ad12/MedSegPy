@@ -34,7 +34,7 @@ def train_model(config, optimizer=None, model=None, class_weights=None):
     """
     raise DeprecationWarning(
         "oai_train.train_model is deprecated. "
-        "Use nn_train.NNTrain._train_model() instead."
+        "Use nn_train.DefaultTrainer._train_model() instead."
     )
 
     # Load data from config
@@ -237,7 +237,7 @@ def fine_tune(dirpath, config, vals_dict=None, class_weights=None):
     #     logger.info('Skipping %s - fine_tune folder exists' % dirpath)
 
     # Initialize for fine tuning
-    config.load_config(os.path.join(dirpath, 'config.ini'))
+    config.merge_from_file(os.path.join(dirpath, 'config.ini'))
 
     # Get best weight path
     best_weight_path = dl_utils.get_weights(dirpath)
