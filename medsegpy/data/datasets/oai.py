@@ -1,5 +1,11 @@
-from medsegpy.data.catalog import MetadataCatalog
+import logging
+import os
+import re
+
+from medsegpy.data.catalog import DatasetCatalog, MetadataCatalog
 from medsegpy.utils.cluster import Cluster, CLUSTER
+
+logger = logging.getLogger(__name__)
 
 _DATA_CATALOG = {}
 _TEST_SET_METADATA_PIK = ""
@@ -36,8 +42,88 @@ OAI_CATEGORIES = [
 ]
 
 
+def load_oai_2d_from_dir(scan_root, dataset_name=None):
+    # sample scan name: "9311328_V01-Aug04_072.im"
+    # format: %7d_V%02d-Aug%02d_%03d
+    FNAME_REGEX = '([\d]+)_V([\d]+)-Aug([\d]+)_([\d]+)'
+
+    files = sorted(os.listdir(scan_root))
+    filepaths = [os.path.join(scan_root, f) for f in files]
+
+    dataset_dicts = []
+    for fp in filepaths:
+        _, pid, time_point, _, slice_id, _ = tuple(re.split(FNAME_REGEX, fp))
+        pid = int(pid)
+        time_point = int(time_point)
+        dataset_dicts.append({
+            "image_file": fp,
+            "sem_seg_file": "{}.seg".format(os.path.splitext(fp)[0]),
+            "scan_id": "{:07d}_V{:02d}".format(pid, time_point),
+            "subject_id": pid,
+            "time_point": time_point,
+            "slice_id": int(slice_id),
+            "total_num_slices": 160,
+        })
+
+    num_scans = len(set([d["scan_id"] for d in dataset_dicts]))
+    num_subjects = len(set([d["subject_id"] for d in dataset_dicts]))
+    if dataset_name:
+        logger.info("Loaded {} from {}".format(dataset_name, scan_root))
+    logger.info("Loaded {} scans from {} subjects ({} slices)".format(
+        num_scans, num_subjects, len(dataset_dicts)
+    ))
+
+    return dataset_dicts
+
+
+def load_oai_3d_from_dir(scan_root, dataset_name=None):
+    # sample scan name: "9311328_V01-Aug04_072.h5"
+    FNAME_REGEX = '([\d]+)_V([\d]+)'
+
+    files = sorted(os.listdir(scan_root))
+    filepaths = [os.path.join(scan_root, f) for f in files]
+
+    dataset_dicts = []
+    for fp in filepaths:
+        pid, time_point = tuple(re.split(FNAME_REGEX, fp))
+        pid = int(pid)
+        time_point = int(time_point)
+        dataset_dicts.append({
+            "image_file": fp,
+            "sem_seg_file": "{}.seg".format(os.path.splitext(fp)[0]),
+            "scan_id": "{:07d}_V{:02d}".format(pid, time_point),
+            "subject_id": pid,
+            "time_point": time_point,
+        })
+
+    num_scans = len(dataset_dicts)
+    num_subjects = len(set([d["subject_id"] for d in dataset_dicts]))
+    if dataset_name:
+        logger.info("Loaded {} from {}".format(dataset_name, scan_root))
+    logger.info("Loaded {} scans from {} subjects".format(
+        num_scans, num_subjects
+    ))
+
+    return dataset_dicts
+
+
 def register_oai():
     for dataset_name, dir_path in _DATA_CATALOG.items():
+        if dataset_name.startswith("oai_2d"):
+            DatasetCatalog.register(
+                dataset_name,
+                lambda: load_oai_2d_from_dir(dir_path, dataset_name),
+            )
+        elif dataset_name.startswith("oai_3d"):
+            DatasetCatalog.register(
+                dataset_name,
+                lambda: load_oai_3d_from_dir(dir_path, dataset_name)
+            )
+        else:
+            raise ValueError("OAI dataset {} not supported".format(
+                dataset_name
+            ))
+
         MetadataCatalog.get(dataset_name).set(
             scan_root=dir_path,
             voxel_spacing=(0.3125, 0.3125, 0.7),
@@ -46,6 +132,8 @@ def register_oai():
             category_abbreviations=[x["abbrev"] for x in OAI_CATEGORIES],
             categories=[x["name"] for x in OAI_CATEGORIES],
             category_colors=[x["color"] for x in OAI_CATEGORIES],
-            category_id_to_contiguous_id={x["id"]: idx for idx, x in enumerate(OAI_CATEGORIES)},
+            category_id_to_contiguous_id={
+                x["id"]: idx for idx, x in enumerate(OAI_CATEGORIES)
+            },
             evaluator_type="SemSegEvaluator",
         )
