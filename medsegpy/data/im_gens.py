@@ -296,7 +296,7 @@ class OAIGenerator(Generator):
         scan_id_to_files = self.__map_files_to_scan_id__(files)
         scan_ids = sorted(scan_id_to_files.keys())
 
-        for scan_id in list(scan_ids)[:2]:
+        for scan_id in list(scan_ids):
             scan_id_files = scan_id_to_files[scan_id]
             num_slices = len(scan_id_files)
 
