@@ -26,7 +26,7 @@ class GeneratorState(Enum):
     TESTING = 3
 
 
-def get_generator(config: Config):
+def get_generator(cfg: Config):
     """Get generator based on config TAG value"""
     for generator in [
         # OAI supported generators.
@@ -37,23 +37,23 @@ def get_generator(config: Config):
         CTGenerator,
     ]:
         try:
-            gen = generator(config)
+            gen = generator(cfg)
             if gen:
                 return gen
         except ValueError:
             continue
 
-    raise ValueError('No generator found for tag `%s`' % config.TAG)
+    raise ValueError('No generator found for tag `%s`' % cfg.TAG)
 
 
 class Generator(ABC):
     """Abstract class for data generator for neural network training and testing"""
     SUPPORTED_TAGS = ['']
 
-    def __init__(self, config: Config):
-        if config.TAG not in self.SUPPORTED_TAGS:
+    def __init__(self, cfg: Config):
+        if cfg.TAG not in self.SUPPORTED_TAGS:
             raise ValueError('Tag mismatch: config must have tag in %s' % self.SUPPORTED_TAGS)
-        self.config = config
+        self.config = cfg
         self.fname_parser = OAISliceWise()
 
     @abstractmethod

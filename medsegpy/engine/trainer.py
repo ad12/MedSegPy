@@ -45,14 +45,6 @@ class DefaultTrainer(object):
         """Train model specified by config.
         """
         cfg = self._cfg
-        output_dir = PathManager.get_local_path(cfg.OUTPUT_DIR)
-        if config.config_exists(output_dir):
-            raise ValueError(
-                "Experiment results exist at {}. "
-                "To re-run the experiment, delete the folder".format(
-                    output_dir
-                )
-            )
 
         self._train_model()
 
@@ -77,12 +69,12 @@ class DefaultTrainer(object):
 
     def _build_data_loaders(
         self,
-        config
+        cfg
     ) -> Union[Tuple[im_gens.Generator, im_gens.Generator],
                data_loader.DataLoader]:
         """Builds train and val data loaders.
         """
-        generator = im_gens.get_generator(config)
+        generator = im_gens.get_generator(cfg)
         # try:
         #     train_gen = data_loader.get_data_loader(
         #         config,
@@ -158,7 +150,7 @@ class DefaultTrainer(object):
         )
         callbacks = self.build_callbacks()
 
-        train_loader, val_loader = self._build_data_loaders(config)
+        train_loader, val_loader = self._build_data_loaders(cfg)
         if isinstance(train_loader, im_gens.Generator):
             train_nbatches, valid_nbatches = train_loader.num_steps()
             train_loader.summary()

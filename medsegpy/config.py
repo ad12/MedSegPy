@@ -1178,9 +1178,3 @@ def init_cmd_line_parser(parser):
     for config in SUPPORTED_CONFIGS:
         subparsers.append(config.init_cmd_line_parser(parser))
     return subparsers
-
-
-def config_exists(experiment_dir: str):
-    return os.path.isfile(os.path.join(experiment_dir, "config.ini")) \
-           or os.path.isfile(os.path.join(experiment_dir, "config.yaml")) \
-           or os.path.isfile(os.path.join(experiment_dir, "config.yml"))

@@ -15,6 +15,12 @@ from medsegpy.utils.collect_env import collect_env_info
 from medsegpy.utils.logger import setup_logger
 
 
+def config_exists(experiment_dir: str):
+    return os.path.isfile(os.path.join(experiment_dir, "config.ini")) \
+           or os.path.isfile(os.path.join(experiment_dir, "config.yaml")) \
+           or os.path.isfile(os.path.join(experiment_dir, "config.yml"))
+
+
 def default_argument_parser():
     """
     Create a parser with some common arguments used by detectron2 users.
@@ -28,7 +34,7 @@ def default_argument_parser():
     parser.add_argument("--eval-only", action="store_true",
                         help="perform evaluation only")
     parser.add_argument("--num-gpus", type=int, default=1,
-                        help="number of gpus *per machine*")
+                        help="number of gpus")
 
     parser.add_argument(
         "opts",
@@ -52,6 +58,15 @@ def default_setup(cfg, args):
         cfg (CfgNode): the full config to be used
         args (argparse.NameSpace): the command line arguments to be logged
     """
+    # Do not run experiment if directory already exists.
+    if not args.eval_only and config_exists(cfg.OUTPUT_DIR):
+        raise ValueError(
+            "Experiment results exist at {}. "
+            "To re-run the experiment, delete the folder".format(
+                cfg.OUTPUT_DIR
+            )
+        )
+
     # Setup cuda visible devices.
     num_gpus = args.num_gpus
     if num_gpus > 0:
