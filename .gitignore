@@ -5,6 +5,9 @@
 # Ignore cache
 **/__pycache__
 
+# Ignore egg files
+**/*.egg-info
+
 # Ignore tensorflow logs
 **/tf_log
 

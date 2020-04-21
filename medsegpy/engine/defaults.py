@@ -11,7 +11,7 @@ import keras.backend as K
 
 from medsegpy import glob_constants
 from medsegpy.utils import dl_utils
-from medsegpy.utils.env import collect_env_info
+from medsegpy.utils.collect_env import collect_env_info
 from medsegpy.utils.logger import setup_logger
 
 
