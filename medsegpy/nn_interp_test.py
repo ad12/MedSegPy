@@ -24,7 +24,7 @@ import argparse
 import keras.backend as K
 from keras.utils import plot_model
 
-logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
+logger = logging.getLogger(__name__)
 
 # EXP_PATH = '/bmrNAS/people/arjun/msk_seg_networks/architecture_limit/deeplabv3_2d/2018-11-30-05-49-49/fine_tune/'
 HR_TEST_PATH = 'us'
@@ -104,7 +104,7 @@ class InterpolationTest():
         logger.info('Config: %s' % config_filepath)
         c = self.load_config(config_filepath)
 
-        c.load_config(config_filepath)
+        c.merge_from_file(config_filepath)
         c.TEST_WEIGHT_PATH = weights_path
 
         config_dict = self.config_dict
@@ -244,7 +244,7 @@ class InterpolationTest():
 
     def load_config(self, config_filepath):
         # get config
-        cp_save_tag = config.get_cp_save_tag(config_filepath)
+        cp_save_tag = config.get_model_name(config_filepath)
         return config.get_config(cp_save_tag, create_dirs=False)
 
     def analysis(self, x_test, y_test, recon, labels, mw: MetricWrapper, voxel_spacing,

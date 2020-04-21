@@ -21,7 +21,7 @@ import scipy.io as sio
 import argparse
 import keras.backend as K
 
-logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
+logger = logging.getLogger(__name__)
 
 DOWNSAMPLED_TEST_PATH = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/test'
 
@@ -91,7 +91,7 @@ class InterpolationTest():
         logger.info('Config: %s' % config_filepath)
         c = self.load_config(config_filepath)
 
-        c.load_config(config_filepath)
+        c.merge_from_file(config_filepath)
         c.TEST_WEIGHT_PATH = weights_path
 
         config_dict = self.config_dict
@@ -189,7 +189,7 @@ class InterpolationTest():
 
     def load_config(self, config_filepath):
         # get config
-        cp_save_tag = config.get_cp_save_tag(config_filepath)
+        cp_save_tag = config.get_model_name(config_filepath)
         return config.get_config(cp_save_tag, create_dirs=False)
 
     def analysis(self, x_test, y_test, recon, labels, mw: MetricWrapper, voxel_spacing,
@@ -276,6 +276,7 @@ def create_config_dict(vargin):
 
 
 if __name__ == '__main__':
+    raise DeprecationWarning("This file is deprecated. Use nn_test.")
     base_parser = argparse.ArgumentParser(description='Run inference (testing)')
     add_testing_arguments(base_parser)
 

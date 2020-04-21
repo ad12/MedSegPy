@@ -17,7 +17,7 @@ from medsegpy.data.im_generator import img_generator_oai_test
 from medsegpy.config import UNetConfig
 from medsegpy.utils import io_utils
 
-logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
+logger = logging.getLogger(__name__)
 
 
 def write_tiff(x, filepath):

@@ -11,15 +11,16 @@ from keras.callbacks import TensorBoard as tfb
 from keras.optimizers import Adam
 from keras.utils import plot_model
 
+import medsegpy.utils.dl_utils
 from medsegpy import glob_constants
 from medsegpy.data import im_gens
 from medsegpy.modeling.losses import get_training_loss, WEIGHTED_CROSS_ENTROPY_LOSS, dice_loss, focal_loss
 from medsegpy.modeling import get_model
 from medsegpy.utils import dl_utils
-from medsegpy.utils import io_utils, parallel_utils as putils
+from medsegpy.utils import io_utils
 from medsegpy.utils.logger import setup_logger
 
-logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
+logger = logging.getLogger(__name__)
 
 CLASS_WEIGHTS = np.asarray([100, 1])
 SAVE_BEST_WEIGHTS = True
@@ -34,7 +35,7 @@ def train_model(config, optimizer=None, model=None, class_weights=None):
     """
     raise DeprecationWarning(
         "oai_train.train_model is deprecated. "
-        "Use nn_train.NNTrain._train_model() instead."
+        "Use nn_train.DefaultTrainer._train_model() instead."
     )
 
     # Load data from config
@@ -77,7 +78,7 @@ def train_model(config, optimizer=None, model=None, class_weights=None):
     num_gpus = len(os.environ["CUDA_VISIBLE_DEVICES"].split(','))
     if num_gpus > 1:
         logger.info('Running multi gpu model')
-        model = putils.ModelMGPU(model, gpus=num_gpus)
+        model = medsegpy.utils.dl_utils.ModelMGPU(model, gpus=num_gpus)
 
     # If no optimizer is provided, default to Adam
     if optimizer is None:
@@ -237,7 +238,7 @@ def fine_tune(dirpath, config, vals_dict=None, class_weights=None):
     #     logger.info('Skipping %s - fine_tune folder exists' % dirpath)
 
     # Initialize for fine tuning
-    config.load_config(os.path.join(dirpath, 'config.ini'))
+    config.merge_from_file(os.path.join(dirpath, 'config.ini'))
 
     # Get best weight path
     best_weight_path = dl_utils.get_weights(dirpath)
@@ -355,7 +356,7 @@ if __name__ == '__main__':
     config_dict = c.parse_cmd_line(vargin)
 
     # parse tissues
-    config_dict['TISSUES'] = mri_utils.parse_tissues(vargin)
+    config_dict['CATEGORIES'] = mri_utils.parse_tissues(vargin)
 
     if fine_tune_dirpath:
         # parse freeze layers

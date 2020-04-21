@@ -32,7 +32,7 @@ from medsegpy.modeling import get_model
 from medsegpy.scan_metadata import ScanMetadata
 from medsegpy.data.im_gens import get_generator
 
-logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
+logger = logging.getLogger(__name__)
 
 DATE_THRESHOLD = strptime('2018-09-01-22-39-39', '%Y-%m-%d-%H-%M-%S')
 TEST_SET_METADATA_PIK = '/bmrNAS/people/arjun/msk_seg_networks/oai_metadata/oai_data.dat'
@@ -415,14 +415,14 @@ def test_dir(
     # Create config, if not provided.
     config_filepath = os.path.join(dirpath, 'config.ini')
     if not config:
-        config = MCONFIG.get_config(MCONFIG.get_cp_save_tag(config_filepath),
+        config = MCONFIG.get_config(MCONFIG.get_model_name(config_filepath),
                                     create_dirs=False)
 
     # Get best weight path
     if best_weight_path is None:
         best_weight_path = dl_utils.get_weights(dirpath)
 
-    config.load_config(config_filepath)
+    config.merge_from_file(config_filepath)
     config.TEST_WEIGHT_PATH = best_weight_path
 
     # Initialize logger.
@@ -785,6 +785,7 @@ def handle_best_network_test_exp(vargin):
 
 
 if __name__ == '__main__':
+    raise DeprecationWarning("This file is deprecated. Use nn_test.")
     parser = argparse.ArgumentParser(description='Run inference on OAI dataset')
 
     subparsers = parser.add_subparsers(help='experiment to run', dest=EXP_KEY)

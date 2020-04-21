@@ -8,11 +8,19 @@ from keras.layers import Input, Conv2D, MaxPooling2D, Conv2DTranspose, Dropout, 
 from keras.models import Model
 from keras.utils import plot_model
 
-logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
+logger = logging.getLogger(__name__)
 
 
-def anisotropic_unet_2d(input_size=None, input_tensor=None, output_mode=None, num_filters=None, depth=6,
-                        kernel_size=(3,3), pooling_size=None, pooling_ratio=None):
+def anisotropic_unet_2d(
+    input_size = None,
+    input_tensor = None,
+    output_mode = None,
+    num_filters = None,
+    depth = 6,
+    kernel_size = (3, 3),
+    pooling_size = None,
+    pooling_ratio = None,
+):
     """Generate Unet 2D model compatible with Keras 2
 
     :param input_size: tuple of input size - format: (height, width, 1)

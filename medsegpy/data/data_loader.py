@@ -9,7 +9,7 @@ import numpy as np
 from medsegpy.config import Config
 from .im_gens import GeneratorState, Generator, OAIGenerator
 
-logger = logging.getLogger("msk_seg.{}".format(__name__))
+logger = logging.getLogger(__name__)
 
 
 class DataLoader(k_utils.Sequence, ABC):
@@ -99,7 +99,7 @@ class OAIDataLoader(DataLoader):
         else:
             self._files = self._generator.sort_files(self._files)
         self._image_size = config.IMG_SIZE
-        self._tissues = config.TISSUES
+        self._tissues = config.CATEGORIES
         self._include_background = config.INCLUDE_BACKGROUND
         self._num_neighboring_slices = config.num_neighboring_slices()
         self._num_classes = config.get_num_classes()

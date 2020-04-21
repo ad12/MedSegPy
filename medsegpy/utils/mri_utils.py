@@ -17,31 +17,7 @@ men = MEN = MASK_MENISCUS
 SUPPORTED_TISSUES = ['fc', 'tc', 'pc', 'men']
 
 
-def init_cmd_line(parser: argparse.ArgumentParser):
-    parser.add_argument('--tissues', nargs='+',
-                        default=['fc'],
-                        help='tissues to segment. Use `fc` ,`tc`, `pc`, or `men`')
-
-
-def parse_tissues(vargin: dict):
-    str_tissues = vargin['tissues']
-    tissues = []
-    for t in str_tissues:
-        if t not in SUPPORTED_TISSUES:
-            raise ValueError('tissue corresponding to `%s` not found. Supported tissues: %s' % (t, SUPPORTED_TISSUES))
-
-    if 'fc' in str_tissues:
-        tissues.append(MASK_FEMORAL_CARTILAGE)
-    if 'tc' in str_tissues:
-        tissues.append(MASK_TIBIAL_CARTILAGE)
-    if 'pc' in str_tissues:
-        tissues.append(MASK_PATELLAR_CARTILAGE)
-    if 'men' in str_tissues:
-        tissues.append(MASK_MENISCUS)
-
-    return tissues
-
-
+# TODO: REMOVE
 def get_tissue_name(inds: list):
     names_to_val = {'fc': MASK_FEMORAL_CARTILAGE,
                     'tc': MASK_TIBIAL_CARTILAGE,

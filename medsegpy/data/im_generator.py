@@ -7,7 +7,7 @@ from re import split
 import h5py
 import numpy as np
 
-logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
+logger = logging.getLogger(__name__)
 
 
 # find unique data regardless of the file prefix

@@ -68,10 +68,10 @@ def test_dir(dirpath, config=None, vals_dict=None, best_weight_path=None, save_g
 
     config_filepath = os.path.join(dirpath, 'config.ini')
     if not config:
-        config = MCONFIG.get_config(MCONFIG.get_cp_save_tag(config_filepath), create_dirs=False)
+        config = MCONFIG.get_config(MCONFIG.get_model_name(config_filepath), create_dirs=False)
 
     print('Config: %s' % config_filepath)
-    config.load_config(config_filepath)
+    config.merge_from_file(config_filepath)
     config.TEST_WEIGHT_PATH = best_weight_path
 
     if vals_dict is not None:

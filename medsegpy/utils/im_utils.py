@@ -14,7 +14,7 @@ class MultiClassOverlay():
     """
     def __init__(self, num_classes,
                  color_palette=sns.color_palette('bright'),
-                 background_label=0,
+                 background_label=-1,
                  opacity=0.7,
                  dirpath = ''):
         """

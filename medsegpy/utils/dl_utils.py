@@ -1,20 +1,28 @@
 import os
 import subprocess
 
+from keras import Model
+from keras.utils import multi_gpu_model
 
-def get_weights(base_folder):
-    """
-    Gets the best weights file inside the base_folder
-    :param base_folder: dirpath where weights are stored
-    :return: h5 file
 
-    Assumes that only the best weights are stored, so searching for the epoch should be enough
+def get_weights(experiment_dir):
+    """Gets the weights file corresponding to lowest validation loss.
+
+    Assumes that only the best weights are stored, so searching for the epoch
+    should be enough.
+    TODO: remove this assumption.
+
+    Args:
+        experiment_dir (str): Experiment directory where weights are stored.
+
+    Returns:
+        str: Path to weights h5 file.
     """
-    files = os.listdir(base_folder)
+    files = os.listdir(experiment_dir)
     max_epoch = -1
     best_file = ''
     for file in files:
-        file_fullpath = os.path.join(base_folder, file)
+        file_fullpath = os.path.join(experiment_dir, file)
         # Ensure the file is an h5 file
         if not (os.path.isfile(file_fullpath) and file_fullpath.endswith('.h5') and 'weights' in file):
             continue
@@ -23,14 +31,79 @@ def get_weights(base_folder):
         train_info = file.split('.')[1]
         epoch = int(train_info.split('-')[0])
 
-        if (epoch > max_epoch):
+        if epoch > max_epoch:
             max_epoch = epoch
             best_file = file_fullpath
 
     if not best_file:
-        raise FileNotFoundError('No weights file found in %s' % base_folder)
+        raise FileNotFoundError('No weights file found in %s' % experiment_dir)
 
     return best_file
+
+
+def _check_results_file(base_path):
+    """Recursively check for results.txt file.
+    """
+    if (base_path is None) or (not os.path.isdir(base_path)) or (base_path == ''):
+        return []
+
+    results_filepath = os.path.join(base_path, 'results.txt')
+
+    results_paths = []
+    if os.path.isfile(results_filepath):
+        results_paths.append(results_filepath)
+
+    files = os.listdir(base_path)
+    for file in files:
+        possible_dir = os.path.join(base_path, file)
+        if os.path.isdir(possible_dir):
+            subdir_results_files = _check_results_file(possible_dir)
+            results_paths.extend(subdir_results_files)
+
+    return results_paths
+
+
+def get_valid_subdirs(root_dir: str, exist_ok: bool = False):
+    """Recursively search for experiments that are ready to be tested.
+
+    Different experiments live in different folders. Based on training protocol,
+    we assume that an valid experiment has completed training if its folder
+    contains files "config.ini" and "pik_data.dat".
+
+    To avoid recomputing experiments with results, `exist_ok=False` by default.
+
+    Args:
+        root_dir (str): Root folder to search.
+        exist_ok (:obj:`bool`, optional): If `True`, recompute results for
+            experiments.
+
+    Return:
+        List[str]: Experiment directories to test.
+    """
+    no_results = not exist_ok
+    if (root_dir is None) or (not os.path.isdir(root_dir)) or (root_dir == []):
+        return []
+
+    subdirs = []
+    config_path = os.path.join(root_dir, 'config.ini')
+    pik_data_path = os.path.join(root_dir, 'pik_data.dat')
+    test_results_dirpath = os.path.join(root_dir, 'test_results')
+    results_file_exists = len(_check_results_file(test_results_dirpath)) > 0
+
+    # 1. Check if you are a valid subdirectory - must contain a pik data path
+    if os.path.isfile(config_path) and os.path.isfile(pik_data_path):
+        if (no_results and (not results_file_exists)) or ((not no_results)):
+            subdirs.append(root_dir)
+
+    files = os.listdir(root_dir)
+    # 2. Recursively search through other subdirectories
+    for file in files:
+        possible_dir = os.path.join(root_dir, file)
+        if os.path.isdir(possible_dir):
+            rec_subdirs = get_valid_subdirs(possible_dir, no_results)
+            subdirs.extend(rec_subdirs)
+
+    return subdirs
 
 
 def get_available_gpus(num_gpus: int=None):
@@ -43,6 +116,7 @@ def get_available_gpus(num_gpus: int=None):
     Args:
         num_gpus: Number of requested gpus. If not specified,
             ids of all available gpu(s) are returned.
+
     Returns:
         List[int]: List of gpu ids that are free. Length
             will equal `num_gpus`, if specified.
@@ -67,3 +141,28 @@ def get_available_gpus(num_gpus: int=None):
         raise ValueError("Requested {} gpus, only {} are free".format(num_requested_gpus, len(available_gpus)))
 
     return available_gpus[:num_requested_gpus] if num_requested_gpus else available_gpus
+
+
+def num_gpus():
+    if "CUDA_VISIBLE_DEVICES" not in os.environ \
+        or not os.environ["CUDA_VISIBLE_DEVICES"]:
+        return 0
+
+    return len(os.environ["CUDA_VISIBLE_DEVICES"].split(','))
+
+
+class ModelMGPU(Model):
+    def __init__(self, ser_model, gpus):
+        pmodel = multi_gpu_model(ser_model, gpus)
+        self.__dict__.update(pmodel.__dict__)
+        self._smodel = ser_model
+
+    def __getattribute__(self, attrname):
+        '''Override load and save methods to be used from the serial-model. The
+        serial-model holds references to the weights in the multi-gpu model.
+        '''
+        # return Model.__getattribute__(self, attrname)
+        if 'load' in attrname or 'save' in attrname:
+            return getattr(self._smodel, attrname)
+
+        return super(ModelMGPU, self).__getattribute__(attrname)

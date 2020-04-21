@@ -1,11 +1,8 @@
 import logging
-import os
-import sys
 
 from keras import Model
 from keras.initializers import glorot_uniform
 from keras.layers import Input, Conv2D
-from keras.utils import plot_model
 
 from medsegpy.config import DeeplabV3Config, SegnetConfig, UNetConfig, \
     UNetMultiContrastConfig, UNet2_5DConfig, DeeplabV3_2_5DConfig, ResidualUNet, AnisotropicUNetConfig, RefineNetConfig, \
@@ -20,7 +17,7 @@ from .unet_2d.unet_model import unet_2d_model, unet_2d_model_v2
 from .refinenet.refinenet_model import refinenet_model
 from .unet_3d_model import unet_3d_model
 
-logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
+logger = logging.getLogger(__name__)
 
 
 def get_model(config):
@@ -35,8 +32,6 @@ def get_model(config):
         model = segnet_2d(config)
     elif type(config) is UNetConfig:
         model = unet_2d(config)
-    elif type(config) is UNetMultiContrastConfig:
-        model = unet_2d_multi_contrast(config)
     elif type(config) is UNet2_5DConfig:
         model = unet_2_5d(config)
     elif type(config) is DeeplabV3_2_5DConfig:
@@ -193,11 +188,6 @@ def deeplabv3_2d(config):
     x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation, seed=config.SEED)
     model = Model(inputs=model.input, outputs=x)
 
-    # Save image
-    dil_rates_str = str(dil_rate_input[0]) + '-' + str(dil_rate_input[1]) + '-' + str(dil_rate_input[2])
-    img_name = config.CP_SAVE_TAG + '_' + str(OS) + '_' + dil_rates_str + '.png'
-    plot_model(model, os.path.join(config.PLOT_MODEL_PATH, img_name), show_shapes=True)
-
     return model
 
 
@@ -226,7 +216,7 @@ def segnet_2d(config: SegnetConfig):
             output_mode=output_mode,
             seed=config.SEED,
         )
-        model = model.model
+        model = model.build_model()
     else:
         model = Segnet_v2(input_shape=input_shape,
                           n_labels=num_classes,
@@ -237,53 +227,6 @@ def segnet_2d(config: SegnetConfig):
                           conv_act_bn=config.CONV_ACT_BN,
                           output_mode=output_mode,
                           seed=config.SEED)
-
-    model_name = config.CP_SAVE_TAG + '_%d' + '_%s' + '_%s'
-    bn_str = 'xbn'
-    conv_act_bn_str = 'cba'
-
-    if config.SINGLE_BN:
-        bn_str = '1bn'
-
-    if config.CONV_ACT_BN:
-        conv_act_bn_str = 'cab'
-
-    model_name = model_name % (config.DEPTH, bn_str, conv_act_bn_str)
-
-    plot_model(model, os.path.join(config.PLOT_MODEL_PATH, model_name + '.png'), show_shapes=True)
-
-    return model
-
-
-def unet_2d_multi_contrast(config):
-    """
-    Returns unet model corresponding to 3-channel multi-contrast inputs
-    :param config: a UNetMultiContrastConfig object
-    :return: a Keras model
-
-    :raises ValueError: if config not of type UNetMultiContrastConfig
-    """
-    if (type(config) is not UNetMultiContrastConfig):
-        raise ValueError('config must be instance of UNetMultiContrastConfig')
-
-    activation = config.LOSS[1]
-    num_classes = config.get_num_classes()
-    input_shape = config.IMG_SIZE
-
-    logger.info('Initializing multi contrast 2d unet: input size - ' + str(input_shape))
-
-    x = Input(input_shape)
-    x = Conv2D(1, (1, 1), name='conv_mc_comp')(x)
-
-    model = unet_2d_model(input_tensor=x)
-
-    # Add activation
-    x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation, seed=config.SEED)
-    model = Model(inputs=model.input, outputs=x)
-
-    # only load weights for layers that share the same name
-    if config.INIT_UNET_2D:
-        model.load_weights(config.INIT_UNET_2D_WEIGHTS, by_name=True)
 
     return model
 
@@ -351,11 +294,6 @@ def deeplabv3_2_5d(config):
     x = __add_activation_layer(output=model.layers[-1].output, num_classes=num_classes, activation=activation, seed=config.SEED)
     model = Model(inputs=model.input, outputs=x)
 
-    # Save image
-    dil_rates_str = str(dil_rate_input[0]) + '-' + str(dil_rate_input[1]) + '-' + str(dil_rate_input[2])
-    img_name = config.CP_SAVE_TAG + '_' + str(OS) + '_' + dil_rates_str + '.png'
-    plot_model(model, os.path.join(config.PLOT_MODEL_PATH, img_name), show_shapes=True)
-
     return model
 
 
@@ -380,14 +318,3 @@ def __add_activation_layer(output, num_classes, activation='sigmoid', seed=None)
     return Conv2D(num_classes, (1, 1), activation=activation,
                   kernel_initializer=glorot_uniform(seed=seed),
                   name='output_activation')(output)
-
-
-if __name__ == '__main__':
-    # config = UNetMultiContrastConfig(create_dirs=False)
-    # config.INIT_UNET_2D_WEIGHTS = './test_data/unet_2d_fc_weights.004--0.8968.h5'
-    #
-    # unet_2d_multi_contrast(config)
-    config = RefineNetConfig(create_dirs=False)
-    save_path = '../imgs/refinenet_resnet50.png'
-    m = get_model(config)
-    plot_model(m, to_file=save_path, show_shapes=True)

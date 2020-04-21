@@ -4,11 +4,10 @@ from keras.initializers import glorot_uniform
 from keras.layers import Input
 from keras.layers.convolutional import Convolution2D
 from keras.models import Model
-from keras.utils import plot_model
 
 from .segnet import SegNet
 
-logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
+logger = logging.getLogger(__name__)
 
 
 class SegNetBottleneck(SegNet):
@@ -27,6 +26,8 @@ class SegNetBottleneck(SegNet):
         output_mode = self._output_mode
         single_bn = self._single_bn
         conv_act_bn = self._conv_act_bn
+
+        logger.info('Initializing SegNet with seed: {}'.format(self._seed))
 
         inputs = input_tensor if input_tensor else Input(shape=input_shape)
 

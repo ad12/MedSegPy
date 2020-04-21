@@ -1,73 +1,61 @@
-import copy
 import logging
 import os
 
-import keras.backend as K
 import numpy as np
 
-os.environ["MSK_SEG_NETWORKS_PROJECT"] = "abCT"
-
-from medsegpy.ct_test import test_dir
 from medsegpy.data.im_gens import CTGenerator
-from medsegpy.nn_train import NNTrain
-from medsegpy.utils import ct_utils
+from medsegpy.engine.defaults import default_argument_parser
+from medsegpy.nn_train import main
+from medsegpy.engine.trainer import DefaultTrainer
 
 CLASS_WEIGHTS = np.asarray([100, 1])
 SAVE_BEST_WEIGHTS = True
 FREEZE_LAYERS = None
 
-logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
+logger = logging.getLogger(__name__)
 
 
-class CTTrain(NNTrain):
-    __DESCRIPTION__ = 'Train networks for ct segmentation'
+def parse_windows(windows):
+    windowing = {
+        "soft": (400, 50),
+        "bone": (1800, 400),
+        "liver": (150, 30),
+        "spine": (250, 50),
+        "custom": (500, 50)
+    }
+    vals = []
+    for w in windows:
+        if w not in windowing:
+            raise KeyError("Window {} not found".format(w))
+        window_width = windowing[w][0]
+        window_level = windowing[w][1]
+        upper = window_level + window_width / 2
+        lower = window_level - window_width / 2
 
+        vals.append((lower, upper))
+
+    return vals
+
+
+class AbCTTrainer(DefaultTrainer):
     _ARG_KEY_WINDOWS = "windows"
 
-    @staticmethod
-    def _add_classes_parser(parser):
-        parser.add_argument("--classes", type=int, nargs="+",
-                            required=False,
-                            default=[],
-                            help="tissue indices to segment")
-
-    def _parse_classes(self):
-        return self.args["classes"]
-
-    def _add_default_args(self, parser):
-        super()._add_default_args(parser)
-        parser.add_argument('--{}'.format(self._ARG_KEY_WINDOWS),
-                            metavar='W', type=str, nargs='*',
-                            dest=self._ARG_KEY_WINDOWS,
-                            help='(min, max) windows for clipping data')
-
-    def _train_cross_validation(self, config):
-        raise NotImplementedError(
-            "Cross validation not supported for CT training")
-
-    def _build_data_loaders(self, config):
-        window_keys = self.get_arg(self._ARG_KEY_WINDOWS)
-        windows = ct_utils.parse_windows(window_keys) if window_keys else None
-        generator = CTGenerator(config, windows)
+    def _build_data_loaders(self, cfg):
+        windows = cfg.PREPROCESSING_WINDOWS
+        windows = parse_windows(windows) if windows else None
+        generator = CTGenerator(cfg, windows)
 
         return generator, generator
 
-    def _test(self, config):
-        logger.info("Beginning testing...")
-        config = copy.deepcopy(config)  # will be modified below.
-        dirpath = config.OUTPUT_DIR
-
-        window_keys = self.get_arg(self._ARG_KEY_WINDOWS)
-        windows = ct_utils.parse_windows(window_keys) if window_keys else None
-        test_dir(
-            dirpath,
-            windows=windows
-        )
-
-        K.clear_session()
+    def build_test_data_loader(self, cfg):
+        windows = cfg.PREPROCESSING_WINDOWS
+        windows = parse_windows(windows) if windows else None
+        return CTGenerator(cfg, windows)
 
 
 if __name__ == '__main__':
-    nn_train = CTTrain()
-    nn_train.parse()
-    nn_train.run()
+    basename = os.path.splitext(os.path.basename(__file__))[0]
+    logger = logging.getLogger("medsegpy.{}.{}".format(basename, __name__))
+    args = default_argument_parser().parse_args()
+    main(args, AbCTTrainer)
+

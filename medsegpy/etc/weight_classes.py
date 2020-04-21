@@ -9,7 +9,7 @@ import numpy as np
 from medsegpy.data.im_generator import add_file
 from medsegpy.utils import io_utils
 
-logger = logging.getLogger("msk_seg_networks.{}".format(__name__))
+logger = logging.getLogger(__name__)
 
 TRAIN_PATH = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/train_aug'
 CLASS_FREQ_DAT_FOLDER = io_utils.check_dir('/bmrNAS/people/arjun/msk_seg_networks/class_weights')
