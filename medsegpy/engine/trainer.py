@@ -228,7 +228,7 @@ class DefaultTrainer(object):
         evaluator = build_evaluator(
             test_dataset,
             cfg,
-            save_raw_data=True
+            save_raw_data=False
         )
         return inference_on_dataset(model, test_gen, evaluator)
 

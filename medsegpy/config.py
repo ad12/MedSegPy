@@ -28,7 +28,7 @@ DEPRECATED_KEYS = ['NUM_CLASSES', 'TRAIN_FILES_CV', 'VALID_FILES_CV',
 RENAMED_KEYS = {
     "CP_SAVE_PATH": "OUTPUT_DIR",
     "CP_SAVE_TAG": "MODEL_NAME",
-    "INIT_WEIGHTS": "INIT_WEIGHTS",
+    "INIT_WEIGHT_PATH": "INIT_WEIGHTS",
     "TISSUES": "CATEGORIES",
 }
 
@@ -218,7 +218,10 @@ class Config(object):
                     prev_key, full_key, prev_val, value
                 ))
         elif full_key == "LOSS" and isinstance(value, str):
-            value = get_training_loss_from_str(value)
+            try:
+                value = get_training_loss_from_str(value)
+            except ValueError:
+                pass
         elif full_key == "OUTPUT_DIR":
             value = PathManager.get_local_path(value)
 
@@ -235,9 +238,10 @@ class Config(object):
         vars_dict = self._load_dict_from_file(cfg_filename)
 
         # TODO: Handle cp save tag as a protected key.
-        if vars_dict['MODEL_NAME'] != self.MODEL_NAME:
+        model_name = vars_dict['MODEL_NAME'] if "MODEL_NAME" in vars_dict else vars_dict["CP_SAVE_TAG"]
+        if model_name != self.MODEL_NAME:
             raise ValueError(
-                'Wrong config. Expected {}'.format(vars_dict['MODEL_NAME'])
+                'Wrong config. Expected {}'.format(model_name)
             )
 
         for full_key, value in vars_dict.items():
@@ -436,64 +440,57 @@ class Config(object):
         """
 
         summary_vals = ['MODEL_NAME', 'TAG', '']
+        summary_vals.extend([
+            'TRAIN_DATASET', 'VAL_DATASET', 'TEST_DATASET', '',
 
-        if self.STATE == 'training':
-            summary_vals.extend([
-                'TRAIN_DATASET', 'VAL_DATASET', 'TEST_DATASET', '',
+            'CATEGORIES', '',
 
-                'CATEGORIES', '',
+            'IMG_SIZE', '',
 
-                'IMG_SIZE', '',
+            'N_EPOCHS',
+            'AUGMENT_DATA',
+            'LOSS',
+            "CLASS_WEIGHTS",
+            "",
 
-                'N_EPOCHS',
-                'AUGMENT_DATA',
-                'LOSS',
-                "CLASS_WEIGHTS",
-                "",
+            'USE_CROSS_VALIDATION',
+            'CV_K' if self.USE_CROSS_VALIDATION else '',
+            'CV_FILE' if self.USE_CROSS_VALIDATION else '',
+            'CV_TRAIN_BINS' if self.USE_CROSS_VALIDATION else '',
+            'CV_VALID_BINS' if self.USE_CROSS_VALIDATION else '',
+            'CV_TEST_BINS' if self.USE_CROSS_VALIDATION else '', ''
+                                                                 
+            'TRAIN_BATCH_SIZE', 'VALID_BATCH_SIZE', "TEST_BATCH_SIZE", '',
 
-                'USE_CROSS_VALIDATION',
-                'CV_K' if self.USE_CROSS_VALIDATION else '',
-                'CV_FILE' if self.USE_CROSS_VALIDATION else '',
-                'CV_TRAIN_BINS' if self.USE_CROSS_VALIDATION else '',
-                'CV_VALID_BINS' if self.USE_CROSS_VALIDATION else '',
-                'CV_TEST_BINS' if self.USE_CROSS_VALIDATION else '', ''
-                                                                     
-                'TRAIN_BATCH_SIZE', 'VALID_BATCH_SIZE', '',
+            "NUM_GRAD_STEPS", "",
 
-                "NUM_GRAD_STEPS", "",
+            'INITIAL_LEARNING_RATE',
+            'LR_SCHEDULER_NAME',
+            'DROP_FACTOR' if self.LR_SCHEDULER_NAME else '',
+            'DROP_RATE' if self.LR_SCHEDULER_NAME else '',
+            'MIN_LEARNING_RATE' if self.LR_SCHEDULER_NAME else '',
+            "LR_MIN_DELTA" if self.LR_SCHEDULER_NAME else "",
+            "LR_PATIENCE" if self.LR_SCHEDULER_NAME else "",
+            "LR_COOLDOWN" if self.LR_SCHEDULER_NAME else "",
+            ""
 
-                'INITIAL_LEARNING_RATE',
-                'LR_SCHEDULER_NAME',
-                'DROP_FACTOR' if self.LR_SCHEDULER_NAME else '',
-                'DROP_RATE' if self.LR_SCHEDULER_NAME else '',
-                'MIN_LEARNING_RATE' if self.LR_SCHEDULER_NAME else '',
-                "LR_MIN_DELTA" if self.LR_SCHEDULER_NAME else "",
-                "LR_PATIENCE" if self.LR_SCHEDULER_NAME else "",
-                "LR_COOLDOWN" if self.LR_SCHEDULER_NAME else "",
-                ""
+            'USE_EARLY_STOPPING',
+            'EARLY_STOPPING_MIN_DELTA' if self.USE_EARLY_STOPPING else '',
+            'EARLY_STOPPING_PATIENCE' if self.USE_EARLY_STOPPING else '',
+            'EARLY_STOPPING_CRITERION' if self.USE_EARLY_STOPPING else '',
+            '',
 
-                'USE_EARLY_STOPPING',
-                'EARLY_STOPPING_MIN_DELTA' if self.USE_EARLY_STOPPING else '',
-                'EARLY_STOPPING_PATIENCE' if self.USE_EARLY_STOPPING else '',
-                'EARLY_STOPPING_CRITERION' if self.USE_EARLY_STOPPING else '',
-                '',
+            'KERNEL_INITIALIZER',
+            'SEED' if self.SEED else '', '' 
 
-                'KERNEL_INITIALIZER',
-                'SEED' if self.SEED else '', '' 
+            'INIT_WEIGHTS', '',
 
-                'FINE_TUNE',
-                'INIT_WEIGHTS', '',
+            "TEST_WEIGHT_PATH", "TEST_METRICS", ""
 
-                'NUM_WORKERS',
-                "OUTPUT_DIR",
-                '',
-            ])
-        else:
-            summary_vals.extend([
-                'TEST_RESULT_PATH',
-                'TEST_WEIGHT_PATH',
-                'TEST_BATCH_SIZE',
-            ])
+            'NUM_WORKERS',
+            "OUTPUT_DIR",
+            '',
+        ])
 
         summary_vals.extend(additional_vars)
 
@@ -1168,7 +1165,7 @@ def get_model_name(cfg_filename: str):
         str: MODEL_NAME
     """
     vars_dict = Config._load_dict_from_file(cfg_filename)
-    return vars_dict['MODEL_NAME']
+    return vars_dict['MODEL_NAME']if "MODEL_NAME" in vars_dict else vars_dict["CP_SAVE_TAG"]
 
 
 def init_cmd_line_parser(parser):

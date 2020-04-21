@@ -5,7 +5,7 @@ from keras.initializers import glorot_uniform
 from keras.layers import Input, Conv2D
 
 from medsegpy.config import DeeplabV3Config, SegnetConfig, UNetConfig, \
-    UNetMultiContrastConfig, UNet2_5DConfig, DeeplabV3_2_5DConfig, ResidualUNet, AnisotropicUNetConfig, RefineNetConfig, \
+    UNet2_5DConfig, DeeplabV3_2_5DConfig, ResidualUNet, AnisotropicUNetConfig, RefineNetConfig, \
     UNet3DConfig
 
 from .deeplab_2d.deeplab_model import DeeplabModel

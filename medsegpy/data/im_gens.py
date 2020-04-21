@@ -296,7 +296,7 @@ class OAIGenerator(Generator):
         scan_id_to_files = self.__map_files_to_scan_id__(files)
         scan_ids = sorted(scan_id_to_files.keys())
 
-        for scan_id in list(scan_ids):
+        for scan_id in list(scan_ids)[:2]:
             scan_id_files = scan_id_to_files[scan_id]
             num_slices = len(scan_id_files)
 
@@ -575,7 +575,7 @@ class OAIGenerator(Generator):
             state
         )
         scanset_info = self.__get_scanset_data__(files)
-        return len(scanset_info["scan_id"])
+        return len(scanset_info["scanid"])
 
     def __get_scanset_data__(self, files, keys=['pid', 'scanid']):
         info_dict = dict()
