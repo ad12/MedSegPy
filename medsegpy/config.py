@@ -10,20 +10,22 @@ import yaml
 from fvcore.common.file_io import PathManager
 
 from medsegpy.cross_validation import cv_util
-from medsegpy.losses import DICE_LOSS, CMD_LINE_SUPPORTED_LOSSES, get_training_loss_from_str
+from medsegpy.losses import DICE_LOSS, get_training_loss_from_str
 from medsegpy.utils import utils as utils, io_utils
 
 logger = logging.getLogger(__name__)
 
 # Keys that have been deprecated.
-DEPRECATED_KEYS = ['NUM_CLASSES', 'TRAIN_FILES_CV', 'VALID_FILES_CV',
-                   'TEST_FILES_CV', "USE_STEP_DECAY",
-                   "PIK_SAVE_PATH_DIR", "PIK_SAVE_PATH", "TF_LOG_DIR",
-                   "TRAIN_PATH", "VALID_PATH", "TEST_PATH",
-                   "PLOT_MODEL_PATH", "FINE_TUNE", "LEARN_FILES",
-                   "DEBUG",
-                   "TEST_RESULT_PATH", "TEST_RESULTS_FOLDER_NAME",
-                   ]
+DEPRECATED_KEYS = [
+    'NUM_CLASSES', 'TRAIN_FILES_CV', 'VALID_FILES_CV',
+    'TEST_FILES_CV', "USE_STEP_DECAY",
+    "PIK_SAVE_PATH_DIR", "PIK_SAVE_PATH", "TF_LOG_DIR",
+    "TRAIN_PATH", "VALID_PATH", "TEST_PATH",
+    "PLOT_MODEL_PATH", "FINE_TUNE", "LEARN_FILES",
+    "DEBUG",
+    "TEST_RESULT_PATH", "TEST_RESULTS_FOLDER_NAME",
+]
+
 RENAMED_KEYS = {
     "CP_SAVE_PATH": "OUTPUT_DIR",
     "CP_SAVE_TAG": "MODEL_NAME",
@@ -131,7 +133,7 @@ class Config(object):
     # Extra parameters related to different parameters.
     PREPROCESSING_WINDOWS = ()
 
-    def __init__(self, cp_save_tag, state='training', create_dirs=True):
+    def __init__(self, cp_save_tag, state = 'training', create_dirs = True):
         if state not in ['testing', 'training']:
             raise ValueError('state must either be \'training\' or \'testing\'')
 
@@ -174,9 +176,10 @@ class Config(object):
             attr for attr in dir(self)
             if not callable(getattr(self, attr))
                and not attr.startswith("__")
-               and not (hasattr(type(self), attr) and isinstance(getattr(type(self), attr), property))
+               and not (hasattr(type(self), attr) and isinstance(
+                getattr(type(self), attr), property))
         ]
-        
+
         filepath = os.path.join(self.OUTPUT_DIR, "config.ini")
         config_vars = dict()
         for m_var in members:
@@ -223,7 +226,8 @@ class Config(object):
         vars_dict = self._load_dict_from_file(cfg_filename)
 
         # TODO: Handle cp save tag as a protected key.
-        model_name = vars_dict['MODEL_NAME'] if "MODEL_NAME" in vars_dict else vars_dict["CP_SAVE_TAG"]
+        model_name = vars_dict['MODEL_NAME'] if "MODEL_NAME" in vars_dict else \
+        vars_dict["CP_SAVE_TAG"]
         if model_name != self.MODEL_NAME:
             raise ValueError(
                 'Wrong config. Expected {}'.format(model_name)
@@ -232,7 +236,9 @@ class Config(object):
         for full_key, value in vars_dict.items():
             full_key = str(full_key).upper()
             if full_key in ("TRAIN_PATH", "VALID_PATH", "TEST_PATH") and value:
-                raise ValueError("{} not longer supported - update to _DATASET".format(full_key))
+                raise ValueError(
+                    "{} not longer supported - update to _DATASET".format(
+                        full_key))
 
             full_key, value = self._parse_special_attributes(
                 full_key,
@@ -256,7 +262,8 @@ class Config(object):
             if not hasattr(self, full_key):
                 raise ValueError("Key {} does not exist.".format(full_key))
 
-            value = self._decode_cfg_value(value, type(self.__getattribute__(full_key)))
+            value = self._decode_cfg_value(value, type(
+                self.__getattribute__(full_key)))
             value = _check_and_coerce_cfg_value_type(
                 value,
                 self.__getattribute__(full_key),
@@ -365,7 +372,8 @@ class Config(object):
         if filename.endswith(".ini"):
             cfg = configparser.ConfigParser()
             if not os.path.isfile(filename):
-                raise FileNotFoundError("Config file {} not found".format(filename))
+                raise FileNotFoundError(
+                    "Config file {} not found".format(filename))
             cfg.read(filename)
             vars_dict = cfg['DEFAULT']
             vars_dict = {k.upper(): v for k, v in vars_dict.items()}
@@ -395,10 +403,12 @@ class Config(object):
         curr_val = self.__getattribute__(attr)
 
         if type(val) is str and type(curr_val) is not str:
-            val = utils.convert_data_type(var_string=val, data_type=type(curr_val))
+            val = utils.convert_data_type(var_string=val,
+                                          data_type=type(curr_val))
 
         if curr_val is not None and (type(val) != type(curr_val)):
-            raise ValueError('%s is of type %s. Expected %s' % (attr, str(type(val)), str(type(curr_val))))
+            raise ValueError('%s is of type %s. Expected %s' % (
+            attr, str(type(val)), str(type(curr_val))))
 
         self.__setattr__(attr, val)
 
@@ -420,7 +430,7 @@ class Config(object):
             self.__CV_VALID_FILES__ = valid_files
             self.__CV_TEST_FILES__ = test_files
 
-    def summary(self, additional_vars=[]):
+    def summary(self, additional_vars = []):
         """
         Print config summary
         :param additional_vars: additional list of variables to print
@@ -447,8 +457,9 @@ class Config(object):
             'CV_TRAIN_BINS' if self.USE_CROSS_VALIDATION else '',
             'CV_VALID_BINS' if self.USE_CROSS_VALIDATION else '',
             'CV_TEST_BINS' if self.USE_CROSS_VALIDATION else '', ''
-                                                                 
-            'TRAIN_BATCH_SIZE', 'VALID_BATCH_SIZE', "TEST_BATCH_SIZE", '',
+
+                                                                 'TRAIN_BATCH_SIZE',
+            'VALID_BATCH_SIZE', "TEST_BATCH_SIZE", '',
 
             "NUM_GRAD_STEPS", "",
 
@@ -469,13 +480,13 @@ class Config(object):
             '',
 
             'KERNEL_INITIALIZER',
-            'SEED' if self.SEED else '', '' 
+            'SEED' if self.SEED else '', ''
 
-            'INIT_WEIGHTS', '',
+                                         'INIT_WEIGHTS', '',
 
             "TEST_WEIGHT_PATH", "TEST_METRICS", ""
 
-            'NUM_WORKERS',
+                                                'NUM_WORKERS',
             "OUTPUT_DIR",
             '',
         ])
@@ -516,163 +527,6 @@ class Config(object):
     def training(self):
         return self.STATE == 'training'
 
-    @classmethod
-    def init_cmd_line_parser(cls, parser):
-        subcommand_parser = parser.add_parser('%s' % cls.MODEL_NAME, description='%s config parameters')
-
-        # Data format tag
-        subcommand_parser.add_argument('--tag', metavar='T', type=str, default=cls.TAG, nargs='?',
-                                       help='tag defining data format. Default: %s' % cls.TAG)
-
-        # Data paths
-        subcommand_parser.add_argument('--train_dataset', metavar='tp', type=str, default=cls.TRAIN_DATASET, nargs='?',
-                                       help='training data path. Default: %s' % cls.TRAIN_DATASET)
-        subcommand_parser.add_argument('--val_dataset', metavar='tp', type=str, default=cls.VAL_DATASET, nargs='?',
-                                       help='validation data path. Default: %s' % cls.VAL_DATASET)
-        subcommand_parser.add_argument('--test_dataset', metavar='tp', type=str, default=cls.TEST_DATASET, nargs='?',
-                                       help='testing data path. Default: %s' % cls.TEST_DATASET)
-
-        # Number of epochs
-        subcommand_parser.add_argument('--n_epochs', metavar='E', type=int, default=cls.N_EPOCHS, nargs='?',
-                                       help='number of training epochs. Default: %d' % cls.N_EPOCHS)
-
-        # Augment data
-        subcommand_parser.add_argument('--augment_data', default=False, action='store_const',
-                                       const=True,
-                                       help='use augmented data for training. Default: %s' % False)
-
-        # Learning rate.
-        subcommand_parser.add_argument('--initial_learning_rate', metavar='LR', type=float,
-                                       default=cls.INITIAL_LEARNING_RATE,
-                                       nargs='?',
-                                       help='initial learning rate. Default: %s' % cls.INITIAL_LEARNING_RATE)
-        subcommand_parser.add_argument('--min_learning_rate', metavar='mLR', type=float,
-                                       default=cls.MIN_LEARNING_RATE,
-                                       nargs='?',
-                                       help='minimum learning rate during decay. Default: %s' % cls.MIN_LEARNING_RATE)
-        subcommand_parser.add_argument(
-            '--lr_scheduler_name',
-            default=cls.LR_SCHEDULER_NAME,
-            nargs="?",
-            type=str,
-            help='learning rate scheduler. Default: {}'.format(
-                None if not cls.LR_SCHEDULER_NAME else cls.LR_SCHEDULER_NAME),
-        )
-        subcommand_parser.add_argument('--drop_factor', metavar='DF', type=float, default=cls.DROP_FACTOR, nargs='?',
-                                       help='drop factor for learning rate decay. Default: %s' % cls.DROP_FACTOR)
-        subcommand_parser.add_argument('--drop_rate', metavar='DR', type=float, default=cls.DROP_RATE, nargs='?',
-                                       help='drop rate for learning rate decay. Default: %s' % cls.DROP_RATE)
-
-        # Number of gradient steps
-        subcommand_parser.add_argument('--num_grad_steps', metavar='S', type=int,
-                               default=cls.NUM_GRAD_STEPS,
-                               nargs='?',
-                               help='number of gradient accumulation steps. Default: %s' % cls.NUM_GRAD_STEPS)
-
-        # Early stopping
-        subcommand_parser.add_argument('--use_early_stopping', default=False, action='store_const',
-                                       const=True,
-                                       help='use learning rate step decay. Default: %s' % False)
-        subcommand_parser.add_argument('--early_stopping_min_delta', metavar='D', type=float,
-                                       default=cls.EARLY_STOPPING_MIN_DELTA, nargs='?',
-                                       help='minimum change in the monitored quantity to qualify as an improvement, '
-                                            'i.e. an absolute change of less than min_delta, will count as no improvement. Default: %s' % cls.EARLY_STOPPING_MIN_DELTA)
-        subcommand_parser.add_argument('--early_stopping_patience', metavar='P', type=int, default=0, nargs='?',
-                                       help='number of epochs with no improvement after which training will be stopped. Default: %s' % cls.EARLY_STOPPING_PATIENCE)
-        subcommand_parser.add_argument('--early_stopping_criterion', metavar='C', type=str, default='val_loss',
-                                       nargs='?',
-                                       help='criterion to monitor for early stopping. Default: %s' % cls.EARLY_STOPPING_CRITERION)
-
-        # Batch size
-        subcommand_parser.add_argument('--train_batch_size', metavar='trBS', type=int, default=cls.TRAIN_BATCH_SIZE,
-                                       nargs='?',
-                                       help='training batch size. Default: %s' % cls.TRAIN_BATCH_SIZE)
-        subcommand_parser.add_argument('--valid_batch_size', metavar='vBS', type=int, default=cls.VALID_BATCH_SIZE,
-                                       nargs='?',
-                                       help='validation batch size. Default: %s' % cls.VALID_BATCH_SIZE)
-        subcommand_parser.add_argument('--test_batch_size', metavar='tBS', type=int, default=cls.TEST_BATCH_SIZE,
-                                       nargs='?',
-                                       help='testing/inference batch size. Default %s' % cls.TEST_BATCH_SIZE)
-
-        # Loss function
-        subcommand_parser.add_argument('--loss', metavar='L', type=str, default='DICE_LOSS', nargs='?',
-                                       choices=CMD_LINE_SUPPORTED_LOSSES,
-                                       help='loss function. Choose from %s' % CMD_LINE_SUPPORTED_LOSSES)
-        subcommand_parser.add_argument('--class_weights', metavar="W", type=float, default=cls.CLASS_WEIGHTS,
-                                       nargs="*",
-                                       help="class weights (if applicable). Defaults to equal weighting",
-                                      )
-
-        # Include background
-        subcommand_parser.add_argument('--include_background', default=False, action='store_const',
-                                       const=True,
-                                       help='include background for loss function (i.e. softmax). Default: %s' % False)
-
-        # Image size
-        subcommand_parser.add_argument('--img_size', type=str, default=str(cls.IMG_SIZE), nargs='?',
-                                       help='image size. Default: %s' % str(cls.IMG_SIZE))
-
-        # Kernel initializer
-        subcommand_parser.add_argument('--kernel_initializer', type=str, default=cls.KERNEL_INITIALIZER, nargs='?',
-                                       help='kernel initializer. Default: %s' % str(cls.KERNEL_INITIALIZER))
-
-        subcommand_parser.add_argument('-s', '--seed', metavar='S', type=int, default=cls.SEED, nargs='?',
-                                       dest='seed',
-                                       help='python seed to initialize filter weights. Default: %s' % cls.SEED)
-
-        # Initialize weight path.
-        subcommand_parser.add_argument('-init_weight_path', '--init_weight_path', metavar='P', type=str,
-                                       default=cls.INIT_WEIGHTS,
-                                       nargs='?',
-                                       dest='init_weight_path',
-                                       help='Path to weights file to initialize. Default: %s' % cls.INIT_WEIGHTS)
-
-        # System parameters
-        subcommand_parser.add_argument('--num_workers', metavar='W', type=int, default=1, nargs='?',
-                                       dest='num_workers',
-                                       help='number of workers for data loading. Default: %s' % cls.NUM_WORKERS)
-
-        return subcommand_parser
-
-    @classmethod
-    def __get_cmd_line_vars__(cls):
-        return ['tag',
-                'train_dataset', 'val_dataset', 'test_dataset',
-                'n_epochs', 'augment_data',
-                'num_grad_steps',
-                'lr_scheduler_name', 'initial_learning_rate',
-                'min_learning_rate', 'drop_factor', 'drop_rate',
-                'use_early_stopping', 'early_stopping_min_delta',
-                'early_stopping_patience',
-                'early_stopping_criterion',
-                'train_batch_size', 'valid_batch_size', 'test_batch_size',
-                'loss', 'class_weights', 'include_background',
-                'img_size',
-                'kernel_initializer', 'seed',
-                'init_weight_path',
-                'num_workers',
-                ]
-
-    @classmethod
-    def parse_cmd_line(cls, vargin):
-        config_dict = dict()
-        for skey in cls.__get_cmd_line_vars__():
-            if skey not in vargin.keys():
-                continue
-
-            c_skey = skey.upper()
-            val = vargin[skey]
-
-            if skey == 'loss':
-                val = get_training_loss_from_str(vargin[skey].upper())
-
-            if skey == 'img_size':
-                val = utils.convert_data_type(vargin[skey], data_type=type(cls.IMG_SIZE))
-                assert type(val) is tuple
-
-            config_dict[c_skey] = val
-        return config_dict
-
 
 class DeeplabV3Config(Config):
     """
@@ -685,41 +539,12 @@ class DeeplabV3Config(Config):
     AT_DIVISOR = 2
     DROPOUT_RATE = 0.1
 
-    def __init__(self, state='training', create_dirs=True):
+    def __init__(self, state = 'training', create_dirs = True):
         super().__init__(self.MODEL_NAME, state, create_dirs=create_dirs)
 
-    def summary(self, additional_vars=[]):
+    def summary(self, additional_vars = []):
         summary_attrs = ['OS', 'DIL_RATES', 'DROPOUT_RATE']
         super().summary(summary_attrs)
-
-    @classmethod
-    def init_cmd_line_parser(cls, parser):
-        subparser = super().init_cmd_line_parser(parser)
-
-        subparser.add_argument('--os', type=int, default=cls.OS, nargs='?',
-                               help='output stride. Default: %d' % cls.OS)
-        subparser.add_argument('--dil_rates', type=str, default=str(cls.DIL_RATES), nargs='?',
-                               help='dilation rates. Default: %s' % str(cls.DIL_RATES))
-        subparser.add_argument('--dropout_rate', type=float, default=cls.DROPOUT_RATE, nargs='?',
-                               help='dropout rate before classification layer')
-
-        return subparser
-
-    @classmethod
-    def __get_cmd_line_vars__(cls):
-        cmd_line_vars = super().__get_cmd_line_vars__()
-        cmd_line_vars.extend(['os', 'dil_rates', 'dropout_rate'])
-        return cmd_line_vars
-
-    @classmethod
-    def parse_cmd_line(cls, vargin) -> dict:
-        config_dict = super().parse_cmd_line(vargin)
-        
-        config_dict['DIL_RATES'] = utils.convert_data_type(config_dict['DIL_RATES'], tuple)
-
-        assert len(config_dict['DIL_RATES']) == 3
-
-        return config_dict
 
 
 class SegnetConfig(Config):
@@ -740,65 +565,12 @@ class SegnetConfig(Config):
 
     INITIAL_LEARNING_RATE = 1e-3
 
-    def __init__(self, state='training', create_dirs=True):
+    def __init__(self, state = 'training', create_dirs = True):
         super().__init__(self.MODEL_NAME, state, create_dirs=create_dirs)
 
-    def summary(self, additional_vars=[]):
+    def summary(self, additional_vars = []):
         summary_attrs = ['DEPTH', 'NUM_CONV_LAYERS', 'NUM_FILTERS']
         super().summary(summary_attrs)
-
-    @classmethod
-    def init_cmd_line_parser(cls, parser):
-        subparser = super().init_cmd_line_parser(parser)
-
-        subparser.add_argument('--depth', type=int, default=cls.DEPTH, nargs='?',
-                               help='network depth. Default: %d' % cls.DEPTH)
-        subparser.add_argument('--num_conv_layers', type=str, default=str(cls.NUM_CONV_LAYERS), nargs='?',
-                               help='number of convolutional layers. Default: %s' % str(cls.NUM_CONV_LAYERS))
-        subparser.add_argument('--num_filters', type=str, default=str(cls.NUM_FILTERS), nargs='?',
-                               help='number of filters at each depth layer. Default: %s' % str(cls.NUM_FILTERS))
-        subparser.add_argument(
-            "--single_bn",
-            default=False,
-            action="store_true",
-            help='use single batch norm per depth. Default: %s' % False,
-        )
-        subparser.add_argument(
-            "--use_bottleneck",
-            default=False,
-            action="store_true",
-            help='use bottleneck w/o pooling. Default: %s' % False,
-        )
-
-        return subparser
-
-    @classmethod
-    def __get_cmd_line_vars__(cls):
-        cmd_line_vars = super().__get_cmd_line_vars__()
-        cmd_line_vars.extend([
-            'depth',
-            'num_conv_layers',
-            'num_filters',
-            "single_bn",
-            "use_bottleneck",
-        ])
-        return cmd_line_vars
-
-    @classmethod
-    def parse_cmd_line(cls, vargin) -> dict:
-        config_dict = super().parse_cmd_line(vargin)
-        depth = config_dict['DEPTH']
-
-        num_conv_layers = utils.convert_data_type(config_dict['NUM_CONV_LAYERS'], type(cls.NUM_CONV_LAYERS))
-        num_filters = utils.convert_data_type(config_dict['NUM_FILTERS'], type(cls.NUM_FILTERS))
-
-        assert len(num_conv_layers) == depth, "Number of conv layers must be specified for each depth"
-        assert len(num_filters) == depth, "Number of filters must be specified for each depth"
-
-        config_dict['NUM_CONV_LAYERS'] = num_conv_layers
-        config_dict['NUM_FILTERS'] = num_filters
-
-        return config_dict
 
 
 class UNetConfig(Config):
@@ -817,43 +589,14 @@ class UNetConfig(Config):
     DEPTH = 6
     NUM_FILTERS = None
 
-    def __init__(self, state='training', create_dirs=True):
+    def __init__(self, state = 'training', create_dirs = True):
         super().__init__(self.MODEL_NAME, state, create_dirs=create_dirs)
 
-    @classmethod
-    def init_cmd_line_parser(cls, parser):
-        subparser = super().init_cmd_line_parser(parser)
-
-        subparser.add_argument('--depth', type=int, default=cls.DEPTH, nargs='?',
-                               help='network depth. Default: %d' % cls.DEPTH)
-        subparser.add_argument('--num_filters', type=str, default=str(cls.NUM_FILTERS), nargs='?',
-                               help='number of filters. Default: %s' % str(cls.NUM_FILTERS))
-
-        return subparser
-
-    @classmethod
-    def __get_cmd_line_vars__(cls):
-        cmd_line_vars = super().__get_cmd_line_vars__()
-        cmd_line_vars.extend(['depth', 'num_filters'])
-        return cmd_line_vars
-
-    def summary(self, additional_vars=[]):
+    def summary(self, additional_vars = []):
         summary_vars = ['DEPTH', 'NUM_FILTERS', '']
         summary_vars.extend(additional_vars)
         super().summary(summary_vars)
 
-    @classmethod
-    def parse_cmd_line(cls, vargin) -> dict:
-        config_dict = super().parse_cmd_line(vargin)
-        depth = config_dict['DEPTH']
-
-        num_filters = utils.convert_data_type(config_dict['NUM_FILTERS'], type(cls.NUM_FILTERS))
-        if num_filters:
-            assert len(num_filters) == depth, "Number of filters must be specified for each depth"
-
-        config_dict['NUM_FILTERS'] = num_filters
-
-        return config_dict
 
 class ResidualUNet(Config):
     """
@@ -870,34 +613,10 @@ class ResidualUNet(Config):
     USE_SE_BLOCK = False
     SE_RATIO = 8
 
-    def __init__(self, state='training', create_dirs=True):
+    def __init__(self, state = 'training', create_dirs = True):
         super().__init__(self.MODEL_NAME, state, create_dirs=create_dirs)
 
-    @classmethod
-    def init_cmd_line_parser(cls, parser):
-        subparser = super().init_cmd_line_parser(parser)
-
-        subparser.add_argument('--depth', type=int, default=cls.DEPTH, nargs='?',
-                               help='network depth. Default: %d' % cls.DEPTH)
-        subparser.add_argument('--dropout_rate', type=float, default=cls.DROPOUT_RATE, nargs='?',
-                               help='dropout rate. Default: %d' % cls.DROPOUT_RATE)
-        subparser.add_argument('--layer_order', type=str, default=str(cls.LAYER_ORDER), nargs='?',
-                               help='layer order. Default: %s' % cls.LAYER_ORDER)
-
-        subparser.add_argument('--use_se_block', action='store_const', default=False, const=True,
-                               help='use squeeze-excitation block. Default: False')
-        subparser.add_argument('--se_ratio', type=int, default=cls.SE_RATIO, nargs='?',
-                               help='squeeze-excitation downsampling ratio. Default: %d' % cls.SE_RATIO)
-
-        return subparser
-
-    @classmethod
-    def __get_cmd_line_vars__(cls):
-        cmd_line_vars = super().__get_cmd_line_vars__()
-        cmd_line_vars.extend(['depth', 'dropout_rate', 'layer_order', 'use_se_block', 'se_ratio'])
-        return cmd_line_vars
-
-    def summary(self, additional_vars=[]):
+    def summary(self, additional_vars = []):
         summary_attrs = ['DEPTH', 'NUM_FILTERS', 'DROPOUT_RATE', '',
                          'LAYER_ORDER', '',
                          'USE_SE_BLOCK', 'SE_RATIO']
@@ -911,10 +630,10 @@ class UNet2_5DConfig(UNetConfig):
     """
     Configuration for 3D U-Net architecture
     """
+    MODEL_NAME = 'unet_2_5d'
 
     IMG_SIZE = (288, 288, 7)
 
-    MODEL_NAME = 'unet_2_5d'
     N_EPOCHS = 20
     AUGMENT_DATA = False
     INITIAL_LEARNING_RATE = 1e-2
@@ -922,18 +641,15 @@ class UNet2_5DConfig(UNetConfig):
     DROP_RATE = 1.0
     DROP_FACTOR = 0.8
 
-    # Train path - volumetric augmentation
-    #TRAIN_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/vol_aug/train_sag/'
-
     def num_neighboring_slices(self):
         return self.IMG_SIZE[2]
 
 
 class UNet3DConfig(UNetConfig):
+    MODEL_NAME = 'unet_3d'
 
     IMG_SIZE = (288, 288, 4, 1)
 
-    MODEL_NAME = 'unet_3d'
     N_EPOCHS = 20
     INITIAL_LEARNING_RATE = 1e-2
 
@@ -946,63 +662,25 @@ class UNet3DConfig(UNetConfig):
 
     NUM_FILTERS = [32, 64, 128, 256, 512, 1024]
 
-    # Train path - volumetric augmentation
-    #TRAIN_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/vol_aug/train_sag/'
-
     def num_neighboring_slices(self):
         return self.IMG_SIZE[2]
 
-    @classmethod
-    def init_cmd_line_parser(cls, parser):
-        subparser = super().init_cmd_line_parser(parser)
-
-        subparser.add_argument('--slice_subset', type=str, default=str(cls.SLICE_SUBSET), nargs='?',
-                               help='subset of slices to select (tuple). Default: %s' % str(cls.SLICE_SUBSET))
-
-        return subparser
-
-    @classmethod
-    def __get_cmd_line_vars__(cls):
-        cmd_line_vars = super().__get_cmd_line_vars__()
-        cmd_line_vars.extend(['slice_subset'])
-        return cmd_line_vars
-
-    def summary(self, additional_vars=[]):
+    def summary(self, additional_vars = []):
         summary_attrs = ['SLICE_SUBSET']
         super().summary(summary_attrs)
 
-    @classmethod
-    def parse_cmd_line(cls, vargin) -> dict:
-        config_dict = super().parse_cmd_line(vargin)
-
-        slice_subset = utils.convert_data_type(config_dict['SLICE_SUBSET'], type(cls.SLICE_SUBSET))
-        if slice_subset:
-            assert len(slice_subset) == 2, "slice_subset must define starting and ending slices"
-
-        config_dict['SLICE_SUBSET'] = slice_subset
-
-        return config_dict
-
 
 class DeeplabV3_2_5DConfig(DeeplabV3Config):
-    """
-    Configuration for 2.5D Deeplabv3+ architecture
+    """2.5D DeeplabV3+.
     """
     IMG_SIZE = (288, 288, 3)
-
-    MODEL_NAME = 'deeplabv3_2_5d'
-    N_EPOCHS = 100
-
-    # Train path - volumetric augmentation
-    #TRAIN_PATH = '/bmrNAS/people/akshay/dl/oai_data/oai_aug/vol_aug/train_sag/'
 
     def num_neighboring_slices(self):
         return self.IMG_SIZE[2]
 
 
 class AnisotropicUNetConfig(Config):
-    """
-    Configuration for 2D Anisotropic U-Net architecture
+    """2D Anisotropic U-Net.
     """
     MODEL_NAME = 'anisotropic_unet'
 
@@ -1018,45 +696,23 @@ class AnisotropicUNetConfig(Config):
 
     KERNEL_SIZE = (7, 3)
 
-    #KERNEL_SIZE_RATIO = None
-    #POOLING_SIZE_RATIO = None
-    #POOLING_SIZE = (3, 11)
-
-    def __init__(self, state='training', create_dirs=True):
+    def __init__(self, state = 'training', create_dirs = True):
         super().__init__(self.MODEL_NAME, state, create_dirs=create_dirs)
 
-    @classmethod
-    def init_cmd_line_parser(cls, parser):
-        subparser = super().init_cmd_line_parser(parser)
-
-        subparser.add_argument('--depth', type=int, default=cls.DEPTH, nargs='?',
-                               help='network depth. Default: %d' % cls.DEPTH)
-        subparser.add_argument('--kernel_size', type=str, default=str(cls.KERNEL_SIZE), nargs='?',
-                               help='kernel size. Default: %s' % str(cls.KERNEL_SIZE))
-
-        return subparser
-
-    @classmethod
-    def __get_cmd_line_vars__(cls):
-        cmd_line_vars = super().__get_cmd_line_vars__()
-        cmd_line_vars.extend(['depth', 'kernel_size'])
-        return cmd_line_vars
-
-    def summary(self, additional_vars=[]):
+    def summary(self, additional_vars = []):
         summary_attrs = ['DEPTH', 'NUM_FILTERS', 'KERNEL_SIZE']
         super().summary(summary_attrs)
 
 
 class RefineNetConfig(Config):
-    """
-    Configuration for RefineNet architecture as suggested by paper below
+    """Configuration for RefineNet architecture as suggested by paper below
     http://openaccess.thecvf.com/content_cvpr_2017/papers/Lin_RefineNet_Multi-Path_Refinement_CVPR_2017_paper.pdf
     """
     MODEL_NAME = 'refinenet'
 
     INITIAL_LEARNING_RATE = 1e-3
 
-    def __init__(self, state='training', create_dirs=True):
+    def __init__(self, state = 'training', create_dirs = True):
         super().__init__(self.MODEL_NAME, state, create_dirs=create_dirs)
 
 
@@ -1107,7 +763,7 @@ def _assert_with_logging(cond, msg):
     assert cond, msg
 
 
-def _error_with_logging(cond, msg, error_type=ValueError):
+def _error_with_logging(cond, msg, error_type = ValueError):
     if not cond:
         logger.error(msg)
         raise error_type(msg)
@@ -1120,8 +776,7 @@ SUPPORTED_CONFIGS = [UNetConfig, SegnetConfig, DeeplabV3Config, ResidualUNet,
 
 def get_config(
     config_cp_save_tag: str,
-    create_dirs: bool=True,
-    output_dir: str = "",
+    create_dirs: bool = True,
 ):
     """Get config using config_cp_save_tag
 
@@ -1137,32 +792,20 @@ def get_config(
     for config in configs:
         if config.MODEL_NAME == config_cp_save_tag:
             c = config(create_dirs=create_dirs)
-            if output_dir:
-                c.OUTPUT_DIR = output_dir
             return c
 
     raise ValueError('config %s not found' % config_cp_save_tag)
 
 
 def get_model_name(cfg_filename: str):
-    """Get "MODEL_NAME" from config file.
+    """Get "MODEL_NAME" attribute from config file.
+
     Args:
         cfg_filename: filepath to INI or YAML file where config is stored
 
     Returns:
-        str: MODEL_NAME
+        str: The model name.
     """
     vars_dict = Config._load_dict_from_file(cfg_filename)
-    return vars_dict['MODEL_NAME']if "MODEL_NAME" in vars_dict else vars_dict["CP_SAVE_TAG"]
-
-
-def init_cmd_line_parser(parser):
-    """
-    Initialize command line parser for configs by adding supported configs as arguments
-    :param parser: an ArgumentParser
-    :return: subparsers corresponding to command line arguments for each config
-    """
-    subparsers = []
-    for config in SUPPORTED_CONFIGS:
-        subparsers.append(config.init_cmd_line_parser(parser))
-    return subparsers
+    return vars_dict['MODEL_NAME'] if "MODEL_NAME" in vars_dict else vars_dict[
+        "CP_SAVE_TAG"]
