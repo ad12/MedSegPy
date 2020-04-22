@@ -1,35 +1,7 @@
-# MRSegPy
-MRSegPy is a command-line-enabled framework for training segmentation networks on magnetic resonance (MR) images. It is designed to utilize the Keras/Tensorflow libraries and abstractly handle training hyperparameters,
-such as loss functions, early stopping, adaptive learning rates, etc.
-
-## Getting Started
-### Installation
-Download this repository to your disk. Note that the path to this repo should not have any spaces. In general, this library does not handle folder paths that have spaces in between folder names.
-
-#### Virtual Environment
-We recommend using the Anaconda virtual environment to run python. If Anaconda is not installed, please do so from [Anaconda Distribution](https://www.anaconda.com/distribution/).
-
-An `environment.yml` file is provided in this repo containing all libraries used. To install all dependencies in a new environment, follow the steps below:
-1. Open Terminal/Bash
-2. Navigate to folder containing `environment.yml` file
-3. Run `conda env create -f environment.yml`
-
-### Formatting Data
-All data should be written to h5 files slice-wise, meaning each slice is its own file. Each file should have the following format:
-
-**Readable format:** `PatientID_Timepoint-AugmentationNumber_SliceNumber`
-
-**String format:** `%07d_V%02d-Aug%02d_%03d`
-
-**Regex:** `([\d]+)_V([\d]+)-Aug([\d]+)_([\d]+)`
-
-**Examples:**
-- `0123456_V01-Aug00_001`: Patient 0123456, Timepoint 1, Augmentation None, Slice 1
-- `0123456_V00-Aug00_001`: Patient 0123456, Timepoint 0, Augmentation None, Slice 1
-- `0123456_V00-Aug04_001`: Patient 0123456, Timepoint 0, Augmentation 4, Slice 1
-- `0123456_V00-Aug00_999`: Patient 0123456, Timepoint 0, Augmentation 4, Slice 999
-
-Data should be stored in 3 directories corressponding to training/validation/testing sets respectively (preferred) or stored in a single directory (if cross validation is being used).
+# MedSegPy
+MedSegPy is a framework for training segmentation networks on medical images.
+It is designed to utilize the Keras/Tensorflow libraries and make training easily
+configurable.
 
 ## Training Networks
 ### Architectures

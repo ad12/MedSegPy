@@ -4,19 +4,28 @@
 import os
 from os import path
 from setuptools import find_packages, setup
+
 import keras
 import tensorflow as tf
 
 tf_ver = [int(x) for x in tf.__version__.split(".")[:2]]
 assert tf_ver >= [1, 8] and tf_ver < [2, 0], "Requires TensorFlow >=1.8,<2.0"
 keras_ver = [int(x) for x in keras.__version__.split(".")[:3]]
-assert keras_ver >= [2, 1, 6] and keras_ver < [2, 2, 0], "Requires Keras >=2.1.6, <2.2.0"
+assert keras_ver >= [2, 1, 6] and keras_ver < [
+    2,
+    2,
+    0,
+], "Requires Keras >=2.1.6, <2.2.0"
 
 
 def get_version():
-    init_py_path = path.join(path.abspath(path.dirname(__file__)), "medsegpy", "__init__.py")
+    init_py_path = path.join(
+        path.abspath(path.dirname(__file__)), "medsegpy", "__init__.py"
+    )
     init_py = open(init_py_path, "r").readlines()
-    version_line = [l.strip() for l in init_py if l.startswith("__version__")][0]
+    version_line = [l.strip() for l in init_py if l.startswith("__version__")][
+        0
+    ]
     version = version_line.split("=")[-1].strip().strip("'\"")
 
     # The following is used to build release packages.
@@ -48,6 +57,7 @@ setup(
     install_requires=[
         "Pillow",  # you can also use pillow-simd for better performance
         "matplotlib",
+        "seaborn",
         "mock",
         "fvcore",
         "pydot",
@@ -63,6 +73,12 @@ setup(
     ],
     extras_require={
         "all": ["shapely", "psutil"],
-        "dev": ["flake8", "isort", "black==19.3b0", "flake8-bugbear", "flake8-comprehensions"],
+        "dev": [
+            "flake8",
+            "isort",
+            "black==19.3b0",
+            "flake8-bugbear",
+            "flake8-comprehensions",
+        ],
     },
 )

@@ -1,3 +1,0 @@
-[submodule "analysis/pystats"]
-	path = analysis/pystats
-	url = git@github.com:ad12/pystats.git

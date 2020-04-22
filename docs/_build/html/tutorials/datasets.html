@@ -1,0 +1,363 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Use Custom Datasets &mdash; MedSegPy 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Use Custom Dataloaders" href="data_loading.html" />
+    <link rel="prev" title="Extend MedSegPy’s Defaults" href="extend.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> MedSegPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html">Getting Started with Detectron2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="extend.html">Extend MedSegPy’s Defaults</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Use Custom Datasets</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#data-augmentation">Data Augmentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#data-format">Data format</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#image-files">Image files</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#segmentation-files">Segmentation files</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#collating-segmentations">Collating segmentations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#how-h5-files-are-read">How h5 files are read</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#data-paths">Data paths</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#register-metadata-for-a-dataset">Register Metadata for a Dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#update-the-config-for-new-datasets">Update the Config for New Datasets</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="data_loading.html">Use Custom Dataloaders</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">Use Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="write-models.html">Write Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="training.html">Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evaluation.html">Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configs.html">Use Configs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/index.html">API Documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">MedSegPy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">Tutorials</a> &raquo;</li>
+        
+      <li>Use Custom Datasets</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/tutorials/datasets.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="use-custom-datasets">
+<span id="use-custom-datasets"></span><h1>Use Custom Datasets<a class="headerlink" href="#use-custom-datasets" title="Permalink to this headline">¶</a></h1>
+<p>If you want to use a custom dataset while also reusing medsegpy’s data loaders,
+you will need to</p>
+<ol class="simple">
+<li><p>Optionally perform data augmentation</p></li>
+<li><p>Store data in a medsegpy friendly way.</p></li>
+<li><p>Register metadata for you dataset (i.e., tell medsegpy how to obtain your dataset).</p></li>
+</ol>
+<p>Next, we explain the above two concepts in details.</p>
+<div class="section" id="data-augmentation">
+<span id="data-augmentation"></span><h2>Data Augmentation<a class="headerlink" href="#data-augmentation" title="Permalink to this headline">¶</a></h2>
+<p>Volume-specific data augmentation can optionally be done outside of medsegpy.
+If augmentations are used, define different augmentations or series of augmentations with a unique numeric identifier. This identifier will be the augmentation number for different scans (see below).</p>
+<p>Note that augmentation should only be done on the training data. If augmentations are done on the validation and testing data, medsegpy functionality cannot be guaranteed.</p>
+</div>
+<div class="section" id="data-format">
+<span id="data-format"></span><h2>Data format<a class="headerlink" href="#data-format" title="Permalink to this headline">¶</a></h2>
+<p>Currently, data must be stored as slices in the h5df format and must follow a specific naming convention:</p>
+<ul class="simple">
+<li><p>Subject id: 7 digits</p></li>
+<li><p>Timepoint: 2 digits</p></li>
+<li><p>Augmentation Number: 2 digits. Should be <code class="docutils literal notranslate"><span class="pre">00</span></code> for volumes that are not augmented</p></li>
+<li><p>Slice number: 3 digits (1-indexed)</p></li>
+</ul>
+<p><strong>Readable format:</strong> <code class="docutils literal notranslate"><span class="pre">SubjectID_Timepoint-AugmentationNumber_SliceNumber</span></code></p>
+<p><strong>String format:</strong> <code class="docutils literal notranslate"><span class="pre">%07d_V%02d-Aug%02d_%03d</span></code></p>
+<p><strong>Regex:</strong> <code class="docutils literal notranslate"><span class="pre">([\d]+)_V([\d]+)-Aug([\d]+)_([\d]+)</span></code></p>
+<p><strong>Examples:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">0123456_V01-Aug00_001</span></code>: Subject 0123456, Timepoint 1, No Augmentation, Slice 1</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">0123456_V00-Aug00_001</span></code>: Subject 0123456, Timepoint 0,  No Augmentation, Slice 1</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">0123456_V00-Aug04_001</span></code>: Subject 0123456, Timepoint 0, Augmentation 4, Slice 1</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">0123456_V00-Aug00_999</span></code>: Subject 0123456, Timepoint 0, Augmentation 4, Slice 999</p></li>
+</ul>
+<p>The augmentation number is used to keep track of what augmentations are done. When naming files, note that slices should start at slice 1.</p>
+<div class="section" id="image-files">
+<span id="image-files"></span><h3>Image files<a class="headerlink" href="#image-files" title="Permalink to this headline">¶</a></h3>
+<p>Image files should end with a <code class="docutils literal notranslate"><span class="pre">.im</span></code> extension. The file should contain a dataset
+<code class="docutils literal notranslate"><span class="pre">data</span></code>, which contains a <code class="docutils literal notranslate"><span class="pre">HxWx1</span></code> shaped array corresponding to the slice.</p>
+<p>For example, <code class="docutils literal notranslate"><span class="pre">0123456_V00-Aug00_999.im</span></code> contains slice 999 from the volume
+<code class="docutils literal notranslate"><span class="pre">0123456_V00-Aug00</span></code>.</p>
+</div>
+<div class="section" id="segmentation-files">
+<span id="segmentation-files"></span><h3>Segmentation files<a class="headerlink" href="#segmentation-files" title="Permalink to this headline">¶</a></h3>
+<p>Ground truth masks should end with a <code class="docutils literal notranslate"><span class="pre">.seg</span></code> extension. The file should contain a
+dataset <code class="docutils literal notranslate"><span class="pre">data</span></code>, which contains a <code class="docutils literal notranslate"><span class="pre">HxWx1xC</span></code> shaped binary array corresponding to the segmentation for the slice. Here, <code class="docutils literal notranslate"><span class="pre">C</span></code> refers to masks for different classes.</p>
+<p>For example, <code class="docutils literal notranslate"><span class="pre">0123456_V00-Aug00_999.seg</span></code> contains segmentations for slice 999 from the volume <code class="docutils literal notranslate"><span class="pre">0123456_V00-Aug00</span></code>.</p>
+</div>
+<div class="section" id="collating-segmentations">
+<span id="collating-segmentations"></span><h3>Collating segmentations<a class="headerlink" href="#collating-segmentations" title="Permalink to this headline">¶</a></h3>
+<p>Segmentations can also be collated (combined) to form segmentations for
+superclasses. For example, if segmentations for “dog” and “cat” were stored
+at index <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">2</span></code> in the segmentation file, to segment the both classes as a single class, specify the tuple <code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">2)</span></code> as the index to segment.</p>
+</div>
+<div class="section" id="how-h5-files-are-read">
+<span id="how-h5-files-are-read"></span><h3>How h5 files are read<a class="headerlink" href="#how-h5-files-are-read" title="Permalink to this headline">¶</a></h3>
+<p>Below is an example of how slice 999 for volume <code class="docutils literal notranslate"><span class="pre">0123456_V00-Aug00</span></code> will be read by current data loaders.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">h5py</span>
+
+<span class="c1"># Read image slice.</span>
+<span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="s2">&quot;0123456_V00-Aug00_999.im&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][:]</span>  <span class="c1"># shape: HxWx1</span>
+
+<span class="c1"># Read segmentations</span>
+<span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="s2">&quot;0123456_V00-Aug00_999.seg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][:]</span>  <span class="c1"># shape: HxWx1xC</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="data-paths">
+<span id="data-paths"></span><h3>Data paths<a class="headerlink" href="#data-paths" title="Permalink to this headline">¶</a></h3>
+<p>Data is often split into training, validation, and testing data. Each split
+should be in a different directory. Image and segmentation files should be stored in the appropriate folder.</p>
+</div>
+</div>
+<div class="section" id="register-metadata-for-a-dataset">
+<span id="register-metadata-for-a-dataset"></span><h2>Register Metadata for a Dataset<a class="headerlink" href="#register-metadata-for-a-dataset" title="Permalink to this headline">¶</a></h2>
+<p>To let medsegpy know how to obtain a dataset named “my_dataset”, you will need
+to add metadata for your specific dataset. Metadata names and types are shown
+below.</p>
+<p>Required:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">scan_root</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): the directory path where images/segmentation files for the dataset are stored.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">category_ids</span></code> (sequence of <code class="docutils literal notranslate"><span class="pre">int</span></code> or <code class="docutils literal notranslate"><span class="pre">tuple[int]</span></code>): Category ids corresponding to different classes. Supports segmentation collating.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">categories</span></code> (sequence of <code class="docutils literal notranslate"><span class="pre">str</span></code>): Sequence of category names. 1-to-1 with <code class="docutils literal notranslate"><span class="pre">category_ids</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">category_id_to_contiguous_id</span></code> (dict of <code class="docutils literal notranslate"><span class="pre">int/tuple[int]</span></code>-&gt;<code class="docutils literal notranslate"><span class="pre">int</span></code>): Maps
+category ids to contiguous ids (0-indexed).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">evaluator_type</span></code> (<code class="docutils literal notranslate"><span class="pre">str</span></code>): value should be <code class="docutils literal notranslate"><span class="pre">&quot;SemSegEvaluator&quot;</span></code></p></li>
+</ul>
+<p>Optional:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">voxel_spacing</span></code> (tuple of <code class="docutils literal notranslate"><span class="pre">float</span></code>): the voxel spacing in millimeters for scan volumes <code class="docutils literal notranslate"><span class="pre">(dH,</span> <span class="pre">dW,</span> <span class="pre">...)</span></code>. Required for some segmentation metrics.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">category_abbreviations</span></code> (sequence of <code class="docutils literal notranslate"><span class="pre">str</span></code>): Abbreviations for categories.
+1-to-1 with <code class="docutils literal notranslate"><span class="pre">categories</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">category_colors</span></code> (sequence of <code class="docutils literal notranslate"><span class="pre">(R,G,B)</span></code>): R,G,B colors for different categories.</p></li>
+</ul>
+<p>For data that is split into train/val/test splits, each split should be registered as a different dataset.</p>
+<p>Below is an example for registering with training, validation, and testing splits. Segmentations for this data have 4 classes (in order): dog, human, cat, tree. We also want to collate the <code class="docutils literal notranslate"><span class="pre">dog</span></code> and <code class="docutils literal notranslate"><span class="pre">cat</span></code> categories into a new category <code class="docutils literal notranslate"><span class="pre">pet</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">medsegpy.data</span> <span class="kn">import</span> <span class="n">MetadataCatalog</span>
+<span class="n">category_info</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;dog&quot;</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;human&quot;</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;cat&quot;</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;tree&quot;</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;pet&quot;</span><span class="p">},</span>  <span class="c1"># collate &quot;dog&quot; &amp; &quot;cat&quot; into &quot;pet&quot;</span>
+<span class="p">]</span>
+<span class="n">datasets_to_path</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;my_dataset_train&quot;</span><span class="p">:</span> <span class="s2">&quot;/path/to/train/split&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;my_dataset_val&quot;</span><span class="p">:</span> <span class="s2">&quot;/path/to/val/split&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;my_dataset_test&quot;</span><span class="p">:</span> <span class="s2">&quot;/path/to/test/split&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="k">for</span> <span class="n">dataset_name</span><span class="p">,</span> <span class="n">scan_root</span> <span class="ow">in</span> <span class="n">datasets_to_path</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="n">MetadataCatalog</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dataset_name</span><span class="p">)</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
+        <span class="n">scan_root</span><span class="o">=</span><span class="n">scan_root</span><span class="p">,</span>
+        <span class="n">category_ids</span><span class="o">=</span><span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">category_info</span><span class="p">],</span>
+        <span class="n">categories</span><span class="o">=</span><span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">category_info</span><span class="p">],</span>
+        <span class="n">category_id_to_contiguous_id</span><span class="o">=</span><span class="p">{</span>
+            <span class="n">x</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]:</span> <span class="n">idx</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">OAI_CATEGORIES</span><span class="p">)</span>
+        <span class="p">},</span>
+        <span class="n">evaluator_type</span><span class="o">=</span><span class="s2">&quot;SemSegEvaluator&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="update-the-config-for-new-datasets">
+<span id="update-the-config-for-new-datasets"></span><h2>Update the Config for New Datasets<a class="headerlink" href="#update-the-config-for-new-datasets" title="Permalink to this headline">¶</a></h2>
+<p>Once you’ve registered the dataset, you can use the name of the dataset (e.g., “my_dataset” in
+example above) in <code class="docutils literal notranslate"><span class="pre">{TRAIN,VAL,TEST}_DATASET</span></code>.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="data_loading.html" class="btn btn-neutral float-right" title="Use Custom Dataloaders" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="extend.html" class="btn btn-neutral float-left" title="Extend MedSegPy’s Defaults" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Arjun Desai
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

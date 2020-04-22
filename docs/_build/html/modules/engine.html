@@ -1,0 +1,300 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>medsegpy.engine package &mdash; MedSegPy 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="medsegpy.evaluation package" href="evaluation.html" />
+    <link rel="prev" title="medsegpy.data package" href="data.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> MedSegPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="data.html">medsegpy.data package</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">medsegpy.engine package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#medsegpy-engine-trainer-module">medsegpy.engine.trainer module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-medsegpy.engine.defaults">medsegpy.engine.defaults module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-medsegpy.engine.callbacks">medsegpy.engine.callbacks module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="evaluation.html">medsegpy.evaluation package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html">medsegpy.modeling package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver.html">medsegpy.solver package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">medsegpy.utils package</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">MedSegPy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">API Documentation</a> &raquo;</li>
+        
+      <li>medsegpy.engine package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/modules/engine.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="medsegpy-engine-package">
+<h1>medsegpy.engine package<a class="headerlink" href="#medsegpy-engine-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="medsegpy-engine-trainer-module">
+<h2>medsegpy.engine.trainer module<a class="headerlink" href="#medsegpy-engine-trainer-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-medsegpy.engine.defaults">
+<span id="medsegpy-engine-defaults-module"></span><h2>medsegpy.engine.defaults module<a class="headerlink" href="#module-medsegpy.engine.defaults" title="Permalink to this headline">¶</a></h2>
+<p>Default engine activities.</p>
+<p>Adapted from Facebook’s detectron2.
+<a class="reference external" href="https://github.com/facebookresearch/detectron2">https://github.com/facebookresearch/detectron2</a></p>
+<dl class="function">
+<dt id="medsegpy.engine.defaults.config_exists">
+<code class="sig-prename descclassname">medsegpy.engine.defaults.</code><code class="sig-name descname">config_exists</code><span class="sig-paren">(</span><em class="sig-param">experiment_dir: str</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/engine/defaults.html#config_exists"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.engine.defaults.config_exists" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="medsegpy.engine.defaults.default_argument_parser">
+<code class="sig-prename descclassname">medsegpy.engine.defaults.</code><code class="sig-name descname">default_argument_parser</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/engine/defaults.html#default_argument_parser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.engine.defaults.default_argument_parser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a parser with some common arguments used by detectron2 users.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>argparse.ArgumentParser</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="medsegpy.engine.defaults.default_setup">
+<code class="sig-prename descclassname">medsegpy.engine.defaults.</code><code class="sig-name descname">default_setup</code><span class="sig-paren">(</span><em class="sig-param">cfg</em>, <em class="sig-param">args</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/engine/defaults.html#default_setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.engine.defaults.default_setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform some basic common setups at the beginning of a job, including:</p>
+<ol class="arabic simple">
+<li><p>Set up the medsegpy logger</p></li>
+<li><p>Log basic information about environment, cmdline arguments, and config</p></li>
+<li><p>Backup the config to the output directory</p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cfg</strong> (<em>CfgNode</em>) – the full config to be used</p></li>
+<li><p><strong>args</strong> (<em>argparse.NameSpace</em>) – the command line arguments to be logged</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-medsegpy.engine.callbacks">
+<span id="medsegpy-engine-callbacks-module"></span><h2>medsegpy.engine.callbacks module<a class="headerlink" href="#module-medsegpy.engine.callbacks" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="medsegpy.engine.callbacks.lr_callback">
+<code class="sig-prename descclassname">medsegpy.engine.callbacks.</code><code class="sig-name descname">lr_callback</code><span class="sig-paren">(</span><em class="sig-param">optimizer</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/engine/callbacks.html#lr_callback"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.engine.callbacks.lr_callback" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper for learning rate tensorflow metric.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>optimizer</strong> – Optimizer used for training.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>func</em> – To be wrapped in metric or callback.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="medsegpy.engine.callbacks.LossHistory">
+<em class="property">class </em><code class="sig-prename descclassname">medsegpy.engine.callbacks.</code><code class="sig-name descname">LossHistory</code><a class="reference internal" href="../_modules/medsegpy/engine/callbacks.html#LossHistory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.engine.callbacks.LossHistory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">keras.callbacks.Callback</span></code></p>
+<p>A Keras callback to log training history</p>
+<dl class="method">
+<dt id="medsegpy.engine.callbacks.LossHistory.on_train_begin">
+<code class="sig-name descname">on_train_begin</code><span class="sig-paren">(</span><em class="sig-param">logs={}</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/engine/callbacks.html#LossHistory.on_train_begin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.engine.callbacks.LossHistory.on_train_begin" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="medsegpy.engine.callbacks.LossHistory.on_epoch_end">
+<code class="sig-name descname">on_epoch_end</code><span class="sig-paren">(</span><em class="sig-param">epoch</em>, <em class="sig-param">logs={}</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/engine/callbacks.html#LossHistory.on_epoch_end"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.engine.callbacks.LossHistory.on_epoch_end" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="evaluation.html" class="btn btn-neutral float-right" title="medsegpy.evaluation package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="data.html" class="btn btn-neutral float-left" title="medsegpy.data package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Arjun Desai
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

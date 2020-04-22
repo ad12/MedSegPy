@@ -1,0 +1,9 @@
+medsegpy.config package
+=========================
+
+.. automodule:: medsegpy.config
+    :members:
+    :undoc-members:
+    :show-inheritance:
+    :inherited-members:
+

@@ -1,0 +1,370 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Use Models &mdash; MedSegPy 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Write Models" href="write-models.html" />
+    <link rel="prev" title="Use Custom Dataloaders" href="data_loading.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> MedSegPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html">Getting Started with Detectron2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="extend.html">Extend MedSegPy’s Defaults</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets.html">Use Custom Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_loading.html">Use Custom Dataloaders</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Use Models</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#model-input-format">Model Input Format</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#how-it-connects-to-data-loader">How it connects to data loader:</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#model-output-format">Model Output Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-to-use-a-model-in-your-code">How to use a model in your code:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#partially-execute-a-model">Partially execute a model:</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="write-models.html">Write Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="training.html">Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evaluation.html">Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configs.html">Use Configs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/index.html">API Documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">MedSegPy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">Tutorials</a> &raquo;</li>
+        
+      <li>Use Models</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/tutorials/models.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="use-models">
+<span id="use-models"></span><h1>Use Models<a class="headerlink" href="#use-models" title="Permalink to this headline">¶</a></h1>
+<p>Models (and their sub-models) in detectron2 are built by
+functions such as <code class="docutils literal notranslate"><span class="pre">build_model</span></code>, <code class="docutils literal notranslate"><span class="pre">build_backbone</span></code>, <code class="docutils literal notranslate"><span class="pre">build_roi_heads</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">detectron2.modeling</span> <span class="kn">import</span> <span class="n">build_model</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">build_model</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>  <span class="c1"># returns a torch.nn.Module</span>
+</pre></div>
+</div>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">build_model</span></code> only builds the model structure, and fill it with random parameters.
+To load an existing checkpoint to the model, use
+<code class="docutils literal notranslate"><span class="pre">DetectionCheckpointer(model).load(file_path)</span></code>.
+Detectron2 recognizes models in pytorch’s <code class="docutils literal notranslate"><span class="pre">.pth</span></code> format, as well as the <code class="docutils literal notranslate"><span class="pre">.pkl</span></code> files
+in our model zoo.</p>
+<p>You can use a model by just <code class="docutils literal notranslate"><span class="pre">outputs</span> <span class="pre">=</span> <span class="pre">model(inputs)</span></code>.
+Next, we explain the inputs/outputs format used by the builtin models in detectron2.</p>
+<p><a class="reference external" href="/modules/engine.html#detectron2.engine.defaults.DefaultPredictor">DefaultPredictor</a>
+is a wrapper around model that provides the default behavior for regular inference. It includes model loading as
+well as preprocessing, and operates on single image rather than batches.</p>
+<div class="section" id="model-input-format">
+<span id="model-input-format"></span><h2>Model Input Format<a class="headerlink" href="#model-input-format" title="Permalink to this headline">¶</a></h2>
+<p>All builtin models take a <code class="docutils literal notranslate"><span class="pre">list[dict]</span></code> as the inputs. Each dict
+corresponds to information about one image.</p>
+<p>The dict may contain the following keys:</p>
+<ul>
+<li><p>“image”: <code class="docutils literal notranslate"><span class="pre">Tensor</span></code> in (C, H, W) format. The meaning of channels are defined by <code class="docutils literal notranslate"><span class="pre">cfg.INPUT.FORMAT</span></code>.</p></li>
+<li><p>“instances”: an <a class="reference external" href="/modules/structures.html#detectron2.structures.Instances">Instances</a>
+object, with the following fields:</p>
+<ul class="simple">
+<li><p>“gt_boxes”: a <a class="reference external" href="/modules/structures.html#detectron2.structures.Boxes">Boxes</a> object storing N boxes, one for each instance.</p></li>
+<li><p>“gt_classes”: <code class="docutils literal notranslate"><span class="pre">Tensor</span></code> of long type, a vector of N labels, in range [0, num_categories).</p></li>
+<li><p>“gt_masks”: a <a class="reference external" href="/modules/structures.html#detectron2.structures.PolygonMasks">PolygonMasks</a>
+or <a class="reference external" href="/modules/structures.html#detectron2.structures.BitMasks">BitMasks</a> object storing N masks, one for each instance.</p></li>
+<li><p>“gt_keypoints”: a <a class="reference external" href="/modules/structures.html#detectron2.structures.Keypoints">Keypoints</a>
+object storing N keypoint sets, one for each instance.</p></li>
+</ul>
+</li>
+<li><p>“proposals”: an <a class="reference external" href="/modules/structures.html#detectron2.structures.Instances">Instances</a>
+object used only in Fast R-CNN style models, with the following fields:</p>
+<ul class="simple">
+<li><p>“proposal_boxes”: a <a class="reference external" href="/modules/structures.html#detectron2.structures.Boxes">Boxes</a> object storing P proposal boxes.</p></li>
+<li><p>“objectness_logits”: <code class="docutils literal notranslate"><span class="pre">Tensor</span></code>, a vector of P scores, one for each proposal.</p></li>
+</ul>
+</li>
+<li><p>“height”, “width”: the <strong>desired</strong> output height and width, which is not necessarily the same
+as the height or width of the <code class="docutils literal notranslate"><span class="pre">image</span></code> input field.
+For example, the <code class="docutils literal notranslate"><span class="pre">image</span></code> input field might be a resized image,
+but you may want the outputs to be in <strong>original</strong> resolution.</p>
+<p>If provided, the model will produce output in this resolution,
+rather than in the resolution of the <code class="docutils literal notranslate"><span class="pre">image</span></code> as input into the model. This is more efficient and accurate.</p>
+</li>
+<li><p>“sem_seg”: <code class="docutils literal notranslate"><span class="pre">Tensor[int]</span></code> in (H, W) format. The semantic segmentation ground truth.
+Values represent category labels starting from 0.</p></li>
+</ul>
+<div class="section" id="how-it-connects-to-data-loader">
+<span id="how-it-connects-to-data-loader"></span><h3>How it connects to data loader:<a class="headerlink" href="#how-it-connects-to-data-loader" title="Permalink to this headline">¶</a></h3>
+<p>The output of the default <a class="reference external" href="/modules/data.html#detectron2.data.DatasetMapper">DatasetMapper</a> is a dict
+that follows the above format.
+After the data loader performs batching, it becomes <code class="docutils literal notranslate"><span class="pre">list[dict]</span></code> which the builtin models support.</p>
+</div>
+</div>
+<div class="section" id="model-output-format">
+<span id="model-output-format"></span><h2>Model Output Format<a class="headerlink" href="#model-output-format" title="Permalink to this headline">¶</a></h2>
+<p>When in training mode, the builtin models output a <code class="docutils literal notranslate"><span class="pre">dict[str-&gt;ScalarTensor]</span></code> with all the losses.</p>
+<p>When in inference mode, the builtin models output a <code class="docutils literal notranslate"><span class="pre">list[dict]</span></code>, one dict for each image.
+Based on the tasks the model is doing, each dict may contain the following fields:</p>
+<ul>
+<li><p>“instances”: <a class="reference external" href="/modules/structures.html#detectron2.structures.Instances">Instances</a>
+object with the following fields:</p>
+<ul class="simple">
+<li><p>“pred_boxes”: <a class="reference external" href="/modules/structures.html#detectron2.structures.Boxes">Boxes</a> object storing N boxes, one for each detected instance.</p></li>
+<li><p>“scores”: <code class="docutils literal notranslate"><span class="pre">Tensor</span></code>, a vector of N scores.</p></li>
+<li><p>“pred_classes”: <code class="docutils literal notranslate"><span class="pre">Tensor</span></code>, a vector of N labels in range [0, num_categories).</p></li>
+</ul>
+<ul class="simple">
+<li><p>“pred_masks”: a <code class="docutils literal notranslate"><span class="pre">Tensor</span></code> of shape (N, H, W), masks for each detected instance.</p></li>
+<li><p>“pred_keypoints”: a <code class="docutils literal notranslate"><span class="pre">Tensor</span></code> of shape (N, num_keypoint, 3).
+Each row in the last dimension is (x, y, score). Scores are larger than 0.</p></li>
+</ul>
+</li>
+<li><p>“sem_seg”: <code class="docutils literal notranslate"><span class="pre">Tensor</span></code> of (num_categories, H, W), the semantic segmentation prediction.</p></li>
+<li><p>“proposals”: <a class="reference external" href="/modules/structures.html#detectron2.structures.Instances">Instances</a>
+object with the following fields:</p>
+<ul class="simple">
+<li><p>“proposal_boxes”: <a class="reference external" href="/modules/structures.html#detectron2.structures.Boxes">Boxes</a>
+object storing N boxes.</p></li>
+<li><p>“objectness_logits”: a torch vector of N scores.</p></li>
+</ul>
+</li>
+<li><p>“panoptic_seg”: A tuple of <code class="docutils literal notranslate"><span class="pre">(Tensor,</span> <span class="pre">list[dict])</span></code>. The tensor has shape (H, W), where each element
+represent the segment id of the pixel. Each dict describes one segment id and has the following fields:</p>
+<ul class="simple">
+<li><p>“id”: the segment id</p></li>
+<li><p>“isthing”: whether the segment is a thing or stuff</p></li>
+<li><p>“category_id”: the category id of this segment. It represents the thing
+class id when <code class="docutils literal notranslate"><span class="pre">isthing==True</span></code>, and the stuff class id otherwise.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="how-to-use-a-model-in-your-code">
+<span id="how-to-use-a-model-in-your-code"></span><h2>How to use a model in your code:<a class="headerlink" href="#how-to-use-a-model-in-your-code" title="Permalink to this headline">¶</a></h2>
+<p>Contruct your own <code class="docutils literal notranslate"><span class="pre">list[dict]</span></code> as inputs, with the necessary keys. Then call <code class="docutils literal notranslate"><span class="pre">outputs</span> <span class="pre">=</span> <span class="pre">model(inputs)</span></code>.
+For example, in order to do inference, provide dicts with “image”, and optionally “height” and “width”.</p>
+<p>Note that when in training mode, all models are required to be used under an <code class="docutils literal notranslate"><span class="pre">EventStorage</span></code>.
+The training statistics will be put into the storage:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">detectron2.utils.events</span> <span class="kn">import</span> <span class="n">EventStorage</span>
+<span class="k">with</span> <span class="n">EventStorage</span><span class="p">()</span> <span class="k">as</span> <span class="n">storage</span><span class="p">:</span>
+  <span class="n">losses</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Another small thing to remember: detectron2 models do not support <code class="docutils literal notranslate"><span class="pre">model.to(device)</span></code> or <code class="docutils literal notranslate"><span class="pre">model.cpu()</span></code>.
+The device is defined in <code class="docutils literal notranslate"><span class="pre">cfg.MODEL.DEVICE</span></code> and cannot be changed afterwards.</p>
+</div>
+<div class="section" id="partially-execute-a-model">
+<span id="partially-execute-a-model"></span><h2>Partially execute a model:<a class="headerlink" href="#partially-execute-a-model" title="Permalink to this headline">¶</a></h2>
+<p>Sometimes you may want to obtain an intermediate tensor inside a model.
+Since there are typically hundreds of intermediate tensors, there isn’t an API that provides you
+the intermediate result you need.
+You have the following options:</p>
+<ol class="simple">
+<li><p>Write a (sub)model. Following the <a class="reference external" href="/tutorials/write-models.html">tutorial</a>, you can
+rewrite a model component (e.g. a head of a model), such that it
+does the same thing as the existing component, but returns the output
+you need.</p></li>
+<li><p>Partially execute a model. You can create the model as usual,
+but use custom code to execute it instead of its <code class="docutils literal notranslate"><span class="pre">forward()</span></code>. For example,
+the following code obtains mask features before mask head.</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">images</span> <span class="o">=</span> <span class="n">ImageList</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>  <span class="c1"># preprocessed input tensor</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">build_model</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+<span class="n">features</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">backbone</span><span class="p">(</span><span class="n">images</span><span class="o">.</span><span class="n">tensor</span><span class="p">)</span>
+<span class="n">proposals</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">proposal_generator</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">features</span><span class="p">)</span>
+<span class="n">instances</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">roi_heads</span><span class="o">.</span><span class="n">_forward_box</span><span class="p">(</span>
+  <span class="p">[</span><span class="n">features</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">roi_heads</span><span class="o">.</span><span class="n">in_features</span><span class="p">],</span>
+  <span class="n">proposals</span>
+<span class="p">)</span>
+<span class="n">mask_features</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">roi_heads</span><span class="o">.</span><span class="n">mask_pooler</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">pred_boxes</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">instances</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Note that both options require you to read the existing forward code to understand
+how to write code to obtain the outputs you need.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="write-models.html" class="btn btn-neutral float-right" title="Write Models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="data_loading.html" class="btn btn-neutral float-left" title="Use Custom Dataloaders" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Arjun Desai
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

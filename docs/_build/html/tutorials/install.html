@@ -1,0 +1,343 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Installation &mdash; MedSegPy 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Getting Started with Detectron2" href="getting_started.html" />
+    <link rel="prev" title="Tutorials" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> MedSegPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Tutorials</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#requirements">Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#build-and-install-detectron2">Build and Install Detectron2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#common-installation-issues">Common Installation Issues</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html">Getting Started with Detectron2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="extend.html">Extend MedSegPy’s Defaults</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets.html">Use Custom Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_loading.html">Use Custom Dataloaders</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">Use Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="write-models.html">Write Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="training.html">Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evaluation.html">Evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configs.html">Use Configs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/index.html">API Documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">MedSegPy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">Tutorials</a> &raquo;</li>
+        
+      <li>Installation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/tutorials/install.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="installation">
+<span id="installation"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<p>Our <a class="reference external" href="https://colab.research.google.com/drive/16jcaJoc6bCFAQ96jDe2HwtXj7BMD_-m5">Colab Notebook</a>
+has step-by-step instructions that install detectron2.
+The <a class="reference external" href="https://github.com/facebookresearch/detectron2/blob/master/docker/Dockerfile">Dockerfile</a>
+also installs detectron2 with a few simple commands.</p>
+<div class="section" id="requirements">
+<span id="requirements"></span><h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Linux or macOS</p></li>
+<li><p>Python ≥ 3.6</p></li>
+<li><p>PyTorch ≥ 1.3</p></li>
+<li><p><a class="reference external" href="https://github.com/pytorch/vision/">torchvision</a> that matches the PyTorch installation.
+You can install them together at <a class="reference external" href="https://pytorch.org">pytorch.org</a> to make sure of this.</p></li>
+<li><p>OpenCV, optional, needed by demo and visualization</p></li>
+<li><p>pycocotools: <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">cython;</span> <span class="pre">pip</span> <span class="pre">install</span> <span class="pre">'git+https://github.com/cocodataset/cocoapi.git#subdirectory=PythonAPI'</span></code></p></li>
+<li><p>gcc &amp; g++ ≥ 4.9</p></li>
+</ul>
+</div>
+<div class="section" id="build-and-install-detectron2">
+<span id="build-and-install-detectron2"></span><h2>Build and Install Detectron2<a class="headerlink" href="#build-and-install-detectron2" title="Permalink to this headline">¶</a></h2>
+<p>After having the above dependencies, run:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="s1">&#39;git+https://github.com/facebookresearch/detectron2.git&#39;</span>
+<span class="c1"># (add --user if you don&#39;t have permission)</span>
+
+<span class="c1"># Or, to install it from a local clone:</span>
+<span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">facebookresearch</span><span class="o">/</span><span class="n">detectron2</span><span class="o">.</span><span class="n">git</span>
+<span class="n">cd</span> <span class="n">detectron2</span> <span class="o">&amp;&amp;</span> <span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">e</span> <span class="o">.</span>
+
+<span class="c1"># Or if you are on macOS</span>
+<span class="c1"># MACOSX_DEPLOYMENT_TARGET=10.9 CC=clang CXX=clang++ pip install -e .</span>
+</pre></div>
+</div>
+<p>To <strong>rebuild</strong> detectron2 that’s built from a local clone, <code class="docutils literal notranslate"><span class="pre">rm</span> <span class="pre">-rf</span> <span class="pre">build/</span> <span class="pre">**/*.so</span></code> then <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">.</span></code>.
+You often need to rebuild detectron2 after reinstalling PyTorch.</p>
+</div>
+<div class="section" id="common-installation-issues">
+<span id="common-installation-issues"></span><h2>Common Installation Issues<a class="headerlink" href="#common-installation-issues" title="Permalink to this headline">¶</a></h2>
+<p>Click each issue for its solutions:</p>
+<p><details>
+<summary>
+Undefined torch/aten/caffe2 symbols, or segmentation fault immediately when running the library.
+</summary></p>
+<p>This can happen if detectron2 or torchvision is not
+compiled with the version of PyTorch you’re running.</p>
+<p>If you use a pre-built torchvision, uninstall torchvision &amp; pytorch, and reinstall them
+following <a class="reference external" href="http://pytorch.org">pytorch.org</a>.
+If you manually build detectron2 or torchvision, remove the files you built (<code class="docutils literal notranslate"><span class="pre">build/</span></code>, <code class="docutils literal notranslate"><span class="pre">**/*.so</span></code>)
+and rebuild them.</p>
+<p>If you cannot resolve the problem, please include the output of <code class="docutils literal notranslate"><span class="pre">gdb</span> <span class="pre">-ex</span> <span class="pre">&quot;r&quot;</span> <span class="pre">-ex</span> <span class="pre">&quot;bt&quot;</span> <span class="pre">-ex</span> <span class="pre">&quot;quit&quot;</span> <span class="pre">--args</span> <span class="pre">python</span> <span class="pre">-m</span> <span class="pre">detectron2.utils.collect_env</span></code>
+in your issue.
+</details></p>
+<p><details>
+<summary>
+Undefined C++ symbols in <code class="docutils literal notranslate"><span class="pre">detectron2/_C*.so</span></code>.
+</summary>
+Usually it’s because the library is compiled with a newer C++ compiler but run with an old C++ run time.
+This can happen with old anaconda.</p>
+<p>Try <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">update</span> <span class="pre">libgcc</span></code>. Then rebuild detectron2.
+</details></p>
+<p><details>
+<summary>
+“Not compiled with GPU support” or “Detectron2 CUDA Compiler: not available”.
+</summary>
+CUDA is not found when building detectron2.
+You should make sure</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">c</span> <span class="s1">&#39;import torch; from torch.utils.cpp_extension import CUDA_HOME; print(torch.cuda.is_available(), CUDA_HOME)&#39;</span>
+</pre></div>
+</div>
+<p>print valid outputs at the time you build detectron2.
+</details></p>
+<p><details>
+<summary>
+“invalid device function” or “no kernel image is available for execution”.
+</summary></p>
+<p>Two possibilities:</p>
+<ul>
+<li><p>You build detectron2 with one version of CUDA but run it with a different version.</p>
+<p>To check whether it is the case,
+use <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">detectron2.utils.collect_env</span></code> to find out inconsistent CUDA versions.
+In the output of this command, you should expect “Detectron2 CUDA Compiler”, “CUDA_HOME”, “PyTorch built with - CUDA”
+to contain cuda libraries of the same version.</p>
+<p>When they are inconsistent,
+you need to either install a different build of PyTorch (or build by yourself)
+to match your local CUDA installation, or install a different version of CUDA to match PyTorch.</p>
+</li>
+<li><p>Detectron2 or PyTorch/torchvision is not built for the correct GPU architecture (compute compatibility).</p>
+<p>The GPU architecture for PyTorch/detectron2/torchvision is available in the “architecture flags” in
+<code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">detectron2.utils.collect_env</span></code>.</p>
+<p>The GPU architecture flags of detectron2/torchvision by default matches the GPU model detected
+during building. This means the compiled code may not work on a different GPU model.
+To overwrite the GPU architecture for detectron2/torchvision, use <code class="docutils literal notranslate"><span class="pre">TORCH_CUDA_ARCH_LIST</span></code> environment variable during building.</p>
+<p>For example, <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">TORCH_CUDA_ARCH_LIST=6.0,7.0</span></code> makes it work for both P100s and V100s.
+Visit <a class="reference external" href="https://developer.nvidia.com/cuda-gpus">developer.nvidia.com/cuda-gpus</a> to find out
+the correct compute compatibility number for your device.</p>
+</li>
+</ul>
+<p></details></p>
+<p><details>
+<summary>
+Undefined CUDA symbols or cannot open libcudart.so.
+</summary></p>
+<p>The version of NVCC you use to build detectron2 or torchvision does
+not match the version of CUDA you are running with.
+This often happens when using anaconda’s CUDA runtime.</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">detectron2.utils.collect_env</span></code> to find out inconsistent CUDA versions.
+In the output of this command, you should expect “Detectron2 CUDA Compiler”, “CUDA_HOME”, “PyTorch built with - CUDA”
+to contain cuda libraries of the same version.</p>
+<p>When they are inconsistent,
+you need to either install a different build of PyTorch (or build by yourself)
+to match your local CUDA installation, or install a different version of CUDA to match PyTorch.
+</details></p>
+<p><details>
+<summary>
+“ImportError: cannot import name ‘_C’”.
+</summary>
+Please build and install detectron2 following the instructions above.
+</details></p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="getting_started.html" class="btn btn-neutral float-right" title="Getting Started with Detectron2" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="Tutorials" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Arjun Desai
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

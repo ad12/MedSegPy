@@ -1,0 +1,484 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>medsegpy.utils.metric_utils &mdash; MedSegPy 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> MedSegPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/index.html">API Documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">MedSegPy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>medsegpy.utils.metric_utils</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for medsegpy.utils.metric_utils</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.stats</span> <span class="k">as</span> <span class="nn">spstats</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">tabulate</span>
+
+<span class="kn">from</span> <span class="nn">medpy.metric</span> <span class="k">import</span> <span class="n">dc</span><span class="p">,</span> <span class="n">assd</span><span class="p">,</span> <span class="n">recall</span><span class="p">,</span> <span class="n">precision</span><span class="p">,</span> <span class="n">sensitivity</span><span class="p">,</span> <span class="n">specificity</span><span class="p">,</span> <span class="n">positive_predictive_value</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Collection</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="k">import</span> <span class="n">Enum</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="cv"><a class="viewcode-back" href="../../../modules/utils.html#medsegpy.utils.metric_utils.cv">[docs]</a><span class="k">def</span> <span class="nf">cv</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Coefficient of Variation</span>
+<span class="sd">    :param y_true:</span>
+<span class="sd">    :param y_pred:</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">y_true</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span>
+    <span class="n">y_pred</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">y_pred</span><span class="p">)</span>
+
+    <span class="n">cv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y_true</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y_pred</span><span class="p">)])</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y_true</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y_pred</span><span class="p">)])</span>
+    <span class="k">return</span> <span class="n">cv</span></div>
+
+
+<div class="viewcode-block" id="dice_score_coefficient"><a class="viewcode-back" href="../../../modules/utils.html#medsegpy.utils.metric_utils.dice_score_coefficient">[docs]</a><span class="k">def</span> <span class="nf">dice_score_coefficient</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dice Score Coefficient</span>
+<span class="sd">    :param y_true: binary ground truth</span>
+<span class="sd">    :param y_pred: binary prediction</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">y_true</span> <span class="o">=</span> <span class="n">y_true</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">y_pred</span> <span class="o">=</span> <span class="n">y_pred</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+    <span class="n">ovlp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y_true</span> <span class="o">*</span> <span class="n">y_pred</span><span class="p">)</span>
+
+    <span class="n">mu</span> <span class="o">=</span> <span class="mf">1e-07</span>
+    <span class="n">dice</span> <span class="o">=</span> <span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">ovlp</span> <span class="o">+</span> <span class="n">mu</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y_pred</span><span class="p">)</span> <span class="o">+</span> <span class="n">mu</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">dice</span></div>
+
+
+<div class="viewcode-block" id="volumetric_overlap_error"><a class="viewcode-back" href="../../../modules/utils.html#medsegpy.utils.metric_utils.volumetric_overlap_error">[docs]</a><span class="k">def</span> <span class="nf">volumetric_overlap_error</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Volumetric overlap error</span>
+<span class="sd">    :param y_true:</span>
+<span class="sd">    :param y_pred:</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">y_true</span> <span class="o">=</span> <span class="n">y_true</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">y_pred</span> <span class="o">=</span> <span class="n">y_pred</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+    <span class="n">y_true_bool</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+    <span class="n">y_pred_bool</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+    <span class="n">TP</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y_true_bool</span> <span class="o">*</span> <span class="n">y_pred_bool</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">FP</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">~</span><span class="n">y_true_bool</span> <span class="o">*</span> <span class="n">y_pred_bool</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">FN</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y_true_bool</span> <span class="o">*</span> <span class="o">~</span><span class="n">y_pred_bool</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">mu</span> <span class="o">=</span> <span class="mf">1e-07</span>
+
+    <span class="n">voe</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">TP</span> <span class="o">+</span> <span class="n">mu</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">TP</span> <span class="o">+</span> <span class="n">FP</span> <span class="o">+</span> <span class="n">FN</span> <span class="o">+</span> <span class="n">mu</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">voe</span></div>
+
+
+<div class="viewcode-block" id="SegMetric"><a class="viewcode-back" href="../../../modules/utils.html#medsegpy.utils.metric_utils.SegMetric">[docs]</a><span class="k">class</span> <span class="nc">SegMetric</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="n">DSC</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;Dice Score Coefficient&#39;</span><span class="p">,</span> <span class="n">dc</span><span class="p">,</span> <span class="kc">False</span>
+    <span class="n">VOE</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;Volumetric Overlap Error&#39;</span><span class="p">,</span> <span class="n">volumetric_overlap_error</span><span class="p">,</span> <span class="kc">False</span>
+    <span class="n">CV</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;Coefficient of Variation&#39;</span><span class="p">,</span> <span class="n">cv</span><span class="p">,</span> <span class="kc">False</span>
+    <span class="n">ASSD</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;Average Symmetric Surface Distance&#39;</span><span class="p">,</span> <span class="n">assd</span><span class="p">,</span> <span class="kc">True</span>
+    <span class="n">PRECISION</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="s1">&#39;Precision&#39;</span><span class="p">,</span> <span class="n">precision</span><span class="p">,</span> <span class="kc">False</span>
+    <span class="n">RECALL</span> <span class="o">=</span> <span class="mi">6</span><span class="p">,</span> <span class="s1">&#39;Recall&#39;</span><span class="p">,</span> <span class="n">recall</span><span class="p">,</span> <span class="kc">False</span>
+    <span class="n">SENSITIVITY</span> <span class="o">=</span> <span class="mi">7</span><span class="p">,</span> <span class="s1">&#39;Sensitivity&#39;</span><span class="p">,</span> <span class="n">sensitivity</span><span class="p">,</span> <span class="kc">False</span>
+    <span class="n">SPECIFICITY</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span> <span class="s1">&#39;Specificity&#39;</span><span class="p">,</span> <span class="n">specificity</span><span class="p">,</span> <span class="kc">False</span>
+    <span class="n">PPV</span> <span class="o">=</span> <span class="mi">9</span><span class="p">,</span> <span class="s2">&quot;Positive Predictive Value&quot;</span><span class="p">,</span> <span class="n">positive_predictive_value</span><span class="p">,</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">keycode</span><span class="p">,</span> <span class="n">full_name</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">use_voxel_spacing</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="nb">object</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">_value_</span> <span class="o">=</span> <span class="n">keycode</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">full_name</span> <span class="o">=</span> <span class="n">full_name</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">func</span> <span class="o">=</span> <span class="n">func</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">use_voxel_spacing</span> <span class="o">=</span> <span class="n">use_voxel_spacing</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
+<div class="viewcode-block" id="SegMetric.compute"><a class="viewcode-back" href="../../../modules/utils.html#medsegpy.utils.metric_utils.SegMetric.compute">[docs]</a>    <span class="k">def</span> <span class="nf">compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">voxel_spacing</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_voxel_spacing</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">voxel_spacing</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">y_true</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="MetricOperation"><a class="viewcode-back" href="../../../modules/utils.html#medsegpy.utils.metric_utils.MetricOperation">[docs]</a><span class="k">class</span> <span class="nc">MetricOperation</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="n">MEAN</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">MEDIAN</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">RMS</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">x</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">keycode</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="nb">object</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">_value_</span> <span class="o">=</span> <span class="n">keycode</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">func</span> <span class="o">=</span> <span class="n">func</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
+<div class="viewcode-block" id="MetricOperation.compute"><a class="viewcode-back" href="../../../modules/utils.html#medsegpy.utils.metric_utils.MetricOperation.compute">[docs]</a>    <span class="k">def</span> <span class="nf">compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="MetricError"><a class="viewcode-back" href="../../../modules/utils.html#medsegpy.utils.metric_utils.MetricError">[docs]</a><span class="k">class</span> <span class="nc">MetricError</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="n">STANDARD_DEVIATION</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">STANDARD_ERROR</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">__sem__</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">keycode</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="nb">object</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">_value_</span> <span class="o">=</span> <span class="n">keycode</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">func</span> <span class="o">=</span> <span class="n">func</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
+<div class="viewcode-block" id="MetricError.compute"><a class="viewcode-back" href="../../../modules/utils.html#medsegpy.utils.metric_utils.MetricError.compute">[docs]</a>    <span class="k">def</span> <span class="nf">compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">__sem__</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;axis&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;ddof&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+    <span class="n">args</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">spstats</span><span class="o">.</span><span class="n">sem</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="MetricsManager"><a class="viewcode-back" href="../../../modules/utils.html#medsegpy.utils.metric_utils.MetricsManager">[docs]</a><span class="k">class</span> <span class="nc">MetricsManager</span><span class="p">():</span>
+    <span class="n">__METRICS</span> <span class="o">=</span> <span class="p">[</span><span class="n">SegMetric</span><span class="o">.</span><span class="n">DSC</span><span class="p">,</span> <span class="n">SegMetric</span><span class="o">.</span><span class="n">VOE</span><span class="p">,</span> <span class="n">SegMetric</span><span class="o">.</span><span class="n">ASSD</span><span class="p">,</span> <span class="n">SegMetric</span><span class="o">.</span><span class="n">CV</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">class_names</span><span class="p">:</span> <span class="n">Collection</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">metrics</span><span class="o">=</span><span class="n">__METRICS</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scan_names</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">class_names</span> <span class="o">=</span> <span class="n">class_names</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__seg_metrics_processor</span> <span class="o">=</span> <span class="n">SegMetricsProcessor</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">class_names</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">runtimes</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="MetricsManager.analyze"><a class="viewcode-back" href="../../../modules/utils.html#medsegpy.utils.metric_utils.MetricsManager.analyze">[docs]</a>    <span class="k">def</span> <span class="nf">analyze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scan_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>  <span class="n">y_true</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">voxel_spacing</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">,</span>
+                <span class="n">runtime</span><span class="p">:</span> <span class="nb">float</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scan_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">scan_name</span><span class="p">)</span>
+        <span class="n">summary</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__seg_metrics_processor</span><span class="o">.</span><span class="n">compute_metrics</span><span class="p">(</span><span class="n">scan_name</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">voxel_spacing</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">runtimes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">runtime</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">summary</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;scan_ids&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">scan_names</span><span class="p">,</span>
+                <span class="s1">&#39;runtimes&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">runtimes</span><span class="p">,</span>
+                <span class="s1">&#39;seg_metrics&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">__seg_metrics_processor</span><span class="o">.</span><span class="n">data</span><span class="p">}</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">seg_metrics_processor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__seg_metrics_processor</span></div>
+
+
+<div class="viewcode-block" id="SegMetricsProcessor"><a class="viewcode-back" href="../../../modules/utils.html#medsegpy.utils.metric_utils.SegMetricsProcessor">[docs]</a><span class="k">class</span> <span class="nc">SegMetricsProcessor</span><span class="p">():</span>
+    <span class="c1"># Default is to capitalize all metric names. If another name is, please specify here</span>
+    <span class="n">__METRICS_DISPLAY_NAMES</span> <span class="o">=</span> <span class="p">{</span><span class="n">SegMetric</span><span class="o">.</span><span class="n">DSC</span><span class="p">:</span> <span class="n">SegMetric</span><span class="o">.</span><span class="n">DSC</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                               <span class="n">SegMetric</span><span class="o">.</span><span class="n">VOE</span><span class="p">:</span> <span class="n">SegMetric</span><span class="o">.</span><span class="n">VOE</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                               <span class="n">SegMetric</span><span class="o">.</span><span class="n">CV</span><span class="p">:</span> <span class="n">SegMetric</span><span class="o">.</span><span class="n">CV</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                               <span class="n">SegMetric</span><span class="o">.</span><span class="n">ASSD</span><span class="p">:</span> <span class="s1">&#39;ASSD (mm)&#39;</span><span class="p">,</span>
+                               <span class="n">SegMetric</span><span class="o">.</span><span class="n">PRECISION</span><span class="p">:</span> <span class="s1">&#39;Precision&#39;</span><span class="p">,</span>
+                               <span class="n">SegMetric</span><span class="o">.</span><span class="n">RECALL</span><span class="p">:</span> <span class="s1">&#39;Recall&#39;</span><span class="p">,</span>
+                               <span class="n">SegMetric</span><span class="o">.</span><span class="n">SENSITIVITY</span><span class="p">:</span> <span class="s1">&#39;Sensitivity&#39;</span><span class="p">,</span>
+                               <span class="n">SegMetric</span><span class="o">.</span><span class="n">SPECIFICITY</span><span class="p">:</span> <span class="s1">&#39;Specificity&#39;</span><span class="p">,</span>
+                               <span class="n">SegMetric</span><span class="o">.</span><span class="n">PPV</span><span class="p">:</span> <span class="n">SegMetric</span><span class="o">.</span><span class="n">PPV</span><span class="o">.</span><span class="n">name</span><span class="p">}</span>
+
+    <span class="n">__DEFAULT_METRICS_OPERATIONS</span> <span class="o">=</span> <span class="p">{</span><span class="n">SegMetric</span><span class="o">.</span><span class="n">CV</span><span class="p">:</span> <span class="n">MetricOperation</span><span class="o">.</span><span class="n">RMS</span><span class="p">}</span>
+
+<div class="viewcode-block" id="SegMetricsProcessor.__init__"><a class="viewcode-back" href="../../../modules/utils.html#medsegpy.utils.metric_utils.SegMetricsProcessor.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">class_names</span><span class="p">,</span>
+                 <span class="n">metrics_to_operations</span> <span class="o">=</span> <span class="n">__DEFAULT_METRICS_OPERATIONS</span><span class="p">,</span>
+                 <span class="n">error_metric</span> <span class="o">=</span> <span class="n">MetricError</span><span class="o">.</span><span class="n">STANDARD_DEVIATION</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Constructor</span>
+
+<span class="sd">        :param metrics: Metrics to analyze. Default is all supported metrics</span>
+<span class="sd">        :param class_names: Class names, in order of channels in input</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span> <span class="o">=</span> <span class="n">metrics</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">class_names</span> <span class="o">=</span> <span class="n">class_names</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__scan_ids</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__scan_seg_data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__is_data_stale</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># Default operations (mean, RMS, Median, etc) and error (std. dev., SEM, etc.) to use per metric</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metrics_to_operations</span> <span class="o">=</span> <span class="n">metrics_to_operations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">error_metric</span> <span class="o">=</span> <span class="n">error_metric</span></div>
+
+<div class="viewcode-block" id="SegMetricsProcessor.compute_metrics"><a class="viewcode-back" href="../../../modules/utils.html#medsegpy.utils.metric_utils.SegMetricsProcessor.compute_metrics">[docs]</a>    <span class="k">def</span> <span class="nf">compute_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scan_id</span><span class="p">,</span> <span class="n">y_true</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">voxel_spacing</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute segmentation metrics for volume</span>
+<span class="sd">        :param scan_id</span>
+<span class="sd">        :param y_true:</span>
+<span class="sd">        :param y_pred:</span>
+<span class="sd">        :param voxel_spacing: Voxel spacing (in mm)</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span> <span class="ow">is</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">y_pred</span><span class="p">)</span> <span class="ow">is</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="s2">&quot;y_true and y_pred must be numpy arrays&quot;</span>
+        <span class="k">assert</span> <span class="n">y_true</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">y_pred</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="s2">&quot;Shape mismatch: y_true and y_pred must have the same shape&quot;</span>
+        <span class="k">assert</span> <span class="n">y_true</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span> <span class="ow">or</span> <span class="n">y_true</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;Arrays must be (Y,X,Z) or (Y, X, Z, #classes)&quot;</span>
+
+        <span class="k">if</span> <span class="n">y_true</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">y_true</span> <span class="o">=</span> <span class="n">y_true</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+            <span class="n">y_pred</span> <span class="o">=</span> <span class="n">y_pred</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+
+        <span class="k">assert</span> <span class="n">y_true</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">class_names</span><span class="p">),</span> <span class="s2">&quot;Expected </span><span class="si">%d</span><span class="s2"> classes. Got </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">class_names</span><span class="p">),</span>
+                                                                                           <span class="n">y_true</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">num_classes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">class_names</span><span class="p">)</span>
+
+        <span class="n">metrics_data</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">metrics_names</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">:</span>
+            <span class="n">metrics_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__METRICS_DISPLAY_NAMES</span><span class="p">[</span><span class="n">m</span><span class="p">])</span>
+            <span class="n">metrics_data</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">m</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">y_true</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">c</span><span class="p">],</span> <span class="n">y_pred</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">c</span><span class="p">],</span> <span class="n">voxel_spacing</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_classes</span><span class="p">)])</span>
+
+        <span class="n">metrics_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">metrics_data</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">metrics_names</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">class_names</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">scan_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__scan_ids</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Scan id already exists, use different id&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__scan_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">scan_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__scan_seg_data</span><span class="p">[</span><span class="n">scan_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">metrics_data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__is_data_stale</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">scan_summary</span><span class="p">(</span><span class="n">scan_id</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SegMetricsProcessor.scan_summary"><a class="viewcode-back" href="../../../modules/utils.html#medsegpy.utils.metric_utils.SegMetricsProcessor.scan_summary">[docs]</a>    <span class="k">def</span> <span class="nf">scan_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scan_id</span><span class="p">):</span>
+        <span class="n">scan_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__scan_seg_data</span><span class="p">[</span><span class="n">scan_id</span><span class="p">]</span>
+        <span class="n">avg_data</span> <span class="o">=</span> <span class="n">scan_data</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">metrics</span> <span class="o">=</span> <span class="n">avg_data</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+        <span class="n">summary_str_format</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">: </span><span class="si">%0.3f</span><span class="s1">, &#39;</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
+        <span class="n">summary_str_format</span> <span class="o">=</span> <span class="n">summary_str_format</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">avg_data</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">tolist</span><span class="p">():</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">name</span><span class="p">,</span> <span class="n">avg_data</span><span class="p">[</span><span class="n">name</span><span class="p">]])</span>
+        
+        <span class="k">return</span> <span class="n">summary_str_format</span> <span class="o">%</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">data</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="SegMetricsProcessor.summary"><a class="viewcode-back" href="../../../modules/utils.html#medsegpy.utils.metric_utils.SegMetricsProcessor.summary">[docs]</a>    <span class="k">def</span> <span class="nf">summary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">metric_name</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">metric_name</span><span class="p">)</span>
+            <span class="n">arr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">metric_name</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">names</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">class_names</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tabulate</span><span class="o">.</span><span class="n">tabulate</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">class_names</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">scan_id_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__scan_seg_data</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__is_data_stale</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__refresh_data</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__data</span>
+
+    <span class="k">def</span> <span class="nf">__refresh_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># create array with dimensions subjects, classes, metrics</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__scan_seg_data</span><span class="p">[</span><span class="n">scan_id</span><span class="p">])</span> <span class="k">for</span> <span class="n">scan_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__scan_ids</span><span class="p">],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">transpose</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">):</span>
+            <span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">__METRICS_DISPLAY_NAMES</span><span class="p">[</span><span class="n">m</span><span class="p">]]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">ind</span><span class="p">],</span>
+                                                                 <span class="n">index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__scan_ids</span><span class="p">,</span>
+                                                                 <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">class_names</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__data</span> <span class="o">=</span> <span class="n">data</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">11</span><span class="p">]])</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">__sem__</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;aplha&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">])</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="s1">&#39;b&#39;</span><span class="p">])</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Arjun Desai
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

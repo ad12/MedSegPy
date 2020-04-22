@@ -1,0 +1,416 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>medsegpy.data.catalog &mdash; MedSegPy 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> MedSegPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/index.html">API Documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">MedSegPy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>medsegpy.data.catalog</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for medsegpy.data.catalog</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Metadata catalogs for different datasets.</span>
+
+<span class="sd">Metadata stores information like directory paths, mapping from class ids to</span>
+<span class="sd">name, etc.</span>
+
+<span class="sd">Adopted from Facebook&#39;s detectron2.</span>
+<span class="sd">https://github.com/facebookresearch/detectron2</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">types</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">List</span>
+
+<span class="kn">from</span> <span class="nn">medsegpy.utils.logger</span> <span class="k">import</span> <span class="n">log_first_n</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;DatasetCatalog&quot;</span><span class="p">,</span> <span class="s2">&quot;MetadataCatalog&quot;</span><span class="p">]</span>
+
+
+<span class="k">class</span> <span class="nc">DatasetCatalog</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A catalog that stores information about the datasets and how to obtain them.</span>
+
+<span class="sd">    It contains a mapping from strings</span>
+<span class="sd">    (which are names that identify a dataset, e.g. &quot;oai_2d_train&quot;)</span>
+<span class="sd">    to a function which parses the dataset and returns the samples in the</span>
+<span class="sd">    format of `list[dict]`.</span>
+
+<span class="sd">    The returned dicts should be in MedSegPy Dataset format</span>
+<span class="sd">    (See DATASETS.md for details) if used with the data loader functionalities</span>
+<span class="sd">    in `data/build.py,data/detection_transform.py`.</span>
+
+<span class="sd">    The purpose of having this catalog is to make it easy to choose</span>
+<span class="sd">    different datasets, by just using the strings in the config.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_REGISTERED</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">register</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            name (str): the name that identifies a dataset, e.g. &quot;coco_2014_train&quot;.</span>
+<span class="sd">            func (callable): a callable which takes no arguments and returns a list of dicts.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">callable</span><span class="p">(</span><span class="n">func</span><span class="p">),</span> <span class="s2">&quot;You must register a function with `DatasetCatalog.register`!&quot;</span>
+        <span class="k">assert</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">DatasetCatalog</span><span class="o">.</span><span class="n">_REGISTERED</span><span class="p">,</span> <span class="s2">&quot;Dataset &#39;</span><span class="si">{}</span><span class="s2">&#39; is already registered!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">name</span>
+        <span class="p">)</span>
+        <span class="n">DatasetCatalog</span><span class="o">.</span><span class="n">_REGISTERED</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">func</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Call the registered function and return its results.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name (str): the name that identifies a dataset, e.g. &quot;coco_2014_train&quot;.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list[dict]: dataset annotations.0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">DatasetCatalog</span><span class="o">.</span><span class="n">_REGISTERED</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+                <span class="s2">&quot;Dataset &#39;</span><span class="si">{}</span><span class="s2">&#39; is not registered! Available datasets are: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">name</span><span class="p">,</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DatasetCatalog</span><span class="o">.</span><span class="n">_REGISTERED</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">f</span><span class="p">()</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">list</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        List all registered datasets.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list[str]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">DatasetCatalog</span><span class="o">.</span><span class="n">_REGISTERED</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">clear</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove all registered dataset.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">DatasetCatalog</span><span class="o">.</span><span class="n">_REGISTERED</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+
+<span class="k">class</span> <span class="nc">Metadata</span><span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">SimpleNamespace</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class that supports simple attribute setter/getter.</span>
+<span class="sd">    It is intended for storing metadata of a dataset and make it accessible globally.</span>
+
+<span class="sd">    Examples:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        # somewhere when you load the data:</span>
+<span class="sd">        MetadataCatalog.get(&quot;mydataset&quot;).thing_classes = [&quot;person&quot;, &quot;dog&quot;]</span>
+
+<span class="sd">        # somewhere when you print statistics or visualize:</span>
+<span class="sd">        classes = MetadataCatalog.get(&quot;mydataset&quot;).thing_classes</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># the name of the dataset</span>
+    <span class="c1"># set default to N/A so that `self.name` in the errors will not trigger</span>
+    <span class="c1"># getattr again</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;N/A&quot;</span>
+
+    <span class="n">_RENAMED</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_RENAMED</span><span class="p">:</span>
+            <span class="n">log_first_n</span><span class="p">(</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">,</span>
+                <span class="s2">&quot;Metadata &#39;</span><span class="si">{}</span><span class="s2">&#39; was renamed to &#39;</span><span class="si">{}</span><span class="s2">&#39;!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">key</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_RENAMED</span><span class="p">[</span><span class="n">key</span><span class="p">],</span>
+                <span class="p">),</span>
+                <span class="n">n</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_RENAMED</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+
+        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
+            <span class="s2">&quot;Attribute &#39;</span><span class="si">{}</span><span class="s2">&#39; does not exist in the metadata of &#39;</span><span class="si">{}</span><span class="s2">&#39;. &quot;</span>
+            <span class="s2">&quot;Available keys are </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">key</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_RENAMED</span><span class="p">:</span>
+            <span class="n">log_first_n</span><span class="p">(</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">,</span>
+                <span class="s2">&quot;Metadata &#39;</span><span class="si">{}</span><span class="s2">&#39; was renamed to &#39;</span><span class="si">{}</span><span class="s2">&#39;!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">key</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_RENAMED</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                <span class="p">),</span>
+                <span class="n">n</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_RENAMED</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">val</span><span class="p">)</span>
+
+        <span class="c1"># Ensure that metadata of the same name stays consistent</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">oldval</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">oldval</span> <span class="o">==</span> <span class="n">val</span><span class="p">,</span> <span class="p">(</span>
+                <span class="s2">&quot;Attribute &#39;</span><span class="si">{}</span><span class="s2">&#39; in the metadata of &#39;</span><span class="si">{}</span><span class="s2">&#39; cannot be set &quot;</span>
+                <span class="s2">&quot;to a different value!</span><span class="se">\n</span><span class="si">{}</span><span class="s2"> != </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">oldval</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">as_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns all the metadata as a dict.</span>
+<span class="sd">        Note that modifications to the returned dict will not reflect on the</span>
+<span class="sd">        Metadata object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set multiple metadata with kwargs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Access an attribute and return its value if exists.</span>
+<span class="sd">        Otherwise return default.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">default</span>
+
+
+<div class="viewcode-block" id="MetadataCatalog"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.MetadataCatalog">[docs]</a><span class="k">class</span> <span class="nc">MetadataCatalog</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    MetadataCatalog provides access to &quot;Metadata&quot; of a given dataset.</span>
+
+<span class="sd">    The metadata associated with a certain name is a singleton: once created,</span>
+<span class="sd">    the metadata will stay alive and will be returned by future calls to</span>
+<span class="sd">    `get(name)`.</span>
+
+<span class="sd">    It&#39;s like global variables, so don&#39;t abuse it.</span>
+<span class="sd">    It&#39;s meant for storing knowledge that&#39;s constant and shared across the</span>
+<span class="sd">    execution of the program, e.g.: the class names in OAI iMorphics.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_NAME_TO_META</span> <span class="o">=</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="MetadataCatalog.get"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.MetadataCatalog.get">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            name (str): name of a dataset (e.g. oai_2d_train).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Metadata: The :class:`Metadata` instance associated with this name,</span>
+<span class="sd">            or create an empty one if none is available.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">MetadataCatalog</span><span class="o">.</span><span class="n">_NAME_TO_META</span><span class="p">:</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">MetadataCatalog</span><span class="o">.</span><span class="n">_NAME_TO_META</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">ret</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="n">MetadataCatalog</span><span class="o">.</span><span class="n">_NAME_TO_META</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">Metadata</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">m</span></div>
+
+<div class="viewcode-block" id="MetadataCatalog.convert_path_to_dataset"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.MetadataCatalog.convert_path_to_dataset">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">convert_path_to_dataset</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+        <span class="n">catalog</span> <span class="o">=</span> <span class="p">{</span><span class="n">m</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;scan_root&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span> <span class="n">name</span>
+                   <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">MetadataCatalog</span><span class="o">.</span><span class="n">_NAME_TO_META</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="n">catalog</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">catalog</span><span class="p">[</span><span class="n">path</span><span class="p">]</span></div></div>
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Arjun Desai
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

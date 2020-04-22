@@ -8,11 +8,11 @@ dependencies:
   - pip=10.0.1=py36_0
   - pyparsing=2.2.0
   - python=3.6.8
+  - graphviz
   - pip:
     - configparser==3.5.0
     - cython==0.29
     - fvcore
-    - graphviz==0.9
     - h5py==2.8.0
     - keras==2.1.6
     - matplotlib==3.0.3
@@ -21,7 +21,6 @@ dependencies:
     - opencv-python
     - pandas==0.23.4
     - pillow==5.2.0
-    - pmw==2.0.1
     - pydot==1.2.4
     - pydotplus==2.0.2
     - scikit-image==0.14.2
@@ -30,3 +29,4 @@ dependencies:
     - simpleitk==1.1.0
     - tensorboard==1.8.0
     - tensorflow==1.8.0
+    - resnet
