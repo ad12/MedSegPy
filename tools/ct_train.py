@@ -1,18 +1,16 @@
-import logging
+"""Sample extension of train_net.py for the abdominal CT dataset."""
 import os
 
 import numpy as np
 
 from medsegpy.data.im_gens import CTGenerator
 from medsegpy.engine.defaults import default_argument_parser
-from medsegpy.nn_train import main
+from tools.nn_train import main
 from medsegpy.engine.trainer import DefaultTrainer
 
 CLASS_WEIGHTS = np.asarray([100, 1])
 SAVE_BEST_WEIGHTS = True
 FREEZE_LAYERS = None
-
-logger = logging.getLogger(__name__)
 
 
 def parse_windows(windows):
@@ -55,7 +53,6 @@ class AbCTTrainer(DefaultTrainer):
 
 if __name__ == '__main__':
     basename = os.path.splitext(os.path.basename(__file__))[0]
-    logger = logging.getLogger("medsegpy.{}.{}".format(basename, __name__))
     args = default_argument_parser().parse_args()
     main(args, AbCTTrainer)
 

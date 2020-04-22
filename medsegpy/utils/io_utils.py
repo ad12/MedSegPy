@@ -1,7 +1,6 @@
 from abc import ABC
 import os
 import pickle
-import re
 from typing import Any
 
 from fvcore.common.file_io import PathHandler, PathManager
@@ -10,40 +9,32 @@ import h5py
 from .cluster import CLUSTER
 
 
-def parse_results_file(filepath):
-    # returns mean
-    with open(filepath) as search:
-        for line in search:
-            line = line.rstrip()  # remove '\n' at end of line
-            if 'MEAN' not in line.upper() or 'DSC' not in line.upper():
-                continue
+def load_h5(file_path):
+    """Load data in h5df format.
 
-            vals = re.findall("\d+\.\d+", line)
-            return float(vals[0])
+    Args:
+        file_path (str): Path to h5 file
 
-
-def load_h5(filepath):
-    """Load data in H5DF format
-    :param filepath: path to h5 file
-    :return: dictionary of data values stored using save_h5
+    Returns:
+        dict: dictionary representation of h5df data.
     """
-    if not os.path.isfile(filepath):
-        raise FileNotFoundError('%s does not exist' % filepath)
+    if not os.path.isfile(file_path):
+        raise FileNotFoundError('%s does not exist' % file_path)
 
     data = dict()
-    with h5py.File(filepath, 'r') as f:
+    with h5py.File(file_path, 'r') as f:
         for key in f.keys():
             data[key] = f.get(key).value
 
     return data
 
 
-def save_optimizer(optimizer, dirpath):
-    """
-    Serialize a model and add the config of the optimizer
-    :param optimizer: a Keras optimizer
-    :param dirpath: path to directory
-    :return:
+def save_optimizer(optimizer, dirpath: str):
+    """Serialize a model and add the config of the optimizer.
+
+    Args:
+        optimizer (keras.Optimzer): a Keras optimizer
+        dirpath (str): Path to directory
     """
     if optimizer is None:
         return
@@ -56,11 +47,8 @@ def save_optimizer(optimizer, dirpath):
     save_pik(config, filepath)
 
 
-def load_optimizer(dirpath):
-    """
-    Return model and optimizer in previous state
-    :param dirpath: path to directory storing optimizer
-    :return: optimizer
+def load_optimizer(dirpath: str):
+    """Return model and optimizer in previous state.
     """
     from keras import optimizers
     filepath = os.path.join(dirpath, 'optimizer.dat')
@@ -72,11 +60,7 @@ def load_optimizer(dirpath):
 
 
 def save_pik(data, filepath):
-    """
-    Save data using pickle
-    :param data: data to save
-    :param filepath: a string
-    :return:
+    """Save data using pickle.
     """
     with open(filepath, "wb") as f:
         pickle.dump(data, f)
@@ -90,17 +74,6 @@ def load_pik(filepath):
     """
     with open(filepath, "rb") as f:
         return pickle.load(f)
-
-
-def check_dir(dir_path):
-    """
-    If directory does not exist, make directory
-    :param dir_path: path to directory
-    :return: path to directory
-    """
-    if not os.path.isdir(dir_path):
-        os.makedirs(dir_path)
-    return dir_path
 
 
 class GeneralPathHandler(PathHandler, ABC):
@@ -117,7 +90,7 @@ class GeneralPathHandler(PathHandler, ABC):
         return PathManager.open(self._get_local_path(path), mode, **kwargs)
 
     def _mkdirs(self, path: str, **kwargs: Any):
-        check_dir(self._get_local_path(path))
+        os.makedirs(self._get_local_path(path), exist_ok=True)
 
     def _project_name(self):
         return self.PREFIX[:-3]

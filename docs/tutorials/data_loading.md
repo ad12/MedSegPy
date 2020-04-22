@@ -96,7 +96,7 @@ for an example.
 
 If you use [DefaultTrainer](../modules/engine.html#medsegpy.engine.defaults.DefaultTrainer),
 you can overwrite its `_build_data_loaders` and `build_test_data_loader` methods to use your own dataloader.
-See the [abCT training](../../medsegpy/ct_train.py)
+See the [abCT training](../../tools/ct_train.py)
 for an example.
 
 If you write your own training loop, you can plug in your data loader easily.

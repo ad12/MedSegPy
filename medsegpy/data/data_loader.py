@@ -1,3 +1,5 @@
+raise NotImplementedError("This module is not ready for use.")
+
 import math
 from abc import ABC, abstractmethod
 from collections import defaultdict

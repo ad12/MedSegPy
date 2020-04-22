@@ -1,3 +1,5 @@
+raise DeprecationWarning("This module is deprecated")
+
 import logging
 import os
 from os import listdir
@@ -6,14 +8,13 @@ from os.path import splitext
 import h5py
 import numpy as np
 
-from medsegpy.data.im_generator import add_file
 from medsegpy.utils import io_utils
 
 logger = logging.getLogger(__name__)
 
 TRAIN_PATH = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/train_aug'
-CLASS_FREQ_DAT_FOLDER = io_utils.check_dir('/bmrNAS/people/arjun/msk_seg_networks/class_weights')
-
+CLASS_FREQ_DAT_FOLDER = '/bmrNAS/people/arjun/msk_seg_networks/class_weights'
+os.makedirs(CLASS_FREQ_DAT_FOLDER, exist_ok=True)
 CLASS_FREQ_DAT_WEIGHTS_AUG = os.path.join(CLASS_FREQ_DAT_FOLDER, 'class_frequencies-aug.dat')
 CLASS_FREQ_DAT_WEIGHTS_NO_AUG = os.path.join(CLASS_FREQ_DAT_FOLDER, 'class_frequencies-no_aug.dat')
 

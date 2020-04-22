@@ -5,31 +5,30 @@ import h5py
 import numpy as np
 import seaborn as sns
 
-from medsegpy.utils.io_utils import check_dir
 
-
-class MultiClassOverlay():
+class MultiClassOverlay(object):
+    """Class to simplify overlaying images and labels.
     """
-    Class to simplify overlaying images and labels
-    """
-    def __init__(self, num_classes,
-                 color_palette=sns.color_palette('bright'),
-                 background_label=-1,
-                 opacity=0.7,
-                 dirpath = ''):
-        """
-        Constructor
-        :param num_classes: Number of classes
 
-        Optional:
-        :param color_palette: list of RGB tuples to use for color. Default seaborn.color_palette('pastel').
-        :param background_label: Label to exclude for background. Default: 0.
-                                 To include background, set to None.
-        :param opacity: How transparent overlay should be (0-1). Default: 0.7
+    def __init__(
+        self,
+        num_classes: int,
+        color_palette = sns.color_palette('bright'),
+        background_label = 0,
+        opacity = 0.7,
+    ):
         """
-        effective_num_classes = num_classes-1 if background_label is not None else num_classes
+        Args:
+            num_classes (int): Number of classes
+            color_palette (optional): RGB tuples to use for category colors.
+            background_label (:obj:`int`, optional): Label to exclude for
+                background.
+            opacity (:obj:`float`, optional): Overlay transparency (0-1).
+        """
+        effective_num_classes = num_classes - 1 if background_label is not None else num_classes
         if len(color_palette) < effective_num_classes:
-            raise ValueError('Must provide at least %d colors' % effective_num_classes)
+            raise ValueError(
+                'Must provide at least %d colors' % effective_num_classes)
 
         if opacity < 0 or opacity > 1:
             raise ValueError('opacity must be between 0-1')
@@ -49,25 +48,25 @@ class MultiClassOverlay():
             colormap[i] = color_palette[cp_ind]
         self.colormap = colormap
 
-    def im_overlay(self, dirpath, volume: np.ndarray, logits: np.ndarray):
-        dirpath = check_dir(dirpath)
-        assert volume.ndim == 3, "Volume must be 3D array with shape [Y, X, Z]"
-        assert logits.ndim == 4, "Labels must be 4D array with shape [Y, X, Z, classes]"
+    def overlay(self, dirpath, volume: np.ndarray, logits: np.ndarray):
+        os.makedirs(dirpath, exist_ok=True)
+        assert volume.ndim == 3, "Volume must be 3D array with shape HxWxD"
+        assert logits.ndim == 4, "Labels must be 4D array with shape HxWxDxC"
 
         # labels are argmax(logits) in the class dimension
         labels = np.argmax(logits, axis=-1)
-        labels_colored = self.__apply_colormap(labels)
+        labels_colored = self._apply_colormap(labels)
 
         for z in range(volume.shape[-1]):
             x_im = volume[..., z]
             label_overlay = labels_colored[..., z, :]
 
-            slice_name = '%03d.png' % (z+1)
+            slice_name = '%03d.png' % (z + 1)
 
             filepath = os.path.join(dirpath, slice_name)
-            self.__im_overlay(x_im, label_overlay, filepath)
+            self._im_overlay(x_im, label_overlay, filepath)
 
-    def __apply_colormap(self, labels: np.ndarray):
+    def _apply_colormap(self, labels: np.ndarray):
         colormap = self.colormap
         background_label = self.background_label
 
@@ -79,9 +78,9 @@ class MultiClassOverlay():
 
             labels_colored[labels == c, :] = colormap[c]
 
-        return (labels_colored*255).astype(np.uint8)
+        return (labels_colored * 255).astype(np.uint8)
 
-    def __im_overlay(self, x, c_label, filepath=None):
+    def _im_overlay(self, x, c_label, filepath = None):
         x_o = scale_img(np.squeeze(x))
         x_rgb = np.stack([x_o, x_o, x_o], axis=-1).astype(np.uint8)
         overlap_img = cv2.addWeighted(x_rgb, 1, c_label, self.opacity, 0)
@@ -97,7 +96,7 @@ def write_im_overlay(dir_path, xs, im_overlay):
     :param xs: inputs
     :param im_overlay: overlay images
     """
-    dir_path = check_dir(dir_path)
+    os.makedirs(dir_path, exist_ok=True)
     num_slices = xs.shape[0]
     for i in range(num_slices):
         x = scale_img(np.squeeze(xs[i, ...]))
@@ -115,20 +114,24 @@ def write_sep_im_overlay(dir_path, xs, y_true, y_pred):
     Overlap input (xs) with mask (im_overlap) and save to directory
     :param dir_path: path to directory to save images
     :param xs: inputs
-    :param im_overlay: overlay images
+    :param overlay: overlay images
     """
-    correct_dir_path = check_dir(os.path.join(dir_path, 'true_pos'))
-    error_dir_path = check_dir(os.path.join(dir_path, 'error'))
+    correct_dir_path = os.path.join(dir_path, 'true_pos')
+    error_dir_path = os.path.join(dir_path, 'error')
+    os.makedirs(correct_dir_path, exist_ok=True)
+    os.makedirs(error_dir_path, exist_ok=False)
     num_slices = xs.shape[0]
     for i in range(num_slices):
         x = scale_img(np.squeeze(xs[i, ...]))
         x = np.stack([x, x, x], axis=-1).astype(np.uint8)
-        im_correct, im_error = generate_sep_ovlp_image(y_true[i, ...], y_pred[i, ...])
+        im_correct, im_error = generate_sep_ovlp_image(y_true[i, ...],
+                                                       y_pred[i, ...])
 
         slice_name = '%03d.png' % i
 
         overlap_img_correct = cv2.addWeighted(x, 1, im_correct, 1.0, 0)
-        cv2.imwrite(os.path.join(correct_dir_path, slice_name), overlap_img_correct)
+        cv2.imwrite(os.path.join(correct_dir_path, slice_name),
+                    overlap_img_correct)
 
         overlap_img_error = cv2.addWeighted(x, 1, im_error, 1.0, 0)
         cv2.imwrite(os.path.join(error_dir_path, slice_name), overlap_img_error)
@@ -152,8 +155,10 @@ def generate_sep_ovlp_image(y_true, y_pred):
     FP = (~y_true) * y_pred
 
     # BGR format
-    img_corr = np.stack([np.zeros(TP.shape), TP, np.zeros(TP.shape)], axis=-1).astype(np.uint8) * 255
-    img_err = np.stack([FP, np.zeros(TP.shape), FN], axis=-1).astype(np.uint8) * 255
+    img_corr = np.stack([np.zeros(TP.shape), TP, np.zeros(TP.shape)],
+                        axis=-1).astype(np.uint8) * 255
+    img_err = np.stack([FP, np.zeros(TP.shape), FN], axis=-1).astype(
+        np.uint8) * 255
 
     return (img_corr, img_err)
 
@@ -168,7 +173,7 @@ def write_ovlp_masks(dir_path, y_true, y_pred):
     :param y_true: numpy array of ground truth labels
     :param y_pred: numpy array of predicted labels
     """
-    dir_path = check_dir(dir_path)
+    os.makedirs(dir_path, exist_ok=True)
     y_true = np.squeeze(y_true)
     y_pred = np.squeeze(y_pred)
 
@@ -193,7 +198,7 @@ def write_mask(dir_path, y_true):
     :param dir_path: path to directory
     :param y_true: numpy array of ground truth labels
     """
-    dir_path = check_dir(dir_path)
+    os.makedirs(dir_path, exist_ok=True)
     y_true = np.squeeze(y_true) * 255
     num_slices = y_true.shape[0]
     for i in range(num_slices):
@@ -207,7 +212,7 @@ def write_prob_map(dir_path, y_probs):
     :param dir_path: path to directory
     :param y_probs: numpy array of prediction probabilities
     """
-    dir_path = check_dir(dir_path)
+    os.makedirs(dir_path, exist_ok=True)
     y_probs = np.squeeze(y_probs)
     num_slices = y_probs.shape[0]
     for i in range(num_slices):
@@ -218,7 +223,7 @@ def write_prob_map(dir_path, y_probs):
         cv2.imwrite(os.path.join(dir_path, slice_name), imC)
 
 
-def scale_img(im, scale=255):
+def scale_img(im, scale = 255):
     """
     Scale image from 0-scale
     :param im: input image
@@ -256,21 +261,18 @@ def generate_ovlp_image(y_true, y_pred):
     return img
 
 
-OPACITY = 0.7
-
-
-def save_ims(filepath):
-    im_path = '%s.im' % filepath
+def save_ims(output_dir: str):
+    im_path = '%s.im' % output_dir
     with h5py.File(im_path, 'r') as f:
         im = f['data'][:]
 
-    seg_path = '%s.seg' % filepath
+    seg_path = '%s.seg' % output_dir
     with h5py.File(seg_path, 'r') as f:
         seg = f['data'][:].astype('float32')
         seg = seg[..., 0, 0]
-    filepath = check_dir(filepath)
+    os.makedirs(output_dir, exist_ok=True)
     # save ims
-    cv2.imwrite(os.path.join(filepath, 'im.png'), scale_img(im))
+    cv2.imwrite(os.path.join(output_dir, 'im.png'), scale_img(im))
 
     # save segs
-    cv2.imwrite(os.path.join(filepath, 'seg.png'), scale_img(seg))
+    cv2.imwrite(os.path.join(output_dir, 'seg.png'), scale_img(seg))

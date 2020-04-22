@@ -165,7 +165,8 @@ class Config(object):
         config.__CV_VALID_FILES__ = valid_files
         config.__CV_TEST_FILES__ = test_files
 
-        config.OUTPUT_DIR = io_utils.check_dir(output_dir)
+        os.makedirs(output_dir, exist_ok=True)
+        config.OUTPUT_DIR = output_dir
 
         return config
 

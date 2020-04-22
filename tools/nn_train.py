@@ -12,14 +12,9 @@ to use the library. If your project requires new dataset loaders, evaluators, or
 other customizations, we suggest writing your own script. See `ct_train.py` for
 an example of how to extend to different use cases.
 """
-import logging
-
 from medsegpy import config
 from medsegpy.engine.defaults import default_argument_parser, default_setup
 from medsegpy.engine.trainer import DefaultTrainer
-from medsegpy.utils import dl_utils
-
-logger = logging.getLogger(__name__)
 
 
 def setup(args):
@@ -51,6 +46,5 @@ def main(args, trainer_cls: type = DefaultTrainer):
 
 
 if __name__ == '__main__':
-    logger = logging.getLogger("medsegpy.nn_train.{}".format(__name__))
     args = default_argument_parser().parse_args()
     main(args)

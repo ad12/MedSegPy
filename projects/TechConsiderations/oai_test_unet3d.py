@@ -1,3 +1,4 @@
+raise DeprecationWarning("This file is deprecated.")
 import logging
 import os
 import time
@@ -12,9 +13,9 @@ from medsegpy.utils import im_utils, io_utils
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from tools.oai import oai_test
+from projects.TechConsiderations import oai_test
 from medsegpy.utils import dice_score_coefficient, volumetric_overlap_error
-from tools.oai.scan_metadata import ScanMetadata
+from projects.TechConsiderations.scan_metadata import ScanMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +89,8 @@ def test_model():
 
     # Load config data
     test_path = UNET_3D_TEST_PATH
-    test_result_path = io_utils.check_dir(UNET_3D_TEST_RESULT_PATH)
+    test_result_path = UNET_3D_TEST_RESULT_PATH
+    os.makedirs(test_result_path, exist_ok=True)
     test_batch_size = TEST_BATCH_SIZE
 
     scans_data = load_pid_data(test_path)

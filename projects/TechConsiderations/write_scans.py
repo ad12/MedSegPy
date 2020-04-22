@@ -1,3 +1,5 @@
+raise DeprecationWarning("This module is deprecated")
+
 import logging
 import os
 import sys
@@ -12,8 +14,6 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 
-sys.path.insert(0, '../')
-from medsegpy.data.im_generator import img_generator_oai_test
 from medsegpy.config import UNetConfig
 from medsegpy.utils import io_utils
 
@@ -55,7 +55,7 @@ def normalize_im(x):
 
 
 SAVE_PATH = '/bmrNAS/people/arjun/msk_seg_networks/oai_metadata'
-io_utils.check_dir(SAVE_PATH)
+os.makedirs(SAVE_PATH, exist_ok=True)
 
 if __name__ == '__main__':
     start_time = time.time()

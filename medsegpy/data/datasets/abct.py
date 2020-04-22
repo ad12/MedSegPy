@@ -1,3 +1,4 @@
+"""Abdominal CT Dataset."""
 from medsegpy.data.catalog import MetadataCatalog
 from medsegpy.utils.cluster import Cluster, CLUSTER
 

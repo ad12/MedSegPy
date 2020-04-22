@@ -1,3 +1,4 @@
+raise DeprecationWarning("This file is deprecated.")
 # Author: Zhongnan Fang, zhongnanf@gmail.com, 2017 July
 # Modified: Akshay Chaudhari, akshaysc@stanford.edu 2017 August
 #           Arjun Desai, arjundd@stanford.edu, 2018 June
@@ -28,7 +29,7 @@ from medsegpy.config import DeeplabV3Config, SegnetConfig, UNetConfig, UNet2_5DC
 from medsegpy.utils import dice_score_coefficient
 from medsegpy.utils.logger import setup_logger
 from medsegpy.modeling import get_model
-from tools.oai.scan_metadata import ScanMetadata
+from projects.TechConsiderations.scan_metadata import ScanMetadata
 from medsegpy.data.im_gens import get_generator
 
 logger = logging.getLogger(__name__)
@@ -141,7 +142,7 @@ def test_model(
     # Read the files that will be segmented
     test_gen.summary()
     logger.info('Save path: %s' % (test_result_path))
-    io_utils.check_dir(test_result_path)
+    os.makedirs(test_result_path, exist_ok=True)
 
     # test_gen = img_generator_oai_test(test_path, test_batch_size, config)
 
@@ -232,7 +233,7 @@ def test_model(
             # TODO (arjundd): fix writing masks to files
             #x_write_o = np.transpose(x_write, (1, 2, 0))
             #recon_oo = np.transpose(recon_o, (1, 2, 0, 3))
-            #mc_overlay.im_overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write_o, recon_oo)
+            #mc_overlay.overlay(os.path.join(test_result_path, 'im_ovlp', fname), x_write_o, recon_oo)
             #ovlps = im_utils.write_ovlp_masks(os.path.join(test_result_path, 'ovlp', fname), y_test[...,0], labels[...,0])
             #im_utils.write_mask(os.path.join(test_result_path, 'gt', fname), y_test)
             #im_utils.write_mask(os.path.join(test_result_path, 'labels', fname), labels)
@@ -784,7 +785,6 @@ def handle_best_network_test_exp(vargin):
 
 
 if __name__ == '__main__':
-    raise DeprecationWarning("This file is deprecated. Use nn_test.")
     parser = argparse.ArgumentParser(description='Run inference on OAI dataset')
 
     subparsers = parser.add_subparsers(help='experiment to run', dest=EXP_KEY)
