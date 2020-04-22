@@ -10,7 +10,6 @@ import yaml
 from fvcore.common.file_io import PathManager
 
 from medsegpy.cross_validation import cv_util
-from medsegpy.data import MetadataCatalog
 from medsegpy.losses import DICE_LOSS, CMD_LINE_SUPPORTED_LOSSES, get_training_loss_from_str
 from medsegpy.utils import utils as utils, io_utils
 
@@ -203,21 +202,7 @@ class Config(object):
             full_key (str): Upper case attribute representation.
             value (Any): Corresponding value.
         """
-        if full_key in ("TRAIN_PATH", "VALID_PATH", "TEST_PATH"):
-            # Ignore empty values.
-            mapping = {
-                "TRAIN_PATH": "TRAIN_DATASET",
-                "VALID_PATH": "VAL_DATASET",
-                "TEST_PATH": "TEST_DATASET",
-            }
-            if value:
-                prev_key, prev_val = full_key, value
-                value = MetadataCatalog.convert_path_to_dataset(value)
-                full_key = mapping[full_key]
-                logger.info("Converting {} -> {}: {} -> {}".format(
-                    prev_key, full_key, prev_val, value
-                ))
-        elif full_key == "LOSS" and isinstance(value, str):
+        if full_key == "LOSS" and isinstance(value, str):
             try:
                 value = get_training_loss_from_str(value)
             except ValueError:
@@ -246,6 +231,9 @@ class Config(object):
 
         for full_key, value in vars_dict.items():
             full_key = str(full_key).upper()
+            if full_key in ("TRAIN_PATH", "VALID_PATH", "TEST_PATH") and value:
+                raise ValueError("{} not longer supported - update to _DATASET".format(full_key))
+
             full_key, value = self._parse_special_attributes(
                 full_key,
                 value

@@ -214,11 +214,3 @@ class MetadataCatalog:
         else:
             m = MetadataCatalog._NAME_TO_META[name] = Metadata(name=name)
             return m
-
-    @staticmethod
-    def convert_path_to_dataset(path):
-        catalog = {m.get("scan_root", None): name
-                   for name, m in MetadataCatalog._NAME_TO_META.items()}
-        catalog.pop(None)
-        return catalog[path]
-

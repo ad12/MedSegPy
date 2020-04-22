@@ -44,7 +44,7 @@ def main(args, trainer_cls: type = DefaultTrainer):
         if not cfg.TEST_DATASET:
             raise ValueError("TEST_DATASET not specified")
         model = trainer_cls.build_model(cfg)
-        return trainer_cls.test(cfg, model, dl_utils.get_weights(cfg.OUTPUT_DIR))
+        return trainer_cls.test(cfg, model)
 
     trainer = trainer_cls(cfg)
     return trainer.train()
