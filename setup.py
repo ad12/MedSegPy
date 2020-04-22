@@ -1,14 +1,11 @@
 #!/usr/bin/env python
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
-import glob
 import os
-import shutil
 from os import path
 from setuptools import find_packages, setup
-from typing import List
-import tensorflow as tf
 import keras
+import tensorflow as tf
 
 tf_ver = [int(x) for x in tf.__version__.split(".")[:2]]
 assert tf_ver >= [1, 8] and tf_ver < [2, 0], "Requires TensorFlow >=1.8,<2.0"
@@ -44,8 +41,8 @@ setup(
     version=get_version(),
     author="Arjun Desai",
     url="https://github.com/ad12/MedSegPy",
-    description="MedSegPy is a framework for research on medical "
-    "image segmentation.",
+    description="MedSegPy is a framework for research on medical image "
+    "segmentation.",
     packages=find_packages(exclude=("configs", "tests")),
     python_requires=">=3.6",
     install_requires=[
@@ -61,7 +58,8 @@ setup(
         "scipy",
         "scikit-image",
         "simpleitk",
-        "configparser"
+        "configparser",
+        "resnet",
     ],
     extras_require={
         "all": ["shapely", "psutil"],
