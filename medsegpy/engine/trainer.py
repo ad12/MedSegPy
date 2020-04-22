@@ -4,7 +4,6 @@ import os
 import pickle
 from typing import Union, Tuple
 
-from fvcore.common.file_io import PathManager
 from keras import callbacks as kc
 from keras.utils import plot_model
 
@@ -75,26 +74,6 @@ class DefaultTrainer(object):
         """Builds train and val data loaders.
         """
         generator = im_gens.get_generator(cfg)
-        # try:
-        #     train_gen = data_loader.get_data_loader(
-        #         config,
-        #         state=im_gens.GeneratorState.TRAINING,
-        #         shuffle=True,
-        #         drop_last=True,
-        #         generator=generator,
-        #     )
-        #     val_gen = data_loader.get_data_loader(
-        #         config,
-        #         state=im_gens.GeneratorState.VALIDATION,
-        #         shuffle=False,
-        #         drop_last=False,
-        #         generator=generator,
-        #     )
-        #     train_nbatches, valid_nbatches = None, None
-        #     use_multiprocessing = False
-        #     return train_gen, val_gen
-        # except ValueError as e:
-        # logger.info("{}\nDefaulting to traditional generator".format(e))
         return generator, generator
 
     def build_callbacks(self):
@@ -181,7 +160,8 @@ class DefaultTrainer(object):
             callbacks=callbacks,
             workers=num_workers,
             use_multiprocessing=use_multiprocessing,
-            verbose=1
+            verbose=1,
+            shuffle=False,
         )
 
         # Save optimizer state
@@ -205,12 +185,13 @@ class DefaultTrainer(object):
         #                overwrite=True)
 
     @classmethod
-    def test(cls, cfg: config.Config, model, weights=None):
+    def test(cls, cfg: config.Config, model):
         logger.info("Beginning testing...")
         cfg = copy.deepcopy(cfg)  # will be modified below.
         cfg.change_to_test()
 
-        if not weights:
+        weights = cfg.TEST_WEIGHT_PATH
+        if not cfg.TEST_WEIGHT_PATH:
             weights = dl_utils.get_weights(cfg.OUTPUT_DIR)
             logger.info("Best weights: {}".format(weights))
         model.load_weights(weights)
