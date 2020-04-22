@@ -2,7 +2,7 @@ import collections
 import random
 import unittest
 
-from medsegpy import parse_pids
+from tools.oai import parse_pids
 from medsegpy.utils import io_utils
 from medsegpy.config import DeeplabV3Config, SegnetConfig, UNetConfig
 from medsegpy.data.im_generator import calc_generator_info

@@ -12,9 +12,9 @@ from medsegpy.utils import im_utils, io_utils
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from medsegpy import oai_test
+from tools.oai import oai_test
 from medsegpy.utils import dice_score_coefficient, volumetric_overlap_error
-from medsegpy.scan_metadata import ScanMetadata
+from tools.oai.scan_metadata import ScanMetadata
 
 logger = logging.getLogger(__name__)
 

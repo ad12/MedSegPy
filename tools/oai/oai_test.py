@@ -8,7 +8,6 @@ import matplotlib
 matplotlib.use('Agg')
 # import matplotlib.pyplot as plt
 
-import argparse
 import os
 import time
 from time import strptime, strftime
@@ -29,7 +28,7 @@ from medsegpy.config import DeeplabV3Config, SegnetConfig, UNetConfig, UNet2_5DC
 from medsegpy.utils import dice_score_coefficient
 from medsegpy.utils.logger import setup_logger
 from medsegpy.modeling import get_model
-from medsegpy.scan_metadata import ScanMetadata
+from tools.oai.scan_metadata import ScanMetadata
 from medsegpy.data.im_gens import get_generator
 
 logger = logging.getLogger(__name__)
