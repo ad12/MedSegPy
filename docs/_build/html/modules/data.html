@@ -196,14 +196,14 @@ or create an empty one if none is available.</p>
 <dl class="function">
 <dt id="medsegpy.data.get_generator">
 <code class="sig-prename descclassname">medsegpy.data.</code><code class="sig-name descname">get_generator</code><span class="sig-paren">(</span><em class="sig-param">cfg: medsegpy.config.Config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#get_generator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.get_generator" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get generator based on config TAG value</p>
+<dd><p>Get generator based on config <cite>“TAG”</cite> value.</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="medsegpy.data.GeneratorState">
 <em class="property">class </em><code class="sig-prename descclassname">medsegpy.data.</code><code class="sig-name descname">GeneratorState</code><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#GeneratorState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.GeneratorState" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/enum.html#enum.Enum" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
-<p>Defines the state for the generator for training/testing networks</p>
+<p>Defines the generator state for training/testing networks</p>
 <dl class="attribute">
 <dt id="medsegpy.data.GeneratorState.TRAINING">
 <code class="sig-name descname">TRAINING</code><em class="property"> = 1</em><a class="headerlink" href="#medsegpy.data.GeneratorState.TRAINING" title="Permalink to this definition">¶</a></dt>
@@ -225,7 +225,7 @@ or create an empty one if none is available.</p>
 <dt id="medsegpy.data.Generator">
 <em class="property">class </em><code class="sig-prename descclassname">medsegpy.data.</code><code class="sig-name descname">Generator</code><span class="sig-paren">(</span><em class="sig-param">cfg: medsegpy.config.Config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#Generator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.Generator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/abc.html#abc.ABC" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
-<p>Abstract class for data generator for neural network training and testing</p>
+<p>Abstract class for data generator for network training and testing.</p>
 <dl class="attribute">
 <dt id="medsegpy.data.Generator.SUPPORTED_TAGS">
 <code class="sig-name descname">SUPPORTED_TAGS</code><em class="property"> = ['']</em><a class="headerlink" href="#medsegpy.data.Generator.SUPPORTED_TAGS" title="Permalink to this definition">¶</a></dt>
@@ -234,32 +234,55 @@ or create an empty one if none is available.</p>
 <dl class="method">
 <dt id="medsegpy.data.Generator.img_generator">
 <em class="property">abstract </em><code class="sig-name descname">img_generator</code><span class="sig-paren">(</span><em class="sig-param">state: medsegpy.data.im_gens.GeneratorState</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#Generator.img_generator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.Generator.img_generator" title="Permalink to this definition">¶</a></dt>
-<dd><p>Data generator that yields (inputs, outputs) during Keras training
-This method should be passed to the data_generator field when training with Keras
-:param state: A GeneratorState - either TRAINING or VALIDATION</p>
+<dd><p>Data generator that yields <cite>(inputs, outputs)</cite>.</p>
+<p>Use with <cite>model.fit_generator()</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="#medsegpy.data.GeneratorState" title="medsegpy.data.GeneratorState"><em>GeneratorState</em></a>) – <cite>GeneratorState.TRAINING</cite> or
+<cite>GeneratorState.VALIDATION</cite></p>
+</dd>
+<dt class="field-even">Yields</dt>
+<dd class="field-even"><p><em>Tuple[ndarray, ndarray]</em> – batched inputs, batched outputs</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="medsegpy.data.Generator.img_generator_test">
 <em class="property">abstract </em><code class="sig-name descname">img_generator_test</code><span class="sig-paren">(</span><em class="sig-param">model=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#Generator.img_generator_test"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.Generator.img_generator_test" title="Permalink to this definition">¶</a></dt>
-<dd><p>Data generator that yields (inputs, outputs-ground truth, predictions, scan_identifier)
-If model is None, <a href="#id1"><span class="problematic" id="id2">`</span></a>predictions`=None
-This method should be passed to the data_generator field when testing model with Keras
-:param model: A Keras model with which to run inference. Default: None.</p>
+<dd><p>Data generator that yields data during inference.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>keras.models.Model</em>) – A Keras model to use for inference.</p>
+</dd>
+<dt class="field-even">Yields</dt>
+<dd class="field-even"><dl class="simple">
+<dt>inputs, outputs (ground truth), predictions, scan id, time elapsed.</dt><dd><p>predictions and time elapsed are <cite>None</cite> if <cite>model</cite> not
+specified. Volumes will have shape <cite>DxHxW</cite>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="medsegpy.data.Generator.summary">
 <em class="property">abstract </em><code class="sig-name descname">summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#Generator.summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.Generator.summary" title="Permalink to this definition">¶</a></dt>
-<dd><p>Print summary based on self.config state (‘training’, ‘testing’)</p>
+<dd><p>Log summary based on <cite>self.cfg.STATE</cite>.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="medsegpy.data.Generator.num_steps">
 <em class="property">abstract </em><code class="sig-name descname">num_steps</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Tuple[int, int]<a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#Generator.num_steps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.Generator.num_steps" title="Permalink to this definition">¶</a></dt>
-<dd><p>Number of steps per epoch for training and validation
-Use with args <cite>train_steps</cite> and <cite>validation_steps</cite> in Keras <cite>model.fit</cite>
-:return: a tuple of (training_steps, validation_steps)</p>
+<dd><p>Returns number of steps per epoch for training and validation.</p>
+<p>By default it calculates as <cite>len(elements) // batch_size</cite>. Elements are
+the unique elements that are batched together after structuring.</p>
+<p>Use for args <cite>{train,validation}_steps</cite> args in Keras <cite>model.fit()</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>Tuple[int, int]</em> – training steps, validation steps</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -276,16 +299,17 @@ Use with args <cite>train_steps</cite> and <cite>validation_steps</cite> in Kera
 
 <dl class="method">
 <dt id="medsegpy.data.Generator.sort_files">
-<code class="sig-name descname">sort_files</code><span class="sig-paren">(</span><em class="sig-param">files</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#Generator.sort_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.Generator.sort_files" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sort files by name
-:param files: An iterable of filenames
-:return: A sorted list of filenames</p>
+<code class="sig-name descname">sort_files</code><span class="sig-paren">(</span><em class="sig-param">files</em><span class="sig-paren">)</span> &#x2192; List[str]<a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#Generator.sort_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.Generator.sort_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sort files by name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>files</strong> (<em>Sequence</em><em>[</em><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a><em>]</em>) – Files to load.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><em>List[str]</em> – Sorted files.</p>
+</dd>
+</dl>
 </dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.data.Generator.logits_to_binary">
-<em class="property">static </em><code class="sig-name descname">logits_to_binary</code><span class="sig-paren">(</span><em class="sig-param">x: numpy.ndarray</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#Generator.logits_to_binary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.Generator.logits_to_binary" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 </dd></dl>
 
@@ -293,9 +317,13 @@ Use with args <cite>train_steps</cite> and <cite>validation_steps</cite> in Kera
 <dt id="medsegpy.data.OAIGenerator">
 <em class="property">class </em><code class="sig-prename descclassname">medsegpy.data.</code><code class="sig-name descname">OAIGenerator</code><span class="sig-paren">(</span><em class="sig-param">cfg: medsegpy.config.Config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#OAIGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.OAIGenerator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">medsegpy.data.im_gens.Generator</span></code></p>
-<p>Generator to be used with files where training/testing data is written as 2D slices
-Filename: PATIENTID_VISIT_AUGMENTATION-NUMBER_SLICE-NUMBER
-Filename Format: ‘%07d_V%02d_Aug%02d_%03d’ (e.g. ‘0000001_V00_Aug00_001.h5</p>
+<p>Generator for data stored as 2D slices without structuring.</p>
+<p>In this generator, each slice is treated as a different element. For 2.5D
+networks, it loads sequential slices in the channel dimension.
+It should be used for 2D and 2.5D networks.</p>
+<p>Data for this generator must be stored in the medsegpy 2D dataset format.
+See <a class="reference external" href="https://ad12.github.io/MedSegPy/_build/html/tutorials/datasets.html#data-format">https://ad12.github.io/MedSegPy/_build/html/tutorials/datasets.html#data-format</a>
+for more information.</p>
 <dl class="attribute">
 <dt id="medsegpy.data.OAIGenerator.SUPPORTED_TAGS">
 <code class="sig-name descname">SUPPORTED_TAGS</code><em class="property"> = ['oai_aug', 'oai', 'oai_2d', 'oai_aug_2d', 'oai_2.5d', 'oai_aug_2.5d']</em><a class="headerlink" href="#medsegpy.data.OAIGenerator.SUPPORTED_TAGS" title="Permalink to this definition">¶</a></dt>
@@ -310,37 +338,6 @@ Filename Format: ‘%07d_V%02d_Aug%02d_%03d’ (e.g. ‘0000001_V00_Aug00_001.h5
 <dt id="medsegpy.data.OAIGenerator.img_generator_test">
 <code class="sig-name descname">img_generator_test</code><span class="sig-paren">(</span><em class="sig-param">model=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#OAIGenerator.img_generator_test"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.OAIGenerator.img_generator_test" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.data.OAIGenerator.__reformat_testing_scans__">
-<code class="sig-name descname">__reformat_testing_scans__</code><span class="sig-paren">(</span><em class="sig-param">vols</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#OAIGenerator.__reformat_testing_scans__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.OAIGenerator.__reformat_testing_scans__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reformat testing scans if some rendition of patch-based training is done</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>vols</strong> – an iterable for volumes to be reorganized</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a tuple of the iterable reorganized into the full volume</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.data.OAIGenerator.__map_files_to_scan_id__">
-<code class="sig-name descname">__map_files_to_scan_id__</code><span class="sig-paren">(</span><em class="sig-param">files</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#OAIGenerator.__map_files_to_scan_id__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.OAIGenerator.__map_files_to_scan_id__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Map filenames to scan_ids (patient-id_visit-id)
-:param files: an iterable of files
-:return: a dictionary of scan_id –&gt; files</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.data.OAIGenerator.__load_neighboring_slices__">
-<code class="sig-name descname">__load_neighboring_slices__</code><span class="sig-paren">(</span><em class="sig-param">num_slices</em>, <em class="sig-param">filepath</em>, <em class="sig-param">max_slice</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#OAIGenerator.__load_neighboring_slices__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.OAIGenerator.__load_neighboring_slices__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Assumes that there are at most slices go from 1-max_slice
-:param num_slices:
-:param filepath:
-:return:</p>
-</dd></dl>
 
 <dl class="method">
 <dt id="medsegpy.data.OAIGenerator.summary">
@@ -368,7 +365,7 @@ Filename Format: ‘%07d_V%02d_Aug%02d_%03d’ (e.g. ‘0000001_V00_Aug00_001.h5
 <dt id="medsegpy.data.OAI3DGenerator">
 <em class="property">class </em><code class="sig-prename descclassname">medsegpy.data.</code><code class="sig-name descname">OAI3DGenerator</code><span class="sig-paren">(</span><em class="sig-param">config: medsegpy.config.Config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#OAI3DGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.OAI3DGenerator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">medsegpy.data.im_gens.OAIGenerator</span></code></p>
-<p>Generator for training 3D networks where data is stored per slice</p>
+<p>Generator for training 3D networks where data is stored as 2D slices.</p>
 <dl class="attribute">
 <dt id="medsegpy.data.OAI3DGenerator.SUPPORTED_TAGS">
 <code class="sig-name descname">SUPPORTED_TAGS</code><em class="property"> = ['oai_3d']</em><a class="headerlink" href="#medsegpy.data.OAI3DGenerator.SUPPORTED_TAGS" title="Permalink to this definition">¶</a></dt>
@@ -398,7 +395,7 @@ e.g. If each input volume consists of 4 slices, slices 1-4 will be in the same v
 <dt id="medsegpy.data.OAI3DBlockGenerator">
 <em class="property">class </em><code class="sig-prename descclassname">medsegpy.data.</code><code class="sig-name descname">OAI3DBlockGenerator</code><span class="sig-paren">(</span><em class="sig-param">config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#OAI3DBlockGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.OAI3DBlockGenerator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">medsegpy.data.im_gens.OAI3DGenerator</span></code></p>
-<p>Generator for 3D networks where data is stored in blocks</p>
+<p>Generator for structuring 2D data into 3D blocks.</p>
 <dl class="attribute">
 <dt id="medsegpy.data.OAI3DBlockGenerator.SUPPORTED_TAGS">
 <code class="sig-name descname">SUPPORTED_TAGS</code><em class="property"> = ['oai_3d_block']</em><a class="headerlink" href="#medsegpy.data.OAI3DBlockGenerator.SUPPORTED_TAGS" title="Permalink to this definition">¶</a></dt>
@@ -540,13 +537,6 @@ Filename Format: ‘%07d_V%02d_Aug%02d_%03d’ (e.g. ‘0000001_V00_Aug00_001.h5
 <dt id="medsegpy.data.CTGenerator.SUPPORTED_TAGS">
 <code class="sig-name descname">SUPPORTED_TAGS</code><em class="property"> = ['abct', 'abCT']</em><a class="headerlink" href="#medsegpy.data.CTGenerator.SUPPORTED_TAGS" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.data.CTGenerator.__load_neighboring_slices__">
-<code class="sig-name descname">__load_neighboring_slices__</code><span class="sig-paren">(</span><em class="sig-param">num_slices</em>, <em class="sig-param">filepath</em>, <em class="sig-param">max_slice</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#CTGenerator.__load_neighboring_slices__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.CTGenerator.__load_neighboring_slices__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Stacks 2D CT slices from single patient clipped at different window levels.</p>
-<p>Overloads traditional 2.5D networks that look at neighboring slices.</p>
-</dd></dl>
 
 <dl class="method">
 <dt id="medsegpy.data.CTGenerator.img_generator_test">

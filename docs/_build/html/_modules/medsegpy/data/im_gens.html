@@ -156,7 +156,7 @@
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">import</span> <span class="nn">random</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 
 <span class="kn">import</span> <span class="nn">h5py</span>
@@ -176,14 +176,14 @@
 
 
 <div class="viewcode-block" id="GeneratorState"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.GeneratorState">[docs]</a><span class="k">class</span> <span class="nc">GeneratorState</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Defines the state for the generator for training/testing networks&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Defines the generator state for training/testing networks&quot;&quot;&quot;</span>
     <span class="n">TRAINING</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">VALIDATION</span> <span class="o">=</span> <span class="mi">2</span>
     <span class="n">TESTING</span> <span class="o">=</span> <span class="mi">3</span></div>
 
 
 <div class="viewcode-block" id="get_generator"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.get_generator">[docs]</a><span class="k">def</span> <span class="nf">get_generator</span><span class="p">(</span><span class="n">cfg</span><span class="p">:</span> <span class="n">Config</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Get generator based on config TAG value&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Get generator based on config `&quot;TAG&quot;` value.&quot;&quot;&quot;</span>
     <span class="k">for</span> <span class="n">generator</span> <span class="ow">in</span> <span class="p">[</span>
         <span class="c1"># OAI supported generators.</span>
         <span class="n">OAIGenerator</span><span class="p">,</span> <span class="n">OAI3DGenerator</span><span class="p">,</span> <span class="n">OAI3DBlockGenerator</span><span class="p">,</span>
@@ -203,7 +203,7 @@
 
 
 <div class="viewcode-block" id="Generator"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.Generator">[docs]</a><span class="k">class</span> <span class="nc">Generator</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Abstract class for data generator for neural network training and testing&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Abstract class for data generator for network training and testing.&quot;&quot;&quot;</span>
     <span class="n">SUPPORTED_TAGS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg</span><span class="p">:</span> <span class="n">Config</span><span class="p">):</span>
@@ -213,49 +213,68 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">fname_parser</span> <span class="o">=</span> <span class="n">OAISliceWise</span><span class="p">()</span>
 
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">_load_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_path</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Load inputs and ground truth from os.path.join(data_path, file)</span>
-<span class="sd">        :param data_path: A path specifying the directory where data is</span>
-<span class="sd">        :param file: A filename</span>
-<span class="sd">        :return: a tuple of (inputs, outputs)</span>
+    <span class="k">def</span> <span class="nf">_load_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_path</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Load inputs and ground truth from `os.path.join(data_path, file)`.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data_path (str): Root directory</span>
+<span class="sd">            file (str): A filename</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple[ndarray, ndarray]: inputs, outputs</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span>
 
 <div class="viewcode-block" id="Generator.img_generator"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.Generator.img_generator">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">img_generator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">GeneratorState</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Data generator that yields (inputs, outputs) during Keras training</span>
-<span class="sd">        This method should be passed to the data_generator field when training with Keras</span>
-<span class="sd">        :param state: A GeneratorState - either TRAINING or VALIDATION</span>
+        <span class="sd">&quot;&quot;&quot;Data generator that yields `(inputs, outputs)`.</span>
+
+<span class="sd">        Use with `model.fit_generator()`.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            state (GeneratorState): `GeneratorState.TRAINING` or</span>
+<span class="sd">                `GeneratorState.VALIDATION`</span>
+
+<span class="sd">        Yields:</span>
+<span class="sd">            Tuple[ndarray, ndarray]: batched inputs, batched outputs</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">accepted_states</span> <span class="o">=</span> <span class="p">[</span><span class="n">GeneratorState</span><span class="o">.</span><span class="n">TRAINING</span><span class="p">,</span> <span class="n">GeneratorState</span><span class="o">.</span><span class="n">VALIDATION</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">state</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">accepted_states</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Generator must be either </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">accepted_states</span><span class="p">)</span></div>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Generator must be either </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">accepted_states</span><span class="p">)</span>
+            <span class="p">)</span></div>
 
 <div class="viewcode-block" id="Generator.img_generator_test"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.Generator.img_generator_test">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">img_generator_test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Data generator that yields (inputs, outputs-ground truth, predictions, scan_identifier)</span>
-<span class="sd">        If model is None, `predictions`=None</span>
-<span class="sd">        This method should be passed to the data_generator field when testing model with Keras</span>
-<span class="sd">        :param model: A Keras model with which to run inference. Default: None.</span>
+        <span class="sd">&quot;&quot;&quot;Data generator that yields data during inference.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            model (keras.models.Model): A Keras model to use for inference.</span>
+
+<span class="sd">        Yields:</span>
+<span class="sd">            inputs, outputs (ground truth), predictions, scan id, time elapsed.</span>
+<span class="sd">                predictions and time elapsed are `None` if `model` not</span>
+<span class="sd">                specified. Volumes will have shape `DxHxW`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
 <div class="viewcode-block" id="Generator.summary"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.Generator.summary">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">summary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Print summary based on self.config state (&#39;training&#39;, &#39;testing&#39;)</span>
+        <span class="sd">&quot;&quot;&quot;Log summary based on `self.cfg.STATE`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
 <div class="viewcode-block" id="Generator.num_steps"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.Generator.num_steps">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">num_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Number of steps per epoch for training and validation</span>
-<span class="sd">        Use with args `train_steps` and `validation_steps` in Keras `model.fit`</span>
-<span class="sd">        :return: a tuple of (training_steps, validation_steps)</span>
+        <span class="sd">&quot;&quot;&quot;Returns number of steps per epoch for training and validation.</span>
+
+<span class="sd">        By default it calculates as `len(elements) // batch_size`. Elements are</span>
+<span class="sd">        the unique elements that are batched together after structuring.</span>
+
+<span class="sd">        Use for args `{train,validation}_steps` args in Keras `model.fit()`.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple[int, int]: training steps, validation steps</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span></div>
 
@@ -269,11 +288,14 @@
         <span class="sd">&quot;&quot;&quot;Number of scans corresponding to given state.&quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
-<div class="viewcode-block" id="Generator.sort_files"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.Generator.sort_files">[docs]</a>    <span class="k">def</span> <span class="nf">sort_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">files</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Sort files by name</span>
-<span class="sd">        :param files: An iterable of filenames</span>
-<span class="sd">        :return: A sorted list of filenames</span>
+<div class="viewcode-block" id="Generator.sort_files"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.Generator.sort_files">[docs]</a>    <span class="k">def</span> <span class="nf">sort_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">files</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Sort files by name.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            files (Sequence[str]): Files to load.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            List[str]: Sorted files.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">def</span> <span class="nf">argsort</span><span class="p">(</span><span class="n">seq</span><span class="p">):</span>
             <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">seq</span><span class="p">)),</span> <span class="n">key</span><span class="o">=</span><span class="n">seq</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">)</span>
@@ -286,14 +308,28 @@
 
         <span class="k">return</span> <span class="p">[</span><span class="n">files</span><span class="p">[</span><span class="n">cnt1</span><span class="p">]</span> <span class="k">for</span> <span class="n">cnt1</span> <span class="ow">in</span> <span class="n">order</span><span class="p">]</span></div>
 
-    <span class="k">def</span> <span class="nf">_add_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">unique_filenames</span><span class="p">,</span> <span class="n">pids</span><span class="p">,</span> <span class="n">augment_data</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Check if file should be added to list of files</span>
-<span class="sd">        :param file: a string (filename or filepath accepted)</span>
-<span class="sd">        :param unique_filenames: list of unique filenames</span>
-<span class="sd">        :param pids: list of pids to include</span>
-<span class="sd">        :param augment_data: If data should be augmented, ignored if &#39;aug&#39; not found in filename</span>
-<span class="sd">        :return: a boolean</span>
+    <span class="k">def</span> <span class="nf">_add_file</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">unique_filenames</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">pids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span>
+        <span class="n">augment_data</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if file should be added to list of files.</span>
+
+<span class="sd">        This is useful when wanting to filter out augmented data, specific</span>
+<span class="sd">        subject/patient ids, etc.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            file (str): Filename or filepath.</span>
+<span class="sd">            unique_filenames (Sequence[str]): Running list of unique filenames</span>
+<span class="sd">                to add.</span>
+<span class="sd">            pids (Sequence[str/int]): Patient ids to include. If `None`, check</span>
+<span class="sd">                is not made.</span>
+<span class="sd">            augment_data (bool): If `True`, include augmented data.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: If `True`, file should be added.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">should_add_file</span> <span class="o">=</span> <span class="n">file</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">unique_filenames</span>
         <span class="n">file_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fname_parser</span><span class="o">.</span><span class="n">get_file_info</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
@@ -317,10 +353,14 @@
         <span class="k">return</span> <span class="n">should_add_file</span>
 
     <span class="k">def</span> <span class="nf">_add_background_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">segs</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Generate background labels based on segmentations</span>
-<span class="sd">        :param segs: a binary ndarray with last dimension corresponding to different classes</span>
-<span class="sd">                     i.e. if 3 classes, segs.shape[-1] = 3</span>
+        <span class="sd">&quot;&quot;&quot;Add index for background labels based on segmentations.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            segs (ndarray): A binary array of shape (...)xC- i.e. last dimension</span>
+<span class="sd">                is class dimension.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            ndarray: Last dim has length `C+1`, where `x[...,0]` is background.</span>
 <span class="sd">        :return:</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">all_tissues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">segs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
@@ -331,10 +371,19 @@
         <span class="k">return</span> <span class="n">seg_total</span>
 
     <span class="k">def</span> <span class="nf">_img_generator_base_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">GeneratorState</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get base info for either TRAINING, VALIDATION, or TESTING generator states</span>
-<span class="sd">        :param state: A GeneratorState</span>
-<span class="sd">        :return: a dictionary of basic info pertaining to the GeneratorState</span>
+        <span class="sd">&quot;&quot;&quot;Get base info for TRAINING, VALIDATION, or TESTING generator states.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            state (GeneratorState):</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: Basic information pertaining to this GeneratorState.</span>
+<span class="sd">                Includes the following keys:</span>
+<span class="sd">                * &quot;data_path_or_files&quot;</span>
+<span class="sd">                * &quot;batch_size&quot;</span>
+<span class="sd">                * &quot;shuffle_epoch&quot;</span>
+<span class="sd">                * &quot;pids&quot;</span>
+<span class="sd">                * &quot;augment_data&quot;</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span>
         <span class="k">if</span> <span class="n">state</span> <span class="o">==</span> <span class="n">GeneratorState</span><span class="o">.</span><span class="n">TRAINING</span><span class="p">:</span>
@@ -364,21 +413,19 @@
                      <span class="s1">&#39;pids&#39;</span><span class="p">:</span> <span class="n">pids</span><span class="p">,</span>
                      <span class="s1">&#39;augment_data&#39;</span><span class="p">:</span> <span class="n">augment_data</span><span class="p">}</span>
 
-        <span class="k">return</span> <span class="n">base_info</span>
-
-<div class="viewcode-block" id="Generator.logits_to_binary"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.Generator.logits_to_binary">[docs]</a>    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">logits_to_binary</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-        <span class="n">data</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">1</span>
-
-        <span class="k">return</span> <span class="n">data</span></div></div>
+        <span class="k">return</span> <span class="n">base_info</span></div>
 
 
 <div class="viewcode-block" id="OAIGenerator"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.OAIGenerator">[docs]</a><span class="k">class</span> <span class="nc">OAIGenerator</span><span class="p">(</span><span class="n">Generator</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Generator to be used with files where training/testing data is written as 2D slices</span>
-<span class="sd">    Filename: PATIENTID_VISIT_AUGMENTATION-NUMBER_SLICE-NUMBER</span>
-<span class="sd">    Filename Format: &#39;%07d_V%02d_Aug%02d_%03d&#39; (e.g. &#39;0000001_V00_Aug00_001.h5</span>
+    <span class="sd">&quot;&quot;&quot;Generator for data stored as 2D slices without structuring.</span>
+
+<span class="sd">    In this generator, each slice is treated as a different element. For 2.5D</span>
+<span class="sd">    networks, it loads sequential slices in the channel dimension.</span>
+<span class="sd">    It should be used for 2D and 2.5D networks.</span>
+
+<span class="sd">    Data for this generator must be stored in the medsegpy 2D dataset format.</span>
+<span class="sd">    See https://ad12.github.io/MedSegPy/_build/html/tutorials/datasets.html#data-format</span>
+<span class="sd">    for more information.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">SUPPORTED_TAGS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;oai_aug&#39;</span><span class="p">,</span> <span class="s1">&#39;oai&#39;</span><span class="p">,</span> <span class="s1">&#39;oai_2d&#39;</span><span class="p">,</span> <span class="s1">&#39;oai_aug_2d&#39;</span><span class="p">,</span> <span class="s1">&#39;oai_2.5d&#39;</span><span class="p">,</span> <span class="s1">&#39;oai_aug_2.5d&#39;</span><span class="p">]</span>
     <span class="n">__EXPECTED_IMG_SIZE_DIMS__</span> <span class="o">=</span> <span class="mi">3</span>
@@ -449,7 +496,7 @@
 
         <span class="n">files</span><span class="p">,</span> <span class="n">batches_per_epoch</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_generator_info</span><span class="p">(</span><span class="n">GeneratorState</span><span class="o">.</span><span class="n">TESTING</span><span class="p">)</span>
         <span class="n">files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sort_files</span><span class="p">(</span><span class="n">files</span><span class="p">)</span>
-        <span class="n">scan_id_to_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__map_files_to_scan_id__</span><span class="p">(</span><span class="n">files</span><span class="p">)</span>
+        <span class="n">scan_id_to_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_map_files_to_scan_id</span><span class="p">(</span><span class="n">files</span><span class="p">)</span>
         <span class="n">scan_ids</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">scan_id_to_files</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 
         <span class="k">for</span> <span class="n">scan_id</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">scan_ids</span><span class="p">):</span>
@@ -479,26 +526,31 @@
                 <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
                 <span class="n">recon</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">)</span>
                 <span class="n">time_elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
-                <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">recon</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__reformat_testing_scans__</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">recon</span><span class="p">))</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">recon</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reformat_testing_scans</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">recon</span><span class="p">))</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__reformat_testing_scans__</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reformat_testing_scans</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
 
             <span class="k">yield</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">recon</span><span class="p">,</span> <span class="n">scan_id</span><span class="p">,</span> <span class="n">time_elapsed</span><span class="p">)</span></div>
     
-<div class="viewcode-block" id="OAIGenerator.__reformat_testing_scans__"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.OAIGenerator.__reformat_testing_scans__">[docs]</a>    <span class="k">def</span> <span class="nf">__reformat_testing_scans__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vols</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Reformat testing scans if some rendition of patch-based training is done</span>
+    <span class="k">def</span> <span class="nf">_reformat_testing_scans</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vols</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;Reformat each volume in `vols` into DxHxW shape.</span>
 
-<span class="sd">        :param vols: an iterable for volumes to be reorganized</span>
-<span class="sd">        :return: a tuple of the iterable reorganized into the full volume</span>
+<span class="sd">        Args:</span>
+<span class="sd">            vols (Sequence[ndarray]): Volumes to be reformatted.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple[ndarray]: Volumes reformatted in DxHxW shape.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">vols</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">vols</span><span class="p">)</span>
 
-<div class="viewcode-block" id="OAIGenerator.__map_files_to_scan_id__"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.OAIGenerator.__map_files_to_scan_id__">[docs]</a>    <span class="k">def</span> <span class="nf">__map_files_to_scan_id__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">files</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Map filenames to scan_ids (patient-id_visit-id)</span>
-<span class="sd">        :param files: an iterable of files</span>
-<span class="sd">        :return: a dictionary of scan_id --&gt; files</span>
+    <span class="k">def</span> <span class="nf">_map_files_to_scan_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">files</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Map file names to scan_ids (patient-id_timepoint-id).</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            files: An iterable of files</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: scan_id -&gt; files</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">scan_id_files</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
@@ -514,7 +566,7 @@
         <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">scan_id_files</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="n">scan_id_files</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">scan_id_files</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
 
-        <span class="k">return</span> <span class="n">scan_id_files</span></div>
+        <span class="k">return</span> <span class="n">scan_id_files</span>
 
     <span class="k">def</span> <span class="nf">_load_input_helper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">tissues</span><span class="p">,</span> <span class="n">num_neighboring_slices</span><span class="p">,</span> <span class="n">max_slice_num</span><span class="p">,</span> <span class="n">include_background</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -530,16 +582,16 @@
         <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="s1">&#39;&#39;</span>
 
         <span class="k">if</span> <span class="n">num_neighboring_slices</span><span class="p">:</span>
-            <span class="n">im</span><span class="p">,</span> <span class="n">seg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__load_neighboring_slices__</span><span class="p">(</span><span class="n">num_slices</span><span class="o">=</span><span class="n">num_neighboring_slices</span><span class="p">,</span>
-                                                       <span class="n">filepath</span><span class="o">=</span><span class="n">filepath</span><span class="p">,</span>
-                                                       <span class="n">max_slice</span><span class="o">=</span><span class="n">max_slice_num</span><span class="p">)</span>
+            <span class="n">im</span><span class="p">,</span> <span class="n">seg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_neighboring_slices</span><span class="p">(</span><span class="n">num_slices</span><span class="o">=</span><span class="n">num_neighboring_slices</span><span class="p">,</span>
+                                                    <span class="n">filepath</span><span class="o">=</span><span class="n">filepath</span><span class="p">,</span>
+                                                    <span class="n">max_slice</span><span class="o">=</span><span class="n">max_slice_num</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">im</span><span class="p">,</span> <span class="n">seg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_inputs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">filepath</span><span class="p">),</span>
                                         <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">filepath</span><span class="p">))</span>
 
         <span class="c1"># support multi class</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tissues</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">seg_tissues</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__compress_multi_class_mask__</span><span class="p">(</span><span class="n">seg</span><span class="p">,</span> <span class="n">tissues</span><span class="p">)</span>
+            <span class="n">seg_tissues</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compress_multi_class_mask</span><span class="p">(</span><span class="n">seg</span><span class="p">,</span> <span class="n">tissues</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">seg_tissues</span> <span class="o">=</span> <span class="n">seg</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">tissues</span><span class="p">]</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tissues</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span>  <span class="c1"># if tissues are supposed to be summed (like tibial cartilage and patellar cartilage)</span>
@@ -554,7 +606,7 @@
 
         <span class="k">return</span> <span class="n">im</span><span class="p">,</span> <span class="n">seg_total</span>
 
-    <span class="k">def</span> <span class="nf">__compress_multi_class_mask__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seg</span><span class="p">,</span> <span class="n">tissues</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_compress_multi_class_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seg</span><span class="p">,</span> <span class="n">tissues</span><span class="p">):</span>
         <span class="n">o_seg</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="k">for</span> <span class="n">t_inds</span> <span class="ow">in</span> <span class="n">tissues</span><span class="p">:</span>
@@ -565,7 +617,7 @@
 
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">o_seg</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
 
-<div class="viewcode-block" id="OAIGenerator.__load_neighboring_slices__"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.OAIGenerator.__load_neighboring_slices__">[docs]</a>    <span class="k">def</span> <span class="nf">__load_neighboring_slices__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_slices</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">max_slice</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_load_neighboring_slices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_slices</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">max_slice</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Assumes that there are at most slices go from 1-max_slice</span>
 <span class="sd">        :param num_slices:</span>
@@ -601,7 +653,7 @@
         <span class="c1">#im = np.transpose(im, (1, 2, 0))</span>
         <span class="n">seg</span> <span class="o">=</span> <span class="n">segs</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">segs</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">]</span>
 
-        <span class="k">return</span> <span class="n">im</span><span class="p">,</span> <span class="n">seg</span></div>
+        <span class="k">return</span> <span class="n">im</span><span class="p">,</span> <span class="n">seg</span>
 
     <span class="k">def</span> <span class="nf">_load_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="n">im_path</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/</span><span class="si">%s</span><span class="s1">.im&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
@@ -762,8 +814,7 @@
 
 
 <div class="viewcode-block" id="OAI3DGenerator"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.OAI3DGenerator">[docs]</a><span class="k">class</span> <span class="nc">OAI3DGenerator</span><span class="p">(</span><span class="n">OAIGenerator</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Generator for training 3D networks where data is stored per slice</span>
+    <span class="sd">&quot;&quot;&quot;Generator for training 3D networks where data is stored as 2D slices.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">SUPPORTED_TAGS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;oai_3d&#39;</span><span class="p">]</span>
     <span class="n">__EXPECTED_IMG_SIZE_DIMS__</span> <span class="o">=</span> <span class="mi">4</span>
@@ -817,7 +868,7 @@
 
         <span class="c1"># support multi class</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tissues</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">seg_tissues</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__compress_multi_class_mask__</span><span class="p">(</span><span class="n">seg</span><span class="p">,</span> <span class="n">tissues</span><span class="p">)</span>
+            <span class="n">seg_tissues</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compress_multi_class_mask</span><span class="p">(</span><span class="n">seg</span><span class="p">,</span> <span class="n">tissues</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">seg_tissues</span> <span class="o">=</span> <span class="n">seg</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">tissues</span><span class="p">]</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tissues</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span>  <span class="c1"># if tissues are supposed to be summed (like tibial cartilage and patellar cartilage)</span>
@@ -831,7 +882,7 @@
 
         <span class="k">return</span> <span class="n">im</span><span class="p">,</span> <span class="n">seg_total</span>
 
-    <span class="k">def</span> <span class="nf">__compress_multi_class_mask__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seg</span><span class="p">,</span> <span class="n">tissues</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_compress_multi_class_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seg</span><span class="p">,</span> <span class="n">tissues</span><span class="p">):</span>
         <span class="n">o_seg</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="k">for</span> <span class="n">t_inds</span> <span class="ow">in</span> <span class="n">tissues</span><span class="p">:</span>
@@ -994,7 +1045,7 @@
                                       <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">filepath</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">im_vol</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">num_slices</span><span class="p">,)</span>
     
-    <span class="k">def</span> <span class="nf">__reformat_testing_scans__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vols</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_reformat_testing_scans</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vols</span><span class="p">):</span>
         <span class="n">vols_updated</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vols</span><span class="p">:</span>
             <span class="k">assert</span> <span class="n">v</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">5</span> <span class="ow">and</span> <span class="n">v</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">v</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">IMG_SIZE</span><span class="p">,</span> <span class="s2">&quot;img dims must be </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">((</span><span class="mi">1</span><span class="p">,)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">IMG_SIZE</span><span class="p">)</span>
@@ -1008,8 +1059,7 @@
 
 
 <div class="viewcode-block" id="OAI3DBlockGenerator"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.OAI3DBlockGenerator">[docs]</a><span class="k">class</span> <span class="nc">OAI3DBlockGenerator</span><span class="p">(</span><span class="n">OAI3DGenerator</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Generator for 3D networks where data is stored in blocks</span>
+    <span class="sd">&quot;&quot;&quot;Generator for structuring 2D data into 3D blocks.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">SUPPORTED_TAGS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;oai_3d_block&#39;</span><span class="p">]</span>
 
@@ -1354,7 +1404,7 @@
 
         <span class="c1"># support multi class</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tissues</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">seg_tissues</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__compress_multi_class_mask__</span><span class="p">(</span><span class="n">seg</span><span class="p">,</span> <span class="n">tissues</span><span class="p">)</span>
+            <span class="n">seg_tissues</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compress_multi_class_mask</span><span class="p">(</span><span class="n">seg</span><span class="p">,</span> <span class="n">tissues</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">seg_tissues</span> <span class="o">=</span> <span class="n">seg</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">tissues</span><span class="p">]</span>
         <span class="n">seg_total</span> <span class="o">=</span> <span class="n">seg_tissues</span>
@@ -1366,7 +1416,7 @@
 
         <span class="k">return</span> <span class="n">seg_total</span>
 
-    <span class="k">def</span> <span class="nf">__compress_multi_class_mask__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seg</span><span class="p">,</span> <span class="n">tissues</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_compress_multi_class_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seg</span><span class="p">,</span> <span class="n">tissues</span><span class="p">):</span>
         <span class="n">o_seg</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="k">for</span> <span class="n">t_inds</span> <span class="ow">in</span> <span class="n">tissues</span><span class="p">:</span>
@@ -1472,7 +1522,7 @@
 
         <span class="k">return</span> <span class="n">im</span>
 
-<div class="viewcode-block" id="CTGenerator.__load_neighboring_slices__"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.CTGenerator.__load_neighboring_slices__">[docs]</a>    <span class="k">def</span> <span class="nf">__load_neighboring_slices__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_slices</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">max_slice</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_load_neighboring_slices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_slices</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">max_slice</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Stacks 2D CT slices from single patient clipped at different window levels.</span>
 
 <span class="sd">        Overloads traditional 2.5D networks that look at neighboring slices.</span>
@@ -1488,7 +1538,7 @@
         <span class="n">im</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">ims</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="k">assert</span> <span class="n">im</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">num_neighboring_slices</span><span class="p">())</span>
-        <span class="k">return</span> <span class="n">im</span><span class="p">,</span> <span class="n">seg</span></div>
+        <span class="k">return</span> <span class="n">im</span><span class="p">,</span> <span class="n">seg</span>
 
 <div class="viewcode-block" id="CTGenerator.img_generator_test"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.CTGenerator.img_generator_test">[docs]</a>    <span class="k">def</span> <span class="nf">img_generator_test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span>
@@ -1507,7 +1557,7 @@
             <span class="n">GeneratorState</span><span class="o">.</span><span class="n">TESTING</span>
         <span class="p">)</span>
         <span class="n">files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sort_files</span><span class="p">(</span><span class="n">files</span><span class="p">)</span>
-        <span class="n">scan_id_to_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__map_files_to_scan_id__</span><span class="p">(</span><span class="n">files</span><span class="p">)</span>
+        <span class="n">scan_id_to_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_map_files_to_scan_id</span><span class="p">(</span><span class="n">files</span><span class="p">)</span>
         <span class="n">scan_ids</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">scan_id_to_files</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 
         <span class="k">for</span> <span class="n">scan_id</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">scan_ids</span><span class="p">):</span>
@@ -1535,9 +1585,9 @@
                 <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
                 <span class="n">recon</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">)</span>
                 <span class="n">time_elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
-                <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">recon</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__reformat_testing_scans__</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">recon</span><span class="p">))</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">recon</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reformat_testing_scans</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">recon</span><span class="p">))</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__reformat_testing_scans__</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reformat_testing_scans</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
 
             <span class="k">yield</span> <span class="p">(</span><span class="n">x_orig</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">recon</span><span class="p">,</span> <span class="n">scan_id</span><span class="p">,</span> <span class="n">time_elapsed</span><span class="p">)</span></div></div>
 </pre></div>

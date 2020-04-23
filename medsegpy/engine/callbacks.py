@@ -25,8 +25,7 @@ def lr_callback(optimizer):
 
 
 class LossHistory(kc.Callback):
-    """
-    A Keras callback to log training history
+    """A Keras callback to log training history
     """
 
     def on_train_begin(self, logs = {}):

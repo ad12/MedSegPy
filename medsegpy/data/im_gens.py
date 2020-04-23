@@ -6,7 +6,7 @@ import multiprocessing as mp
 import os
 import time
 import random
-from typing import Tuple
+from typing import Tuple, Sequence, List, Union
 import warnings
 
 import h5py
@@ -26,14 +26,14 @@ __all__ = [
 
 
 class GeneratorState(Enum):
-    """Defines the state for the generator for training/testing networks"""
+    """Defines the generator state for training/testing networks"""
     TRAINING = 1
     VALIDATION = 2
     TESTING = 3
 
 
 def get_generator(cfg: Config):
-    """Get generator based on config TAG value"""
+    """Get generator based on config `"TAG"` value."""
     for generator in [
         # OAI supported generators.
         OAIGenerator, OAI3DGenerator, OAI3DBlockGenerator,
@@ -53,7 +53,7 @@ def get_generator(cfg: Config):
 
 
 class Generator(ABC):
-    """Abstract class for data generator for neural network training and testing"""
+    """Abstract class for data generator for network training and testing."""
     SUPPORTED_TAGS = ['']
 
     def __init__(self, cfg: Config):
@@ -63,49 +63,68 @@ class Generator(ABC):
         self.fname_parser = OAISliceWise()
 
     @abstractmethod
-    def _load_inputs(self, data_path, file):
-        """
-        Load inputs and ground truth from os.path.join(data_path, file)
-        :param data_path: A path specifying the directory where data is
-        :param file: A filename
-        :return: a tuple of (inputs, outputs)
+    def _load_inputs(self, data_path, file) -> Tuple[np.ndarray, np.ndarray]:
+        """Load inputs and ground truth from `os.path.join(data_path, file)`.
+
+        Args:
+            data_path (str): Root directory
+            file (str): A filename
+
+        Returns:
+            Tuple[ndarray, ndarray]: inputs, outputs
         """
         pass
 
     @abstractmethod
     def img_generator(self, state: GeneratorState):
-        """
-        Data generator that yields (inputs, outputs) during Keras training
-        This method should be passed to the data_generator field when training with Keras
-        :param state: A GeneratorState - either TRAINING or VALIDATION
+        """Data generator that yields `(inputs, outputs)`.
+
+        Use with `model.fit_generator()`.
+
+        Args:
+            state (GeneratorState): `GeneratorState.TRAINING` or
+                `GeneratorState.VALIDATION`
+
+        Yields:
+            Tuple[ndarray, ndarray]: batched inputs, batched outputs
         """
         accepted_states = [GeneratorState.TRAINING, GeneratorState.VALIDATION]
         if state not in accepted_states:
-            raise ValueError('Generator must be either %s' % accepted_states)
+            raise ValueError(
+                "Generator must be either {}".format(accepted_states)
+            )
 
     @abstractmethod
     def img_generator_test(self, model=None):
-        """
-        Data generator that yields (inputs, outputs-ground truth, predictions, scan_identifier)
-        If model is None, `predictions`=None
-        This method should be passed to the data_generator field when testing model with Keras
-        :param model: A Keras model with which to run inference. Default: None.
+        """Data generator that yields data during inference.
+
+        Args:
+            model (keras.models.Model): A Keras model to use for inference.
+
+        Yields:
+            inputs, outputs (ground truth), predictions, scan id, time elapsed.
+                predictions and time elapsed are `None` if `model` not
+                specified. Volumes will have shape `DxHxW`.
         """
         pass
 
     @abstractmethod
     def summary(self):
-        """
-        Print summary based on self.config state ('training', 'testing')
+        """Log summary based on `self.cfg.STATE`.
         """
         pass
 
     @abstractmethod
     def num_steps(self) -> Tuple[int, int]:
-        """
-        Number of steps per epoch for training and validation
-        Use with args `train_steps` and `validation_steps` in Keras `model.fit`
-        :return: a tuple of (training_steps, validation_steps)
+        """Returns number of steps per epoch for training and validation.
+
+        By default it calculates as `len(elements) // batch_size`. Elements are
+        the unique elements that are batched together after structuring.
+
+        Use for args `{train,validation}_steps` args in Keras `model.fit()`.
+
+        Returns:
+            Tuple[int, int]: training steps, validation steps
         """
         return 0, 0
 
@@ -119,11 +138,14 @@ class Generator(ABC):
         """Number of scans corresponding to given state."""
         pass
 
-    def sort_files(self, files):
-        """
-        Sort files by name
-        :param files: An iterable of filenames
-        :return: A sorted list of filenames
+    def sort_files(self, files) -> List[str]:
+        """Sort files by name.
+
+        Args:
+            files (Sequence[str]): Files to load.
+
+        Returns:
+            List[str]: Sorted files.
         """
         def argsort(seq):
             return sorted(range(len(seq)), key=seq.__getitem__)
@@ -136,14 +158,28 @@ class Generator(ABC):
 
         return [files[cnt1] for cnt1 in order]
 
-    def _add_file(self, file: str, unique_filenames, pids, augment_data: bool):
-        """
-        Check if file should be added to list of files
-        :param file: a string (filename or filepath accepted)
-        :param unique_filenames: list of unique filenames
-        :param pids: list of pids to include
-        :param augment_data: If data should be augmented, ignored if 'aug' not found in filename
-        :return: a boolean
+    def _add_file(
+        self,
+        file: str,
+        unique_filenames: Sequence[str],
+        pids: Sequence[Union[str, int]],
+        augment_data: bool,
+    ):
+        """Check if file should be added to list of files.
+
+        This is useful when wanting to filter out augmented data, specific
+        subject/patient ids, etc.
+
+        Args:
+            file (str): Filename or filepath.
+            unique_filenames (Sequence[str]): Running list of unique filenames
+                to add.
+            pids (Sequence[str/int]): Patient ids to include. If `None`, check
+                is not made.
+            augment_data (bool): If `True`, include augmented data.
+
+        Returns:
+            bool: If `True`, file should be added.
         """
         should_add_file = file not in unique_filenames
         file_info = self.fname_parser.get_file_info(file)
@@ -167,10 +203,14 @@ class Generator(ABC):
         return should_add_file
 
     def _add_background_labels(self, segs: np.ndarray):
-        """
-        Generate background labels based on segmentations
-        :param segs: a binary ndarray with last dimension corresponding to different classes
-                     i.e. if 3 classes, segs.shape[-1] = 3
+        """Add index for background labels based on segmentations.
+
+        Args:
+            segs (ndarray): A binary array of shape (...)xC- i.e. last dimension
+                is class dimension.
+
+        Returns:
+            ndarray: Last dim has length `C+1`, where `x[...,0]` is background.
         :return:
         """
         all_tissues = np.sum(segs, axis=-1, dtype=np.bool)
@@ -181,10 +221,19 @@ class Generator(ABC):
         return seg_total
 
     def _img_generator_base_info(self, state: GeneratorState):
-        """
-        Get base info for either TRAINING, VALIDATION, or TESTING generator states
-        :param state: A GeneratorState
-        :return: a dictionary of basic info pertaining to the GeneratorState
+        """Get base info for TRAINING, VALIDATION, or TESTING generator states.
+
+        Args:
+            state (GeneratorState):
+
+        Returns:
+            dict: Basic information pertaining to this GeneratorState.
+                Includes the following keys:
+                * "data_path_or_files"
+                * "batch_size"
+                * "shuffle_epoch"
+                * "pids"
+                * "augment_data"
         """
         config = self.config
         if state == GeneratorState.TRAINING:
@@ -216,19 +265,17 @@ class Generator(ABC):
 
         return base_info
 
-    @staticmethod
-    def logits_to_binary(x: np.ndarray):
-        data = np.zeros(x.shape[:-1])
-        data[..., np.max(x, axis=-1)] = 1
-
-        return data
-
 
 class OAIGenerator(Generator):
-    """
-    Generator to be used with files where training/testing data is written as 2D slices
-    Filename: PATIENTID_VISIT_AUGMENTATION-NUMBER_SLICE-NUMBER
-    Filename Format: '%07d_V%02d_Aug%02d_%03d' (e.g. '0000001_V00_Aug00_001.h5
+    """Generator for data stored as 2D slices without structuring.
+
+    In this generator, each slice is treated as a different element. For 2.5D
+    networks, it loads sequential slices in the channel dimension.
+    It should be used for 2D and 2.5D networks.
+
+    Data for this generator must be stored in the medsegpy 2D dataset format.
+    See https://ad12.github.io/MedSegPy/_build/html/tutorials/datasets.html#data-format
+    for more information.
     """
     SUPPORTED_TAGS = ['oai_aug', 'oai', 'oai_2d', 'oai_aug_2d', 'oai_2.5d', 'oai_aug_2.5d']
     __EXPECTED_IMG_SIZE_DIMS__ = 3
@@ -299,7 +346,7 @@ class OAIGenerator(Generator):
 
         files, batches_per_epoch, _ = self._calc_generator_info(GeneratorState.TESTING)
         files = self.sort_files(files)
-        scan_id_to_files = self.__map_files_to_scan_id__(files)
+        scan_id_to_files = self._map_files_to_scan_id(files)
         scan_ids = sorted(scan_id_to_files.keys())
 
         for scan_id in list(scan_ids):
@@ -329,26 +376,31 @@ class OAIGenerator(Generator):
                 start_time = time.time()
                 recon = model.predict(x, batch_size=batch_size)
                 time_elapsed = time.time() - start_time
-                x, y, recon = self.__reformat_testing_scans__((x, y, recon))
+                x, y, recon = self._reformat_testing_scans((x, y, recon))
             else:
-                x, y = self.__reformat_testing_scans__((x, y))
+                x, y = self._reformat_testing_scans((x, y))
 
             yield (x, y, recon, scan_id, time_elapsed)
     
-    def __reformat_testing_scans__(self, vols):
-        """
-        Reformat testing scans if some rendition of patch-based training is done
+    def _reformat_testing_scans(self, vols: Sequence[np.ndarray]):
+        """Reformat each volume in `vols` into DxHxW shape.
 
-        :param vols: an iterable for volumes to be reorganized
-        :return: a tuple of the iterable reorganized into the full volume
+        Args:
+            vols (Sequence[ndarray]): Volumes to be reformatted.
+
+        Returns:
+            Tuple[ndarray]: Volumes reformatted in DxHxW shape.
         """
         return tuple(vols)
 
-    def __map_files_to_scan_id__(self, files):
-        """
-        Map filenames to scan_ids (patient-id_visit-id)
-        :param files: an iterable of files
-        :return: a dictionary of scan_id --> files
+    def _map_files_to_scan_id(self, files):
+        """Map file names to scan_ids (patient-id_timepoint-id).
+
+        Args:
+            files: An iterable of files
+
+        Returns:
+            dict: scan_id -> files
         """
         scan_id_files = dict()
         for f in files:
@@ -380,16 +432,16 @@ class OAIGenerator(Generator):
         assert os.path.dirname(filepath) is not ''
 
         if num_neighboring_slices:
-            im, seg = self.__load_neighboring_slices__(num_slices=num_neighboring_slices,
-                                                       filepath=filepath,
-                                                       max_slice=max_slice_num)
+            im, seg = self._load_neighboring_slices(num_slices=num_neighboring_slices,
+                                                    filepath=filepath,
+                                                    max_slice=max_slice_num)
         else:
             im, seg = self._load_inputs(os.path.dirname(filepath),
                                         os.path.basename(filepath))
 
         # support multi class
         if len(tissues) > 1:
-            seg_tissues = self.__compress_multi_class_mask__(seg, tissues)
+            seg_tissues = self._compress_multi_class_mask(seg, tissues)
         else:
             seg_tissues = seg[..., 0, tissues]
             if isinstance(tissues[0], list):  # if tissues are supposed to be summed (like tibial cartilage and patellar cartilage)
@@ -404,7 +456,7 @@ class OAIGenerator(Generator):
 
         return im, seg_total
 
-    def __compress_multi_class_mask__(self, seg, tissues):
+    def _compress_multi_class_mask(self, seg, tissues):
         o_seg = []
 
         for t_inds in tissues:
@@ -415,7 +467,7 @@ class OAIGenerator(Generator):
 
         return np.stack(o_seg, axis=-1)
 
-    def __load_neighboring_slices__(self, num_slices, filepath, max_slice):
+    def _load_neighboring_slices(self, num_slices, filepath, max_slice):
         """
         Assumes that there are at most slices go from 1-max_slice
         :param num_slices:
@@ -612,8 +664,7 @@ class OAIGenerator(Generator):
 
 
 class OAI3DGenerator(OAIGenerator):
-    """
-    Generator for training 3D networks where data is stored per slice
+    """Generator for training 3D networks where data is stored as 2D slices.
     """
     SUPPORTED_TAGS = ['oai_3d']
     __EXPECTED_IMG_SIZE_DIMS__ = 4
@@ -667,7 +718,7 @@ class OAI3DGenerator(OAIGenerator):
 
         # support multi class
         if len(tissues) > 1:
-            seg_tissues = self.__compress_multi_class_mask__(seg, tissues)
+            seg_tissues = self._compress_multi_class_mask(seg, tissues)
         else:
             seg_tissues = seg[..., 0, tissues]
             if isinstance(tissues[0], list):  # if tissues are supposed to be summed (like tibial cartilage and patellar cartilage)
@@ -681,7 +732,7 @@ class OAI3DGenerator(OAIGenerator):
 
         return im, seg_total
 
-    def __compress_multi_class_mask__(self, seg, tissues):
+    def _compress_multi_class_mask(self, seg, tissues):
         o_seg = []
 
         for t_inds in tissues:
@@ -844,7 +895,7 @@ class OAI3DGeneratorFullVolume(OAI3DGenerator):
                                       os.path.basename(filepath))
         return im_vol.shape[:2] + (num_slices,)
     
-    def __reformat_testing_scans__(self, vols):
+    def _reformat_testing_scans(self, vols):
         vols_updated = []
         for v in vols:
             assert v.ndim == 5 and v.shape[0] == 1 and v.shape[1:] == self.config.IMG_SIZE, "img dims must be %s" % str((1,) + self.config.IMG_SIZE)
@@ -858,8 +909,7 @@ class OAI3DGeneratorFullVolume(OAI3DGenerator):
 
 
 class OAI3DBlockGenerator(OAI3DGenerator):
-    """
-    Generator for 3D networks where data is stored in blocks
+    """Generator for structuring 2D data into 3D blocks.
     """
     SUPPORTED_TAGS = ['oai_3d_block']
 
@@ -1204,7 +1254,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
 
         # support multi class
         if len(tissues) > 1:
-            seg_tissues = self.__compress_multi_class_mask__(seg, tissues)
+            seg_tissues = self._compress_multi_class_mask(seg, tissues)
         else:
             seg_tissues = seg[..., 0, tissues]
         seg_total = seg_tissues
@@ -1216,7 +1266,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
 
         return seg_total
 
-    def __compress_multi_class_mask__(self, seg, tissues):
+    def _compress_multi_class_mask(self, seg, tissues):
         o_seg = []
 
         for t_inds in tissues:
@@ -1322,7 +1372,7 @@ class CTGenerator(OAIGenerator):
 
         return im
 
-    def __load_neighboring_slices__(self, num_slices, filepath, max_slice):
+    def _load_neighboring_slices(self, num_slices, filepath, max_slice):
         """Stacks 2D CT slices from single patient clipped at different window levels.
 
         Overloads traditional 2.5D networks that look at neighboring slices.
@@ -1357,7 +1407,7 @@ class CTGenerator(OAIGenerator):
             GeneratorState.TESTING
         )
         files = self.sort_files(files)
-        scan_id_to_files = self.__map_files_to_scan_id__(files)
+        scan_id_to_files = self._map_files_to_scan_id(files)
         scan_ids = sorted(scan_id_to_files.keys())
 
         for scan_id in list(scan_ids):
@@ -1385,8 +1435,8 @@ class CTGenerator(OAIGenerator):
                 start_time = time.time()
                 recon = model.predict(x, batch_size=batch_size)
                 time_elapsed = time.time() - start_time
-                x, y, recon = self.__reformat_testing_scans__((x, y, recon))
+                x, y, recon = self._reformat_testing_scans((x, y, recon))
             else:
-                x, y = self.__reformat_testing_scans__((x, y))
+                x, y = self._reformat_testing_scans((x, y))
 
             yield (x_orig, x, y, recon, scan_id, time_elapsed)
