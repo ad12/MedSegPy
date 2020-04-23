@@ -7,8 +7,15 @@ See [INSTALL.md](INSTALL.md).
 
 ## Quick Start
 
-See [GETTING_STARTED.md](GETTING_STARTED.md).
+See [GETTING_STARTED.md](GETTING_STARTED.md) and learn more at our [documentation](https://ad12.github.io/MedSegPy/).
 
-Learn more at our [documentation](https://detectron2.readthedocs.org).
-And see [projects/](projects/) for some projects that are built on top of
-medsegpy.
+
+## How To Cite
+```
+@article{desai2019technical,
+  title={Technical considerations for semantic segmentation in MRI using convolutional neural networks},
+  author={Desai, Arjun D and Gold, Garry E and Hargreaves, Brian A and Chaudhari, Akshay S},
+  journal={arXiv preprint arXiv:1902.01977},
+  year={2019}
+}
+```

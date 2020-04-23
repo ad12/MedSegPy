@@ -1,16 +1,10 @@
 """Sample extension of train_net.py for the abdominal CT dataset."""
 import os
 
-import numpy as np
-
 from medsegpy.data.im_gens import CTGenerator
 from medsegpy.engine.defaults import default_argument_parser
-from tools.nn_train import main
 from medsegpy.engine.trainer import DefaultTrainer
-
-CLASS_WEIGHTS = np.asarray([100, 1])
-SAVE_BEST_WEIGHTS = True
-FREEZE_LAYERS = None
+from train_net import main
 
 
 def parse_windows(windows):
