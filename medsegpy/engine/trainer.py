@@ -8,7 +8,7 @@ from keras import callbacks as kc
 from keras.utils import plot_model
 
 from medsegpy import config, solver
-from medsegpy.data import im_gens, data_loader
+from medsegpy.data import im_gens
 from medsegpy.engine.callbacks import LossHistory, lr_callback
 from medsegpy.evaluation import build_evaluator, inference_on_dataset
 from medsegpy.losses import get_training_loss, dice_loss
@@ -69,8 +69,7 @@ class DefaultTrainer(object):
     def _build_data_loaders(
         self,
         cfg
-    ) -> Union[Tuple[im_gens.Generator, im_gens.Generator],
-               data_loader.DataLoader]:
+    ) -> Tuple[im_gens.Generator, im_gens.Generator]:
         """Builds train and val data loaders.
         """
         generator = im_gens.get_generator(cfg)
