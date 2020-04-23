@@ -45,6 +45,6 @@ def main(args, trainer_cls: type = DefaultTrainer):
     return trainer.train()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     args = default_argument_parser().parse_args()
     main(args)

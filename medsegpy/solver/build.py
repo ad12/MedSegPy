@@ -1,9 +1,10 @@
 import logging
 
-from keras.optimizers import Adam
 from keras import callbacks as kc
+from keras.optimizers import Adam
 
 from medsegpy.config import Config
+
 from .lr_scheduler import step_decay
 from .optimizer import AdamAccumulate
 
@@ -30,7 +31,7 @@ def build_optimizer(config: Config):
             beta_2=0.995,
             epsilon=1e-8,
             decay=config.ADAM_DECAY,
-            amsgrad=config.USE_AMSGRAD
+            amsgrad=config.USE_AMSGRAD,
         )
     elif config.NUM_GRAD_STEPS > 1:
         logger.info(
@@ -39,10 +40,11 @@ def build_optimizer(config: Config):
         optimizer = AdamAccumulate(
             lr=config.INITIAL_LEARNING_RATE,
             beta_1=0.99,
-            beta_2=0.995, epsilon=1e-8,
+            beta_2=0.995,
+            epsilon=1e-8,
             decay=config.ADAM_DECAY,
             amsgrad=config.USE_AMSGRAD,
-            accum_iters=config.NUM_GRAD_STEPS
+            accum_iters=config.NUM_GRAD_STEPS,
         )
     else:
         raise ValueError("config.NUM_GRAD_STEPS must be >= 1")

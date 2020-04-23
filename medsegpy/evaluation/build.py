@@ -9,8 +9,9 @@ Registry for evaluators, which process input/output pairs to compute metric
 scores and save data to disk. The evaluator type should be registered with
 it's metadata in :class:`MetadataCatalog`.
 
-The registered object will be called with `obj(dataset_name, cfg, output_dir, save_raw_data)`.
-The call should return a `nn.Module` object.
+The registered object will be called with
+`obj(dataset_name, cfg, output_dir, save_raw_data)`.
+The call should return a :class:`DatasetEvaluator` object.
 """
 
 

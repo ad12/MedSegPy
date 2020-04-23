@@ -1,8 +1,7 @@
 import re
 import socket
-from typing import List
-
 from enum import Enum
+from typing import List
 
 
 class Cluster(Enum):
@@ -10,6 +9,7 @@ class Cluster(Enum):
 
     TODO (arjundd): make the paths configurable via experiments/preferences.
     """
+
     UNKNOWN = 0, [], None
     ROMA = 1, ["roma"], "/bmrNAS/people/arjun/results"
     VIGATA = 2, ["vigata"], "/bmrNAS/people/arjun/results"
@@ -19,8 +19,9 @@ class Cluster(Enum):
         """
         Args:
             value (int): Unique integer value.
-            patterns (`List[str]`): List of regex patterns that would match the hostname on the compute cluster. There
-                can be multiple hostnames per compute cluster because of the different nodes.
+            patterns (`List[str]`): List of regex patterns that would match the
+                hostname on the compute cluster. There can be multiple hostnames
+                per compute cluster because of the different nodes.
             save_dir (str): Directory to save data to.
         """
         obj = object.__new__(cls)
@@ -45,4 +46,3 @@ class Cluster(Enum):
 
 # Environment variable for the current cluster that is being used.
 CLUSTER = Cluster.cluster()
-

@@ -1,4 +1,5 @@
 import logging
+
 import numpy as np
 import tensorflow as tf
 from keras import backend as K
@@ -6,61 +7,65 @@ from keras.losses import binary_crossentropy
 
 logger = logging.getLogger(__name__)
 
-DICE_LOSS = ('dice', 'sigmoid')
+DICE_LOSS = ("dice", "sigmoid")
 MULTI_CLASS_DICE_LOSS = ("multi_class_dice", "sigmoid")
 AVG_DICE_LOSS = ("avg_dice", "sigmoid")
 
-WEIGHTED_CROSS_ENTROPY_LOSS = ('weighted_cross_entropy', 'softmax')
-WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS = ('weighted_cross_entropy_sigmoid', 'sigmoid')
+WEIGHTED_CROSS_ENTROPY_LOSS = ("weighted_cross_entropy", "softmax")
+WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS = (
+    "weighted_cross_entropy_sigmoid",
+    "sigmoid",
+)
 
-BINARY_CROSS_ENTROPY_LOSS = ('binary_crossentropy', 'softmax')
+BINARY_CROSS_ENTROPY_LOSS = ("binary_crossentropy", "softmax")
 
-BINARY_CROSS_ENTROPY_SIG_LOSS = ('binary_crossentropy', 'sigmoid')
+BINARY_CROSS_ENTROPY_SIG_LOSS = ("binary_crossentropy", "sigmoid")
 
-FOCAL_LOSS = ('focal_loss', 'sigmoid')
+FOCAL_LOSS = ("focal_loss", "sigmoid")
 FOCAL_LOSS_GAMMA = 3.0
 
-DICE_FOCAL_LOSS = ('dice_focal_loss', 'sigmoid')
-DICE_MEDIAN_LOSS = ('dice_median_loss', 'sigmoid')
+DICE_FOCAL_LOSS = ("dice_focal_loss", "sigmoid")
+DICE_MEDIAN_LOSS = ("dice_median_loss", "sigmoid")
 
-CMD_LINE_SUPPORTED_LOSSES = ['DICE_LOSS',
-                             "MULTI_CLASS_DICE_LOSS",
-                             "AVG_DICE_LOSS",
-                             'WEIGHTED_CROSS_ENTROPY_LOSS',
-                             'WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS',
-                             'BINARY_CROSS_ENTROPY_LOSS',
-                             'BINARY_CROSS_ENTROPY_SIG_LOSS',
-                             'FOCAL_LOSS',
-                             'DICE_FOCAL_LOSS',
-                             'DICE_MEDIAN_LOSS',
-                             ]
+CMD_LINE_SUPPORTED_LOSSES = [
+    "DICE_LOSS",
+    "MULTI_CLASS_DICE_LOSS",
+    "AVG_DICE_LOSS",
+    "WEIGHTED_CROSS_ENTROPY_LOSS",
+    "WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS",
+    "BINARY_CROSS_ENTROPY_LOSS",
+    "BINARY_CROSS_ENTROPY_SIG_LOSS",
+    "FOCAL_LOSS",
+    "DICE_FOCAL_LOSS",
+    "DICE_MEDIAN_LOSS",
+]
 
 
-# TODO (arjundd): Add ability to exclude specific indices from loss function computation
+# TODO (arjundd): Add ability to exclude specific indices from loss function.
 def get_training_loss_from_str(loss_str: str):
     loss_str = loss_str.upper()
-    if loss_str == 'DICE_LOSS':
+    if loss_str == "DICE_LOSS":
         return DICE_LOSS
     elif loss_str == "MULTI_CLASS_DICE_LOSS":
         return MULTI_CLASS_DICE_LOSS
     elif loss_str == "AVG_DICE_LOSS":
         return AVG_DICE_LOSS
-    elif loss_str == 'WEIGHTED_CROSS_ENTROPY_LOSS':
+    elif loss_str == "WEIGHTED_CROSS_ENTROPY_LOSS":
         return WEIGHTED_CROSS_ENTROPY_LOSS
-    elif loss_str == 'WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS':
+    elif loss_str == "WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS":
         return WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS
-    elif loss_str == 'BINARY_CROSS_ENTROPY_LOSS':
+    elif loss_str == "BINARY_CROSS_ENTROPY_LOSS":
         return BINARY_CROSS_ENTROPY_LOSS
-    elif loss_str == 'BINARY_CROSS_ENTROPY_SIG_LOSS':
+    elif loss_str == "BINARY_CROSS_ENTROPY_SIG_LOSS":
         return BINARY_CROSS_ENTROPY_SIG_LOSS
-    elif loss_str == 'FOCAL_LOSS':
+    elif loss_str == "FOCAL_LOSS":
         return FOCAL_LOSS
-    elif loss_str == 'DICE_FOCAL_LOSS':
+    elif loss_str == "DICE_FOCAL_LOSS":
         return DICE_FOCAL_LOSS
-    elif loss_str == 'DICE_MEDIAN_LOSS':
+    elif loss_str == "DICE_MEDIAN_LOSS":
         return DICE_MEDIAN_LOSS
     else:
-        raise ValueError('%s not supported' % loss_str)
+        raise ValueError("%s not supported" % loss_str)
 
 
 def get_training_loss(loss, **kwargs):
@@ -106,7 +111,9 @@ def dice_loss(y_true, y_pred):
     ovlp = K.sum(y_true * y_pred, axis=-1)
 
     mu = K.epsilon()
-    dice = (2.0 * ovlp + mu) / (K.sum(y_true, axis=-1) + K.sum(y_pred, axis=-1) + mu)
+    dice = (2.0 * ovlp + mu) / (
+        K.sum(y_true, axis=-1) + K.sum(y_pred, axis=-1) + mu
+    )
     loss = 1 - dice
 
     return loss
@@ -116,19 +123,23 @@ def dice_median_loss(y_true, y_pred):
     """Get the median dice loss"""
     lambda1 = 2
     mu = K.epsilon()
-    
+
     szp = K.get_variable_shape(y_pred)
     img_len = szp[1] * szp[2] * szp[3]
-    
+
     y_true = K.reshape(y_true, (-1, img_len))
     y_pred = K.reshape(y_pred, (-1, img_len))
-    
-    dsc = (2.0 * K.sum(y_true * y_pred, axis=-1) + mu) / (K.sum(y_true, axis=-1) + K.sum(y_pred, axis=-1) + mu)
+
+    dsc = (2.0 * K.sum(y_true * y_pred, axis=-1) + mu) / (
+        K.sum(y_true, axis=-1) + K.sum(y_pred, axis=-1) + mu
+    )
     dsc_mean = K.mean(dsc)
     dsc_std = K.std(dsc)
-    bool_mask = tf.logical_and(K.greater_equal(dsc - dsc_mean + lambda1*dsc_std, 0),
-                               K.less_equal(dsc - dsc_mean - lambda1*dsc_std, 0))
-    
+    bool_mask = tf.logical_and(
+        K.greater_equal(dsc - dsc_mean + lambda1 * dsc_std, 0),
+        K.less_equal(dsc - dsc_mean - lambda1 * dsc_std, 0),
+    )
+
     binarize_dsc = tf.boolean_mask(dsc, bool_mask)
 
     loss = 1 - K.mean(binarize_dsc)
@@ -137,9 +148,7 @@ def dice_median_loss(y_true, y_pred):
 
 
 def multi_class_dice_loss(
-    weights=None,
-    remove_background: bool=False,
-    **kwargs
+    weights=None, remove_background: bool = False, **kwargs
 ):
     """Dice loss for multiple classes in softmax layer.
 
@@ -159,7 +168,9 @@ def multi_class_dice_loss(
         ovlp = K.sum(y_true * y_pred, axis=0)
 
         mu = K.epsilon()
-        dice = (2.0 * ovlp + mu) / (K.sum(y_true, axis=0) + K.sum(y_pred, axis=0) + mu)
+        dice = (2.0 * ovlp + mu) / (
+            K.sum(y_true, axis=0) + K.sum(y_pred, axis=0) + mu
+        )
         loss = 1 - dice
 
         if use_weights:
@@ -184,13 +195,15 @@ def avg_dice_loss(weights=None, **kwargs):
         szp = K.get_variable_shape(y_pred)
 
         # Keep batch and class dimensions.
-        y_true = K.reshape(y_true, (-1, szp[1]*szp[2], szp[3]))
-        y_pred = K.reshape(y_pred, (-1, szp[1]*szp[2], szp[3]))
+        y_true = K.reshape(y_true, (-1, szp[1] * szp[2], szp[3]))
+        y_pred = K.reshape(y_pred, (-1, szp[1] * szp[2], szp[3]))
 
         ovlp = K.sum(y_true * y_pred, axis=1)
 
         mu = K.epsilon()
-        dice = (2.0 * ovlp + mu) / (K.sum(y_true, axis=1) + K.sum(y_pred, axis=1) + mu)
+        dice = (2.0 * ovlp + mu) / (
+            K.sum(y_true, axis=1) + K.sum(y_pred, axis=1) + mu
+        )
         loss = 1 - dice
 
         if use_weights:
@@ -209,11 +222,14 @@ def weighted_categorical_crossentropy(weights, **kwargs):
 
     :param: weights: Numpy array of shape (C,) where C is the number of classes
 
-    Use Case:
-        weights = np.array([0.5, 2]) # Class one at 0.5, class 2 2x the normal weights
-        exclude_ind = 0  # exclude background from computation
-        loss = weighted_categorical_crossentropy(weights=weights, exclude=exclude_ind)
-        model.compile(loss=loss, optimizer='adam')
+    Usage:
+    ```
+    weights = np.array([0.5, 2]) # Class 1 at 0.5, class 2 2x the normal weights
+    exclude_ind = 0  # exclude background from computation
+    loss = weighted_categorical_crossentropy(weights=weights,
+    exclude=exclude_ind)
+    model.compile(loss=loss, optimizer='adam')
+    ```
     """
 
     weights = K.variable(weights)
@@ -238,9 +254,11 @@ def weighted_categorical_crossentropy_sigmoid(weights):
     @:param: weights: numpy array of shape (C,) where C is the number of classes
 
     Use Case:
-        weights = np.array([0.5, 2]) # Class one at 0.5, class 2 2x the normal weights
-        loss = weighted_categorical_crossentropy(weights)
-        model.compile(loss=loss,optimizer='adam')
+    ```
+    weights = np.array([0.5, 2]) # Class 1 at 0.5, class 2 2x the normal weights
+    loss = weighted_categorical_crossentropy(weights)
+    model.compile(loss=loss,optimizer='adam')
+    ```
     """
 
     weights = K.variable(weights)
@@ -257,7 +275,9 @@ def weighted_categorical_crossentropy_sigmoid(weights):
         y_pred = K.clip(y_pred, K.epsilon(), 1 - K.epsilon())
 
         # calc
-        loss = (1 - y_true) * K.log(1 - y_pred) * weights[0] + y_true * K.log(y_pred) * weights[1]
+        loss = (1 - y_true) * K.log(1 - y_pred) * weights[0] + y_true * K.log(
+            y_pred
+        ) * weights[1]
         loss = -K.mean(loss)
         return loss
 
@@ -319,15 +339,21 @@ def wasserstein_disagreement_map(prediction, ground_truth, M):
     for i in range(n_classes):
         for j in range(n_classes):
             pairwise_correlations.append(
-                M[i, j] * tf.multiply(prediction[:, i], ground_truth[:, j]))
+                M[i, j] * tf.multiply(prediction[:, i], ground_truth[:, j])
+            )
     wass_dis_map = tf.add_n(pairwise_correlations)
     return wass_dis_map
 
 
-M_tree_4 = np.array([[0., 1., 1., 1., ],
-                     [1., 0., 0.6, 0.5],
-                     [1., 0.6, 0., 0.7],
-                     [1., 0.5, 0.7, 0.]], dtype=np.float64)
+M_tree_4 = np.array(
+    [
+        [0.0, 1.0, 1.0, 1.0],
+        [1.0, 0.0, 0.6, 0.5],
+        [1.0, 0.6, 0.0, 0.7],
+        [1.0, 0.5, 0.7, 0.0],
+    ],
+    dtype=np.float64,
+)
 
 
 def generalised_wasserstein_dice_loss(y_true, y_predicted):
@@ -345,7 +371,9 @@ def generalised_wasserstein_dice_loss(y_true, y_predicted):
     n_classes = K.int_shape(y_predicted)[-1]
 
     ground_truth = tf.cast(tf.reshape(y_true, (-1, n_classes)), dtype=tf.int64)
-    pred_proba = tf.cast(tf.reshape(y_predicted, (-1, n_classes)), dtype=tf.float64)
+    pred_proba = tf.cast(
+        tf.reshape(y_predicted, (-1, n_classes)), dtype=tf.float64
+    )
 
     # M = tf.cast(M, dtype=tf.float64)
     # compute disagreement map (delta)
@@ -358,8 +386,9 @@ def generalised_wasserstein_dice_loss(y_true, y_predicted):
     one_hot = tf.cast(ground_truth, dtype=tf.float64)
     true_pos = tf.reduce_sum(
         tf.multiply(tf.constant(M[0, :n_classes], dtype=tf.float64), one_hot),
-        axis=1)
-    true_pos = tf.reduce_sum(tf.multiply(true_pos, 1. - delta), axis=0)
-    WGDL = 1. - (2. * true_pos) / (2. * true_pos + all_error)
+        axis=1,
+    )
+    true_pos = tf.reduce_sum(tf.multiply(true_pos, 1.0 - delta), axis=0)
+    WGDL = 1.0 - (2.0 * true_pos) / (2.0 * true_pos + all_error)
 
     return tf.cast(WGDL, dtype=tf.float32)

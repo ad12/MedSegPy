@@ -27,6 +27,7 @@ def collect_env_info():
 
     try:
         import PIL
+
         data.append(("Pillow", PIL.__version__))
     except ImportError:
         pass

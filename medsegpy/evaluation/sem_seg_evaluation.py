@@ -2,15 +2,14 @@ import logging
 import os
 import time
 
-from fvcore.common.file_io import PathManager
 import h5py
 import numpy as np
 import seaborn as sns
+from fvcore.common.file_io import PathManager
 
 from medsegpy.config import Config
 from medsegpy.data import MetadataCatalog
-from medsegpy.utils.metric_utils import MetricsManager
-from medsegpy.utils.metric_utils import SegMetric
+from medsegpy.utils.metric_utils import MetricsManager, SegMetric
 
 from .build import EVALUATOR_REGISTRY
 from .evaluator import DatasetEvaluator
@@ -50,7 +49,7 @@ class SemSegEvaluator(DatasetEvaluator):
         cfg: Config,
         output_folder=None,
         save_raw_data: bool = False,
-        stream_evaluation: bool = True
+        stream_evaluation: bool = True,
     ):
         """
         Args:
@@ -64,8 +63,11 @@ class SemSegEvaluator(DatasetEvaluator):
         """
         self._config = cfg
         self._dataset_name = dataset_name
-        self._output_folder = output_folder \
-            if output_folder else os.path.join(cfg.OUTPUT_DIR, "test_results")
+        self._output_folder = (
+            output_folder
+            if output_folder
+            else os.path.join(cfg.OUTPUT_DIR, "test_results")
+        )
         PathManager.mkdirs(self._output_folder)
         self._num_classes = cfg.get_num_classes()
         self._ignore_label = 0
@@ -76,7 +78,10 @@ class SemSegEvaluator(DatasetEvaluator):
         self._meta = meta
         cat_ids = cfg.CATEGORIES
         contiguous_id_map = meta.get("category_id_to_contiguous_id")
-        contiguous_ids = [contiguous_id_map[tuple(x) if isinstance(x, list) else x] for x in cat_ids]
+        contiguous_ids = [
+            contiguous_id_map[tuple(x) if isinstance(x, list) else x]
+            for x in cat_ids
+        ]
 
         categories = meta.get("categories")
         categories = [categories[c_id] for c_id in contiguous_ids]
@@ -103,8 +108,7 @@ class SemSegEvaluator(DatasetEvaluator):
 
     def reset(self):
         self._metrics_manager = MetricsManager(
-            class_names=self._categories,
-            metrics=self._metrics
+            class_names=self._categories, metrics=self._metrics
         )
         self._predictions = []
         self._scan_cnt = 0
@@ -134,9 +138,11 @@ class SemSegEvaluator(DatasetEvaluator):
                     labels[l_argmax == c, c] = 1
                 labels = labels.astype(np.uint)
             else:
-                raise ValueError("output activation {} not supported".format(
-                    output_activation
-                ))
+                raise ValueError(
+                    "output activation {} not supported".format(
+                        output_activation
+                    )
+                )
 
             # background is always excluded from analysis
             if includes_bg:
@@ -174,10 +180,8 @@ class SemSegEvaluator(DatasetEvaluator):
             runtime=time_elapsed,
         )
 
-        logger_info_str = (
-            "Scan #{:03d} (name = {}, {:0.2f}s) = {}".format(
-                scan_cnt, scan_id, time_elapsed, summary
-            )
+        logger_info_str = "Scan #{:03d} (name = {}, {:0.2f}s) = {}".format(
+            scan_cnt, scan_id, time_elapsed, summary
         )
         self._results_str = self._results_str + logger_info_str + "\n"
         logger.info(logger_info_str)
@@ -199,36 +203,36 @@ class SemSegEvaluator(DatasetEvaluator):
         Note, by default coefficient of variation (CV) is calculated as a
         root-mean-squared quantity rather than mean.
         """
-        metrics_manager = self._metrics_manager
         output_dir = self._output_folder
         voxel_spacing = self._voxel_spacing
         logger = self._logger
 
-        start = time.time()
         if self._predictions:
             for input, output, labels, time_elapsed in self._predictions:
                 self.eval_single_scan(input, output, labels, time_elapsed)
-        end = time.time()
 
         results_str = self._results_str
         stats_string = get_stats_string(self._metrics_manager)
-        logger.info('--' * 20)
+        logger.info("--" * 20)
         logger.info("\n" + stats_string)
-        logger.info('--' * 20)
+        logger.info("--" * 20)
         if output_dir:
             test_results_summary_path = os.path.join(output_dir, "results.txt")
 
             # Write details to test file
-            with open(test_results_summary_path, 'w+') as f:
-                f.write('Results generated on %s\n' % time.strftime('%X %x %Z'))
-                f.write('Weights Loaded: %s\n' % os.path.basename(self._config.TEST_WEIGHT_PATH))
+            with open(test_results_summary_path, "w+") as f:
+                f.write("Results generated on %s\n" % time.strftime("%X %x %Z"))
+                f.write(
+                    "Weights Loaded: %s\n"
+                    % os.path.basename(self._config.TEST_WEIGHT_PATH)
+                )
                 if voxel_spacing:
-                    f.write('Voxel Spacing: %s\n' % str(voxel_spacing))
-                f.write('--' * 20)
-                f.write('\n')
+                    f.write("Voxel Spacing: %s\n" % str(voxel_spacing))
+                f.write("--" * 20)
+                f.write("\n")
                 f.write(results_str)
-                f.write('--' * 20)
-                f.write('\n')
+                f.write("--" * 20)
+                f.write("\n")
                 f.write(stats_string)
 
         # TODO: Convert segmentation metrics to valid results matrix.

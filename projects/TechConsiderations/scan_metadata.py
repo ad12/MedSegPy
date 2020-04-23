@@ -1,4 +1,4 @@
-class ScanMetadata():
+class ScanMetadata:
     def __init__(self, data):
         self.scan_id, self.slice_dir, self.kl_grade = data
 

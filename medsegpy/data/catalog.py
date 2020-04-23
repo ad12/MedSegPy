@@ -39,13 +39,17 @@ class DatasetCatalog(object):
     def register(name, func):
         """
         Args:
-            name (str): the name that identifies a dataset, e.g. "coco_2014_train".
-            func (callable): a callable which takes no arguments and returns a list of dicts.
+            name (str): the name that identifies a dataset,
+                e.g. "coco_2014_train".
+            func (callable): a callable which takes no arguments and returns a
+                list of dicts.
         """
-        assert callable(func), "You must register a function with `DatasetCatalog.register`!"
-        assert name not in DatasetCatalog._REGISTERED, "Dataset '{}' is already registered!".format(
-            name
-        )
+        assert callable(
+            func
+        ), "You must register a function with `DatasetCatalog.register`!"
+        assert (
+            name not in DatasetCatalog._REGISTERED
+        ), "Dataset '{}' is already registered!".format(name)
         DatasetCatalog._REGISTERED[name] = func
 
     @staticmethod
@@ -54,7 +58,8 @@ class DatasetCatalog(object):
         Call the registered function and return its results.
 
         Args:
-            name (str): the name that identifies a dataset, e.g. "coco_2014_train".
+            name (str): the name that identifies a dataset,
+                e.g. "coco_2014_train".
 
         Returns:
             list[dict]: dataset annotations.0
@@ -63,7 +68,8 @@ class DatasetCatalog(object):
             f = DatasetCatalog._REGISTERED[name]
         except KeyError:
             raise KeyError(
-                "Dataset '{}' is not registered! Available datasets are: {}".format(
+                "Dataset '{}' is not registered! "
+                "Available datasets are: {}".format(
                     name, ", ".join(DatasetCatalog._REGISTERED.keys())
                 )
             )
@@ -90,7 +96,8 @@ class DatasetCatalog(object):
 class Metadata(types.SimpleNamespace):
     """
     A class that supports simple attribute setter/getter.
-    It is intended for storing metadata of a dataset and make it accessible globally.
+    It is intended for storing metadata of a dataset and make it accessible
+    globally.
 
     Examples:
 
@@ -115,8 +122,7 @@ class Metadata(types.SimpleNamespace):
             log_first_n(
                 logging.WARNING,
                 "Metadata '{}' was renamed to '{}'!".format(
-                    key,
-                    self._RENAMED[key],
+                    key, self._RENAMED[key]
                 ),
                 n=10,
             )
@@ -125,9 +131,7 @@ class Metadata(types.SimpleNamespace):
         raise AttributeError(
             "Attribute '{}' does not exist in the metadata of '{}'. "
             "Available keys are {}.".format(
-                key,
-                self.name,
-                str(self.__dict__.keys()),
+                key, self.name, str(self.__dict__.keys())
             )
         )
 
@@ -136,8 +140,7 @@ class Metadata(types.SimpleNamespace):
             log_first_n(
                 logging.WARNING,
                 "Metadata '{}' was renamed to '{}'!".format(
-                    key,
-                    self._RENAMED[key]
+                    key, self._RENAMED[key]
                 ),
                 n=10,
             )
@@ -149,7 +152,7 @@ class Metadata(types.SimpleNamespace):
             assert oldval == val, (
                 "Attribute '{}' in the metadata of '{}' cannot be set "
                 "to a different value!\n{} != {}".format(
-                    key, self.name, oldval, val,
+                    key, self.name, oldval, val
                 )
             )
         except AttributeError:

@@ -3,11 +3,10 @@ import importlib.util
 import os
 import sys
 
-
 __all__ = []
 
 
-# from https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path
+# from https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path  # noqa
 def _import_file(module_name, file_path, make_importable=False):
     spec = importlib.util.spec_from_file_location(module_name, file_path)
     module = importlib.util.module_from_spec(spec)
@@ -27,7 +26,8 @@ def _configure_libraries():
     if disable_cv2:
         sys.modules["cv2"] = None
     else:
-        # Disable opencl in opencv since its interaction with cuda often has negative effects
+        # Disable opencl in opencv since its interaction with cuda often
+        # has negative effects
         # This envvar is supported after OpenCV 3.4.0
         os.environ["OPENCV_OPENCL_RUNTIME"] = "disabled"
         try:
@@ -73,8 +73,12 @@ def setup_custom_environment(custom_module):
         module = _import_file("medsegpy.utils.env.custom_module", custom_module)
     else:
         module = importlib.import_module(custom_module)
-    assert hasattr(module, "setup_environment") and callable(module.setup_environment), (
+    assert hasattr(module, "setup_environment") and callable(
+        module.setup_environment
+    ), (
         "Custom environment module defined in {} does not have the "
         "required callable attribute 'setup_environment'."
-    ).format(custom_module)
+    ).format(
+        custom_module
+    )
     module.setup_environment()

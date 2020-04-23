@@ -1,9 +1,8 @@
 import unittest
-from fvcore.common.file_io import PathManager
-from medsegpy.config import Config, DeeplabV3Config
 
-# Required to set up paths.
-from tests import utils
+from fvcore.common.file_io import PathManager
+
+from medsegpy.config import Config, DeeplabV3Config
 
 
 class TestConfig(unittest.TestCase):
@@ -40,21 +39,29 @@ class TestConfig(unittest.TestCase):
         )
 
         members = [
-            attr for attr in dir(cfg1)
+            attr
+            for attr in dir(cfg1)
             if not callable(getattr(cfg1, attr))
-               and not attr.startswith("__")
-               and not (hasattr(type(cfg1), attr) and isinstance(getattr(type(cfg1), attr), property))
+            and not attr.startswith("__")
+            and not (
+                hasattr(type(cfg1), attr)
+                and isinstance(getattr(type(cfg1), attr), property)
+            )
         ]
         cfg1_dict = {k: getattr(cfg1, k) for k in members}
 
         members = [
-            attr for attr in dir(cfg2)
+            attr
+            for attr in dir(cfg2)
             if not callable(getattr(cfg2, attr))
-               and not attr.startswith("__")
-               and not (hasattr(type(cfg2), attr) and isinstance(getattr(type(cfg2), attr), property))
+            and not attr.startswith("__")
+            and not (
+                hasattr(type(cfg2), attr)
+                and isinstance(getattr(type(cfg2), attr), property)
+            )
         ]
         cfg2_dict = {k: getattr(cfg2, k) for k in members}
-        for k in (cfg1_dict.keys() | cfg2_dict.keys()):
+        for k in cfg1_dict.keys() | cfg2_dict.keys():
             assert cfg1_dict[k] == cfg2_dict[k]
 
 

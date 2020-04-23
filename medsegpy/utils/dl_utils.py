@@ -20,23 +20,27 @@ def get_weights(experiment_dir):
     """
     files = os.listdir(experiment_dir)
     max_epoch = -1
-    best_file = ''
+    best_file = ""
     for file in files:
         file_fullpath = os.path.join(experiment_dir, file)
         # Ensure the file is an h5 file
-        if not (os.path.isfile(file_fullpath) and file_fullpath.endswith('.h5') and 'weights' in file):
+        if not (
+            os.path.isfile(file_fullpath)
+            and file_fullpath.endswith(".h5")
+            and "weights" in file
+        ):
             continue
 
         # Get file with max epochs
-        train_info = file.split('.')[1]
-        epoch = int(train_info.split('-')[0])
+        train_info = file.split(".")[1]
+        epoch = int(train_info.split("-")[0])
 
         if epoch > max_epoch:
             max_epoch = epoch
             best_file = file_fullpath
 
     if not best_file:
-        raise FileNotFoundError('No weights file found in %s' % experiment_dir)
+        raise FileNotFoundError("No weights file found in %s" % experiment_dir)
 
     return best_file
 
@@ -44,10 +48,14 @@ def get_weights(experiment_dir):
 def _check_results_file(base_path):
     """Recursively check for results.txt file.
     """
-    if (base_path is None) or (not os.path.isdir(base_path)) or (base_path == ''):
+    if (
+        (base_path is None)
+        or (not os.path.isdir(base_path))
+        or (base_path == "")
+    ):
         return []
 
-    results_filepath = os.path.join(base_path, 'results.txt')
+    results_filepath = os.path.join(base_path, "results.txt")
 
     results_paths = []
     if os.path.isfile(results_filepath):
@@ -85,9 +93,9 @@ def get_valid_subdirs(root_dir: str, exist_ok: bool = False):
         return []
 
     subdirs = []
-    config_path = os.path.join(root_dir, 'config.ini')
-    pik_data_path = os.path.join(root_dir, 'pik_data.dat')
-    test_results_dirpath = os.path.join(root_dir, 'test_results')
+    config_path = os.path.join(root_dir, "config.ini")
+    pik_data_path = os.path.join(root_dir, "pik_data.dat")
+    test_results_dirpath = os.path.join(root_dir, "test_results")
     results_file_exists = len(_check_results_file(test_results_dirpath)) > 0
 
     # 1. Check if you are a valid subdirectory - must contain a pik data path
@@ -106,13 +114,13 @@ def get_valid_subdirs(root_dir: str, exist_ok: bool = False):
     return subdirs
 
 
-def get_available_gpus(num_gpus: int=None):
+def get_available_gpus(num_gpus: int = None):
     """Get gpu ids for gpus that are >95% free.
 
     Tensorflow does not support checking free memory on gpus.
     This is a crude method that relies on `nvidia-smi` to
     determine which gpus are occupied and which are free.
-    
+
     Args:
         num_gpus: Number of requested gpus. If not specified,
             ids of all available gpu(s) are returned.
@@ -127,28 +135,53 @@ def get_available_gpus(num_gpus: int=None):
         return [-1]
 
     num_requested_gpus = num_gpus
-    num_gpus = len(subprocess.check_output("nvidia-smi --list-gpus", shell=True).decode().split("\n")) - 1
+    num_gpus = (
+        len(
+            subprocess.check_output("nvidia-smi --list-gpus", shell=True)
+            .decode()
+            .split("\n")
+        )
+        - 1
+    )
 
-    out_str = subprocess.check_output("nvidia-smi | grep MiB", shell=True).decode()
+    out_str = subprocess.check_output(
+        "nvidia-smi | grep MiB", shell=True
+    ).decode()
     mem_str = [x for x in out_str.split() if "MiB" in x]
     # First 2 * num_gpu elements correspond to memory for gpus
     # Order: (occupied-0, total-0, occupied-1, total-1, ...)
     mems = [float(x[:-3]) for x in mem_str]
-    gpu_percent_occupied_mem = [mems[2*gpu_id] / mems[2*gpu_id+1] for gpu_id in range(num_gpus)]
+    gpu_percent_occupied_mem = [
+        mems[2 * gpu_id] / mems[2 * gpu_id + 1] for gpu_id in range(num_gpus)
+    ]
 
-    available_gpus = [gpu_id for gpu_id, mem in enumerate(gpu_percent_occupied_mem) if mem < 0.05]
+    available_gpus = [
+        gpu_id
+        for gpu_id, mem in enumerate(gpu_percent_occupied_mem)
+        if mem < 0.05
+    ]
     if num_requested_gpus and num_requested_gpus > len(available_gpus):
-        raise ValueError("Requested {} gpus, only {} are free".format(num_requested_gpus, len(available_gpus)))
+        raise ValueError(
+            "Requested {} gpus, only {} are free".format(
+                num_requested_gpus, len(available_gpus)
+            )
+        )
 
-    return available_gpus[:num_requested_gpus] if num_requested_gpus else available_gpus
+    return (
+        available_gpus[:num_requested_gpus]
+        if num_requested_gpus
+        else available_gpus
+    )
 
 
 def num_gpus():
-    if "CUDA_VISIBLE_DEVICES" not in os.environ \
-        or not os.environ["CUDA_VISIBLE_DEVICES"]:
+    if (
+        "CUDA_VISIBLE_DEVICES" not in os.environ
+        or not os.environ["CUDA_VISIBLE_DEVICES"]
+    ):
         return 0
 
-    return len(os.environ["CUDA_VISIBLE_DEVICES"].split(','))
+    return len(os.environ["CUDA_VISIBLE_DEVICES"].split(","))
 
 
 class ModelMGPU(Model):
@@ -158,11 +191,11 @@ class ModelMGPU(Model):
         self._smodel = ser_model
 
     def __getattribute__(self, attrname):
-        '''Override load and save methods to be used from the serial-model. The
+        """Override load and save methods to be used from the serial-model. The
         serial-model holds references to the weights in the multi-gpu model.
-        '''
+        """
         # return Model.__getattribute__(self, attrname)
-        if 'load' in attrname or 'save' in attrname:
+        if "load" in attrname or "save" in attrname:
             return getattr(self._smodel, attrname)
 
         return super(ModelMGPU, self).__getattribute__(attrname)

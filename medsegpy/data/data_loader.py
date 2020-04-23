@@ -1,20 +1,21 @@
 raise NotImplementedError("This module is not ready for use.")
 
+import logging
 import math
+import random
+import time
 from abc import ABC, abstractmethod
 from collections import defaultdict
-import random
-import logging
-import time
 from typing import Any, Dict, List, Sequence, Tuple
 
-from keras import utils as k_utils
-import numpy as np
 import h5py
+import numpy as np
+from keras import utils as k_utils
 
 from medsegpy.config import Config
+
 from .im_gens import GeneratorState, OAIGenerator
-from .sem_seg_utils import collect_mask, add_background_labels
+from .sem_seg_utils import add_background_labels, collect_mask
 
 logger = logging.getLogger(__name__)
 
@@ -22,10 +23,7 @@ logger = logging.getLogger(__name__)
 _SORT_KEYS = ("scan_id", "slice_id", "block_id")
 
 
-def get_data_loader(
-    data_loader_name,
-    **kwargs
-) -> "DataLoader":
+def get_data_loader(data_loader_name, **kwargs) -> "DataLoader":
     """Get data loader based on config `TAG` value"""
     for generator in [DefaultDataLoader]:
         try:
@@ -35,7 +33,7 @@ def get_data_loader(
         except ValueError:
             continue
 
-    raise ValueError('No data loader found for tag `{}`'.format(generator))
+    raise ValueError("No data loader found for tag `{}`".format(generator))
 
 
 class DataLoader(k_utils.Sequence, ABC):
@@ -46,6 +44,7 @@ class DataLoader(k_utils.Sequence, ABC):
     Data loaders in medsegpy also have the ability to yield inference results
     per scan.
     """
+
     ALIASES = []
 
     def __init__(
@@ -127,6 +126,7 @@ class DefaultDataLoader(DataLoader):
     3. If needed:
         a. Add binary labels for background
     """
+
     _GENERATOR_TYPE = OAIGenerator
 
     def __init__(
@@ -179,15 +179,15 @@ class DefaultDataLoader(DataLoader):
 
             image, mask = self._load_input(file_name, sem_seg_file_name)
 
-            assert image.shape == img_size, (
-                "Image shape mismatch. Expected {}, got {}".format(
-                    img_size, image.shape,
-                )
+            assert (
+                image.shape == img_size
+            ), "Image shape mismatch. Expected {}, got {}".format(
+                img_size, image.shape
             )
-            assert mask.shape == mask_size, (
-                "Mask shape mismatch. Expected {}, got {}".format(
-                    mask_size, mask.shape
-                )
+            assert (
+                mask.shape == mask_size
+            ), "Mask shape mismatch. Expected {}, got {}".format(
+                mask_size, mask.shape
             )
 
             images.append(image)

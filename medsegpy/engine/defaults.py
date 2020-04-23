@@ -6,8 +6,8 @@ https://github.com/facebookresearch/detectron2
 import argparse
 import os
 
-from fvcore.common.file_io import PathManager
 import keras.backend as K
+from fvcore.common.file_io import PathManager
 
 from medsegpy import glob_constants
 from medsegpy.utils import dl_utils
@@ -16,9 +16,11 @@ from medsegpy.utils.logger import setup_logger
 
 
 def config_exists(experiment_dir: str):
-    return os.path.isfile(os.path.join(experiment_dir, "config.ini")) \
-           or os.path.isfile(os.path.join(experiment_dir, "config.yaml")) \
-           or os.path.isfile(os.path.join(experiment_dir, "config.yml"))
+    return (
+        os.path.isfile(os.path.join(experiment_dir, "config.ini"))
+        or os.path.isfile(os.path.join(experiment_dir, "config.yaml"))
+        or os.path.isfile(os.path.join(experiment_dir, "config.yml"))
+    )
 
 
 def default_argument_parser():
@@ -29,12 +31,15 @@ def default_argument_parser():
         argparse.ArgumentParser:
     """
     parser = argparse.ArgumentParser(description="MedSegPy Training")
-    parser.add_argument("--config-file", default="", metavar="FILE",
-                        help="path to config file")
-    parser.add_argument("--eval-only", action="store_true",
-                        help="perform evaluation only")
-    parser.add_argument("--num-gpus", type=int, default=1,
-                        help="number of gpus")
+    parser.add_argument(
+        "--config-file", default="", metavar="FILE", help="path to config file"
+    )
+    parser.add_argument(
+        "--eval-only", action="store_true", help="perform evaluation only"
+    )
+    parser.add_argument(
+        "--num-gpus", type=int, default=1, help="number of gpus"
+    )
 
     parser.add_argument(
         "opts",
@@ -62,9 +67,7 @@ def default_setup(cfg, args):
     if not args.eval_only and config_exists(cfg.OUTPUT_DIR):
         raise ValueError(
             "Experiment results exist at {}. "
-            "To re-run the experiment, delete the folder".format(
-                cfg.OUTPUT_DIR
-            )
+            "To re-run the experiment, delete the folder".format(cfg.OUTPUT_DIR)
         )
 
     # Setup cuda visible devices.
@@ -103,4 +106,4 @@ def default_setup(cfg, args):
         glob_constants.SEED = cfg.SEED
 
     # Set image format to be (N, dim1, dim2, dim3, channel).
-    K.set_image_data_format('channels_last')
+    K.set_image_data_format("channels_last")

@@ -4,9 +4,10 @@ import collections
 import random
 import unittest
 
-from projects.TechConsiderations import parse_pids
-from medsegpy.utils import io_utils
 from medsegpy.config import DeeplabV3Config, SegnetConfig, UNetConfig
+from medsegpy.utils import io_utils
+
+from projects.TechConsiderations import parse_pids
 
 
 class DataLimitationTest(unittest.TestCase):
@@ -20,23 +21,31 @@ class DataLimitationTest(unittest.TestCase):
 
         for config in configs:
             # config when PIDS are none
-            gen_train_files, _ = calc_generator_info(config.TRAIN_PATH, config.TRAIN_BATCH_SIZE,
-                                                     learn_files=[],
-                                                     pids=config.PIDS,
-                                                     augment_data=config.AUGMENT_DATA)
+            gen_train_files, _ = calc_generator_info(
+                config.TRAIN_PATH,
+                config.TRAIN_BATCH_SIZE,
+                learn_files=[],
+                pids=config.PIDS,
+                augment_data=config.AUGMENT_DATA,
+            )
 
             # config when PIDS is list of all subjects
             pids = io_utils.load_pik(parse_pids.PID_TXT_PATH)
             num_pids = len(pids)
             pids_sampled = random.sample(pids, num_pids)
             config.PIDS = pids_sampled
-            pids_train_files, _ = calc_generator_info(config.TRAIN_PATH, config.TRAIN_BATCH_SIZE,
-                                                      learn_files=[],
-                                                      pids=config.PIDS,
-                                                      augment_data=config.AUGMENT_DATA)
-            assert (len(pids_train_files) == len(gen_train_files))
-            assert (collections.Counter(gen_train_files) == collections.Counter(pids_train_files))
+            pids_train_files, _ = calc_generator_info(
+                config.TRAIN_PATH,
+                config.TRAIN_BATCH_SIZE,
+                learn_files=[],
+                pids=config.PIDS,
+                augment_data=config.AUGMENT_DATA,
+            )
+            assert len(pids_train_files) == len(gen_train_files)
+            assert collections.Counter(gen_train_files) == collections.Counter(
+                pids_train_files
+            )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

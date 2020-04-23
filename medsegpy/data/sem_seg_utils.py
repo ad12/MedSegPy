@@ -4,8 +4,7 @@ import numpy as np
 
 
 def collect_mask(
-    mask: np.ndarray,
-    index: Sequence[Union[int, Sequence[int], int]]
+    mask: np.ndarray, index: Sequence[Union[int, Sequence[int], int]]
 ):
     """Collect masks by index.
 
@@ -19,7 +18,7 @@ def collect_mask(
     """
     if isinstance(index, int):
         index = (index,)
-    if not any([isinstance(idx, Sequence) for idx in index]):
+    if not any(isinstance(idx, Sequence) for idx in index):
         mask = mask[..., index]
     else:
         o_seg = []

@@ -12,11 +12,15 @@ from medsegpy.utils import io_utils
 
 logger = logging.getLogger(__name__)
 
-TRAIN_PATH = '/bmrNAS/people/akshay/dl/oai_data/unet_2d/train_aug'
-CLASS_FREQ_DAT_FOLDER = '/bmrNAS/people/arjun/msk_seg_networks/class_weights'
+TRAIN_PATH = "/bmrNAS/people/akshay/dl/oai_data/unet_2d/train_aug"
+CLASS_FREQ_DAT_FOLDER = "/bmrNAS/people/arjun/msk_seg_networks/class_weights"
 os.makedirs(CLASS_FREQ_DAT_FOLDER, exist_ok=True)
-CLASS_FREQ_DAT_WEIGHTS_AUG = os.path.join(CLASS_FREQ_DAT_FOLDER, 'class_frequencies-aug.dat')
-CLASS_FREQ_DAT_WEIGHTS_NO_AUG = os.path.join(CLASS_FREQ_DAT_FOLDER, 'class_frequencies-no_aug.dat')
+CLASS_FREQ_DAT_WEIGHTS_AUG = os.path.join(
+    CLASS_FREQ_DAT_FOLDER, "class_frequencies-aug.dat"
+)
+CLASS_FREQ_DAT_WEIGHTS_NO_AUG = os.path.join(
+    CLASS_FREQ_DAT_FOLDER, "class_frequencies-no_aug.dat"
+)
 
 
 # Create list of pids
@@ -41,9 +45,9 @@ def get_class_freq(data_path, class_id=[0], pids=None, augment_data=True):
 
     count = 0
     for file in files:
-        seg_path = '%s/%s.seg' % (data_path, file)
-        with h5py.File(seg_path, 'r') as f:
-            seg = f['data'][:].astype('float32')
+        seg_path = "%s/%s.seg" % (data_path, file)
+        with h5py.File(seg_path, "r") as f:
+            seg = f["data"][:].astype("float32")
             # select class of interest
             seg = seg[..., class_id]
             seg = seg.flatten()
@@ -54,11 +58,11 @@ def get_class_freq(data_path, class_id=[0], pids=None, augment_data=True):
         count += 1
 
         if count % 1000 == 0:
-            logger.info('%d/%d' % (count, len(files)))
+            logger.info("%d/%d" % (count, len(files)))
     return freqs
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     freq = get_class_freq(TRAIN_PATH)
     logger.info(freq)
     io_utils.save_pik(freq, CLASS_FREQ_DAT_WEIGHTS_AUG)

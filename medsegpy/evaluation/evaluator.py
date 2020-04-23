@@ -7,9 +7,8 @@ import datetime
 import logging
 import time
 
+from medsegpy.data.im_gens import Generator, GeneratorState
 from medsegpy.utils.logger import log_every_n_seconds
-from medsegpy.data.im_gens import Generator
-from medsegpy.data.im_gens import GeneratorState
 
 
 class DatasetEvaluator:
@@ -17,9 +16,11 @@ class DatasetEvaluator:
     Base class for a dataset evaluator.
 
     The function :func:`inference_on_dataset` runs the model over
-    all samples in the dataset, and have a DatasetEvaluator to process the inputs/outputs.
+    all samples in the dataset, and have a DatasetEvaluator to process the
+        inputs/outputs.
 
-    This class will accumulate information of the inputs/outputs (by :meth:`process`),
+    This class will accumulate information of the inputs/outputs
+        (by :meth:`process`),
     and produce evaluation results in the end (by :meth:`evaluate`).
     """
 
@@ -43,8 +44,8 @@ class DatasetEvaluator:
         pass
 
     def evaluate(self):
-        """
-        Evaluate/summarize the performance, after processing all input/output pairs.
+        """Evaluate/summarize the performance, after processing all input/output
+        pairs.
 
         Returns:
             dict:
@@ -59,20 +60,14 @@ class DatasetEvaluator:
 
 
 def inference_on_dataset(
-    model,
-    generator: Generator,
-    evaluator: DatasetEvaluator,
+    model, generator: Generator, evaluator: DatasetEvaluator
 ):
     """
     Run model on the data_loader and evaluate the metrics with evaluator.
     The model will be used in eval mode.
 
     Args:
-        model (nn.Module): a module which accepts an object from
-            `data_loader` and returns some outputs. It will be temporarily set to `eval` mode.
-
-            If you wish to evaluate a model in `training` mode instead, you can
-            wrap the given model and override its behavior of `.eval()` and `.train()`.
+        model (keras.Model):
         generator: an iterable object with a length.
             The elements it generates will be the inputs to the model.
         evaluator (DatasetEvaluator): the evaluator to run. Use
@@ -89,26 +84,33 @@ def inference_on_dataset(
     total = generator.num_scans(GeneratorState.TESTING)
     start_compute_time = time.perf_counter()
     logger = logging.getLogger(__name__)
-    for idx, (x_test, y_test, recon, fname, time_elapsed) in enumerate(generator.img_generator_test(model)):
+    for idx, (x_test, y_test, recon, fname, time_elapsed) in enumerate(
+        generator.img_generator_test(model)
+    ):
         total_compute_time += time.perf_counter() - start_compute_time
         input = {"scan_id": fname, "y_true": y_test, "scan": x_test}
         start_processing_time = time.perf_counter()
-        evaluator.process(
-            [input],
-            [recon],
-            [time_elapsed],
-        )
+        evaluator.process([input], [recon], [time_elapsed])
         total_processing_time = time.perf_counter() - start_processing_time
         iters_after_start = idx + 1 - num_warmup * int(idx >= num_warmup)
         seconds_per_scan = total_compute_time / iters_after_start
         if idx >= num_warmup * 2 or seconds_per_scan > 5:
-            total_seconds_per_img = (time.perf_counter() - start_time) / iters_after_start
+            total_seconds_per_img = (
+                time.perf_counter() - start_time
+            ) / iters_after_start
             eta = datetime.timedelta(
-                seconds=int(total_seconds_per_img * (total - idx - 1)))
+                seconds=int(total_seconds_per_img * (total - idx - 1))
+            )
             log_every_n_seconds(
                 logging.INFO,
-                "Inference done {}/{}. {:.4f} s / scan ({:.4f} inference, {:.4f} processing). ETA={}".format(
-                    idx + 1, total, seconds_per_scan, time_elapsed, total_processing_time, str(eta)
+                "Inference done {}/{}. {:.4f} s / scan ({:.4f} inference, "
+                "{:.4f} processing). ETA={}".format(
+                    idx + 1,
+                    total,
+                    seconds_per_scan,
+                    time_elapsed,
+                    total_processing_time,
+                    str(eta),
                 ),
                 n=5,
             )
@@ -118,9 +120,14 @@ def inference_on_dataset(
     logger.info("Begin evaluation...")
     results = evaluator.evaluate()
     total_eval_time = time.perf_counter() - eval_start
-    logger.info("Time Elapsed: {:.4f} seconds".format(total_compute_time + total_eval_time))
+    logger.info(
+        "Time Elapsed: {:.4f} seconds".format(
+            total_compute_time + total_eval_time
+        )
+    )
     # An evaluator may return None when not in main process.
-    # Replace it by an empty dict instead to make it easier for downstream code to handle
+    # Replace it by an empty dict instead to make it easier for downstream
+    # code to handle
     if results is None:
         results = {}
     return results

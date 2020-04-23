@@ -1,10 +1,10 @@
-from abc import ABC
 import os
 import pickle
+from abc import ABC
 from typing import Any
 
-from fvcore.common.file_io import PathHandler, PathManager
 import h5py
+from fvcore.common.file_io import PathHandler, PathManager
 
 from .cluster import CLUSTER
 
@@ -19,10 +19,10 @@ def load_h5(file_path):
         dict: dictionary representation of h5df data.
     """
     if not os.path.isfile(file_path):
-        raise FileNotFoundError('%s does not exist' % file_path)
+        raise FileNotFoundError("%s does not exist" % file_path)
 
     data = dict()
-    with h5py.File(file_path, 'r') as f:
+    with h5py.File(file_path, "r") as f:
         for key in f.keys():
             data[key] = f.get(key).value
 
@@ -40,9 +40,9 @@ def save_optimizer(optimizer, dirpath: str):
         return
 
     config = dict()
-    config['optimizer'] = optimizer.get_config()
+    config["optimizer"] = optimizer.get_config()
 
-    filepath = os.path.join(dirpath, 'optimizer.dat')
+    filepath = os.path.join(dirpath, "optimizer.dat")
     # Save optimizer state
     save_pik(config, filepath)
 
@@ -51,9 +51,10 @@ def load_optimizer(dirpath: str):
     """Return model and optimizer in previous state.
     """
     from keras import optimizers
-    filepath = os.path.join(dirpath, 'optimizer.dat')
+
+    filepath = os.path.join(dirpath, "optimizer.dat")
     model_dict = load_pik(filepath)
-    optimizer_params = dict([(k, v) for k, v in model_dict.get('optimizer').items()])
+    optimizer_params = {k: v for k, v in model_dict.get("optimizer").items()}
     optimizer = optimizers.get(optimizer_params)
 
     return optimizer
@@ -83,7 +84,7 @@ class GeneralPathHandler(PathHandler, ABC):
         return [self.PREFIX]
 
     def _get_local_path(self, path: str, **kwargs: Any):
-        name = path[len(self.PREFIX):]
+        name = path[len(self.PREFIX) :]
         return os.path.join(CLUSTER.save_dir, self._project_name(), name)
 
     def _open(self, path, mode="r", **kwargs):
@@ -102,10 +103,10 @@ class TechConsiderationsHandler(GeneralPathHandler):
     def _project_name(self):
         return "tech-considerations"
 
+
 class abCTHandler(GeneralPathHandler):
     PREFIX = "abCT://"
 
 
 PathManager.register_handler(TechConsiderationsHandler())
 PathManager.register_handler(abCTHandler())
-

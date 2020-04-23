@@ -27,7 +27,7 @@ class SegNetBottleneck(SegNet):
         single_bn = self._single_bn
         conv_act_bn = self._conv_act_bn
 
-        logger.info('Initializing SegNet with seed: {}'.format(self._seed))
+        logger.info("Initializing SegNet with seed: {}".format(self._seed))
 
         inputs = input_tensor if input_tensor else Input(shape=input_shape)
 
@@ -46,12 +46,14 @@ class SegNetBottleneck(SegNet):
             eff_pool_sizes.append(eff_pool_size)
 
         # encoder
-        logger.info('Building Encoder...')
+        logger.info("Building Encoder...")
         for i in range(depth):
             eff_pool_size = eff_pool_sizes[i]
             # Do not pool on bottleneck layer.
             is_bottleneck = i == depth - 1
-            n_conv = num_conv_layers[i] - 1 if is_bottleneck else num_conv_layers[i]
+            n_conv = (
+                num_conv_layers[i] - 1 if is_bottleneck else num_conv_layers[i]
+            )
             if conv_act_bn:
                 curr_layer, l_mask = self._encoder_block_conv_act_bn(
                     curr_layer,
@@ -82,7 +84,7 @@ class SegNetBottleneck(SegNet):
                 curr_layer,
                 level=depth + 1,
                 num_conv_layers=1,
-                num_filters=num_filters[depth-2],
+                num_filters=num_filters[depth - 2],
                 kernel=kernel,
                 pool_size=eff_pool_size,
                 add_pool=False,
@@ -92,14 +94,14 @@ class SegNetBottleneck(SegNet):
                 curr_layer,
                 level=depth + 1,
                 num_conv_layers=1,
-                num_filters=num_filters[depth-2],
+                num_filters=num_filters[depth - 2],
                 kernel=kernel,
                 pool_size=eff_pool_size,
                 single_bn=single_bn,
                 add_pool=False,
             )
 
-        logger.info('Building decoder...')
+        logger.info("Building decoder...")
         # decoder
         for i in reversed(range(depth - 1)):
             l_mask = mask_layers[i]
@@ -122,10 +124,12 @@ class SegNetBottleneck(SegNet):
                     level=i + 1,
                     num_conv_layers=num_conv_layers[i],
                     num_filters=num_filters[i],
-                    num_filters_next=num_filters[i] if i == 0 else num_filters[i - 1],
+                    num_filters_next=num_filters[i]
+                    if i == 0
+                    else num_filters[i - 1],
                     kernel=kernel,
                     pool_size=eff_pool_size,
-                    single_bn=single_bn
+                    single_bn=single_bn,
                 )
 
         outputs = Convolution2D(

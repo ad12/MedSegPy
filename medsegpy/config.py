@@ -1,29 +1,39 @@
 import ast
 import configparser
 import copy
-import os
-from itertools import groupby
 import logging
-from typing import Any, Tuple
+import os
 import yaml
+from itertools import groupby
+from typing import Any, Tuple
 
 from fvcore.common.file_io import PathManager
 
 from medsegpy.cross_validation import cv_util
 from medsegpy.losses import DICE_LOSS, get_training_loss_from_str
-from medsegpy.utils import utils as utils, io_utils
+from medsegpy.utils import utils as utils
 
 logger = logging.getLogger(__name__)
 
 # Keys that have been deprecated.
 DEPRECATED_KEYS = [
-    'NUM_CLASSES', 'TRAIN_FILES_CV', 'VALID_FILES_CV',
-    'TEST_FILES_CV', "USE_STEP_DECAY",
-    "PIK_SAVE_PATH_DIR", "PIK_SAVE_PATH", "TF_LOG_DIR",
-    "TRAIN_PATH", "VALID_PATH", "TEST_PATH",
-    "PLOT_MODEL_PATH", "FINE_TUNE", "LEARN_FILES",
+    "NUM_CLASSES",
+    "TRAIN_FILES_CV",
+    "VALID_FILES_CV",
+    "TEST_FILES_CV",
+    "USE_STEP_DECAY",
+    "PIK_SAVE_PATH_DIR",
+    "PIK_SAVE_PATH",
+    "TF_LOG_DIR",
+    "TRAIN_PATH",
+    "VALID_PATH",
+    "TEST_PATH",
+    "PLOT_MODEL_PATH",
+    "FINE_TUNE",
+    "LEARN_FILES",
     "DEBUG",
-    "TEST_RESULT_PATH", "TEST_RESULTS_FOLDER_NAME",
+    "TEST_RESULT_PATH",
+    "TEST_RESULTS_FOLDER_NAME",
 ]
 
 RENAMED_KEYS = {
@@ -40,6 +50,7 @@ class Config(object):
     Each subclass of :class:`Config` corresponds to a specific model
     architecture.
     """
+
     VERSION = 7
 
     # Model name specific to config. Cannot be changed.
@@ -78,7 +89,7 @@ class Config(object):
     USE_EARLY_STOPPING = False
     EARLY_STOPPING_MIN_DELTA = 0.0
     EARLY_STOPPING_PATIENCE = 0
-    EARLY_STOPPING_CRITERION = 'val_loss'
+    EARLY_STOPPING_CRITERION = "val_loss"
 
     # Batch sizes
     TRAIN_BATCH_SIZE = 12
@@ -90,10 +101,10 @@ class Config(object):
     INCLUDE_BACKGROUND = False
 
     # File Types
-    FILE_TYPES = ['im']
+    FILE_TYPES = ["im"]
 
     # Transfer Learning
-    INIT_WEIGHTS = ''
+    INIT_WEIGHTS = ""
     FREEZE_LAYERS = ()
 
     # Dataset names
@@ -103,7 +114,7 @@ class Config(object):
 
     # Cross-Validation-Parameters
     USE_CROSS_VALIDATION = False
-    CV_FILE = ''
+    CV_FILE = ""
     CV_K = 0
     CV_TRAIN_BINS = []
     CV_VALID_BINS = []
@@ -117,41 +128,50 @@ class Config(object):
 
     # Dataset tag - What dataset are we training on? 'dess' or 'oai'
     # choose from oai_aug, oai_aug_3d
-    TAG = 'oai_aug'
+    TAG = "oai_aug"
 
     # Weights kernel initializer.
-    KERNEL_INITIALIZER = 'he_normal'
+    KERNEL_INITIALIZER = "he_normal"
 
     # System params
     NUM_WORKERS = 1
     SEED = None
 
     # Evaluation params
-    TEST_WEIGHT_PATH = ''
+    TEST_WEIGHT_PATH = ""
     TEST_METRICS = ["DSC", "VOE", "ASSD", "CV"]
 
     # Extra parameters related to different parameters.
     PREPROCESSING_WINDOWS = ()
 
-    def __init__(self, cp_save_tag, state = 'training', create_dirs = True):
-        if state not in ['testing', 'training']:
-            raise ValueError('state must either be \'training\' or \'testing\'')
+    def __init__(self, cp_save_tag, state="training", create_dirs=True):
+        if state not in ["testing", "training"]:
+            raise ValueError("state must either be 'training' or 'testing'")
 
         self.MODEL_NAME = cp_save_tag
         self.STATE = state
 
-    def init_cross_validation(self, train_files, valid_files, test_files,
-                              train_bins, valid_bins, test_bins,
-                              cv_k, cv_file, output_dir):
+    def init_cross_validation(
+        self,
+        train_files,
+        valid_files,
+        test_files,
+        train_bins,
+        valid_bins,
+        test_bins,
+        cv_k,
+        cv_file,
+        output_dir,
+    ):
         """Initialize config for cross validation.
 
         Returns:
             Config: A deep copy of the config. This copy is initialized for
                 cross validation.
         """
-        assert self.STATE == 'training', (
-            "Initializing cross-validation must be done in training state"
-        )
+        assert (
+            self.STATE == "training"
+        ), "Initializing cross-validation must be done in training state"
 
         config = copy.deepcopy(self)
         config.USE_CROSS_VALIDATION = True
@@ -174,11 +194,14 @@ class Config(object):
         """Save params of config to ini file.
         """
         members = [
-            attr for attr in dir(self)
+            attr
+            for attr in dir(self)
             if not callable(getattr(self, attr))
-               and not attr.startswith("__")
-               and not (hasattr(type(self), attr) and isinstance(
-                getattr(type(self), attr), property))
+            and not attr.startswith("__")
+            and not (
+                hasattr(type(self), attr)
+                and isinstance(getattr(type(self), attr), property)
+            )
         ]
 
         filepath = os.path.join(self.OUTPUT_DIR, "config.ini")
@@ -188,15 +211,13 @@ class Config(object):
 
         # Save config
         config = configparser.ConfigParser(config_vars)
-        with PathManager.open(filepath, 'w+') as configfile:
+        with PathManager.open(filepath, "w+") as configfile:
             config.write(configfile)
 
         logger.info("Full config saved to {}".format(os.path.abspath(filepath)))
 
     def _parse_special_attributes(
-        self,
-        full_key: str,
-        value: Any
+        self, full_key: str, value: Any
     ) -> Tuple[str, Any]:
         """Special parsing values for attributes.
 
@@ -227,24 +248,24 @@ class Config(object):
         vars_dict = self._load_dict_from_file(cfg_filename)
 
         # TODO: Handle cp save tag as a protected key.
-        model_name = vars_dict['MODEL_NAME'] if "MODEL_NAME" in vars_dict else \
-        vars_dict["CP_SAVE_TAG"]
+        model_name = (
+            vars_dict["MODEL_NAME"]
+            if "MODEL_NAME" in vars_dict
+            else vars_dict["CP_SAVE_TAG"]
+        )
         if model_name != self.MODEL_NAME:
-            raise ValueError(
-                'Wrong config. Expected {}'.format(model_name)
-            )
+            raise ValueError("Wrong config. Expected {}".format(model_name))
 
         for full_key, value in vars_dict.items():
             full_key = str(full_key).upper()
             if full_key in ("TRAIN_PATH", "VALID_PATH", "TEST_PATH") and value:
                 raise ValueError(
                     "{} not longer supported - update to _DATASET".format(
-                        full_key))
+                        full_key
+                    )
+                )
 
-            full_key, value = self._parse_special_attributes(
-                full_key,
-                value
-            )
+            full_key, value = self._parse_special_attributes(full_key, value)
 
             if full_key in DEPRECATED_KEYS:
                 logger.warning(
@@ -254,21 +275,18 @@ class Config(object):
             if full_key in RENAMED_KEYS:
                 new_name = RENAMED_KEYS[full_key]
                 logger.warning(
-                    "Key {} has been renamed to {}".format(
-                        full_key, new_name
-                    )
+                    "Key {} has been renamed to {}".format(full_key, new_name)
                 )
                 full_key = new_name
 
             if not hasattr(self, full_key):
                 raise ValueError("Key {} does not exist.".format(full_key))
 
-            value = self._decode_cfg_value(value, type(
-                self.__getattribute__(full_key)))
+            value = self._decode_cfg_value(
+                value, type(self.__getattribute__(full_key))
+            )
             value = _check_and_coerce_cfg_value_type(
-                value,
-                self.__getattribute__(full_key),
-                full_key
+                value, self.__getattribute__(full_key), full_key
             )
 
             # Loading config
@@ -281,9 +299,8 @@ class Config(object):
         """
         _error_with_logging(
             len(cfg_list) % 2 == 0,
-            "Override list has odd length: {}; it must be a list of pairs".format(
-                cfg_list
-            ),
+            "Override list has odd length: {}; "
+            "it must be a list of pairs".format(cfg_list),
         )
 
         for full_key, v in zip(cfg_list[0::2], cfg_list[1::2]):
@@ -301,13 +318,10 @@ class Config(object):
                 error_type=KeyError,
             )
             value = self._decode_cfg_value(
-                v,
-                type(self.__getattribute__(full_key))
+                v, type(self.__getattribute__(full_key))
             )
             value = _check_and_coerce_cfg_value_type(
-                value,
-                self.__getattribute__(full_key),
-                full_key
+                value, self.__getattribute__(full_key), full_key
             )
             self.__setattr__(full_key, value)
 
@@ -321,11 +335,11 @@ class Config(object):
         If the value is a str, it will be evaluated as literals.
         Otherwise it is returned as-is.
         """
-        # Configs parsed from raw yaml will contain dictionary keys that need to be
-        # converted to CfgNode objects
+        # Configs parsed from raw yaml will contain dictionary keys that need to
+        # be converted to CfgNode objects
         """
         Convert string to relevant data type
-        :param var_string: variable as a string (e.g.: '[0]', '1', '2.0', 'hellow')
+        :param var_string: variable as a string (e.g.: '[0]', '1', 'hellow')
         :param data_type: the type of the data
         :return: string converted to data_type
         """
@@ -374,9 +388,10 @@ class Config(object):
             cfg = configparser.ConfigParser()
             if not os.path.isfile(filename):
                 raise FileNotFoundError(
-                    "Config file {} not found".format(filename))
+                    "Config file {} not found".format(filename)
+                )
             cfg.read(filename)
-            vars_dict = cfg['DEFAULT']
+            vars_dict = cfg["DEFAULT"]
             vars_dict = {k.upper(): v for k, v in vars_dict.items()}
         elif filename.endswith(".yaml") or filename.endswith(".yml"):
             with open(filename, "r") as f:
@@ -397,19 +412,20 @@ class Config(object):
                             if type of val is different from the default type
         """
         if type(attr) is not str:
-            raise ValueError('attr must be of type str')
+            raise ValueError("attr must be of type str")
 
         if not hasattr(self, attr):
-            raise ValueError('The attribute %s does not exist' % attr)
+            raise ValueError("The attribute %s does not exist" % attr)
         curr_val = self.__getattribute__(attr)
 
         if type(val) is str and type(curr_val) is not str:
-            val = utils.convert_data_type(var_string=val,
-                                          data_type=type(curr_val))
+            val = utils.convert_data_type(var_string=val, original=curr_val)
 
         if curr_val is not None and (type(val) != type(curr_val)):
-            raise ValueError('%s is of type %s. Expected %s' % (
-            attr, str(type(val)), str(type(curr_val))))
+            raise ValueError(
+                "%s is of type %s. Expected %s"
+                % (attr, str(type(val)), str(type(curr_val)))
+            )
 
         self.__setattr__(attr, val)
 
@@ -417,7 +433,7 @@ class Config(object):
         """
         Initialize testing state
         """
-        self.STATE = 'testing'
+        self.STATE = "testing"
 
         # if cross validation is enabled, load testing cross validation bin
         if self.USE_CROSS_VALIDATION:
@@ -431,85 +447,84 @@ class Config(object):
             self.__CV_VALID_FILES__ = valid_files
             self.__CV_TEST_FILES__ = test_files
 
-    def summary(self, additional_vars = []):
+    def summary(self, additional_vars=None):
         """
         Print config summary
         :param additional_vars: additional list of variables to print
         :return:
         """
 
-        summary_vals = ['MODEL_NAME', 'TAG', '']
-        summary_vals.extend([
-            'TRAIN_DATASET', 'VAL_DATASET', 'TEST_DATASET', '',
-
-            'CATEGORIES', '',
-
-            'IMG_SIZE', '',
-
-            'N_EPOCHS',
-            'AUGMENT_DATA',
-            'LOSS',
-            "CLASS_WEIGHTS",
-            "",
-
-            'USE_CROSS_VALIDATION',
-            'CV_K' if self.USE_CROSS_VALIDATION else '',
-            'CV_FILE' if self.USE_CROSS_VALIDATION else '',
-            'CV_TRAIN_BINS' if self.USE_CROSS_VALIDATION else '',
-            'CV_VALID_BINS' if self.USE_CROSS_VALIDATION else '',
-            'CV_TEST_BINS' if self.USE_CROSS_VALIDATION else '', ''
-
-                                                                 'TRAIN_BATCH_SIZE',
-            'VALID_BATCH_SIZE', "TEST_BATCH_SIZE", '',
-
-            "NUM_GRAD_STEPS", "",
-
-            'INITIAL_LEARNING_RATE',
-            'LR_SCHEDULER_NAME',
-            'DROP_FACTOR' if self.LR_SCHEDULER_NAME else '',
-            'DROP_RATE' if self.LR_SCHEDULER_NAME else '',
-            'MIN_LEARNING_RATE' if self.LR_SCHEDULER_NAME else '',
-            "LR_MIN_DELTA" if self.LR_SCHEDULER_NAME else "",
-            "LR_PATIENCE" if self.LR_SCHEDULER_NAME else "",
-            "LR_COOLDOWN" if self.LR_SCHEDULER_NAME else "",
-            ""
-
-            'USE_EARLY_STOPPING',
-            'EARLY_STOPPING_MIN_DELTA' if self.USE_EARLY_STOPPING else '',
-            'EARLY_STOPPING_PATIENCE' if self.USE_EARLY_STOPPING else '',
-            'EARLY_STOPPING_CRITERION' if self.USE_EARLY_STOPPING else '',
-            '',
-
-            'KERNEL_INITIALIZER',
-            'SEED' if self.SEED else '', ''
-
-                                         'INIT_WEIGHTS', '',
-
-            "TEST_WEIGHT_PATH", "TEST_METRICS", ""
-
-                                                'NUM_WORKERS',
-            "OUTPUT_DIR",
-            '',
-        ])
-
-        summary_vals.extend(additional_vars)
+        summary_vals = ["MODEL_NAME", "TAG", ""]
+        summary_vals.extend(
+            [
+                "TRAIN_DATASET",
+                "VAL_DATASET",
+                "TEST_DATASET",
+                "",
+                "CATEGORIES",
+                "",
+                "IMG_SIZE",
+                "",
+                "N_EPOCHS",
+                "AUGMENT_DATA",
+                "LOSS",
+                "CLASS_WEIGHTS",
+                "",
+                "USE_CROSS_VALIDATION",
+                "CV_K" if self.USE_CROSS_VALIDATION else "",
+                "CV_FILE" if self.USE_CROSS_VALIDATION else "",
+                "CV_TRAIN_BINS" if self.USE_CROSS_VALIDATION else "",
+                "CV_VALID_BINS" if self.USE_CROSS_VALIDATION else "",
+                "CV_TEST_BINS" if self.USE_CROSS_VALIDATION else "",
+                "" "TRAIN_BATCH_SIZE",
+                "VALID_BATCH_SIZE",
+                "TEST_BATCH_SIZE",
+                "",
+                "NUM_GRAD_STEPS",
+                "",
+                "INITIAL_LEARNING_RATE",
+                "LR_SCHEDULER_NAME",
+                "DROP_FACTOR" if self.LR_SCHEDULER_NAME else "",
+                "DROP_RATE" if self.LR_SCHEDULER_NAME else "",
+                "MIN_LEARNING_RATE" if self.LR_SCHEDULER_NAME else "",
+                "LR_MIN_DELTA" if self.LR_SCHEDULER_NAME else "",
+                "LR_PATIENCE" if self.LR_SCHEDULER_NAME else "",
+                "LR_COOLDOWN" if self.LR_SCHEDULER_NAME else "",
+                "" "USE_EARLY_STOPPING",
+                "EARLY_STOPPING_MIN_DELTA" if self.USE_EARLY_STOPPING else "",
+                "EARLY_STOPPING_PATIENCE" if self.USE_EARLY_STOPPING else "",
+                "EARLY_STOPPING_CRITERION" if self.USE_EARLY_STOPPING else "",
+                "",
+                "KERNEL_INITIALIZER",
+                "SEED" if self.SEED else "",
+                "" "INIT_WEIGHTS",
+                "",
+                "TEST_WEIGHT_PATH",
+                "TEST_METRICS",
+                "" "NUM_WORKERS",
+                "OUTPUT_DIR",
+                "",
+            ]
+        )
+        if additional_vars:
+            summary_vals.extend(additional_vars)
 
         # Remove consecutive elements in summary vals that are the same
         summary_vals = [x[0] for x in groupby(summary_vals)]
 
-        logger.info('')
-        logger.info('==' * 40)
+        logger.info("")
+        logger.info("==" * 40)
         logger.info("Config Summary")
-        logger.info('==' * 40)
+        logger.info("==" * 40)
 
         for attr in summary_vals:
-            if attr == '':
-                logger.info('')
+            if attr == "":
+                logger.info("")
                 continue
             logger.info(attr + ": " + str(self.__getattribute__(attr)))
 
-        logger.info('==' * 40)
-        logger.info('')
+        logger.info("==" * 40)
+        logger.info("")
 
     def get_num_classes(self):
         if self.INCLUDE_BACKGROUND:
@@ -522,17 +537,19 @@ class Config(object):
 
     @property
     def testing(self):
-        return self.STATE == 'testing'
+        return self.STATE == "testing"
 
     @property
     def training(self):
-        return self.STATE == 'training'
+        return self.STATE == "training"
 
 
 class DeeplabV3Config(Config):
     """
-    Configuration for 2D Deeplabv3+ architecture (https://arxiv.org/abs/1802.02611)
+    Configuration for 2D Deeplabv3+ architecture
+    (https://arxiv.org/abs/1802.02611).
     """
+
     MODEL_NAME = "deeplabv3_2d"
 
     OS = 16
@@ -540,11 +557,11 @@ class DeeplabV3Config(Config):
     AT_DIVISOR = 2
     DROPOUT_RATE = 0.1
 
-    def __init__(self, state = 'training', create_dirs = True):
+    def __init__(self, state="training", create_dirs=True):
         super().__init__(self.MODEL_NAME, state, create_dirs=create_dirs)
 
-    def summary(self, additional_vars = []):
-        summary_attrs = ['OS', 'DIL_RATES', 'DROPOUT_RATE']
+    def summary(self, additional_vars=None):
+        summary_attrs = ["OS", "DIL_RATES", "DROPOUT_RATE"]
         super().summary(summary_attrs)
 
 
@@ -552,6 +569,7 @@ class SegnetConfig(Config):
     """
     Configuration for 2D Segnet architecture (https://arxiv.org/abs/1505.07293)
     """
+
     MODEL_NAME = "segnet_2d"
 
     TRAIN_BATCH_SIZE = 15
@@ -566,11 +584,11 @@ class SegnetConfig(Config):
 
     INITIAL_LEARNING_RATE = 1e-3
 
-    def __init__(self, state = 'training', create_dirs = True):
+    def __init__(self, state="training", create_dirs=True):
         super().__init__(self.MODEL_NAME, state, create_dirs=create_dirs)
 
-    def summary(self, additional_vars = []):
-        summary_attrs = ['DEPTH', 'NUM_CONV_LAYERS', 'NUM_FILTERS']
+    def summary(self, additional_vars=None):
+        summary_attrs = ["DEPTH", "NUM_CONV_LAYERS", "NUM_FILTERS"]
         super().summary(summary_attrs)
 
 
@@ -578,6 +596,7 @@ class UNetConfig(Config):
     """
     Configuration for 2D U-Net architecture (https://arxiv.org/abs/1505.04597)
     """
+
     MODEL_NAME = "unet_2d"
 
     INIT_UNET_2D = False
@@ -590,12 +609,13 @@ class UNetConfig(Config):
     DEPTH = 6
     NUM_FILTERS = None
 
-    def __init__(self, state = 'training', create_dirs = True):
+    def __init__(self, state="training", create_dirs=True):
         super().__init__(self.MODEL_NAME, state, create_dirs=create_dirs)
 
-    def summary(self, additional_vars = []):
-        summary_vars = ['DEPTH', 'NUM_FILTERS', '']
-        summary_vars.extend(additional_vars)
+    def summary(self, additional_vars=None):
+        summary_vars = ["DEPTH", "NUM_FILTERS", ""]
+        if additional_vars:
+            summary_vars.extend(additional_vars)
         super().summary(summary_vars)
 
 
@@ -603,24 +623,32 @@ class ResidualUNet(Config):
     """
     Configuration for 2D Residual U-Net architecture
     """
-    MODEL_NAME = 'res_unet'
+
+    MODEL_NAME = "res_unet"
 
     DEPTH = 6
     NUM_FILTERS = None
 
     DROPOUT_RATE = 0.0
-    LAYER_ORDER = ['relu', 'bn', 'dropout', 'conv']
+    LAYER_ORDER = ["relu", "bn", "dropout", "conv"]
 
     USE_SE_BLOCK = False
     SE_RATIO = 8
 
-    def __init__(self, state = 'training', create_dirs = True):
+    def __init__(self, state="training", create_dirs=True):
         super().__init__(self.MODEL_NAME, state, create_dirs=create_dirs)
 
-    def summary(self, additional_vars = []):
-        summary_attrs = ['DEPTH', 'NUM_FILTERS', 'DROPOUT_RATE', '',
-                         'LAYER_ORDER', '',
-                         'USE_SE_BLOCK', 'SE_RATIO']
+    def summary(self, additional_vars=None):
+        summary_attrs = [
+            "DEPTH",
+            "NUM_FILTERS",
+            "DROPOUT_RATE",
+            "",
+            "LAYER_ORDER",
+            "",
+            "USE_SE_BLOCK",
+            "SE_RATIO",
+        ]
         super().summary(summary_attrs)
 
     def num_neighboring_slices(self):
@@ -631,7 +659,8 @@ class UNet2_5DConfig(UNetConfig):
     """
     Configuration for 3D U-Net architecture
     """
-    MODEL_NAME = 'unet_2_5d'
+
+    MODEL_NAME = "unet_2_5d"
 
     IMG_SIZE = (288, 288, 7)
 
@@ -647,7 +676,7 @@ class UNet2_5DConfig(UNetConfig):
 
 
 class UNet3DConfig(UNetConfig):
-    MODEL_NAME = 'unet_3d'
+    MODEL_NAME = "unet_3d"
 
     IMG_SIZE = (288, 288, 4, 1)
 
@@ -657,23 +686,26 @@ class UNet3DConfig(UNetConfig):
     DROP_RATE = 1.0
     DROP_FACTOR = 0.8
 
-    TAG = 'oai_3d'
+    TAG = "oai_3d"
 
-    SLICE_SUBSET = None  # 1 indexed inclusive - i.e. (5, 64) means slices [5, 64]
+    SLICE_SUBSET = (
+        None
+    )  # 1 indexed inclusive - i.e. (5, 64) means slices [5, 64]
 
     NUM_FILTERS = [32, 64, 128, 256, 512, 1024]
 
     def num_neighboring_slices(self):
         return self.IMG_SIZE[2]
 
-    def summary(self, additional_vars = []):
-        summary_attrs = ['SLICE_SUBSET']
+    def summary(self, additional_vars=None):
+        summary_attrs = ["SLICE_SUBSET"]
         super().summary(summary_attrs)
 
 
 class DeeplabV3_2_5DConfig(DeeplabV3Config):
     """2.5D DeeplabV3+.
     """
+
     IMG_SIZE = (288, 288, 3)
 
     def num_neighboring_slices(self):
@@ -683,7 +715,8 @@ class DeeplabV3_2_5DConfig(DeeplabV3Config):
 class AnisotropicUNetConfig(Config):
     """2D Anisotropic U-Net.
     """
-    MODEL_NAME = 'anisotropic_unet'
+
+    MODEL_NAME = "anisotropic_unet"
 
     IMG_SIZE = (288, 72, 1)
 
@@ -697,23 +730,25 @@ class AnisotropicUNetConfig(Config):
 
     KERNEL_SIZE = (7, 3)
 
-    def __init__(self, state = 'training', create_dirs = True):
+    def __init__(self, state="training", create_dirs=True):
         super().__init__(self.MODEL_NAME, state, create_dirs=create_dirs)
 
-    def summary(self, additional_vars = []):
-        summary_attrs = ['DEPTH', 'NUM_FILTERS', 'KERNEL_SIZE']
+    def summary(self, additional_vars=None):
+        summary_attrs = ["DEPTH", "NUM_FILTERS", "KERNEL_SIZE"]
         super().summary(summary_attrs)
 
 
 class RefineNetConfig(Config):
     """Configuration for RefineNet architecture as suggested by paper below
-    http://openaccess.thecvf.com/content_cvpr_2017/papers/Lin_RefineNet_Multi-Path_Refinement_CVPR_2017_paper.pdf
+    http://openaccess.thecvf.com/content_cvpr_2017/papers/Lin_RefineNet_Multi
+    -Path_Refinement_CVPR_2017_paper.pdf
     """
-    MODEL_NAME = 'refinenet'
+
+    MODEL_NAME = "refinenet"
 
     INITIAL_LEARNING_RATE = 1e-3
 
-    def __init__(self, state = 'training', create_dirs = True):
+    def __init__(self, state="training", create_dirs=True):
         super().__init__(self.MODEL_NAME, state, create_dirs=create_dirs)
 
 
@@ -726,7 +761,7 @@ def _check_and_coerce_cfg_value_type(replacement, original, full_key):
     replacement_type = type(replacement)
 
     # TODO: Convert all to have non-None values by default.
-    if original_type == type(None):
+    if isinstance(original, type(None)):
         return replacement
 
     # The types must match (with some exceptions)
@@ -764,21 +799,26 @@ def _assert_with_logging(cond, msg):
     assert cond, msg
 
 
-def _error_with_logging(cond, msg, error_type = ValueError):
+def _error_with_logging(cond, msg, error_type=ValueError):
     if not cond:
         logger.error(msg)
         raise error_type(msg)
 
 
-SUPPORTED_CONFIGS = [UNetConfig, SegnetConfig, DeeplabV3Config, ResidualUNet,
-                     AnisotropicUNetConfig, RefineNetConfig,
-                     UNet3DConfig, UNet2_5DConfig, DeeplabV3_2_5DConfig]
+SUPPORTED_CONFIGS = [
+    UNetConfig,
+    SegnetConfig,
+    DeeplabV3Config,
+    ResidualUNet,
+    AnisotropicUNetConfig,
+    RefineNetConfig,
+    UNet3DConfig,
+    UNet2_5DConfig,
+    DeeplabV3_2_5DConfig,
+]
 
 
-def get_config(
-    config_cp_save_tag: str,
-    create_dirs: bool = True,
-):
+def get_config(config_cp_save_tag: str, create_dirs: bool = True):
     """Get config using config_cp_save_tag
 
     Args:
@@ -795,7 +835,7 @@ def get_config(
             c = config(create_dirs=create_dirs)
             return c
 
-    raise ValueError('config %s not found' % config_cp_save_tag)
+    raise ValueError("config %s not found" % config_cp_save_tag)
 
 
 def get_model_name(cfg_filename: str):
@@ -808,5 +848,8 @@ def get_model_name(cfg_filename: str):
         str: The model name.
     """
     vars_dict = Config._load_dict_from_file(cfg_filename)
-    return vars_dict['MODEL_NAME'] if "MODEL_NAME" in vars_dict else vars_dict[
-        "CP_SAVE_TAG"]
+    return (
+        vars_dict["MODEL_NAME"]
+        if "MODEL_NAME" in vars_dict
+        else vars_dict["CP_SAVE_TAG"]
+    )

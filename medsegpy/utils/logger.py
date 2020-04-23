@@ -5,6 +5,7 @@ import os
 import sys
 import time
 from collections import Counter
+
 from fvcore.common.file_io import PathManager
 from tabulate import tabulate
 from termcolor import colored
@@ -23,27 +24,35 @@ class _ColorfulFormatter(logging.Formatter):
         log = super(_ColorfulFormatter, self).formatMessage(record)
         if record.levelno == logging.WARNING:
             prefix = colored("WARNING", "red", attrs=["blink"])
-        elif record.levelno == logging.ERROR or record.levelno == logging.CRITICAL:
+        elif (
+            record.levelno == logging.ERROR
+            or record.levelno == logging.CRITICAL
+        ):
             prefix = colored("ERROR", "red", attrs=["blink", "underline"])
         else:
             return log
         return prefix + " " + log
 
 
-@functools.lru_cache()  # so that calling setup_logger multiple times won't add many handlers
+@functools.lru_cache()  # so that calling setup_logger multiple times won't add many handlers  # noqa
 def setup_logger(
-    output=None, distributed_rank=0, *, color=True, name="medsegpy", abbrev_name=None
+    output=None,
+    distributed_rank=0,
+    *,
+    color=True,
+    name="medsegpy",
+    abbrev_name=None
 ):
     """
     Initialize the detectron2 logger and set its verbosity level to "INFO".
 
     Args:
-        output (str): a file name or a directory to save log. If None, will not save log file.
-            If ends with ".txt" or ".log", assumed to be a file name.
-            Otherwise, logs will be saved to `output/log.txt`.
+        output (str): a file name or a directory to save log. If None, will not
+            save log file. If ends with ".txt" or ".log", assumed to be a file
+            name. Otherwise, logs will be saved to `output/log.txt`.
         name (str): the root module name of this logger
-        abbrev_name (str): an abbreviation of the module, to avoid long names in logs.
-            Set to "" to not log the root module in logs.
+        abbrev_name (str): an abbreviation of the module, to avoid long names in
+            logs. Set to "" to not log the root module in logs.
             By default, will abbreviate "detectron2" to "d2" and leave other
             modules unchanged.
 
@@ -58,7 +67,8 @@ def setup_logger(
         abbrev_name = name
 
     plain_formatter = logging.Formatter(
-        "[%(asctime)s] %(name)s %(levelname)s: %(message)s", datefmt="%m/%d %H:%M:%S"
+        "[%(asctime)s] %(name)s %(levelname)s: %(message)s",
+        datefmt="%m/%d %H:%M:%S",
     )
     # stdout logging: master only
     if distributed_rank == 0:
@@ -137,16 +147,19 @@ def log_first_n(lvl, msg, n=1, *, name=None, key="caller"):
         lvl (int): the logging level
         msg (str):
         n (int):
-        name (str): name of the logger to use. Will use the caller's module by default.
+        name (str): name of the logger to use. Will use the caller's module by
+            default.
         key (str or tuple[str]): the string(s) can be one of "caller" or
             "message", which defines how to identify duplicated logs.
             For example, if called with `n=1, key="caller"`, this function
             will only log the first call from the same caller, regardless of
             the message content.
             If called with `n=1, key="message"`, this function will log the
-            same content only once, even if they are called from different places.
+            same content only once, even if they are called from different
+            places.
             If called with `n=1, key=("caller", "message")`, this function
-            will not log only if the same caller has logged the same message before.
+            will not log only if the same caller has logged the same message
+            before.
     """
     if isinstance(key, str):
         key = (key,)
@@ -172,7 +185,8 @@ def log_every_n(lvl, msg, n=1, *, name=None):
         lvl (int): the logging level
         msg (str):
         n (int):
-        name (str): name of the logger to use. Will use the caller's module by default.
+        name (str): name of the logger to use. Will use the caller's module by
+            default.
     """
     caller_module, key = _find_caller()
     _LOG_COUNTER[key] += 1
@@ -188,7 +202,8 @@ def log_every_n_seconds(lvl, msg, n=1, *, name=None):
         lvl (int): the logging level
         msg (str):
         n (int):
-        name (str): name of the logger to use. Will use the caller's module by default.
+        name (str): name of the logger to use. Will use the caller's module by
+            default.
     """
     caller_module, key = _find_caller()
     last_logged = _LOG_TIMER.get(key, None)

@@ -4,6 +4,7 @@ import os
 from medsegpy.data.im_gens import CTGenerator
 from medsegpy.engine.defaults import default_argument_parser
 from medsegpy.engine.trainer import DefaultTrainer
+
 from train_net import main
 
 
@@ -13,7 +14,7 @@ def parse_windows(windows):
         "bone": (1800, 400),
         "liver": (150, 30),
         "spine": (250, 50),
-        "custom": (500, 50)
+        "custom": (500, 50),
     }
     vals = []
     for w in windows:
@@ -45,8 +46,7 @@ class AbCTTrainer(DefaultTrainer):
         return CTGenerator(cfg, windows)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     basename = os.path.splitext(os.path.basename(__file__))[0]
     args = default_argument_parser().parse_args()
     main(args, AbCTTrainer)
-
