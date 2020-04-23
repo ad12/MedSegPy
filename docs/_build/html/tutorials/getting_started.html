@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Getting Started with Detectron2 &mdash; MedSegPy 0.0.1 documentation</title>
+  <title>Getting Started with MedSegPy &mdash; MedSegPy 0.0.1 documentation</title>
   
 
   
@@ -87,17 +87,14 @@
               <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Tutorials</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="install.html">Installation</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Getting Started with Detectron2</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#inference-demo-with-pre-trained-models">Inference Demo with Pre-trained Models</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Getting Started with MedSegPy</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#training-evaluation-in-command-line">Training &amp; Evaluation in Command Line</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#use-detectron2-apis-in-your-code">Use Detectron2 APIs in Your Code</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="extend.html">Extend MedSegPy’s Defaults</a></li>
 <li class="toctree-l2"><a class="reference internal" href="datasets.html">Use Custom Datasets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="data_loading.html">Use Custom Dataloaders</a></li>
 <li class="toctree-l2"><a class="reference internal" href="models.html">Use Models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="write-models.html">Write Models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="training.html">Training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="evaluation.html">Evaluation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="configs.html">Use Configs</a></li>
@@ -151,7 +148,7 @@
         
           <li><a href="index.html">Tutorials</a> &raquo;</li>
         
-      <li>Getting Started with Detectron2</li>
+      <li>Getting Started with MedSegPy</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -170,79 +167,32 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="getting-started-with-detectron2">
-<span id="getting-started-with-detectron2"></span><h1>Getting Started with Detectron2<a class="headerlink" href="#getting-started-with-detectron2" title="Permalink to this headline">¶</a></h1>
-<p>This document provides a brief intro of the usage of builtin command-line tools in detectron2.</p>
-<p>For a tutorial that involves actual coding with the API,
-see our <a class="reference external" href="https://colab.research.google.com/drive/16jcaJoc6bCFAQ96jDe2HwtXj7BMD_-m5">Colab Notebook</a>
-which covers how to run inference with an
-existing model, and how to train a builtin model on a custom dataset.</p>
-<p>For more advanced tutorials, refer to our <a class="reference external" href="https://detectron2.readthedocs.io/tutorials/extend.html">documentation</a>.</p>
-<div class="section" id="inference-demo-with-pre-trained-models">
-<span id="inference-demo-with-pre-trained-models"></span><h2>Inference Demo with Pre-trained Models<a class="headerlink" href="#inference-demo-with-pre-trained-models" title="Permalink to this headline">¶</a></h2>
-<ol class="simple">
-<li><p>Pick a model and its config file from
-<a class="reference external" href="https://github.com/facebookresearch/detectron2/blob/master/MODEL_ZOO.md">model zoo</a>,
-for example, <code class="docutils literal notranslate"><span class="pre">mask_rcnn_R_50_FPN_3x.yaml</span></code>.</p></li>
-<li><p>We provide <code class="docutils literal notranslate"><span class="pre">demo.py</span></code> that is able to run builtin standard models. Run it with:</p></li>
-</ol>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">demo</span><span class="o">/</span><span class="n">demo</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">config</span><span class="o">-</span><span class="n">file</span> <span class="n">configs</span><span class="o">/</span><span class="n">COCO</span><span class="o">-</span><span class="n">InstanceSegmentation</span><span class="o">/</span><span class="n">mask_rcnn_R_50_FPN_3x</span><span class="o">.</span><span class="n">yaml</span> \
-  <span class="o">--</span><span class="nb">input</span> <span class="n">input1</span><span class="o">.</span><span class="n">jpg</span> <span class="n">input2</span><span class="o">.</span><span class="n">jpg</span> \
-    <span class="p">[</span><span class="o">--</span><span class="n">other</span><span class="o">-</span><span class="n">options</span><span class="p">]</span>
-  <span class="o">--</span><span class="n">opts</span> <span class="n">MODEL</span><span class="o">.</span><span class="n">WEIGHTS</span> <span class="n">detectron2</span><span class="p">:</span><span class="o">//</span><span class="n">COCO</span><span class="o">-</span><span class="n">InstanceSegmentation</span><span class="o">/</span><span class="n">mask_rcnn_R_50_FPN_3x</span><span class="o">/</span><span class="mi">137849600</span><span class="o">/</span><span class="n">model_final_f10217</span><span class="o">.</span><span class="n">pkl</span>
-</pre></div>
-</div>
-<p>The configs are made for training, therefore we need to specify <code class="docutils literal notranslate"><span class="pre">MODEL.WEIGHTS</span></code> to a model from model zoo for evaluation.
-This command will run the inference and show visualizations in an OpenCV window.</p>
-<p>For details of the command line arguments, see <code class="docutils literal notranslate"><span class="pre">demo.py</span> <span class="pre">-h</span></code> or look at its source code
-to understand its behavior. Some common arguments are:</p>
-<ul class="simple">
-<li><p>To run <strong>on your webcam</strong>, replace <code class="docutils literal notranslate"><span class="pre">--input</span> <span class="pre">files</span></code> with <code class="docutils literal notranslate"><span class="pre">--webcam</span></code>.</p></li>
-<li><p>To run <strong>on a video</strong>, replace <code class="docutils literal notranslate"><span class="pre">--input</span> <span class="pre">files</span></code> with <code class="docutils literal notranslate"><span class="pre">--video-input</span> <span class="pre">video.mp4</span></code>.</p></li>
-<li><p>To run <strong>on cpu</strong>, add <code class="docutils literal notranslate"><span class="pre">MODEL.DEVICE</span> <span class="pre">cpu</span></code> after <code class="docutils literal notranslate"><span class="pre">--opts</span></code>.</p></li>
-<li><p>To save outputs to a directory (for images) or a file (for webcam or video), use <code class="docutils literal notranslate"><span class="pre">--output</span></code>.</p></li>
-</ul>
-</div>
+  <div class="section" id="getting-started-with-medsegpy">
+<span id="getting-started-with-medsegpy"></span><h1>Getting Started with MedSegPy<a class="headerlink" href="#getting-started-with-medsegpy" title="Permalink to this headline">¶</a></h1>
+<p>This document provides a brief intro of the usage of builtin command-line tools in medsegpy.</p>
+<p>For more advanced tutorials, refer to our <a class="reference external" href="https://ad12.github.io/MedSegPy/">documentation</a>.</p>
 <div class="section" id="training-evaluation-in-command-line">
 <span id="training-evaluation-in-command-line"></span><h2>Training &amp; Evaluation in Command Line<a class="headerlink" href="#training-evaluation-in-command-line" title="Permalink to this headline">¶</a></h2>
-<p>We provide a script in “tools/{,plain_}train_net.py”, that is made to train
-all the configs provided in detectron2.
+<p>We provide a script in “medsegpy/nn_train.py”, that is made to train
+all the configs provided in medsegpy.
 You may want to use it as a reference to write your own training script for a new research.</p>
-<p>To train a model with “train_net.py”, first
+<p>To train a model with “nn_train.py”, first
 setup the corresponding datasets following
-<a class="reference external" href="https://github.com/facebookresearch/detectron2/blob/master/datasets/README.md">datasets/README.md</a>,
+<a class="reference external" href="https://github.com/ad12/MedSegPy/tree/master/datasets">datasets/README.md</a>,
 then run:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">tools</span><span class="o">/</span><span class="n">train_net</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">num</span><span class="o">-</span><span class="n">gpus</span> <span class="mi">8</span> \
-    <span class="o">--</span><span class="n">config</span><span class="o">-</span><span class="n">file</span> <span class="n">configs</span><span class="o">/</span><span class="n">COCO</span><span class="o">-</span><span class="n">InstanceSegmentation</span><span class="o">/</span><span class="n">mask_rcnn_R_50_FPN_1x</span><span class="o">.</span><span class="n">yaml</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">tools</span><span class="o">/</span><span class="n">train_net</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">num</span><span class="o">-</span><span class="n">gpus</span> <span class="mi">1</span> \
+    <span class="o">--</span><span class="n">config</span><span class="o">-</span><span class="n">file</span> <span class="n">configs</span><span class="o">/</span><span class="n">OAI</span><span class="o">-</span><span class="n">iMorphics</span><span class="o">/</span><span class="n">unet_2d</span><span class="o">.</span><span class="n">ini</span> \
+    <span class="n">OUTPUT_DIR</span> <span class="o">/</span><span class="n">PATH</span><span class="o">/</span><span class="n">TO</span><span class="o">/</span><span class="n">SAVE</span><span class="o">/</span><span class="n">DIR</span>
 </pre></div>
 </div>
-<p>The configs are made for 8-GPU training. To train on 1 GPU, change the batch size with:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">tools</span><span class="o">/</span><span class="n">train_net</span><span class="o">.</span><span class="n">py</span> \
-    <span class="o">--</span><span class="n">config</span><span class="o">-</span><span class="n">file</span> <span class="n">configs</span><span class="o">/</span><span class="n">COCO</span><span class="o">-</span><span class="n">InstanceSegmentation</span><span class="o">/</span><span class="n">mask_rcnn_R_50_FPN_1x</span><span class="o">.</span><span class="n">yaml</span> \
-    <span class="n">SOLVER</span><span class="o">.</span><span class="n">IMS_PER_BATCH</span> <span class="mi">2</span> <span class="n">SOLVER</span><span class="o">.</span><span class="n">BASE_LR</span> <span class="mf">0.0025</span>
-</pre></div>
-</div>
-<p>For most models, CPU training is not supported.</p>
-<p>(Note that we applied the <a class="reference external" href="https://arxiv.org/abs/1706.02677">linear learning rate scaling rule</a>
-when changing the batch size.)</p>
+<p>For CPU training, use <code class="docutils literal notranslate"><span class="pre">--num-gpus</span> <span class="pre">0</span></code>, though this is not recommended.</p>
 <p>To evaluate a model’s performance, use</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">tools</span><span class="o">/</span><span class="n">train_net</span><span class="o">.</span><span class="n">py</span> \
-    <span class="o">--</span><span class="n">config</span><span class="o">-</span><span class="n">file</span> <span class="n">configs</span><span class="o">/</span><span class="n">COCO</span><span class="o">-</span><span class="n">InstanceSegmentation</span><span class="o">/</span><span class="n">mask_rcnn_R_50_FPN_1x</span><span class="o">.</span><span class="n">yaml</span> \
-    <span class="o">--</span><span class="nb">eval</span><span class="o">-</span><span class="n">only</span> <span class="n">MODEL</span><span class="o">.</span><span class="n">WEIGHTS</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">checkpoint_file</span>
+    <span class="o">--</span><span class="n">config</span><span class="o">-</span><span class="n">file</span> <span class="o">/</span><span class="n">PATH</span><span class="o">/</span><span class="n">TO</span><span class="o">/</span><span class="n">SAVE</span><span class="o">/</span><span class="n">DIR</span><span class="o">/</span><span class="n">config</span><span class="o">.</span><span class="n">ini</span> \
+    <span class="o">--</span><span class="nb">eval</span><span class="o">-</span><span class="n">only</span> <span class="n">TEST_WEIGHT_PATH</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">checkpoint_file</span>
 </pre></div>
 </div>
 <p>For more options, see <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">tools/train_net.py</span> <span class="pre">-h</span></code>.</p>
-</div>
-<div class="section" id="use-detectron2-apis-in-your-code">
-<span id="use-detectron2-apis-in-your-code"></span><h2>Use Detectron2 APIs in Your Code<a class="headerlink" href="#use-detectron2-apis-in-your-code" title="Permalink to this headline">¶</a></h2>
-<p>See our <a class="reference external" href="https://colab.research.google.com/drive/16jcaJoc6bCFAQ96jDe2HwtXj7BMD_-m5">Colab Notebook</a>
-to learn how to use detectron2 APIs to:</p>
-<ol class="simple">
-<li><p>run inference with an existing model</p></li>
-<li><p>train a builtin model on a custom dataset</p></li>
-</ol>
-<p>See <a class="reference external" href="https://github.com/facebookresearch/detectron2/tree/master/projects">detectron2/projects</a>
-for more ways to build your project on detectron2.</p>
 </div>
 </div>
 

@@ -36,7 +36,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Evaluation" href="evaluation.html" />
-    <link rel="prev" title="Write Models" href="write-models.html" /> 
+    <link rel="prev" title="Use Models" href="models.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -87,12 +87,11 @@
               <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Tutorials</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="install.html">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="getting_started.html">Getting Started with Detectron2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html">Getting Started with MedSegPy</a></li>
 <li class="toctree-l2"><a class="reference internal" href="extend.html">Extend MedSegPy’s Defaults</a></li>
 <li class="toctree-l2"><a class="reference internal" href="datasets.html">Use Custom Datasets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="data_loading.html">Use Custom Dataloaders</a></li>
 <li class="toctree-l2"><a class="reference internal" href="models.html">Use Models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="write-models.html">Write Models</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Training</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#logging-of-metrics">Logging of Metrics</a></li>
 </ul>
@@ -171,34 +170,14 @@
   <div class="section" id="training">
 <span id="training"></span><h1>Training<a class="headerlink" href="#training" title="Permalink to this headline">¶</a></h1>
 <p>From the previous tutorials, you may now have a custom model and data loader.</p>
-<p>You are free to create your own optimizer, and write the training logic: it’s
-usually easy with PyTorch, and allow researchers to see the entire training
-logic more clearly.
-One such example is provided in <a class="reference external" href="https://github.com/facebookresearch/detectron2/blob/master/tools/plain_train_net.py">tools/plain_train_net.py</a>.</p>
-<p>We also provide a standarized “trainer” abstraction with a
-<a class="reference external" href="/modules/engine.html#detectron2.engine.HookBase">minimal hook system</a>
+<p>MedSegPy supports the Adam optimizer both with and without gradient accumulation. You are free to create your own optimizer, and write the training logic.</p>
+<p>We also provide a “trainer” abstraction with
+<a class="reference external" href="../modules/engine.html#medsegpy.engine.trainer.DefaultTrainer"><code class="docutils literal notranslate"><span class="pre">DefaultTrainer</span></code></a>
 that helps simplify the standard types of training.</p>
-<p>You can use
-<a class="reference external" href="/modules/engine.html#detectron2.engine.SimpleTrainer">SimpleTrainer().train()</a>
-which does single-cost single-optimizer single-data-source training.
-Or use <a class="reference external" href="/modules/engine.html#detectron2.engine.defaults.DefaultTrainer">DefaultTrainer().train()</a>
-which includes more standard behavior that one might want to opt in.
-This also means that it’s less likely to support some non-standard behavior
-you might want during research.</p>
 <div class="section" id="logging-of-metrics">
 <span id="logging-of-metrics"></span><h2>Logging of Metrics<a class="headerlink" href="#logging-of-metrics" title="Permalink to this headline">¶</a></h2>
-<p>During training, metrics are logged with a centralized <a class="reference external" href="/modules/utils.html#detectron2.utils.events.EventStorage">EventStorage</a>.
-You can use the following code to access it and log metrics to it:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">detectron2.utils.events</span> <span class="k">import</span> <span class="n">get_event_storage</span>
-
-<span class="c1"># inside the model:</span>
-<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span><span class="p">:</span>
-  <span class="n">value</span> <span class="o">=</span> <span class="c1"># compute the value from inputs</span>
-  <span class="n">storage</span> <span class="o">=</span> <span class="n">get_event_storage</span><span class="p">()</span>
-  <span class="n">storage</span><span class="o">.</span><span class="n">put_scalar</span><span class="p">(</span><span class="s2">&quot;some_accuracy&quot;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Refer to its documentation for more details.</p>
+<p>By default the training/validation losses and learning rate are logged to
+Tensorboard. Other logging coming soon!</p>
 </div>
 </div>
 
@@ -213,7 +192,7 @@ You can use the following code to access it and log metrics to it:</p>
         <a href="evaluation.html" class="btn btn-neutral float-right" title="Evaluation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="write-models.html" class="btn btn-neutral float-left" title="Write Models" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="models.html" class="btn btn-neutral float-left" title="Use Models" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

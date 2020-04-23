@@ -363,15 +363,7 @@
             <span class="k">return</span> <span class="n">ret</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">m</span> <span class="o">=</span> <span class="n">MetadataCatalog</span><span class="o">.</span><span class="n">_NAME_TO_META</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">Metadata</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">m</span></div>
-
-<div class="viewcode-block" id="MetadataCatalog.convert_path_to_dataset"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.MetadataCatalog.convert_path_to_dataset">[docs]</a>    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">convert_path_to_dataset</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-        <span class="n">catalog</span> <span class="o">=</span> <span class="p">{</span><span class="n">m</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;scan_root&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span> <span class="n">name</span>
-                   <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">MetadataCatalog</span><span class="o">.</span><span class="n">_NAME_TO_META</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
-        <span class="n">catalog</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">catalog</span><span class="p">[</span><span class="n">path</span><span class="p">]</span></div></div>
-
+            <span class="k">return</span> <span class="n">m</span></div></div>
 </pre></div>
 
            </div>

@@ -10,8 +10,6 @@ Tutorials
    datasets
    data_loading
    models
-   write-models
    training
    evaluation
    configs
-   deployment

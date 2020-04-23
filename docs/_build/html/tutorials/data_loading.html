@@ -87,7 +87,7 @@
               <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Tutorials</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="install.html">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="getting_started.html">Getting Started with Detectron2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html">Getting Started with MedSegPy</a></li>
 <li class="toctree-l2"><a class="reference internal" href="extend.html">Extend MedSegPy’s Defaults</a></li>
 <li class="toctree-l2"><a class="reference internal" href="datasets.html">Use Custom Datasets</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Use Custom Dataloaders</a><ul>
@@ -98,7 +98,6 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="models.html">Use Models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="write-models.html">Write Models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="training.html">Training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="evaluation.html">Evaluation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="configs.html">Use Configs</a></li>
@@ -268,7 +267,7 @@ for an example.</p>
 <span id="use-a-custom-dataloader"></span><h2>Use a Custom Dataloader<a class="headerlink" href="#use-a-custom-dataloader" title="Permalink to this headline">¶</a></h2>
 <p>If you use <a class="reference external" href="/modules/engine.html#medsegpy.engine.defaults.DefaultTrainer">DefaultTrainer</a>,
 you can overwrite its <code class="docutils literal notranslate"><span class="pre">_build_data_loaders</span></code> and <code class="docutils literal notranslate"><span class="pre">build_test_data_loader</span></code> methods to use your own dataloader.
-See the <a class="reference external" href="https://github.com/facebookresearch/detectron2/blob/master/medsegpy/ct_train.py">abCT training</a>
+See the <a class="reference external" href="https://github.com/facebookresearch/detectron2/blob/master/tools/ct_train.py">abCT training</a>
 for an example.</p>
 <p>If you write your own training loop, you can plug in your data loader easily.</p>
 </div>
