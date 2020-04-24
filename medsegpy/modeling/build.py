@@ -1,5 +1,6 @@
 import logging
 
+from fvcore.common.registry import Registry
 from keras import Model
 from keras.initializers import glorot_uniform
 from keras.layers import Conv2D, Input
@@ -303,7 +304,7 @@ def unet_2_5d(config):
 
     x = Input(input_shape)
 
-    model = unet_2d_model(input_tensor=x)
+    model = unet_2d_model_v2(input_tensor=x)
 
     # Add activation
     x = __add_activation_layer(

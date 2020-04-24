@@ -1,5 +1,5 @@
 import numpy as np
-from keras.initializers import he_normal
+from keras.initializers import he_normal, glorot_uniform
 from keras.layers import Activation
 from keras.layers import BatchNormalization as BN
 from keras.layers import (
@@ -149,8 +149,8 @@ def unet_3d_model(
     recon = Conv3D(
         num_classes,
         (1, 1, 1),
-        padding="same",
-        kernel_initializer=he_normal(seed=seed),
+        padding="valid",
+        kernel_initializer=glorot_uniform(seed=seed),
     )(conv)
     recon = Activation(activation)(recon)
 
