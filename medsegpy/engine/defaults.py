@@ -40,6 +40,9 @@ def default_argument_parser():
     parser.add_argument(
         "--num-gpus", type=int, default=1, help="number of gpus"
     )
+    parser.add_argument(
+        "--overwrite", action="store_true", help="overwrite previous experiment"
+    )
 
     parser.add_argument(
         "opts",
@@ -64,7 +67,9 @@ def default_setup(cfg, args):
         args (argparse.NameSpace): the command line arguments to be logged
     """
     # Do not run experiment if directory already exists.
-    if not args.eval_only and config_exists(cfg.OUTPUT_DIR):
+    if not args.eval_only \
+        and not args.overwrite \
+        and config_exists(cfg.OUTPUT_DIR):
         raise ValueError(
             "Experiment results exist at {}. "
             "To re-run the experiment, delete the folder".format(cfg.OUTPUT_DIR)
