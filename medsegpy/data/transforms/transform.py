@@ -6,23 +6,24 @@ However, medical images typically have >2 dimensions.
 Some transforms implemented in this file are meant to overload transforms in the
 `fvcore.transforms` module.
 """
-from abc import ABC
-from typing import Sequence, Tuple
+from abc import ABC, abstractmethod
+import inspect
+from typing import Sequence, Tuple, Callable, TypeVar
 
-from fvcore.transforms.transform import Transform
 import numpy as np
 
 from medsegpy.config import Config
 
 __all__ = [
     "build_preprocessing",
-    "CropTransform",
     "MedTransform",
+    "TransformList",
+    "CropTransform",
     "ZeroMeanNormalization"
 ]
 
 
-class MedTransform(Transform, ABC):
+class MedTransform(ABC):
     """
     Base class for implementations of __deterministic__ transfomations for
     _medical_ image and other data structures. Like the `fvcore.transforms`
@@ -41,21 +42,174 @@ class MedTransform(Transform, ABC):
     Note, each method may choose to modify the input data in-place for
     efficiency.
     """
+    def _set_attributes(self, params: list = None):
+        """
+        Set attributes from the input list of parameters.
 
-    def apply_coords(self, coords: np.ndarray):
-        raise NotImplementedError(
-            "apply_coords not implemented for MedTransform"
+        Args:
+            params (list): list of parameters.
+        """
+
+        if params:
+            for k, v in params.items():
+                if k != "self" and not k.startswith("_"):
+                    setattr(self, k, v)
+
+    @abstractmethod
+    def apply_image(self, img: np.ndarray):
+        """
+        Apply the transform on an image.
+
+        Args:
+            img (ndarray): of shape NxHxWxC, or HxWxC or HxW. The array can be
+                of type uint8 in range [0, 255], or floating point in range
+                [0, 1] or [0, 255].
+        Returns:
+            ndarray: image after apply the transformation.
+        """
+        pass
+
+    def apply_segmentation(self, segmentation: np.ndarray) -> np.ndarray:
+        """
+        Apply the transform on a full-image segmentation.
+        By default will just perform "apply_image".
+
+        Args:
+            segmentation (ndarray): of shape HxW. The array should have integer
+            or bool dtype.
+
+        Returns:
+            ndarray: segmentation after apply the transformation.
+        """
+        return self.apply_image(segmentation)
+
+    @classmethod
+    def register_type(cls, data_type: str, func: Callable):
+        """
+        Register the given function as a handler that this transform will use
+        for a specific data type.
+
+        Args:
+            data_type (str): the name of the data type (e.g., box)
+            func (callable): takes a transform and a data, returns the
+                transformed data.
+
+        Examples:
+
+        .. code-block:: python
+
+            def func(flip_transform, voxel_data):
+                return transformed_voxel_data
+            HFlipTransform.register_type("voxel", func)
+
+            # ...
+            transform = HFlipTransform(...)
+            transform.apply_voxel(voxel_data)  # func will be called
+        """
+        assert callable(func), (
+            "You can only register a callable to a MedTransform. "
+            "Got {} instead.".format(
+                func
+            )
+        )
+        argspec = inspect.getfullargspec(func)
+        assert len(argspec.args) == 2, (
+            "You can only register a function that takes two positional "
+            "arguments to a Transform! Got a function with spec {}".format(
+                str(argspec)
+            )
+        )
+        setattr(cls, "apply_" + data_type, func)
+
+
+_T = TypeVar("_T")
+
+
+# pyre-ignore-all-errors
+class TransformList:
+    """
+    Maintain a list of transform operations which will be applied in sequence.
+    Attributes:
+        transforms (list[Transform])
+    """
+
+    def __init__(self, transforms: list):
+        """
+        Args:
+            transforms (list[Transform]): list of transforms to perform.
+        """
+        super().__init__()
+        for t in transforms:
+            assert isinstance(t, MedTransform), t
+        self.transforms = transforms
+
+    def _apply(self, x: _T, meth: str) -> _T:
+        """
+        Apply the transforms on the input.
+        Args:
+            x: input to apply the transform operations.
+            meth (str): meth.
+        Returns:
+            x: after apply the transformation.
+        """
+        for t in self.transforms:
+            x = getattr(t, meth)(x)
+        return x
+
+    def __getattr__(self, name: str):
+        """
+        Args:
+            name (str): name of the attribute.
+        """
+        if name.startswith("apply_"):
+            return lambda x: self._apply(x, name)
+        raise AttributeError(
+            "TransformList object has no attribute {}".format(name)
         )
 
-    def apply_box(self, box: np.ndarray) -> np.ndarray:
-        raise NotImplementedError(
-            "apply_box not implemented for MedTransform"
+    def __add__(self, other: "TransformList") -> "TransformList":
+        """
+        Args:
+            other (TransformList): transformation to add.
+        Returns:
+            TransformList: list of transforms.
+        """
+        others = (
+            other.transforms if isinstance(other, TransformList) else [other]
         )
+        return TransformList(self.transforms + others)
 
-    def apply_polygons(self, polygons: list) -> list:
-        raise NotImplementedError(
-            "apply_polygon not implemented for MedTransform"
+    def __iadd__(self, other: "TransformList") -> "TransformList":
+        """
+        Args:
+            other (TransformList): transformation to add.
+        Returns:
+            TransformList: list of transforms.
+        """
+        others = (
+            other.transforms if isinstance(other, TransformList) else [other]
         )
+        self.transforms.extend(others)
+        return self
+
+    def __radd__(self, other: "TransformList") -> "TransformList":
+        """
+        Args:
+            other (TransformList): transformation to add.
+        Returns:
+            TransformList: list of transforms.
+        """
+        others = (
+            other.transforms if isinstance(other, TransformList) else [other]
+        )
+        return TransformList(others + self.transforms)
+
+    def __len__(self) -> int:
+        """
+        Returns:
+            Number of transforms contained in the TransformList.
+        """
+        return len(self.transforms)
 
 
 class CropTransform(MedTransform):

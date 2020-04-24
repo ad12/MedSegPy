@@ -7,12 +7,9 @@ import inspect
 import numpy as np
 import pprint
 from abc import ABCMeta, abstractmethod
-from fvcore.transforms.transform import (
-    Transform,
-    TransformList,
-)
 
-from .transform import MedTransform, CropTransform
+
+from .transform import MedTransform, TransformList, CropTransform
 
 __all__ = [
     "RandomCrop",
@@ -196,7 +193,7 @@ def apply_transform_gens(
     for g in transform_gens:
         tfm = g.get_transform(img) if isinstance(g, TransformGen) else g
         assert isinstance(
-            tfm, Transform
+            tfm, MedTransform
         ), "TransformGen {} must return an instance of Transform! Got {} instead".format(
             g, tfm)
         img = tfm.apply_image(img)
