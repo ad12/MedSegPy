@@ -7,10 +7,19 @@ Some transforms implemented in this file are meant to overload transforms in the
 `fvcore.transforms` module.
 """
 from abc import ABC
-from typing import Sequence
+from typing import Sequence, Tuple
 
 from fvcore.transforms.transform import Transform
 import numpy as np
+
+from medsegpy.config import Config
+
+__all__ = [
+    "build_preprocessing",
+    "CropTransform",
+    "MedTransform",
+    "ZeroMeanNormalization"
+]
 
 
 class MedTransform(Transform, ABC):
@@ -108,3 +117,52 @@ class ZeroMeanNormalization(MedTransform):
     def apply_segmentation(self, segmentation: np.ndarray):
         """Segmentation should not be normalized."""
         return segmentation
+
+
+class Windowing(MedTransform):
+    """Clip image magnitude between values `lower`, `upper`.
+
+    If multiple lower/upper bound pairs are provided, the output will be stacked
+    along the last dimension.
+    """
+    def __init__(self, bounds: Sequence[Tuple[int, int]]):
+        """
+        Args:
+            bounds: `[(10,20)]` or `[(10,20), (40, 100)]` etc.
+        """
+        self._set_attributes(locals())
+        super().__init__()
+
+    def apply_image(self, img: np.ndarray):
+        """Crop the image(s).
+
+        Args:
+            img (ndarray): of shape NxCxDxHxW, or NxDxHxW or DxHxW.
+
+        Returns:
+            ndarray: zero-mean, unit variance image.
+        """
+        imgs = []
+        bounds = self.bounds
+        for l, u in bounds:
+            imgs.append(np.clip(img, a_min=l, a_max=u))
+
+        if len(imgs) == 1:
+            return imgs[0]
+        elif img.shape[-1] == 1:
+            return np.concatenate(imgs, axis=-1)
+        else:
+            return np.stack(imgs, axis=-1)
+
+    def apply_segmentation(self, segmentation: np.ndarray):
+        """Segmentation should not be windowed."""
+        return segmentation
+
+
+def build_preprocessing(cfg: Config):
+    transforms = []
+    for pp in cfg.PREPROCESSING:
+        if pp == "Windowing":
+            transforms.append(Windowing(cfg.PREPROCESSING_WINDOWS))
+
+    return transforms

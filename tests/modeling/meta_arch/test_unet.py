@@ -125,3 +125,6 @@ class TestUNet3D(unittest.TestCase):
             l1_idx += 1
             l2_idx += 1
 
+
+if __name__ == "__main__":
+    unittest.main()

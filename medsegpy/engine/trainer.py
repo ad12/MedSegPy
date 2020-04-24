@@ -14,6 +14,7 @@ from medsegpy.evaluation import build_evaluator, inference_on_dataset
 from medsegpy.losses import dice_loss, get_training_loss
 from medsegpy.modeling import get_model
 from medsegpy.utils import dl_utils, io_utils
+from medsegpy.data import build_loader
 
 logger = logging.getLogger(__name__)
 
@@ -206,3 +207,74 @@ class DefaultTrainer(object):
     @classmethod
     def build_test_data_loader(cls, cfg):
         return im_gens.get_generator(cfg)
+
+
+class DefaultTrainerDataLoader(DefaultTrainer):
+    def _build_data_loaders(
+        self, cfg
+    ) -> Tuple[im_gens.Generator, im_gens.Generator]:
+        """Builds train and val data loaders.
+        """
+        generator = im_gens.get_generator(cfg)
+        return generator, generator
+
+    @classmethod
+    def build_test_data_loader(cls, cfg):
+        return
+
+    def _train_model(self):
+        """Train model."""
+        cfg = self._cfg
+        n_epochs = cfg.N_EPOCHS
+        loss = cfg.LOSS
+        class_weights = cfg.CLASS_WEIGHTS
+        num_workers = cfg.NUM_WORKERS
+        output_dir = cfg.OUTPUT_DIR
+
+        model = self._model
+        model.summary(print_fn=lambda x: logger.info(x))
+
+        # TODO: Add more options for metrics.
+        optimizer = solver.build_optimizer(cfg)
+        loss_func = get_training_loss(loss, weights=class_weights)
+        model.compile(
+            optimizer=optimizer,
+            loss=loss_func,
+            metrics=[lr_callback(optimizer), dice_loss],
+        )
+        callbacks = self.build_callbacks()
+
+        train_loader, val_loader = self._build_data_loaders(cfg)
+        use_multiprocessing = False
+
+        # Start training
+        model.fit_generator(
+            train_loader,
+            epochs=n_epochs,
+            validation_data=val_loader,
+            callbacks=callbacks,
+            workers=num_workers,
+            use_multiprocessing=use_multiprocessing,
+            verbose=1,
+            shuffle=False,
+        )
+
+        # Save optimizer state
+        io_utils.save_optimizer(model.optimizer, output_dir)
+
+        # Save files to write as output
+        # TODO: refactor to save dataframe.
+        hist_cb = self._loss_history
+        data = [hist_cb.epoch, hist_cb.losses, hist_cb.val_losses]
+        pik_data_path = os.path.join(output_dir, "pik_data.dat")
+        with open(pik_data_path, "wb") as f:
+            pickle.dump(data, f)
+
+        model_json = model.to_json()
+        model_json_save_path = os.path.join(output_dir, "model.json")
+        with open(model_json_save_path, "w") as json_file:
+            json_file.write(model_json)
+
+        # if self.save_model:
+        #     model.save(filepath=os.path.join(output_dir, 'model.h5'),
+        #                overwrite=True)

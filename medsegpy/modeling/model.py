@@ -11,6 +11,14 @@ from keras.utils.generic_utils import Progbar
 import numpy as np
 
 
+__all__ = [
+    "add_sem_seg_activation",
+    "get_primary_shape",
+    "zero_pad_like",
+    "Model",
+]
+
+
 class Model(_Model):
     """MedSegPy implementation of the Keras :class:`Model`.
 
@@ -121,8 +129,10 @@ class Model(_Model):
                     # used for training.
                     if len(generator_output) == 2:
                         x, y = generator_output
+                        x_raw = None
                     elif len(generator_output) == 3:
-                        x, y, _ = generator_output
+                        x, y, x_raw = generator_output
+                        assert isinstance(x_raw, np.ndarray)
                     else:
                         raise ValueError('Output of generator should be '
                                          'a tuple `(x, y, sample_weight)` '
@@ -132,9 +142,10 @@ class Model(_Model):
                     # Assumes a generator that only
                     # yields inputs and targets (not sample weights).
                     x, y = generator_output
+                    x_raw = None
 
                 outs = self.predict_on_batch(x)
-                xs = [x]
+                xs = [x_raw if x_raw is not None else x]
                 ys = [y]
                 if not isinstance(outs, list):
                     outs = [outs]
