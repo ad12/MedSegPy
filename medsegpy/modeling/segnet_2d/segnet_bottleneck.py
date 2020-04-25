@@ -3,9 +3,9 @@ import logging
 from keras.initializers import glorot_uniform
 from keras.layers import Input
 from keras.layers.convolutional import Convolution2D
-from keras.models import Model
 
 from .segnet import SegNet
+from ..model import Model
 
 logger = logging.getLogger(__name__)
 
