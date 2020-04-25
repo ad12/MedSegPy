@@ -223,9 +223,7 @@ class CropTransform(MedTransform):
     """
 
     def __init__(
-        self,
-        coords0: Sequence[int, ...],
-        crop_size: Sequence[int, ...],
+        self, coords0: Sequence[int], crop_size: Sequence[int],
     ):
         assert len(coords0) == len(crop_size)
         super().__init__()

@@ -8,6 +8,7 @@ import warnings
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import List, Sequence, Tuple, Union
+import warnings
 
 import h5py
 import numpy as np
@@ -66,6 +67,11 @@ class Generator(ABC):
     SUPPORTED_TAGS = [""]
 
     def __init__(self, cfg: Config):
+        warnings.warn(
+            "Generator is deprecated, use DataLoader instead",
+            DeprecationWarning
+        )
+
         if cfg.TAG not in self.SUPPORTED_TAGS:
             raise ValueError(
                 "Tag mismatch: config must have tag in %s" % self.SUPPORTED_TAGS

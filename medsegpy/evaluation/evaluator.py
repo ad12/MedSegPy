@@ -6,7 +6,9 @@ https://github.com/facebookresearch/detectron2
 import datetime
 import logging
 import time
+from typing import Union
 
+from medsegpy.data import DataLoader
 from medsegpy.data.im_gens import Generator, GeneratorState
 from medsegpy.utils.logger import log_every_n_seconds
 
@@ -60,7 +62,9 @@ class DatasetEvaluator:
 
 
 def inference_on_dataset(
-    model, generator: Generator, evaluator: DatasetEvaluator
+    model, 
+    data_loader: Union[DataLoader, Generator], 
+    evaluator: DatasetEvaluator,
 ):
     """
     Run model on the data_loader and evaluate the metrics with evaluator.
@@ -81,11 +85,17 @@ def inference_on_dataset(
     num_warmup = 1
     start_time = time.perf_counter()
     total_compute_time = 0
-    total = generator.num_scans(GeneratorState.TESTING)
+    if isinstance(data_loader, Generator):
+        iter_loader = lambda: data_loader.img_generator_test(model)
+        total = data_loader.num_scans(GeneratorState.TESTING)
+    else:
+        iter_loader = lambda: data_loader.inference(model)
+        total = data_loader.num_scans()
+
     start_compute_time = time.perf_counter()
     logger = logging.getLogger(__name__)
     for idx, (x_test, y_test, recon, fname, time_elapsed) in enumerate(
-        generator.img_generator_test(model)
+        iter_loader()
     ):
         total_compute_time += time.perf_counter() - start_compute_time
         input = {"scan_id": fname, "y_true": y_test, "scan": x_test}

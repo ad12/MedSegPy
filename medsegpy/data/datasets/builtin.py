@@ -1,5 +1,5 @@
 from .abct import register_abct
-from .oai import register_oai
+from .oai import register_all_oai
 
 register_abct()
-register_oai()
+register_all_oai()

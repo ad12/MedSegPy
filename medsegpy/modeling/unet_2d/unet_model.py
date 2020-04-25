@@ -13,7 +13,7 @@ from keras.layers import (
     Input,
     MaxPooling2D,
 )
-from keras.models import Model
+from ..model import Model
 
 logger = logging.getLogger(__name__)
 

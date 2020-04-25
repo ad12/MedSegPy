@@ -5,6 +5,7 @@ import tensorflow as tf
 from keras.layers import ZeroPadding2D, ZeroPadding3D, Conv2D, Conv3D
 from keras import backend as K
 from keras.models import Model as _Model
+from keras import utils as k_utils
 from keras.utils.data_utils import GeneratorEnqueuer
 from keras.utils.data_utils import OrderedEnqueuer
 from keras.utils.generic_utils import Progbar
@@ -81,7 +82,7 @@ class Model(_Model):
         all_outs = []
         all_xs = []
         all_ys = []
-        is_sequence = isinstance(generator, Sequence)
+        is_sequence = isinstance(generator, k_utils.Sequence)
         if not is_sequence and use_multiprocessing and workers > 1:
             warnings.warn(
                 UserWarning('Using a generator with `use_multiprocessing=True`'

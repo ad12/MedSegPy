@@ -3,7 +3,7 @@ import unittest
 from medsegpy.config import UNetConfig
 from medsegpy.data import MetadataCatalog
 from medsegpy.data import build_loader
-from medsegpy.data.im_gens import get_generator
+from medsegpy.data.im_gens import get_generator, GeneratorState
 
 
 class TestDefaultDataLoader(unittest.TestCase):
@@ -15,6 +15,9 @@ class TestDefaultDataLoader(unittest.TestCase):
         cfg.TRAIN_DATASET = "oai_2d_train"
         cfg.VAL_DATASET = "oai_2d_val"
         cfg.TEST_DATASET = "oai_2d_test"
+        cfg.SEED = 1
+        cfg.CATEGORIES = [0]
+        cfg.IMG_SIZE = (384, 384, 1)
 
         gen = get_generator(cfg)
         train_steps, val_steps = gen.num_steps()

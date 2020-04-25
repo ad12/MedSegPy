@@ -142,6 +142,7 @@ class Config(object):
     TEST_METRICS = ["DSC", "VOE", "ASSD", "CV"]
 
     # Extra parameters related to different parameters.
+    PREPROCESSING = ()
     PREPROCESSING_WINDOWS = ()
 
     def __init__(self, cp_save_tag, state="training", create_dirs=True):

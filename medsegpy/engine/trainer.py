@@ -40,6 +40,7 @@ class DefaultTrainer(object):
         if num_gpus > 1:
             logger.info("Running multi gpu model")
             model = dl_utils.ModelMGPU(model, gpus=num_gpus)
+        self._train_loader, self._val_loader = self._build_data_loaders(cfg)
         self._model = model
 
     def train(self):
@@ -65,14 +66,6 @@ class DefaultTrainer(object):
             logger.info("Freezing layers [{}, {})".format(fl.start, fl.stop))
             for i in fl:
                 model.layers[i].trainable = False
-
-    def _build_data_loaders(
-        self, cfg
-    ) -> Tuple[im_gens.Generator, im_gens.Generator]:
-        """Builds train and val data loaders.
-        """
-        generator = im_gens.get_generator(cfg)
-        return generator, generator
 
     def build_callbacks(self):
         cfg = self._cfg
@@ -133,29 +126,14 @@ class DefaultTrainer(object):
         )
         callbacks = self.build_callbacks()
 
-        train_loader, val_loader = self._build_data_loaders(cfg)
-        if isinstance(train_loader, im_gens.Generator):
-            train_nbatches, valid_nbatches = train_loader.num_steps()
-            train_loader.summary()
-            train_loader = train_loader.img_generator(
-                state=im_gens.GeneratorState.TRAINING
-            )
-            val_loader = val_loader.img_generator(
-                state=im_gens.GeneratorState.VALIDATION
-            )
-            use_multiprocessing = False
-        else:
-            raise ValueError(
-                "Unknown data loader {}".format(type(train_loader))
-            )
+        train_loader, val_loader = self._train_loader, self._val_loader
+        use_multiprocessing = False
 
         # Start training
         model.fit_generator(
             train_loader,
-            train_nbatches,
             epochs=n_epochs,
             validation_data=val_loader,
-            validation_steps=valid_nbatches,
             callbacks=callbacks,
             workers=num_workers,
             use_multiprocessing=use_multiprocessing,
@@ -204,77 +182,36 @@ class DefaultTrainer(object):
     def build_model(cls, cfg):
         return get_model(cfg)
 
-    @classmethod
-    def build_test_data_loader(cls, cfg):
-        return im_gens.get_generator(cfg)
-
-
-class DefaultTrainerDataLoader(DefaultTrainer):
     def _build_data_loaders(
         self, cfg
     ) -> Tuple[im_gens.Generator, im_gens.Generator]:
         """Builds train and val data loaders.
         """
-        generator = im_gens.get_generator(cfg)
-        return generator, generator
+        train_loader = build_loader(
+            cfg,
+            dataset_names=cfg.TRAIN_DATASET,
+            batch_size=cfg.TRAIN_BATCH_SIZE,
+            drop_last=True,
+            is_test=False,
+            shuffle=True
+        )
+        val_loader = build_loader(
+            cfg,
+            dataset_names=cfg.VAL_DATASET,
+            batch_size=cfg.VALID_BATCH_SIZE,
+            drop_last=True,
+            is_test=False,
+            shuffle=False,
+        )
+        return train_loader, val_loader
 
     @classmethod
     def build_test_data_loader(cls, cfg):
-        return
-
-    def _train_model(self):
-        """Train model."""
-        cfg = self._cfg
-        n_epochs = cfg.N_EPOCHS
-        loss = cfg.LOSS
-        class_weights = cfg.CLASS_WEIGHTS
-        num_workers = cfg.NUM_WORKERS
-        output_dir = cfg.OUTPUT_DIR
-
-        model = self._model
-        model.summary(print_fn=lambda x: logger.info(x))
-
-        # TODO: Add more options for metrics.
-        optimizer = solver.build_optimizer(cfg)
-        loss_func = get_training_loss(loss, weights=class_weights)
-        model.compile(
-            optimizer=optimizer,
-            loss=loss_func,
-            metrics=[lr_callback(optimizer), dice_loss],
-        )
-        callbacks = self.build_callbacks()
-
-        train_loader, val_loader = self._build_data_loaders(cfg)
-        use_multiprocessing = False
-
-        # Start training
-        model.fit_generator(
-            train_loader,
-            epochs=n_epochs,
-            validation_data=val_loader,
-            callbacks=callbacks,
-            workers=num_workers,
-            use_multiprocessing=use_multiprocessing,
-            verbose=1,
+        return build_loader(
+            cfg,
+            dataset_names=cfg.TEST_DATASET,
+            batch_size=cfg.TEST_BATCH_SIZE,
+            drop_last=False,
+            is_test=True,
             shuffle=False,
         )
-
-        # Save optimizer state
-        io_utils.save_optimizer(model.optimizer, output_dir)
-
-        # Save files to write as output
-        # TODO: refactor to save dataframe.
-        hist_cb = self._loss_history
-        data = [hist_cb.epoch, hist_cb.losses, hist_cb.val_losses]
-        pik_data_path = os.path.join(output_dir, "pik_data.dat")
-        with open(pik_data_path, "wb") as f:
-            pickle.dump(data, f)
-
-        model_json = model.to_json()
-        model_json_save_path = os.path.join(output_dir, "model.json")
-        with open(model_json_save_path, "w") as json_file:
-            json_file.write(model_json)
-
-        # if self.save_model:
-        #     model.save(filepath=os.path.join(output_dir, 'model.h5'),
-        #                overwrite=True)

@@ -25,6 +25,7 @@
 
 # Ignore data visualization scripts/images
 **/data_visualization
+**/OAI-iMorphics
 
 # temp files
 ._*

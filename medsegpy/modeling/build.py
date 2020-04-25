@@ -1,7 +1,6 @@
 import logging
 
 from fvcore.common.registry import Registry
-from keras import Model
 from keras.initializers import glorot_uniform
 from keras.layers import Conv2D, Input
 
@@ -18,6 +17,7 @@ from medsegpy.config import (
 )
 
 from .deeplab_2d.deeplab_model import DeeplabModel
+from .model import Model
 from .refinenet.refinenet_model import refinenet_model
 from .segnet_2d.segnet import Segnet_v2
 from .segnet_2d.segnet_bottleneck import SegNetBottleneck

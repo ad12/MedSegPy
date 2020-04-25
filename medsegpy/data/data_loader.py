@@ -130,6 +130,9 @@ class DataLoader(k_utils.Sequence, ABC):
         """Number of elements in the data loader."""
         return len(self._dataset_dicts)
 
+    def num_scans(self):
+        return len({x["scan_id"] for x in self._dataset_dicts})
+
     @abstractmethod
     def inference(self, model, **kwargs) -> Tuple[str, Any, Any, Any, float]:
         """Yields x_in, y_true, y_pred, scan_id, time_elapsed in order.
@@ -141,6 +144,7 @@ class DataLoader(k_utils.Sequence, ABC):
         yield None, None, None, None, None
 
 
+@DATA_LOADER_REGISTRY.register()
 class DefaultDataLoader(DataLoader):
     """The default data loader functionality in medsegy.
 
@@ -182,13 +186,13 @@ class DefaultDataLoader(DataLoader):
         self._load_masks = True
 
     def _load_input(self, image_file, sem_seg_file):
-        with h5py.File(image_file) as f:
+        with h5py.File(image_file, "r") as f:
             image = f["data"][:]
         if image.shape[-1] != 1:
             image = image[..., np.newaxis]
 
         if sem_seg_file:
-            with h5py.File(sem_seg_file) as f:
+            with h5py.File(sem_seg_file, "r") as f:
                 mask = f["data"][:]
 
             cat_idxs = self._category_idxs
@@ -232,7 +236,7 @@ class DefaultDataLoader(DataLoader):
         """
         batch_size = self._batch_size
         start = idx * batch_size
-        stop = min(idx * (batch_size + 1), self._num_elements())
+        stop = min((idx + 1) * batch_size, self._num_elements())
 
         inputs, outputs = self._load_batch(self._idxs[start:stop])
         inputs_preprocessed, outputs = self._preprocess(inputs, outputs)
@@ -258,11 +262,6 @@ class DefaultDataLoader(DataLoader):
 
             start = time.perf_counter()
             x, y, preds = model.inference_generator(self, **kwargs)
-
-            #  Concat along batch dim.
-            x = np.concatenate(x, axis=0)
-            y = np.concatenate(y, axis=0)
-            preds = np.concatenate(preds, axis=0)
 
             x, y, preds = self._restructure_data((x, y, preds))
             time_elapsed = time.perf_counter() - start

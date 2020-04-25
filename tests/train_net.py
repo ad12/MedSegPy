@@ -6,8 +6,9 @@ data loaders in MedSegPy are verified, delete.
 """
 from medsegpy import config
 from medsegpy.engine.defaults import default_argument_parser, default_setup
-from medsegpy.engine.trainer import DefaultTrainerDataLoader
+from medsegpy.engine.trainer import DefaultTrainer
 
+import utils
 
 def setup(args):
     """
@@ -24,8 +25,8 @@ def setup(args):
     return cfg
 
 
-def main(args, trainer_cls: type = DefaultTrainerDataLoader):
-    assert issubclass(trainer_cls, DefaultTrainerDataLoader)
+def main(args, trainer_cls: type = DefaultTrainer):
+    assert issubclass(trainer_cls, DefaultTrainer)
     cfg = setup(args)
     if args.eval_only:
         if not cfg.TEST_DATASET:

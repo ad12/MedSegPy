@@ -64,7 +64,7 @@ def load_oai_2d_from_dir(scan_root, dataset_name=None):
     FNAME_REGEX = "([\d]+)_V([\d]+)-Aug([\d]+)_([\d]+)"
 
     files = sorted(os.listdir(scan_root))
-    filepaths = [os.path.join(scan_root, f) for f in files]
+    filepaths = [os.path.join(scan_root, f) for f in files if f.endswith(".im")]
 
     dataset_dicts = []
     for fp in filepaths:
@@ -73,7 +73,7 @@ def load_oai_2d_from_dir(scan_root, dataset_name=None):
         time_point = int(time_point)
         dataset_dicts.append(
             {
-                "image_file": fp,
+                "file_name": fp,
                 "sem_seg_file": "{}.seg".format(os.path.splitext(fp)[0]),
                 "scan_id": "{:07d}_V{:02d}".format(pid, time_point),
                 "subject_id": pid,
@@ -129,33 +129,28 @@ def load_oai_3d_from_dir(scan_root, dataset_name=None):
     return dataset_dicts
 
 
-def register_oai():
-    for dataset_name, dir_path in _DATA_CATALOG.items():
-        if dataset_name.startswith("oai_2d"):
-            DatasetCatalog.register(
-                dataset_name,
-                lambda: load_oai_2d_from_dir(dir_path, dataset_name),
-            )
-        elif dataset_name.startswith("oai_3d"):
-            DatasetCatalog.register(
-                dataset_name,
-                lambda: load_oai_3d_from_dir(dir_path, dataset_name),
-            )
-        else:
-            raise ValueError(
-                "OAI dataset {} not supported".format(dataset_name)
-            )
+def register_oai(name, scan_root):
+    load_func = load_oai_3d_from_dir if name.startswith("oai_3d") else load_oai_2d_from_dir
+    DatasetCatalog.register(name, lambda: load_func(scan_root, name))
 
-        MetadataCatalog.get(dataset_name).set(
-            scan_root=dir_path,
-            voxel_spacing=(0.3125, 0.3125, 0.7),
-            test_set_metadata_pik=_TEST_SET_METADATA_PIK,
-            category_ids=[x["id"] for x in OAI_CATEGORIES],
-            category_abbreviations=[x["abbrev"] for x in OAI_CATEGORIES],
-            categories=[x["name"] for x in OAI_CATEGORIES],
-            category_colors=[x["color"] for x in OAI_CATEGORIES],
-            category_id_to_contiguous_id={
-                x["id"]: idx for idx, x in enumerate(OAI_CATEGORIES)
-            },
-            evaluator_type="SemSegEvaluator",
-        )
+    # 2. Optionally, add metadata about this dataset,
+    # since they might be useful in evaluation, visualization or logging
+
+    MetadataCatalog.get(name).set(
+        scan_root=scan_root,
+        voxel_spacing=(0.3125, 0.3125, 0.7),
+        test_set_metadata_pik=_TEST_SET_METADATA_PIK,
+        category_ids=[x["id"] for x in OAI_CATEGORIES],
+        category_abbreviations=[x["abbrev"] for x in OAI_CATEGORIES],
+        categories=[x["name"] for x in OAI_CATEGORIES],
+        category_colors=[x["color"] for x in OAI_CATEGORIES],
+        category_id_to_contiguous_id={
+            x["id"]: idx for idx, x in enumerate(OAI_CATEGORIES)
+        },
+        evaluator_type="SemSegEvaluator",
+    )
+
+
+def register_all_oai():
+    for dataset_name, scan_root in _DATA_CATALOG.items():
+        register_oai(dataset_name, scan_root)
