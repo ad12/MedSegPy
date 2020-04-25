@@ -32,14 +32,22 @@ class DefaultTrainer(object):
             to_file=os.path.join(cfg.OUTPUT_DIR, "model.png"),
             show_shapes=True,
         )
+        model.summary(print_fn=lambda x: logger.info(x))
+        model_json = model.to_json()
+        model_json_save_path = os.path.join(output_dir, "model.json")
+        with open(model_json_save_path, "w") as json_file:
+            json_file.write(model_json)
+
         if cfg.INIT_WEIGHTS:
             self._init_model(model)
+
         # Replicate model on multiple gpus.
         # Note this does not solve issue of having too large of a model
         num_gpus = dl_utils.num_gpus()
         if num_gpus > 1:
             logger.info("Running multi gpu model")
             model = dl_utils.ModelMGPU(model, gpus=num_gpus)
+
         self._train_loader, self._val_loader = self._build_data_loaders(cfg)
         self._model = model
 
@@ -114,7 +122,6 @@ class DefaultTrainer(object):
         output_dir = cfg.OUTPUT_DIR
 
         model = self._model
-        model.summary(print_fn=lambda x: logger.info(x))
 
         # TODO: Add more options for metrics.
         optimizer = solver.build_optimizer(cfg)
@@ -151,15 +158,6 @@ class DefaultTrainer(object):
         pik_data_path = os.path.join(output_dir, "pik_data.dat")
         with open(pik_data_path, "wb") as f:
             pickle.dump(data, f)
-
-        model_json = model.to_json()
-        model_json_save_path = os.path.join(output_dir, "model.json")
-        with open(model_json_save_path, "w") as json_file:
-            json_file.write(model_json)
-
-        # if self.save_model:
-        #     model.save(filepath=os.path.join(output_dir, 'model.h5'),
-        #                overwrite=True)
 
     @classmethod
     def test(cls, cfg: config.Config, model):
