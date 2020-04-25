@@ -1,32 +1,15 @@
-# -*- coding: utf-8 -*-
+"""DeeplabV3+ implementation.
 
-""" Deeplabv3+ model for Keras.
-This model is based on TF repo:
+This model is based on TF and Keras repos below:
 https://github.com/tensorflow/models/tree/master/research/deeplab
-On Pascal VOC, original model gets to 84.56% mIOU
-
-Now this model is only available for the TensorFlow backend,
-due to its reliance on `SeparableConvolution` layers, but Theano will add
-this layer soon.
-
-MobileNetv2 backbone is based on this repo:
-https://github.com/JonathanCMitchell/mobilenet_v2_keras
-
-# Reference
-- [Encoder-Decoder with Atrous Separable Convolution
-    for Semantic Image Segmentation](https://arxiv.org/pdf/1802.02611.pdf)
-- [Xception: Deep Learning with Depthwise Separable Convolutions]
-    (https://arxiv.org/abs/1610.02357)
-- [Inverted Residuals and Linear Bottlenecks: Mobile Networks for
-    Classification, Detection and Segmentation](https://arxiv.org/abs/1801.04381)
+https://github.com/bonlime/keras-deeplab-v3-plus
 """
+
 import logging
-import warnings
 
 import numpy as np
 from keras import backend as K
 from keras import layers
-from keras.applications import imagenet_utils
 from keras.engine.topology import get_source_inputs
 from keras.layers import (
     Activation,
@@ -41,29 +24,27 @@ from keras.layers import (
     ZeroPadding2D,
 )
 from keras.models import Model
-from keras.utils.data_utils import get_file
 
-from medsegpy.modeling import initializer_utils as init_utils
+from medsegpy.config import DeeplabV3Config
 
+from .. import model_utils as utils
 from ..layers import BilinearUpsampling
 from ..model import Model
+from .build import META_ARCH_REGISTRY, ModelBuilder
 
 logger = logging.getLogger(__name__)
 
-WEIGHTS_PATH_X = "https://github.com/bonlime/keras-deeplab-v3-plus/releases/download/1.1/deeplabv3_xception_tf_dim_ordering_tf_kernels.h5"
-WEIGHTS_PATH_MOBILE = "https://github.com/bonlime/keras-deeplab-v3-plus/releases/download/1.1/deeplabv3_mobilenetv2_tf_dim_ordering_tf_kernels.h5"
 
-
-class DeeplabModel:
-    def __init__(self, kernel_initializer="", seed=None):
-        warnings.warn(
-            "DeeplabModel is deprecated. Use `DeeplabV3Plus` instead.",
-            DeprecationWarning,
+@META_ARCH_REGISTRY.register()
+class DeeplabV3Plus(ModelBuilder):
+    def __init__(self, cfg: DeeplabV3Config):
+        super().__init__(cfg)
+        self._seed = cfg.SEED
+        self._kernel_initializer = utils.build_keras_config(
+            cfg.KERNEL_INITIALIZER, seed=cfg.SEED
         )
-        self.kernel_initializer = kernel_initializer
-        self.seed = seed
 
-    def SepConv_BN(
+    def sep_conv_bn(
         self,
         x,
         filters,
@@ -74,17 +55,21 @@ class DeeplabModel:
         depth_activation=False,
         epsilon=1e-3,
     ):
-        """ SepConv with BN between depthwise & pointwise. Optionally add activation after BN
-            Implements right "same" padding for even kernel sizes
-            Args:
-                x: input tensor
-                filters: num of filters in pointwise convolution
-                prefix: prefix before name
-                stride: stride at depthwise conv
-                kernel_size: kernel size for depthwise convolution
-                rate: atrous rate for depthwise convolution
-                depth_activation: flag to use activation between depthwise & poinwise convs
-                epsilon: epsilon to use in BN layer
+        """SepConv with BN between depthwise & pointwise.
+
+        Optionally add activation after BN.
+        Implements right "same" padding for even kernel sizes
+
+        Args:
+            x: input tensor
+            filters: num of filters in pointwise convolution
+            prefix: prefix before name
+            stride: stride at depthwise conv
+            kernel_size: kernel size for depthwise convolution
+            rate: atrous rate for depthwise convolution
+            depth_activation: flag to use activation between depthwise &
+                pointwise convs
+            epsilon: epsilon to use in BN layer
         """
         if stride == 1:
             depth_padding = "same"
@@ -104,9 +89,7 @@ class DeeplabModel:
             dilation_rate=(rate, rate),
             padding=depth_padding,
             use_bias=False,
-            kernel_initializer=init_utils.get_initializer(
-                self.kernel_initializer, self.seed
-            ),
+            kernel_initializer=self._kernel_initializer,
             name=prefix + "_depthwise",
         )(x)
         x = BatchNormalization(name=prefix + "_depthwise_BN", epsilon=epsilon)(
@@ -119,9 +102,7 @@ class DeeplabModel:
             (1, 1),
             padding="same",
             use_bias=False,
-            kernel_initializer=init_utils.get_initializer(
-                self.kernel_initializer, self.seed
-            ),
+            kernel_initializer=self._kernel_initializer,
             name=prefix + "_pointwise",
         )(x)
         x = BatchNormalization(name=prefix + "_pointwise_BN", epsilon=epsilon)(
@@ -151,9 +132,7 @@ class DeeplabModel:
                 padding="same",
                 use_bias=False,
                 dilation_rate=(rate, rate),
-                kernel_initializer=init_utils.get_initializer(
-                    self.kernel_initializer, self.seed
-                ),
+                kernel_initializer=self._kernel_initializer,
                 name=prefix,
             )(x)
         else:
@@ -169,9 +148,7 @@ class DeeplabModel:
                 padding="valid",
                 use_bias=False,
                 dilation_rate=(rate, rate),
-                kernel_initializer=init_utils.get_initializer(
-                    self.kernel_initializer, self.seed
-                ),
+                kernel_initializer=self._kernel_initializer,
                 name=prefix,
             )(x)
 
@@ -199,7 +176,7 @@ class DeeplabModel:
                 """
         residual = inputs
         for i in range(3):
-            residual = self.SepConv_BN(
+            residual = self.sep_conv_bn(
                 residual,
                 depth_list[i],
                 prefix + "_separable_conv{}".format(i + 1),
@@ -264,9 +241,7 @@ class DeeplabModel:
                 padding="same",
                 use_bias=False,
                 activation=None,
-                kernel_initializer=init_utils.get_initializer(
-                    self.kernel_initializer, self.seed
-                ),
+                kernel_initializer=self._kernel_initializer,
                 name=prefix + "expand",
             )(x)
             x = BatchNormalization(
@@ -283,9 +258,7 @@ class DeeplabModel:
             use_bias=False,
             padding="same",
             dilation_rate=(rate, rate),
-            kernel_initializer=init_utils.get_initializer(
-                self.kernel_initializer, self.seed
-            ),
+            kernel_initializer=self._kernel_initializer,
             name=prefix + "depthwise",
         )(x)
         x = BatchNormalization(
@@ -301,9 +274,7 @@ class DeeplabModel:
             padding="same",
             use_bias=False,
             activation=None,
-            kernel_initializer=init_utils.get_initializer(
-                self.kernel_initializer, self.seed
-            ),
+            kernel_initializer=self._kernel_initializer,
             name=prefix + "project",
         )(x)
         x = BatchNormalization(
@@ -318,9 +289,8 @@ class DeeplabModel:
 
         return x
 
-    def Deeplabv3(
+    def deeplabv3(
         self,
-        weights="pascal_voc",
         input_tensor=None,
         input_shape=(512, 512, 3),
         classes=21,
@@ -330,7 +300,7 @@ class DeeplabModel:
         dilation_divisor=1,
         dil_rate_input=None,
         dropout_rate=0.1,
-    ):
+    ) -> Model:
         """ Instantiates the Deeplabv3+ architecture
 
         Optionally loads weights pre-trained
@@ -368,15 +338,6 @@ class DeeplabModel:
             ValueError: in case of invalid argument for `weights` or `backbone`
 
         """
-        logger.info("Initializing deeplab model")
-
-        if not (weights in {"pascal_voc", None}):
-            raise ValueError(
-                "The `weights` argument should be either "
-                "`None` (random initialization) or `pascal_voc` "
-                "(pre-trained on PASCAL VOC)"
-            )
-
         if K.backend() != "tensorflow":
             raise RuntimeError(
                 "The Deeplabv3+ model is only available with "
@@ -423,9 +384,7 @@ class DeeplabModel:
                 name="entry_flow_conv1_1",
                 use_bias=False,
                 padding="same",
-                kernel_initializer=init_utils.get_initializer(
-                    self.kernel_initializer, self.seed
-                ),
+                kernel_initializer=self._kernel_initializer,
             )(img_input)
             x = BatchNormalization(name="entry_flow_conv1_1_BN")(x)
             x = Activation("relu")(x)
@@ -502,9 +461,7 @@ class DeeplabModel:
                 padding="same",
                 use_bias=False,
                 name="Conv",
-                kernel_initializer=init_utils.get_initializer(
-                    self.kernel_initializer, self.seed
-                ),
+                kernel_initializer=self._kernel_initializer,
             )(img_input)
             x = BatchNormalization(
                 epsilon=1e-3, momentum=0.999, name="Conv_BN"
@@ -699,9 +656,7 @@ class DeeplabModel:
             (1, 1),
             padding="same",
             use_bias=False,
-            kernel_initializer=init_utils.get_initializer(
-                self.kernel_initializer, self.seed
-            ),
+            kernel_initializer=self._kernel_initializer,
             name="image_pooling",
         )(b4)
         b4 = BatchNormalization(name="image_pooling_BN", epsilon=1e-5)(b4)
@@ -719,9 +674,7 @@ class DeeplabModel:
             (1, 1),
             padding="same",
             use_bias=False,
-            kernel_initializer=init_utils.get_initializer(
-                self.kernel_initializer, self.seed
-            ),
+            kernel_initializer=self._kernel_initializer,
             name="aspp0",
         )(x)
         b0 = BatchNormalization(name="aspp0_BN", epsilon=1e-5)(b0)
@@ -730,7 +683,7 @@ class DeeplabModel:
         # there are only 2 branches in mobilenetV2. not sure why
         if backbone == "xception":
             # rate = 6 (12)
-            b1 = self.SepConv_BN(
+            b1 = self.sep_conv_bn(
                 x,
                 256,
                 "aspp1",
@@ -739,7 +692,7 @@ class DeeplabModel:
                 epsilon=1e-5,
             )
             # rate = 12 (24)
-            b2 = self.SepConv_BN(
+            b2 = self.sep_conv_bn(
                 x,
                 256,
                 "aspp2",
@@ -748,7 +701,7 @@ class DeeplabModel:
                 epsilon=1e-5,
             )
             # rate = 18 (36)
-            b3 = self.SepConv_BN(
+            b3 = self.sep_conv_bn(
                 x,
                 256,
                 "aspp3",
@@ -767,14 +720,12 @@ class DeeplabModel:
             (1, 1),
             padding="same",
             use_bias=False,
-            kernel_initializer=init_utils.get_initializer(
-                self.kernel_initializer, self.seed
-            ),
+            kernel_initializer=self._kernel_initializer,
             name="concat_projection",
         )(x)
         x = BatchNormalization(name="concat_projection_BN", epsilon=1e-5)(x)
         x = Activation("relu")(x)
-        x = Dropout(dropout_rate, seed=self.seed)(x)
+        x = Dropout(dropout_rate, seed=self._seed)(x)
 
         # DeepLab v.3+ decoder
 
@@ -792,9 +743,7 @@ class DeeplabModel:
                 (1, 1),
                 padding="same",
                 use_bias=False,
-                kernel_initializer=init_utils.get_initializer(
-                    self.kernel_initializer, self.seed
-                ),
+                kernel_initializer=self._kernel_initializer,
                 name="feature_projection0",
             )(skip1)
             dec_skip1 = BatchNormalization(
@@ -802,10 +751,10 @@ class DeeplabModel:
             )(dec_skip1)
             dec_skip1 = Activation("relu")(dec_skip1)
             x = Concatenate()([x, dec_skip1])
-            x = self.SepConv_BN(
+            x = self.sep_conv_bn(
                 x, 256, "decoder_conv0", depth_activation=True, epsilon=1e-5
             )
-            x = self.SepConv_BN(
+            x = self.sep_conv_bn(
                 x, 256, "decoder_conv1", depth_activation=True, epsilon=1e-5
             )
 
@@ -819,9 +768,7 @@ class DeeplabModel:
             classes,
             (1, 1),
             padding="same",
-            kernel_initializer=init_utils.get_initializer(
-                self.kernel_initializer, self.seed
-            ),
+            kernel_initializer=self._kernel_initializer,
             name=last_layer_name,
         )(x)
         x = BilinearUpsampling(output_size=(input_shape[0], input_shape[1]))(x)
@@ -835,32 +782,19 @@ class DeeplabModel:
 
         model = Model(inputs, x, name="deeplabv3+")
 
-        # load weights
-
-        if weights == "pascal_voc":
-            if backbone == "xception":
-                weights_path = get_file(
-                    "deeplabv3_xception_tf_dim_ordering_tf_kernels.h5",
-                    WEIGHTS_PATH_X,
-                    cache_subdir="models",
-                )
-            else:
-                weights_path = get_file(
-                    "deeplabv3_mobilenetv2_tf_dim_ordering_tf_kernels.h5",
-                    WEIGHTS_PATH_MOBILE,
-                    cache_subdir="models",
-                )
-            model.load_weights(weights_path, by_name=True)
         return model
-
-    def preprocess_input(self, x):
-        """Preprocesses a numpy array encoding a batch of images.
-        # Arguments
-            x: a 4D numpy array consists of RGB values within [0, 255].
-        # Returns
-            Input array scaled to [-1.,1.]
-        """
-        return imagenet_utils.preprocess_input(x, mode="tf")
 
     def relu6(self, x):
         return K.relu(x, max_value=6)
+
+    def build_model(self, input_tensor=None) -> Model:
+        cfg: DeeplabV3Config = self._cfg
+        return self.deeplabv3(
+            input_tensor=input_tensor,
+            input_shape=cfg.IMG_SIZE,
+            classes=cfg.get_num_classes(),
+            OS=cfg.OS,
+            dil_rate_input=cfg.DIL_RATES,
+            dropout_rate=cfg.DROPOUT_RATE,
+            backbone="xception",
+        )

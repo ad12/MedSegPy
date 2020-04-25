@@ -8,13 +8,13 @@ from keras import callbacks as kc
 from keras.utils import plot_model
 
 from medsegpy import config, solver
-from medsegpy.data import im_gens
+from medsegpy.data import build_loader, im_gens
 from medsegpy.engine.callbacks import LossHistory, lr_callback
 from medsegpy.evaluation import build_evaluator, inference_on_dataset
 from medsegpy.losses import dice_loss, get_training_loss
 from medsegpy.modeling import get_model
+from medsegpy.modeling.meta_arch import build_model
 from medsegpy.utils import dl_utils, io_utils
-from medsegpy.data import build_loader
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ class DefaultTrainer(object):
         )
         model.summary(print_fn=lambda x: logger.info(x))
         model_json = model.to_json()
-        model_json_save_path = os.path.join(output_dir, "model.json")
+        model_json_save_path = os.path.join(cfg.OUTPUT_DIR, "model.json")
         with open(model_json_save_path, "w") as json_file:
             json_file.write(model_json)
 
@@ -178,7 +178,10 @@ class DefaultTrainer(object):
 
     @classmethod
     def build_model(cls, cfg):
-        return get_model(cfg)
+        try:
+            return build_model(cfg)
+        except KeyError:
+            return get_model(cfg)
 
     def _build_data_loaders(
         self, cfg
@@ -191,7 +194,7 @@ class DefaultTrainer(object):
             batch_size=cfg.TRAIN_BATCH_SIZE,
             drop_last=True,
             is_test=False,
-            shuffle=True
+            shuffle=True,
         )
         val_loader = build_loader(
             cfg,

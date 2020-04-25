@@ -1,23 +1,12 @@
 import warnings
-from typing import Sequence
 
-import tensorflow as tf
-from keras.layers import ZeroPadding2D, ZeroPadding3D, Conv2D, Conv3D
-from keras import backend as K
-from keras.models import Model as _Model
-from keras import utils as k_utils
-from keras.utils.data_utils import GeneratorEnqueuer
-from keras.utils.data_utils import OrderedEnqueuer
-from keras.utils.generic_utils import Progbar
 import numpy as np
+from keras import utils as k_utils
+from keras.models import Model as _Model
+from keras.utils.data_utils import GeneratorEnqueuer, OrderedEnqueuer
+from keras.utils.generic_utils import Progbar
 
-
-__all__ = [
-    "add_sem_seg_activation",
-    "get_primary_shape",
-    "zero_pad_like",
-    "Model",
-]
+__all__ = ["Model"]
 
 
 class Model(_Model):
@@ -33,11 +22,11 @@ class Model(_Model):
     def inference_generator(
         self,
         generator,
-        steps = None,
-        max_queue_size = 10,
-        workers = 1,
-        use_multiprocessing = False,
-        verbose = 0
+        steps=None,
+        max_queue_size=10,
+        workers=1,
+        use_multiprocessing=False,
+        verbose=0,
     ):
         """Generates predictions for the input samples from a data generator
         and returns inputs, ground truth, and predictions.
@@ -85,26 +74,30 @@ class Model(_Model):
         is_sequence = isinstance(generator, k_utils.Sequence)
         if not is_sequence and use_multiprocessing and workers > 1:
             warnings.warn(
-                UserWarning('Using a generator with `use_multiprocessing=True`'
-                            ' and multiple workers may duplicate your data.'
-                            ' Please consider using the`keras.utils.Sequence'
-                            ' class.'))
+                UserWarning(
+                    "Using a generator with `use_multiprocessing=True`"
+                    " and multiple workers may duplicate your data."
+                    " Please consider using the`keras.utils.Sequence"
+                    " class."
+                )
+            )
         if steps is None:
             if is_sequence:
                 steps = len(generator)
             else:
-                raise ValueError('`steps=None` is only valid for a generator'
-                                 ' based on the `keras.utils.Sequence` class.'
-                                 ' Please specify `steps` or use the'
-                                 ' `keras.utils.Sequence` class.')
+                raise ValueError(
+                    "`steps=None` is only valid for a generator"
+                    " based on the `keras.utils.Sequence` class."
+                    " Please specify `steps` or use the"
+                    " `keras.utils.Sequence` class."
+                )
         enqueuer = None
 
         try:
             if workers > 0:
                 if is_sequence:
                     enqueuer = OrderedEnqueuer(
-                        generator,
-                        use_multiprocessing=use_multiprocessing,
+                        generator, use_multiprocessing=use_multiprocessing
                     )
                 else:
                     enqueuer = GeneratorEnqueuer(
@@ -135,10 +128,11 @@ class Model(_Model):
                         x, y, x_raw = generator_output
                         assert isinstance(x_raw, np.ndarray)
                     else:
-                        raise ValueError('Output of generator should be '
-                                         'a tuple `(x, y, sample_weight)` '
-                                         'or `(x, y)`. Found: ' +
-                                         str(generator_output))
+                        raise ValueError(
+                            "Output of generator should be "
+                            "a tuple `(x, y, sample_weight)` "
+                            "or `(x, y)`. Found: " + str(generator_output)
+                        )
                 else:
                     # Assumes a generator that only
                     # yields inputs and targets (not sample weights).
@@ -179,130 +173,20 @@ class Model(_Model):
             if steps_done == 1:
                 return all_xs[0][0], all_ys[0][0], all_outs[0][0]
             else:
-                return np.concatenate(all_xs[0]), \
-                       np.concatenate(all_ys[0]), \
-                       np.concatenate(all_outs[0])
+                return (
+                    np.concatenate(all_xs[0]),
+                    np.concatenate(all_ys[0]),
+                    np.concatenate(all_outs[0]),
+                )
         if steps_done == 1:
-            return [xs[0] for xs in all_xs], \
-                   [ys[0] for ys in all_ys], \
-                   [out[0] for out in all_outs]
+            return (
+                [xs[0] for xs in all_xs],
+                [ys[0] for ys in all_ys],
+                [out[0] for out in all_outs],
+            )
         else:
-            return [np.concatenate(xs) for xs in all_xs], \
-                   [np.concatenate(ys) for ys in all_ys], \
-                   [np.concatenate(out) for out in all_outs]
-
-
-def get_primary_shape(x: tf.Tensor):
-    """Get sizes of the primary dimensions of x.
-
-    Primary dimensions of a tensor are all dimensions that do not correspond to
-    the batch dimension `B` or the channel dimension `C`.
-
-    Args:
-        x (tf.Tensor): Shape Bx(...)xC (channels_last) or BxCx(...) (channels_first).  # noqa
-
-    Returns:
-        list: primary dimensions.
-    """
-    x_shape = x.shape.as_list()
-    x_shape = x_shape[1:-1] \
-        if K.image_data_format() == "channels_last" else x_shape[2:]
-
-    return x_shape
-
-
-def zero_pad_like(x: tf.Tensor, y: tf.Tensor, x_shape=None, y_shape=None):
-    """Zero pads input (x) to size of target (y).
-
-    Padding is symmetric when difference in dimension size is multiple of 2.
-    Otherwise, the bottom padding is 1 larger than the top padding.
-    Assumes channels are last dimension.
-
-    Primary dimensions of a tensor are all dimensions that do not correspond to
-    the batch dimension or the channel dimension.
-
-    Args:
-        x (tf.Tensor): Input tensor.
-        y (tf.Tensor): Target tensor.
-        x_shape (Sequence[int]): Expected shape of `x`. Required when primary
-            `x` dimensions have sizes `None`.
-        y_shape (Sequence[int]): Like `x_shape`, but for `y`.
-
-    Returns:
-        tf.Tensor: Zero-padded tensor
-    """
-    if not x_shape:
-        x_shape = get_primary_shape(x)
-    if not y_shape:
-        y_shape = get_primary_shape(y)
-
-    assert not any(s is None for s in x_shape)
-    assert not any(s is None for s in y_shape)
-
-    if x_shape == y_shape:
-        return x
-    diff = [y_s - x_s for x_s, y_s in zip(x_shape, y_shape)]
-    assert all(d >= 0 for d in diff), (
-        "x must be smaller than y in all dimensions"
-    )
-
-    if len(diff) == 2:
-        padder = ZeroPadding2D
-    elif len(diff) == 3:
-        padder = ZeroPadding3D
-    else:
-        raise ValueError("Zero padding available for 2D or 3D images only")
-
-    padding = [d//2 if d % 2 == 0 else (d//2, d//2 + 1) for d in diff]
-    x = padder(padding)(x)
-    return x
-
-
-def add_sem_seg_activation(
-    x: tf.Tensor,
-    num_classes: int,
-    activation: str="sigmoid",
-    conv_type=None,
-    kernel_initializer=None,
-    seed = None,
-) -> tf.Tensor:
-    """Standardized output layer for semantic segmentation using 1x1 conv.
-
-    Args:
-        x (tf.Tensor): Input tensor.
-        num_classes (int): Number of classes
-        activation (str, optional): Activation type. Typically `'sigmoid'` or
-            `'softmax'`.
-        conv_type: Either `Conv2D` or `Conv3D`.
-        kernel_initializer: Kernel initializer accepted by
-            `Conv2D` or `Conv3D`.
-        seed (int, optional): Kernel intialization seed. Ignored if
-            `kernel_initializer` is a config dict.
-    """
-
-    # Initializing kernel weights to 1 and bias to 0.
-    # i.e. without training, the x would be a sigmoid activation on each
-    # pixel of the input
-    if not conv_type:
-        conv_type = Conv2D
-    else:
-        assert conv_type in [Conv2D, Conv3D]
-    if not kernel_initializer:
-        kernel_initializer = {
-            "class_name": "glorot_uniform",
-            "config": {"seed": seed},
-        }
-    elif isinstance(kernel_initializer, str):
-        kernel_initializer = {
-            "class_name": kernel_initializer,
-            "config": {"seed": seed},
-        }
-
-    x = conv_type(
-        num_classes,
-        1,
-        activation=activation,
-        kernel_initializer=kernel_initializer,
-        name="output_activation",
-    )(x)
-    return x
+            return (
+                [np.concatenate(xs) for xs in all_xs],
+                [np.concatenate(ys) for ys in all_ys],
+                [np.concatenate(out) for out in all_outs],
+            )

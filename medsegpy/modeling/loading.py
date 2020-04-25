@@ -24,10 +24,13 @@ def model_from_config(config, custom_objects=None):
       TypeError: if `config` is not a dictionary.
     """
     if isinstance(config, list):
-    raise TypeError('`model_from_config` expects a dictionary, not a list. '
-                    'Maybe you meant to use '
-                    '`Sequential.from_config(config)`?')
+        raise TypeError(
+            "`model_from_config` expects a dictionary, not a list. "
+            "Maybe you meant to use "
+            "`Sequential.from_config(config)`?"
+        )
     from .layers import deserialize  # noqa
+
     return deserialize(config, custom_objects=custom_objects)
 
 
@@ -44,9 +47,12 @@ def model_from_yaml(yaml_string, custom_objects=None):
       ImportError: if yaml module is not found.
     """
     if yaml is None:
-    raise ImportError('Requires yaml module installed (`pip install pyyaml`).')
+        raise ImportError(
+            "Requires yaml module installed (`pip install pyyaml`)."
+        )
     config = yaml.load(yaml_string)
     from .layers import deserialize  # noqa
+
     return deserialize(config, custom_objects=custom_objects)
 
 
@@ -62,4 +68,5 @@ def model_from_json(json_string, custom_objects=None):
     """
     config = json.loads(json_string)
     from .layers import deserialize  # noqa
+
     return deserialize(config, custom_objects=custom_objects)

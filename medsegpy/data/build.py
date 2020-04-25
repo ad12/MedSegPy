@@ -1,19 +1,19 @@
 """Build dataset dictionaries."""
 import itertools
 import logging
-from typing import List, Hashable, Dict, Sequence, Union
+from typing import Dict, Hashable, List, Sequence, Union
 
 from medsegpy.config import Config
 
 from .catalog import DatasetCatalog
-from .data_loader import build_data_loader, DefaultDataLoader
+from .data_loader import build_data_loader
 
 
 def filter_dataset(
     dataset_dicts: List[Dict],
     by: Hashable,
     accepted_elements,
-    include_missing: bool = False
+    include_missing: bool = False,
 ):
     """Filter by common dataset fields.
 
@@ -29,7 +29,8 @@ def filter_dataset(
     """
     num_before = len(dataset_dicts)
     dataset_dicts = [
-        x for x in dataset_dicts
+        x
+        for x in dataset_dicts
         if include_missing or (by in x and x[by] in accepted_elements)
     ]
     num_after = len(dataset_dicts)
@@ -37,14 +38,14 @@ def filter_dataset(
     logger = logging.getLogger(__name__)
     logger.info(
         "Removed {} elements with filter '{}'. {} elements left.".format(
-            num_before - num_after, by, num_after,
+            num_before - num_after, by, num_after
         )
     )
     return dataset_dicts
 
 
 def get_sem_seg_dataset_dicts(
-    dataset_names: Sequence[str], filter_empty: bool = True,
+    dataset_names: Sequence[str], filter_empty: bool = True
 ):
     """Load and prepare dataset dicts for semantic segmentation.
 
@@ -65,13 +66,11 @@ def get_sem_seg_dataset_dicts(
     logger = logging.getLogger(__name__)
     if filter_empty:
         num_before = len(dataset_dicts)
-        dataset_dicts = [
-            x for x in dataset_dicts if "sem_seg_file" in x
-        ]
+        dataset_dicts = [x for x in dataset_dicts if "sem_seg_file" in x]
         num_after = len(dataset_dicts)
         logger.info(
             "Removed {} elements without annotations. {} elements left.".format(
-                num_before - num_after, num_after,
+                num_before - num_after, num_after
             )
         )
 
@@ -95,9 +94,4 @@ def build_loader(
     kwargs["drop_last"] = drop_last
 
     dataset_dicts = get_sem_seg_dataset_dicts(dataset_names, filter_empty=True)
-    return build_data_loader(
-        cfg,
-        dataset_dicts,
-        **kwargs
-    )
-
+    return build_data_loader(cfg, dataset_dicts, **kwargs)

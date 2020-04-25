@@ -1,14 +1,15 @@
-"""This script is to verify that we are able to train using the data loader.
+"""Use this script for testing runs.
 
-TODO:
-Once this is verified and functionality similarity between generators and
-data loaders in MedSegPy are verified, delete.
+Usage::
+
+    python tests/train_net --config-file tests/configs/...
 """
 from medsegpy import config
 from medsegpy.engine.defaults import default_argument_parser, default_setup
 from medsegpy.engine.trainer import DefaultTrainer
 
-import utils
+import utils  # noqa
+
 
 def setup(args):
     """

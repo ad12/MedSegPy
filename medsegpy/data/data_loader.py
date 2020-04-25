@@ -6,24 +6,23 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from typing import Any, Dict, List, Sequence, Tuple
 
-from fvcore.common.registry import Registry
 import h5py
 import numpy as np
+from fvcore.common.registry import Registry
 from keras import utils as k_utils
 
 from medsegpy.config import Config
+from medsegpy.modeling import Model
 
 from .sem_seg_utils import add_background_labels, collect_mask
 from .transforms import apply_transform_gens, build_preprocessing
-from medsegpy.modeling import Model
-
 
 logger = logging.getLogger(__name__)
 
 
 DATA_LOADER_REGISTRY = Registry("DATA_LOADER")
 """
-Registry for data loaders, which can be used with `model.fit_generator()` and 
+Registry for data loaders, which can be used with `model.fit_generator()` and
 `model.predict_generator()`. The evaluator type should be registered with
 dataset_dicts, cfg, and other extra parameters.
 
@@ -33,14 +32,12 @@ The call should return a :class:`DataLoader` object.
 """
 
 LEGACY_DATA_LOADER_NAMES = {
-    ("oai_aug", "oai", "oai_2d", "oai_aug_2d"): "DefaultDataLoader",
+    ("oai_aug", "oai", "oai_2d", "oai_aug_2d"): "DefaultDataLoader"
 }
 
 
 def build_data_loader(
-    cfg: Config,
-    dataset_dicts: List[Dict],
-    **kwargs
+    cfg: Config, dataset_dicts: List[Dict], **kwargs
 ) -> "DataLoader":
     """Get data loader based on config `TAG` or name, value.
     """
@@ -251,7 +248,7 @@ class DefaultDataLoader(DataLoader):
 
     def inference(self, model: Model, **kwargs):
         scan_to_dict_mapping = defaultdict(list)
-        for idx, d in enumerate(self._dataset_dicts):
+        for d in self._dataset_dicts:
             scan_to_dict_mapping[d["scan_id"]].append(d)
 
         scan_ids = sorted(scan_to_dict_mapping.keys())

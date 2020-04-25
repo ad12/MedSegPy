@@ -1,9 +1,8 @@
 import unittest
 
 from medsegpy.config import UNetConfig
-from medsegpy.data import MetadataCatalog
 from medsegpy.data import build_loader
-from medsegpy.data.im_gens import get_generator, GeneratorState
+from medsegpy.data.im_gens import GeneratorState, get_generator
 
 
 class TestDefaultDataLoader(unittest.TestCase):
@@ -28,7 +27,7 @@ class TestDefaultDataLoader(unittest.TestCase):
             batch_size=cfg.TRAIN_BATCH_SIZE,
             drop_last=True,
             is_test=False,
-            shuffle=True
+            shuffle=True,
         )
         val_loader = build_loader(
             cfg,
@@ -50,6 +49,8 @@ class TestDefaultDataLoader(unittest.TestCase):
         # Number of steps per epoch should be the same
         assert len(train_loader) == train_steps
         assert len(val_loader) == val_steps
+
+        assert test_loader.num_scans() == gen.num_scans(GeneratorState.TESTING)
 
 
 if __name__ == "__main__":

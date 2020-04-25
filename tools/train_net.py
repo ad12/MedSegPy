@@ -15,9 +15,9 @@ an example of how to extend to different use cases.
 import os
 
 from medsegpy import config
-from medsegpy.modeling.model import Model, model_from_json
 from medsegpy.engine.defaults import default_argument_parser, default_setup
 from medsegpy.engine.trainer import DefaultTrainer
+from medsegpy.modeling import Model, model_from_json
 
 
 def setup(args):
@@ -50,9 +50,11 @@ def main(args, trainer_cls: type = DefaultTrainer):
             try:
                 with open(model_json_file) as f:
                     json_str = f.read()
-                model = model_from_json(json_str, custom_objects={"Model": Model})
-            except Exception:
-                print(e.message)
+                model = model_from_json(
+                    json_str, custom_objects={"Model": Model}
+                )
+            except Exception as e:
+                print(e)
         if model is None:
             model = trainer_cls.build_model(cfg)
 

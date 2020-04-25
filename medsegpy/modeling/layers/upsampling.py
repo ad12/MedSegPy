@@ -24,7 +24,6 @@ import logging
 
 from keras import backend as K
 from keras.engine import InputSpec, Layer
-
 from keras.utils import conv_utils
 
 

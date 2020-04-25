@@ -62,8 +62,8 @@ class DatasetEvaluator:
 
 
 def inference_on_dataset(
-    model, 
-    data_loader: Union[DataLoader, Generator], 
+    model,
+    data_loader: Union[DataLoader, Generator],
     evaluator: DatasetEvaluator,
 ):
     """
@@ -86,16 +86,16 @@ def inference_on_dataset(
     start_time = time.perf_counter()
     total_compute_time = 0
     if isinstance(data_loader, Generator):
-        iter_loader = lambda: data_loader.img_generator_test(model)
+        iter_loader = data_loader.img_generator_test
         total = data_loader.num_scans(GeneratorState.TESTING)
     else:
-        iter_loader = lambda: data_loader.inference(model)
+        iter_loader = data_loader.inference
         total = data_loader.num_scans()
 
     start_compute_time = time.perf_counter()
     logger = logging.getLogger(__name__)
     for idx, (x_test, y_test, recon, fname, time_elapsed) in enumerate(
-        iter_loader()
+        iter_loader(model)
     ):
         total_compute_time += time.perf_counter() - start_compute_time
         input = {"scan_id": fname, "y_true": y_test, "scan": x_test}

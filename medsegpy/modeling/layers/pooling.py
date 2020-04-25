@@ -12,10 +12,7 @@ from keras.layers.convolutional import UpSampling2D
 from keras.layers.core import Layer
 from keras.layers.pooling import MaxPooling2D
 
-__all__ = [
-    "MaxPoolingWithArgmax2D",
-    "MaxUnpooling2D",
-]
+__all__ = ["MaxPoolingWithArgmax2D", "MaxUnpooling2D"]
 
 
 class MaxPoolingWithArgmax2D(Layer):
@@ -60,11 +57,13 @@ class MaxPoolingWithArgmax2D(Layer):
 
     def get_config(self):
         base_cfg = super().get_config()
-        base_cfg.update({
-            "padding": self.padding,
-            "pool_size": self.pool_size,
-            "strides": self.strides,
-        })
+        base_cfg.update(
+            {
+                "padding": self.padding,
+                "pool_size": self.pool_size,
+                "strides": self.strides,
+            }
+        )
         return base_cfg
 
 
@@ -122,7 +121,5 @@ class MaxUnpooling2D(Layer):
 
     def get_config(self):
         base_cfg = super().get_config()
-        base_cfg.update({
-            "pool_size": self.pool_size,
-        })
+        base_cfg.update({"pool_size": self.pool_size})
         return base_cfg

@@ -2,15 +2,14 @@ import os
 
 from fvcore.common.file_io import PathManager
 
+from medsegpy.data import DatasetCatalog, MetadataCatalog
 from medsegpy.data.datasets.oai import (
-    OAI_CATEGORIES, 
-    _DATA_CATALOG, 
-    load_oai_2d_from_dir, 
+    _DATA_CATALOG,
+    OAI_CATEGORIES,
+    load_oai_2d_from_dir,
     load_oai_3d_from_dir,
 )
-from medsegpy.data import DatasetCatalog, MetadataCatalog
 from medsegpy.utils.io_utils import GeneralPathHandler
-
 
 LOCAL_FOLDER = os.path.dirname(os.path.abspath(__file__))
 
@@ -19,7 +18,7 @@ class MockDataPathHandler(GeneralPathHandler):
     PREFIX = "mock_data://"
 
     def _get_local_path(self, path, **kwargs):
-        name = path[len(self.PREFIX):]
+        name = path[len(self.PREFIX) :]
         return os.path.join(LOCAL_FOLDER, "mock_data", name)
 
 
@@ -27,7 +26,7 @@ class ModelImagesPathHandler(GeneralPathHandler):
     PREFIX = "model://"
 
     def _get_local_path(self, path, **kwargs):
-        name = path[len(self.PREFIX):]
+        name = path[len(self.PREFIX) :]
         return os.path.join(LOCAL_FOLDER, "model", name)
 
 
@@ -37,22 +36,18 @@ def register_handlers():
 
 
 def load_oai_2d_mini(scan_root, dataset_name=None):
-    """Takes 5 subjects (in sorted order) for full dataset""" 
+    """Takes 5 subjects (in sorted order) for full dataset"""
     dataset_dicts = load_oai_2d_from_dir(scan_root, dataset_name)
-    subject_ids = sorted(list({x["subject_id"] for x in dataset_dicts}))[:5]
-    dataset_dicts = [
-        x for x in dataset_dicts if x["subject_id"] in subject_ids
-    ]
+    subject_ids = sorted({x["subject_id"] for x in dataset_dicts})[:5]
+    dataset_dicts = [x for x in dataset_dicts if x["subject_id"] in subject_ids]
     return dataset_dicts
 
 
 def load_oai_3d_mini(scan_root, dataset_name=None):
-    """Takes 5 subjects (in sorted order) for full dataset""" 
+    """Takes 5 subjects (in sorted order) for full dataset"""
     dataset_dicts = load_oai_3d_from_dir(scan_root, dataset_name)
-    subject_ids = sorted(list({x["subject_id"] for x in dataset_dicts}))[:5]
-    dataset_dicts = [
-        x for x in dataset_dicts if x["subject_id"] in subject_ids
-    ]
+    subject_ids = sorted({x["subject_id"] for x in dataset_dicts})[:5]
+    dataset_dicts = [x for x in dataset_dicts if x["subject_id"] in subject_ids]
     return dataset_dicts
 
 

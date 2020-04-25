@@ -1,2 +1,3 @@
-from .pooling import MaxPoolingMask2D, MaxPoolingWithArgmax2D, MaxUnpooling2D
+from .pooling import MaxPoolingWithArgmax2D, MaxUnpooling2D
+from .serialization import deserialize
 from .upsampling import BilinearUpsampling

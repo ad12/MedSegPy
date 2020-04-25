@@ -130,7 +130,11 @@ def load_oai_3d_from_dir(scan_root, dataset_name=None):
 
 
 def register_oai(name, scan_root):
-    load_func = load_oai_3d_from_dir if name.startswith("oai_3d") else load_oai_2d_from_dir
+    load_func = (
+        load_oai_3d_from_dir
+        if name.startswith("oai_3d")
+        else load_oai_2d_from_dir
+    )
     DatasetCatalog.register(name, lambda: load_func(scan_root, name))
 
     # 2. Optionally, add metadata about this dataset,

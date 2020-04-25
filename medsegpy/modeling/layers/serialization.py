@@ -1,8 +1,8 @@
 """Overload Keras deserialization for default with custom layers and model names."""
- from keras.layers import deserialize as _deserialize
+from keras.layers import deserialize as _deserialize
 
- from .pooling import MaxPoolingWithArgmax2D, MaxUnpooling2D
- from .upsampling import BilinearUpsampling
+from .pooling import MaxPoolingWithArgmax2D, MaxUnpooling2D
+from .upsampling import BilinearUpsampling
 
 
 def deserialize(config, custom_objects=None):
@@ -26,7 +26,4 @@ def deserialize(config, custom_objects=None):
         "MaxUnpooling2D": MaxUnpooling2D,
     }
     all_custom_objects.update(custom_objects)
-    return deserialize(
-        config,
-        custom_objects=all_custom_objects,
-    )
+    return _deserialize(config, custom_objects=all_custom_objects)
