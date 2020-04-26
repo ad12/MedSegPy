@@ -127,7 +127,7 @@ class DefaultTrainer(object):
         callbacks = self.build_callbacks()
 
         train_loader, val_loader = self._train_loader, self._val_loader
-        use_multiprocessing = False
+        use_multiprocessing = num_workers > 1
 
         # Start training
         model.fit_generator(
