@@ -6,7 +6,7 @@ import os
 import warnings
 import yaml
 from itertools import groupby
-from typing import Any, Tuple
+from typing import Any, Dict, Tuple
 
 from fvcore.common.file_io import PathManager
 
@@ -43,6 +43,8 @@ RENAMED_KEYS = {
     "INIT_WEIGHT_PATH": "INIT_WEIGHTS",
     "TISSUES": "CATEGORIES",
 }
+
+BASE_KEY = "_BASE_"
 
 
 class Config(object):
@@ -281,6 +283,10 @@ class Config(object):
 
         vars_dict = self._load_dict_from_file(cfg_filename)
 
+        # Load information from base files first.
+        if BASE_KEY in vars_dict:
+            vars_dict = self.parse_base_config(cfg_filename)
+
         # TODO: Handle cp save tag as a protected key.
         model_name = (
             vars_dict["MODEL_NAME"]
@@ -415,6 +421,30 @@ class Config(object):
                 full_key, new_key, msg
             )
         )
+
+    @classmethod
+    def parse_base_config(cls, cfg_filename: str) -> Dict:
+        local_dir = os.path.dirname(PathManager.get_local_path(cfg_filename))
+        vars_dict = cls._load_dict_from_file(cfg_filename)
+        base_cfg_filename = vars_dict.pop(BASE_KEY, None)
+        if base_cfg_filename:
+            if base_cfg_filename.startswith("~"):
+                base_cfg_filename = os.path.expanduser(base_cfg_filename)
+            elif any(
+                map(base_cfg_filename.startswith, ["/", "https://", "http://"])
+            ):
+                raise ValueError("Remote configs not currently supported.")
+            else:
+                # the path to base cfg is relative to the config file itself.
+                base_cfg_filename = os.path.join(local_dir, base_cfg_filename)
+            base_dict = cls.parse_base_config(base_cfg_filename)
+            base_dict.update(vars_dict)
+            vars_dict = base_dict
+
+        assert BASE_KEY not in vars_dict, "{} should be popped off!".format(
+            BASE_KEY
+        )
+        return vars_dict
 
     @classmethod
     def _load_dict_from_file(cls, cfg_filename):
@@ -896,7 +926,7 @@ def get_model_name(cfg_filename: str):
     Returns:
         str: The model name.
     """
-    vars_dict = Config._load_dict_from_file(cfg_filename)
+    vars_dict = Config.parse_base_config(cfg_filename)
     return (
         vars_dict["MODEL_NAME"]
         if "MODEL_NAME" in vars_dict
