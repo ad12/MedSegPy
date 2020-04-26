@@ -30,23 +30,23 @@ class ModelImagesPathHandler(GeneralPathHandler):
         return os.path.join(LOCAL_FOLDER, "model", name)
 
 
-def register_handlers():
+def _register_handlers():
     PathManager.register_handler(MockDataPathHandler())
     PathManager.register_handler(ModelImagesPathHandler())
 
 
 def load_oai_2d_mini(scan_root, dataset_name=None):
-    """Takes 5 subjects (in sorted order) for full dataset"""
+    """Takes 2 subjects (in sorted order) for full dataset"""
     dataset_dicts = load_oai_2d_from_dir(scan_root, dataset_name)
-    subject_ids = sorted({x["subject_id"] for x in dataset_dicts})[:5]
+    subject_ids = sorted({x["subject_id"] for x in dataset_dicts})[:2]
     dataset_dicts = [x for x in dataset_dicts if x["subject_id"] in subject_ids]
     return dataset_dicts
 
 
 def load_oai_3d_mini(scan_root, dataset_name=None):
-    """Takes 5 subjects (in sorted order) for full dataset"""
+    """Takes 2 subjects (in sorted order) for full dataset"""
     dataset_dicts = load_oai_3d_from_dir(scan_root, dataset_name)
-    subject_ids = sorted({x["subject_id"] for x in dataset_dicts})[:5]
+    subject_ids = sorted({x["subject_id"] for x in dataset_dicts})[:2]
     dataset_dicts = [x for x in dataset_dicts if x["subject_id"] in subject_ids]
     return dataset_dicts
 
@@ -74,6 +74,8 @@ def register_oai_mini(name, scan_root):
         evaluator_type="SemSegEvaluator",
     )
 
+
+_register_handlers()
 
 for dataset_name, scan_root in _DATA_CATALOG.items():
     register_oai_mini(dataset_name, scan_root)

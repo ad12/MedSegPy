@@ -4,6 +4,9 @@ from fvcore.common.file_io import PathManager
 
 from medsegpy.config import Config, DeeplabV3Config
 
+# Import utils to register handlers
+from . import utils  # noqa
+
 
 class TestConfig(unittest.TestCase):
     def test_merge_from_list(self):

@@ -2,6 +2,7 @@ import logging
 import math
 import random
 import time
+import warnings
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from typing import Any, Dict, List, Sequence, Tuple
@@ -31,8 +32,12 @@ The registered object will be called with
 The call should return a :class:`DataLoader` object.
 """
 
-LEGACY_DATA_LOADER_NAMES = {
+_LEGACY_DATA_LOADER_MAP = {
     ("oai_aug", "oai", "oai_2d", "oai_aug_2d"): "DefaultDataLoader"
+}
+
+LEGACY_DATA_LOADER_NAMES = {
+    x: v for k, v in _LEGACY_DATA_LOADER_MAP.items() for x in k
 }
 
 
@@ -45,10 +50,15 @@ def build_data_loader(
     try:
         data_loader_cls = DATA_LOADER_REGISTRY.get(name)
     except KeyError:
-        for k, v in LEGACY_DATA_LOADER_NAMES.items():
-            if name in k:
-                name = v
-                break
+        prev_name = name
+        if name in LEGACY_DATA_LOADER_NAMES:
+            name = LEGACY_DATA_LOADER_NAMES[name]
+            if prev_name != name:
+                warnings.warn(
+                    "TAG {} is deprecated. Use {} instead".format(
+                        prev_name, name
+                    )
+                )
 
         data_loader_cls = DATA_LOADER_REGISTRY.get(name)
 

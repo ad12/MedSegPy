@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import warnings
 
 from fvcore.common.registry import Registry
 
@@ -20,6 +21,8 @@ _MODEL_MAP = {
     ("deeplabv3_2d", "deeplabv3_2_5d", "deeplabv3+"): "DeeplabV3Plus",
 }
 
+LEGACY_MODEL_NAMES = {x: v for k, v in _MODEL_MAP.items() for x in k}
+
 
 def build_model(cfg, input_tensor=None) -> Model:
     """
@@ -31,10 +34,15 @@ def build_model(cfg, input_tensor=None) -> Model:
         META_ARCH_REGISTRY.get(name)
     except KeyError:
         # Legacy code used different tags for building models.
-        for k, v in _MODEL_MAP.items():
-            if name in k:
-                name = v
-                break
+        prev_name = name
+        if name in LEGACY_MODEL_NAMES:
+            name = LEGACY_MODEL_NAMES[name]
+            if prev_name != name:
+                warnings.warn(
+                    "MODEL_NAME {} is deprecated. Use {} instead".format(
+                        prev_name, name
+                    )
+                )
 
     builder = META_ARCH_REGISTRY.get(name)(cfg)
     model = builder.build_model(input_tensor)

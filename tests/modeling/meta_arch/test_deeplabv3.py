@@ -4,10 +4,6 @@ from medsegpy.config import DeeplabV3_2_5DConfig, DeeplabV3Config
 from medsegpy.modeling import get_model
 from medsegpy.modeling.meta_arch import build
 
-from tests import utils
-
-utils.register_handlers()
-
 
 class TestDeeplabV3Plus(unittest.TestCase):
     """Test building 2D/2.5D UNet using the builder."""

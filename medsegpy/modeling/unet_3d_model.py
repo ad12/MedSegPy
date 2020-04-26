@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 from keras.initializers import glorot_uniform, he_normal
 from keras.layers import Activation
@@ -28,6 +29,10 @@ def unet_3d_model(
     in_plane_pool_size=(2, 2),
     seed=None,
 ):
+    warnings.warn(
+        "unet_3d_model is deprecated. Use UNet3D.build_model()",
+        DeprecationWarning,
+    )
     # input size is a tuple of the size of the image
     # assuming channel last
     # input_size = (dim1, dim2, dim3, ch)
