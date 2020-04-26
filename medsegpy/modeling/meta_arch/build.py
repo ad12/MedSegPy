@@ -1,5 +1,5 @@
-from abc import ABC, abstractmethod
 import warnings
+from abc import ABC, abstractmethod
 
 from fvcore.common.registry import Registry
 

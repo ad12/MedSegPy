@@ -228,7 +228,7 @@ class DefaultDataLoader(DataLoader):
 
         return np.stack(images, axis=0), np.stack(masks, axis=0)
 
-    def _preprocess(self, inputs, outputs):
+    def _preprocess(self, inputs: np.ndarray, outputs: np.ndarray):
         img, transforms = apply_transform_gens(self._transform_gen, inputs)
         outputs = transforms.apply_segmentation(outputs)
         return img, outputs

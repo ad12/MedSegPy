@@ -224,7 +224,9 @@ class MetadataCatalog:
 
         This method will be phased out in future versions.
         """
-        catalog = {m.get("scan_root", None): name
-                   for name, m in MetadataCatalog._NAME_TO_META.items()}
+        catalog = {
+            m.get("scan_root", None): name
+            for name, m in MetadataCatalog._NAME_TO_META.items()
+        }
         catalog.pop(None)
         return catalog[path]

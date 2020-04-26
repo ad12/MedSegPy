@@ -3,10 +3,10 @@ import configparser
 import copy
 import logging
 import os
+import warnings
 import yaml
 from itertools import groupby
 from typing import Any, Tuple
-import warnings
 
 from fvcore.common.file_io import PathManager
 
@@ -232,6 +232,7 @@ class Config(object):
         from medsegpy.data import MetadataCatalog  # noqa
         from medsegpy.data.data_loader import LEGACY_DATA_LOADER_NAMES  # noqa
         from medsegpy.modeling.meta_arch.build import LEGACY_MODEL_NAMES  # noqa
+
         prev_key, prev_val = full_key, value
 
         if full_key in ("TRAIN_PATH", "VALID_PATH", "TEST_PATH") and value:
@@ -242,19 +243,21 @@ class Config(object):
             }
             value = MetadataCatalog.convert_path_to_dataset(value)
             full_key = mapping[full_key]
-            logger.info("Converting {} -> {}: {} -> {}".format(
-                prev_key, full_key, prev_val, value
-            ))
+            logger.info(
+                "Converting {} -> {}: {} -> {}".format(
+                    prev_key, full_key, prev_val, value
+                )
+            )
         elif full_key == "TAG" and value in LEGACY_DATA_LOADER_NAMES:
             value = LEGACY_DATA_LOADER_NAMES[value]
-            logger.info("Converting {}: {} -> {}".format(
-                full_key, prev_val, value,
-            ))
+            logger.info(
+                "Converting {}: {} -> {}".format(full_key, prev_val, value)
+            )
         elif full_key == "MODEL_NAME" and value in LEGACY_MODEL_NAMES:
             value = LEGACY_MODEL_NAMES[value]
-            logger.info("Converting {}: {} -> {}".format(
-                full_key, prev_val, value
-            ))
+            logger.info(
+                "Converting {}: {} -> {}".format(full_key, prev_val, value)
+            )
         elif full_key == "LOSS" and isinstance(value, str):
             try:
                 value = get_training_loss_from_str(value)
@@ -275,6 +278,7 @@ class Config(object):
         """
         # Avoid circular dependencies.
         from medsegpy.modeling.meta_arch.build import LEGACY_MODEL_NAMES
+
         vars_dict = self._load_dict_from_file(cfg_filename)
 
         # TODO: Handle cp save tag as a protected key.
@@ -286,9 +290,11 @@ class Config(object):
         if model_name in LEGACY_MODEL_NAMES:
             model_name = LEGACY_MODEL_NAMES[model_name]
         if model_name != self.MODEL_NAME:
-            raise ValueError("Wrong config. Expected {}. Got {}".format(
-                self.MODEL_NAME, model_name,
-            ))
+            raise ValueError(
+                "Wrong config. Expected {}. Got {}".format(
+                    self.MODEL_NAME, model_name
+                )
+            )
 
         for full_key, value in vars_dict.items():
             full_key = str(full_key).upper()
