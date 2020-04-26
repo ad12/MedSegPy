@@ -8,7 +8,6 @@ import warnings
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import List, Sequence, Tuple, Union
-import warnings
 
 import h5py
 import numpy as np
@@ -69,7 +68,7 @@ class Generator(ABC):
     def __init__(self, cfg: Config):
         warnings.warn(
             "Generator is deprecated, use DataLoader instead",
-            DeprecationWarning
+            DeprecationWarning,
         )
 
         if cfg.TAG not in self.SUPPORTED_TAGS:

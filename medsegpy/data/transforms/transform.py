@@ -6,9 +6,9 @@ However, medical images typically have >2 dimensions.
 Some transforms implemented in this file are meant to overload transforms in the
 `fvcore.transforms` module.
 """
-from abc import ABC, abstractmethod
 import inspect
-from typing import Sequence, Tuple, Callable, TypeVar
+from abc import ABC, abstractmethod
+from typing import Callable, Sequence, Tuple, TypeVar
 
 import numpy as np
 
@@ -19,7 +19,7 @@ __all__ = [
     "MedTransform",
     "TransformList",
     "CropTransform",
-    "ZeroMeanNormalization"
+    "ZeroMeanNormalization",
 ]
 
 
@@ -42,6 +42,7 @@ class MedTransform(ABC):
     Note, each method may choose to modify the input data in-place for
     efficiency.
     """
+
     def _set_attributes(self, params: list = None):
         """
         Set attributes from the input list of parameters.
@@ -108,9 +109,7 @@ class MedTransform(ABC):
         """
         assert callable(func), (
             "You can only register a callable to a MedTransform. "
-            "Got {} instead.".format(
-                func
-            )
+            "Got {} instead.".format(func)
         )
         argspec = inspect.getfullargspec(func)
         assert len(argspec.args) == 2, (
@@ -222,12 +221,10 @@ class CropTransform(MedTransform):
         crop_size (:obj:`int(s)`): Crop size. In order w,h,d,...
     """
 
-    def __init__(
-        self, coords0: Sequence[int], crop_size: Sequence[int],
-    ):
+    def __init__(self, coords0: Sequence[int], crop_size: Sequence[int]):
         assert len(coords0) == len(crop_size)
         super().__init__()
-        window = [slice(c, c+s) for c, s in zip(coords0, crop_size)]
+        window = [slice(c, c + s) for c, s in zip(coords0, crop_size)]
         window.insert(0, Ellipsis)
         self._set_attributes({"window": window})
 
@@ -277,6 +274,7 @@ class Windowing(MedTransform):
     If multiple lower/upper bound pairs are provided, the output will be stacked
     along the last dimension.
     """
+
     def __init__(self, bounds: Sequence[Tuple[int, int]]):
         """
         Args:

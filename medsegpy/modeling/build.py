@@ -1,6 +1,6 @@
 import logging
+import warnings
 
-from fvcore.common.registry import Registry
 from keras.initializers import glorot_uniform
 from keras.layers import Conv2D, Input
 
@@ -172,6 +172,10 @@ def unet_2d(config):
 
      :raises ValueError: if config not of type UNetConfig
      """
+    warnings.warn(
+        "unet_2d is deprecated. Use `meta_arch.build_model(...)`.",
+        DeprecationWarning,
+    )
     input_shape = config.IMG_SIZE
     activation = config.LOSS[1]
     num_classes = config.get_num_classes()
@@ -209,6 +213,11 @@ def deeplabv3_2d(config):
 
     :raises ValueError: if config not of type DeeplabV3Config
     """
+    warnings.warn(
+        "deeplabv3_2d is deprecated. Use `meta_arch.build_model(...)`.",
+        DeprecationWarning,
+    )
+
     if type(config) is not DeeplabV3Config:
         raise ValueError("config must be an instance of DeeplabV3Config")
 
@@ -293,6 +302,10 @@ def unet_2_5d(config):
 
     :raises ValueError: if config not of type UNetMultiContrastConfig
     """
+    warnings.warn(
+        "unet_2_5d is deprecated. Use `meta_arch.build_model(...)`.",
+        DeprecationWarning,
+    )
     if type(config) is not UNet2_5DConfig:
         raise ValueError("config must be instance of UNet2_5DConfig")
 
@@ -330,6 +343,10 @@ def deeplabv3_2_5d(config):
 
     :raises ValueError: if config not of type UNetMultiContrastConfig
     """
+    warnings.warn(
+        "deeplabv3_2_5d is deprecated. Use `meta_arch.build_model(...)`.",
+        DeprecationWarning,
+    )
     if type(config) is not DeeplabV3_2_5DConfig:
         raise ValueError("config must be instance of DeeplabV3_2_5DConfig")
     logger.info(
@@ -365,16 +382,6 @@ def deeplabv3_2_5d(config):
     model = Model(inputs=model.input, outputs=x)
 
     return model
-
-
-def __softmax_activation_layer(output, num_classes):
-    """
-    Returns softmax activation layer
-    :param output:
-    :param num_classes:
-    :return:
-    """
-    return
 
 
 def __add_activation_layer(

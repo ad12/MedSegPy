@@ -1,0 +1,3 @@
+_BASE_: "child1.yaml"
+N_EPOCHS: 100
+DROPOUT_RATE: 0.3

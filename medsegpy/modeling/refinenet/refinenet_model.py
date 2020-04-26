@@ -1,9 +1,8 @@
 from keras.models import Model
 from keras.utils import plot_model
+from resnet import ResNet50
 
 from medsegpy.modeling.refinenet.refine_module import refine_module
-
-from resnet import ResNet50
 
 RESNET_INFO = {
     "resnet50": {

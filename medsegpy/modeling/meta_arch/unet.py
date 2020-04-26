@@ -1,16 +1,25 @@
-from typing import Union, Sequence, Dict
+from typing import Dict, Sequence, Union
 
-import numpy as np
 import tensorflow as tf
 from keras import Input
 from keras.engine import get_source_inputs
-from keras.layers import Concatenate, Conv2DTranspose, MaxPooling2D, Conv2D, \
-    Activation, Conv3D, Conv3DTranspose, MaxPooling3D, BatchNormalization as BN, \
-    Dropout
+from keras.layers import BatchNormalization as BN
+from keras.layers import (
+    Concatenate,
+    Conv2D,
+    Conv2DTranspose,
+    Conv3D,
+    Conv3DTranspose,
+    Dropout,
+    MaxPooling2D,
+    MaxPooling3D,
+)
 
-from medsegpy.config import UNetConfig, UNet3DConfig
-from ..model import add_sem_seg_activation, zero_pad_like, Model
-from .build import META_ARCH_REGISTRY
+from medsegpy.config import UNet3DConfig, UNetConfig
+from medsegpy.modeling import add_sem_seg_activation, zero_pad_like
+
+from ..model import Model
+from .build import META_ARCH_REGISTRY, ModelBuilder
 
 
 def build_encoder_block(
@@ -114,9 +123,9 @@ def build_decoder_block(
 
 
 @META_ARCH_REGISTRY.register()
-class UNet2D(object):
+class UNet2D(ModelBuilder):
     def __init__(self, cfg: UNetConfig):
-        self._cfg = cfg
+        super().__init__(cfg)
         self._pooler_type = MaxPooling2D
         self._conv_type = Conv2D
 
@@ -132,7 +141,7 @@ class UNet2D(object):
 
         kernel_initializer = {
             "class_name": cfg.KERNEL_INITIALIZER,
-            "config": {"seed": seed}
+            "config": {"seed": seed},
         }
         output_mode = cfg.LOSS[1]
         assert output_mode in ["sigmoid", "softmax"]
@@ -224,7 +233,6 @@ class UNet2D(object):
 class UNet3D(UNet2D):
     def __init__(self, cfg: UNet3DConfig):
         super().__init__(cfg)
-        self._cfg = cfg
         self._pooler_type = MaxPooling3D
         self._conv_type = Conv3D
 

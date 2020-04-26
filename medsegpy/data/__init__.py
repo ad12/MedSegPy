@@ -1,6 +1,6 @@
 from .catalog import DatasetCatalog, MetadataCatalog
 from .build import build_loader
-from .data_loader import DataLoader
+from .data_loader import DataLoader, DefaultDataLoader, DATA_LOADER_REGISTRY
 
 # ensure the builtin datasets are registered
 from .im_gens import (

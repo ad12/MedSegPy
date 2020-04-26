@@ -1,4 +1,4 @@
-MODEL_NAME: "DeeplabV3Plus"
+MODEL_NAME: "UNet2D"
 DIL_RATES: (2, 4, 8)
 DROPOUT_RATE: 0.1
 INITIAL_LEARNING_RATE: 0.001
@@ -16,7 +16,7 @@ KERNEL_INITIALIZER: "he_normal"
 MIN_LEARNING_RATE: 1e-08
 NUM_GRAD_STEPS: 4
 N_EPOCHS: 1
-OUTPUT_DIR: "tests/mock_data/results/OAI-iMorphics/deeplabv3_2d"
+OUTPUT_DIR: "tests/mock_data/results/OAI-iMorphics/unet_2d"
 TAG: "DefaultDataLoader"
 TEST_BATCH_SIZE: 80
 TEST_DATASET: "mini_oai_2d_test"

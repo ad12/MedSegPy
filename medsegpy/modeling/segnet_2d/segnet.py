@@ -6,9 +6,9 @@ from keras.layers import Input
 from keras.layers.convolutional import Convolution2D
 from keras.layers.core import Activation
 from keras.layers.normalization import BatchNormalization
-from keras.models import Model
 
-from .Mylayers import MaxPoolingWithArgmax2D, MaxUnpooling2D
+from ..layers import MaxPoolingWithArgmax2D, MaxUnpooling2D
+from ..model import Model
 
 logger = logging.getLogger(__name__)
 

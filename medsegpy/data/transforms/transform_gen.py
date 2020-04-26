@@ -1,34 +1,25 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 # File: transformer.py
-from typing import Sequence, Tuple, Union
-
 import inspect
-import numpy as np
 import pprint
 from abc import ABCMeta, abstractmethod
+from typing import Sequence, Tuple, Union
 
+import numpy as np
 
-from .transform import MedTransform, TransformList, CropTransform
+from .transform import CropTransform, MedTransform, TransformList
 
-__all__ = [
-    "RandomCrop",
-    "TransformGen",
-    "apply_transform_gens",
-]
+__all__ = ["RandomCrop", "TransformGen", "apply_transform_gens"]
 
 
 def check_dtype(img: np.ndarray):
-    assert isinstance(img, np.ndarray), (
-        "[TransformGen] Needs an numpy array, but got a {}!".format(
-            type(img)
-        )
-    )
+    assert isinstance(
+        img, np.ndarray
+    ), "[TransformGen] Needs an numpy array, but got a {}!".format(type(img))
     assert not isinstance(img.dtype, np.integer) or img.dtype == np.uint8, (
         "[TransformGen] Got image of type {}, "
-        "use uint8 or floating points instead!".format(
-            img.dtype
-        )
+        "use uint8 or floating points instead!".format(img.dtype)
     )
     assert img.ndim > 2, img.ndim
 
@@ -48,7 +39,7 @@ class TransformGen(metaclass=ABCMeta):
     A list of `TransformGen` can be applied with :func:`apply_transform_gens`.
     """
 
-    def _init(self, params = None):
+    def _init(self, params=None):
         if params:
             for k, v in params.items():
                 if k != "self" and not k.startswith("_"):
@@ -58,7 +49,7 @@ class TransformGen(metaclass=ABCMeta):
     def get_transform(self, img):
         pass
 
-    def _rand_range(self, low = 1.0, high = None, size = None):
+    def _rand_range(self, low=1.0, high=None, size=None):
         """
         Uniform float random number between low and high.
         """
@@ -79,12 +70,13 @@ class TransformGen(metaclass=ABCMeta):
             argstr = []
             for name, param in sig.parameters.items():
                 assert (
-                    param.kind != param.VAR_POSITIONAL and param.kind != param.VAR_KEYWORD
+                    param.kind != param.VAR_POSITIONAL
+                    and param.kind != param.VAR_KEYWORD
                 ), "The default __repr__ doesn't support *args or **kwargs"
                 assert hasattr(self, name), (
                     "Attribute {} not found! "
-                    "Default __repr__ only works if attributes match the constructor.".format(
-                        name)
+                    "Default __repr__ only works if attributes match "
+                    "the constructor.".format(name)
                 )
                 attr = getattr(self, name)
                 default = param.default
@@ -122,17 +114,17 @@ class RandomCrop(TransformGen):
         cdim = len(self.crop_size)
         image_size = img.shape[-cdim:][::-1]
         crop_size = self.get_crop_size(image_size)
-        assert all([
+        assert all(
             dim >= crop_dim for dim, crop_dim in zip(image_size, crop_size)
-        ]), (
-            "Shape computation in {} has bugs.".format(self)
-        )
+        ), "Shape computation in {} has bugs.".format(self)
 
         # Format: x,y,z,... and w,h,d,...
         image_size = image_size[::-1]
         crop_size = crop_size[::-1]
-        coords0 = [np.random.randint(img_dim - crop_dim + 1)
-                   for img_dim, crop_dim in zip(image_size, crop_size)]
+        coords0 = [
+            np.random.randint(img_dim - crop_dim + 1)
+            for img_dim, crop_dim in zip(image_size, crop_size)
+        ]
         return CropTransform(coords0, crop_size)
 
     def get_crop_size(self, image_size):
@@ -145,18 +137,18 @@ class RandomCrop(TransformGen):
         """
         if self.crop_type == "relative":
             crop_size = self.crop_size
-            return tuple([
+            return tuple(
                 int(dim * crop_dim + 0.5)
                 for dim, crop_dim in zip(image_size, crop_size)
-            ])
+            )
         elif self.crop_type == "relative_range":
             crop_size = np.asarray(self.crop_size, dtype=np.float32)
             cdim = len(len(crop_size))
             crop_size = crop_size + np.random.rand(cdim) * (1 - crop_size)
-            return tuple([
+            return tuple(
                 int(dim * crop_dim + 0.5)
                 for dim, crop_dim in zip(image_size, crop_size)
-            ])
+            )
         elif self.crop_type == "absolute":
             return self.crop_size
         else:
@@ -164,8 +156,7 @@ class RandomCrop(TransformGen):
 
 
 def apply_transform_gens(
-    transform_gens: Sequence[Union[TransformGen, MedTransform]],
-    img: np.ndarray,
+    transform_gens: Sequence[Union[TransformGen, MedTransform]], img: np.ndarray
 ) -> Tuple[np.ndarray, TransformList]:
     """
     Apply a list of :class:`TransformGen` on the input image, and
@@ -192,10 +183,10 @@ def apply_transform_gens(
     tfms = []
     for g in transform_gens:
         tfm = g.get_transform(img) if isinstance(g, TransformGen) else g
-        assert isinstance(
-            tfm, MedTransform
-        ), "TransformGen {} must return an instance of Transform! Got {} instead".format(
-            g, tfm)
+        assert isinstance(tfm, MedTransform), (
+            "TransformGen {} must return an instance of Transform! "
+            "Got {} instead".format(g, tfm)
+        )
         img = tfm.apply_image(img)
         tfms.append(tfm)
     return img, TransformList(tfms)

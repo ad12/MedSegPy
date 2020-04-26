@@ -2,28 +2,28 @@ import logging
 import math
 import random
 import time
+import warnings
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from typing import Any, Dict, List, Sequence, Tuple
 
-from fvcore.common.registry import Registry
 import h5py
 import numpy as np
+from fvcore.common.registry import Registry
 from keras import utils as k_utils
 
 from medsegpy.config import Config
+from medsegpy.modeling import Model
 
 from .sem_seg_utils import add_background_labels, collect_mask
 from .transforms import apply_transform_gens, build_preprocessing
-from medsegpy.modeling import Model
-
 
 logger = logging.getLogger(__name__)
 
 
 DATA_LOADER_REGISTRY = Registry("DATA_LOADER")
 """
-Registry for data loaders, which can be used with `model.fit_generator()` and 
+Registry for data loaders, which can be used with `model.fit_generator()` and
 `model.predict_generator()`. The evaluator type should be registered with
 dataset_dicts, cfg, and other extra parameters.
 
@@ -32,15 +32,17 @@ The registered object will be called with
 The call should return a :class:`DataLoader` object.
 """
 
+_LEGACY_DATA_LOADER_MAP = {
+    ("oai_aug", "oai", "oai_2d", "oai_aug_2d"): "DefaultDataLoader"
+}
+
 LEGACY_DATA_LOADER_NAMES = {
-    ("oai_aug", "oai", "oai_2d", "oai_aug_2d"): "DefaultDataLoader",
+    x: v for k, v in _LEGACY_DATA_LOADER_MAP.items() for x in k
 }
 
 
 def build_data_loader(
-    cfg: Config,
-    dataset_dicts: List[Dict],
-    **kwargs
+    cfg: Config, dataset_dicts: List[Dict], **kwargs
 ) -> "DataLoader":
     """Get data loader based on config `TAG` or name, value.
     """
@@ -48,10 +50,15 @@ def build_data_loader(
     try:
         data_loader_cls = DATA_LOADER_REGISTRY.get(name)
     except KeyError:
-        for k, v in LEGACY_DATA_LOADER_NAMES.items():
-            if name in k:
-                name = v
-                break
+        prev_name = name
+        if name in LEGACY_DATA_LOADER_NAMES:
+            name = LEGACY_DATA_LOADER_NAMES[name]
+            if prev_name != name:
+                warnings.warn(
+                    "TAG {} is deprecated. Use {} instead".format(
+                        prev_name, name
+                    )
+                )
 
         data_loader_cls = DATA_LOADER_REGISTRY.get(name)
 
@@ -221,7 +228,7 @@ class DefaultDataLoader(DataLoader):
 
         return np.stack(images, axis=0), np.stack(masks, axis=0)
 
-    def _preprocess(self, inputs, outputs):
+    def _preprocess(self, inputs: np.ndarray, outputs: np.ndarray):
         img, transforms = apply_transform_gens(self._transform_gen, inputs)
         outputs = transforms.apply_segmentation(outputs)
         return img, outputs
@@ -251,7 +258,7 @@ class DefaultDataLoader(DataLoader):
 
     def inference(self, model: Model, **kwargs):
         scan_to_dict_mapping = defaultdict(list)
-        for idx, d in enumerate(self._dataset_dicts):
+        for d in self._dataset_dicts:
             scan_to_dict_mapping[d["scan_id"]].append(d)
 
         scan_ids = sorted(scan_to_dict_mapping.keys())

@@ -3,9 +3,10 @@ import configparser
 import copy
 import logging
 import os
+import warnings
 import yaml
 from itertools import groupby
-from typing import Any, Tuple
+from typing import Any, Dict, Tuple
 
 from fvcore.common.file_io import PathManager
 
@@ -42,6 +43,8 @@ RENAMED_KEYS = {
     "INIT_WEIGHT_PATH": "INIT_WEIGHTS",
     "TISSUES": "CATEGORIES",
 }
+
+BASE_KEY = "_BASE_"
 
 
 class Config(object):
@@ -126,9 +129,8 @@ class Config(object):
     # Training Model Paths
     OUTPUT_DIR = ""
 
-    # Dataset tag - What dataset are we training on? 'dess' or 'oai'
-    # choose from oai_aug, oai_aug_3d
-    TAG = "oai_aug"
+    # DataLoader tag.
+    TAG = "DefaultDataLoader"
 
     # Weights kernel initializer.
     KERNEL_INITIALIZER = "he_normal"
@@ -228,7 +230,37 @@ class Config(object):
             full_key (str): Upper case attribute representation.
             value (Any): Corresponding value.
         """
-        if full_key == "LOSS" and isinstance(value, str):
+        # Avoid circular dependencies.
+        from medsegpy.data import MetadataCatalog  # noqa
+        from medsegpy.data.data_loader import LEGACY_DATA_LOADER_NAMES  # noqa
+        from medsegpy.modeling.meta_arch.build import LEGACY_MODEL_NAMES  # noqa
+
+        prev_key, prev_val = full_key, value
+
+        if full_key in ("TRAIN_PATH", "VALID_PATH", "TEST_PATH") and value:
+            mapping = {
+                "TRAIN_PATH": "TRAIN_DATASET",
+                "VALID_PATH": "VAL_DATASET",
+                "TEST_PATH": "TEST_DATASET",
+            }
+            value = MetadataCatalog.convert_path_to_dataset(value)
+            full_key = mapping[full_key]
+            logger.info(
+                "Converting {} -> {}: {} -> {}".format(
+                    prev_key, full_key, prev_val, value
+                )
+            )
+        elif full_key == "TAG" and value in LEGACY_DATA_LOADER_NAMES:
+            value = LEGACY_DATA_LOADER_NAMES[value]
+            logger.info(
+                "Converting {}: {} -> {}".format(full_key, prev_val, value)
+            )
+        elif full_key == "MODEL_NAME" and value in LEGACY_MODEL_NAMES:
+            value = LEGACY_MODEL_NAMES[value]
+            logger.info(
+                "Converting {}: {} -> {}".format(full_key, prev_val, value)
+            )
+        elif full_key == "LOSS" and isinstance(value, str):
             try:
                 value = get_training_loss_from_str(value)
             except ValueError:
@@ -246,7 +278,14 @@ class Config(object):
         Args:
             cfg_filename: File path to yaml or ini file.
         """
+        # Avoid circular dependencies.
+        from medsegpy.modeling.meta_arch.build import LEGACY_MODEL_NAMES
+
         vars_dict = self._load_dict_from_file(cfg_filename)
+
+        # Load information from base files first.
+        if BASE_KEY in vars_dict:
+            vars_dict = self.parse_base_config(cfg_filename)
 
         # TODO: Handle cp save tag as a protected key.
         model_name = (
@@ -254,17 +293,24 @@ class Config(object):
             if "MODEL_NAME" in vars_dict
             else vars_dict["CP_SAVE_TAG"]
         )
+        if model_name in LEGACY_MODEL_NAMES:
+            model_name = LEGACY_MODEL_NAMES[model_name]
         if model_name != self.MODEL_NAME:
-            raise ValueError("Wrong config. Expected {}".format(model_name))
+            raise ValueError(
+                "Wrong config. Expected {}. Got {}".format(
+                    self.MODEL_NAME, model_name
+                )
+            )
 
         for full_key, value in vars_dict.items():
             full_key = str(full_key).upper()
-            if full_key in ("TRAIN_PATH", "VALID_PATH", "TEST_PATH") and value:
-                raise ValueError(
-                    "{} not longer supported - update to _DATASET".format(
-                        full_key
-                    )
+
+            if full_key in RENAMED_KEYS:
+                new_name = RENAMED_KEYS[full_key]
+                logger.warning(
+                    "Key {} has been renamed to {}".format(full_key, new_name)
                 )
+                full_key = new_name
 
             full_key, value = self._parse_special_attributes(full_key, value)
 
@@ -273,12 +319,6 @@ class Config(object):
                     "Key {} is deprecated, not loading".format(full_key)
                 )
                 continue
-            if full_key in RENAMED_KEYS:
-                new_name = RENAMED_KEYS[full_key]
-                logger.warning(
-                    "Key {} has been renamed to {}".format(full_key, new_name)
-                )
-                full_key = new_name
 
             if not hasattr(self, full_key):
                 raise ValueError("Key {} does not exist.".format(full_key))
@@ -381,6 +421,30 @@ class Config(object):
                 full_key, new_key, msg
             )
         )
+
+    @classmethod
+    def parse_base_config(cls, cfg_filename: str) -> Dict:
+        local_dir = os.path.dirname(PathManager.get_local_path(cfg_filename))
+        vars_dict = cls._load_dict_from_file(cfg_filename)
+        base_cfg_filename = vars_dict.pop(BASE_KEY, None)
+        if base_cfg_filename:
+            if base_cfg_filename.startswith("~"):
+                base_cfg_filename = os.path.expanduser(base_cfg_filename)
+            elif any(
+                map(base_cfg_filename.startswith, ["/", "https://", "http://"])
+            ):
+                raise ValueError("Remote configs not currently supported.")
+            else:
+                # the path to base cfg is relative to the config file itself.
+                base_cfg_filename = os.path.join(local_dir, base_cfg_filename)
+            base_dict = cls.parse_base_config(base_cfg_filename)
+            base_dict.update(vars_dict)
+            vars_dict = base_dict
+
+        assert BASE_KEY not in vars_dict, "{} should be popped off!".format(
+            BASE_KEY
+        )
+        return vars_dict
 
     @classmethod
     def _load_dict_from_file(cls, cfg_filename):
@@ -551,7 +615,7 @@ class DeeplabV3Config(Config):
     (https://arxiv.org/abs/1802.02611).
     """
 
-    MODEL_NAME = "deeplabv3_2d"
+    MODEL_NAME = "DeeplabV3Plus"
 
     OS = 16
     DIL_RATES = (2, 4, 6)
@@ -598,7 +662,7 @@ class UNetConfig(Config):
     Configuration for 2D U-Net architecture (https://arxiv.org/abs/1505.04597)
     """
 
-    MODEL_NAME = "unet_2d"
+    MODEL_NAME = "UNet2D"
 
     INIT_UNET_2D = False
 
@@ -661,7 +725,7 @@ class UNet2_5DConfig(UNetConfig):
     Configuration for 3D U-Net architecture
     """
 
-    MODEL_NAME = "unet_2_5d"
+    MODEL_NAME = "UNet2D"
 
     IMG_SIZE = (288, 288, 7)
 
@@ -672,12 +736,19 @@ class UNet2_5DConfig(UNetConfig):
     DROP_RATE = 1.0
     DROP_FACTOR = 0.8
 
+    def __init__(self, state="training", create_dirs=True):
+        warnings.warn(
+            "UNet2_5DConfig is deprecated. Use UNet2DConfig instead.",
+            DeprecationWarning,
+        )
+        super().__init__(state, create_dirs)
+
     def num_neighboring_slices(self):
         return self.IMG_SIZE[2]
 
 
 class UNet3DConfig(UNetConfig):
-    MODEL_NAME = "unet_3d"
+    MODEL_NAME = "UNet3D"
 
     IMG_SIZE = (288, 288, 4, 1)
 
@@ -708,6 +779,13 @@ class DeeplabV3_2_5DConfig(DeeplabV3Config):
     """
 
     IMG_SIZE = (288, 288, 3)
+
+    def __init__(self, state="training", create_dirs=True):
+        warnings.warn(
+            "UNet2_5DConfig is deprecated. Use UNet2DConfig instead.",
+            DeprecationWarning,
+        )
+        super().__init__(state, create_dirs)
 
     def num_neighboring_slices(self):
         return self.IMG_SIZE[2]
@@ -848,7 +926,7 @@ def get_model_name(cfg_filename: str):
     Returns:
         str: The model name.
     """
-    vars_dict = Config._load_dict_from_file(cfg_filename)
+    vars_dict = Config.parse_base_config(cfg_filename)
     return (
         vars_dict["MODEL_NAME"]
         if "MODEL_NAME" in vars_dict
