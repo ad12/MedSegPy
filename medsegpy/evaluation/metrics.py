@@ -113,15 +113,18 @@ class Metric(Callable, ABC):
         assert self.FULL_NAME
         self.unit = unit  # can be changed at runtime.
 
-    def name(self):
-        return self.NAME if self.NAME else type(self).__name__
+    @classmethod
+    def name(cls):
+        return cls.NAME if cls.NAME else cls.__name__
 
-    def full_name(self):
-        return self.FULL_NAME
+    @classmethod
+    def full_name(cls):
+        return cls.FULL_NAME
 
     def display_name(self):
         """If `self.unit` is defined, appends it to the name."""
-        return "{} {}".format(self.name, self.unit) if self.unit else self.name
+        name = self.name()
+        return "{} {}".format(name, self.unit) if self.unit else name
 
     @abstractmethod
     def __call__(self, *args, **kwargs):
@@ -233,7 +236,7 @@ class Recall(Metric):
 
 
 _BUILT_IN_METRICS = {
-    x.NAME: x for x in Metric.__subclasses__()
+    x.name(): x for x in Metric.__subclasses__()
 }
 
 
@@ -263,7 +266,8 @@ class MetricsManager:
         self._scan_data = OrderedDict()
         self.class_names = class_names
         self._metrics: Dict[str, Metric] = OrderedDict()
-        self.add_metrics(metrics)
+        if metrics:
+            self.add_metrics(metrics)
         self.category_dim = -1 if len(class_names) > 1 else None
         self.runtimes = []
         self._is_data_stale = False
@@ -299,11 +303,12 @@ class MetricsManager:
         metrics_data = []
         for metric in self._metrics.values():
             args = inspect.getfullargspec(metric).args
-            params = {name: kwargs.get(name) for name in args}
+
+            params = {name: kwargs.get(name) for name in args if name not in ["self"]}
 
             if num_classes > 1 and "category_dim" in args:
                 params["category_dim"] = self.category_dim
-                metrics_data.append(**params)
+                metrics_data.append(metric(**params))
             else:
                 metrics_data.append([
                     metric(**{
