@@ -176,7 +176,7 @@ def apply_transform_gens(
         TransformList: contain the transforms that's used.
     """
     for g in transform_gens:
-        assert isinstance(g, TransformGen), g
+        assert isinstance(g, (TransformGen, MedTransform)), g
 
     check_dtype(img)
 

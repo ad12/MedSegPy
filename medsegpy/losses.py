@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 DICE_LOSS = ("dice", "sigmoid")
 MULTI_CLASS_DICE_LOSS = ("multi_class_dice", "sigmoid")
 AVG_DICE_LOSS = ("avg_dice", "sigmoid")
-
+AVG_DICE_LOSS_SOFTMAX = ("avg_dice", "softmax")
 WEIGHTED_CROSS_ENTROPY_LOSS = ("weighted_cross_entropy", "softmax")
 WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS = (
     "weighted_cross_entropy_sigmoid",
@@ -31,6 +31,7 @@ CMD_LINE_SUPPORTED_LOSSES = [
     "DICE_LOSS",
     "MULTI_CLASS_DICE_LOSS",
     "AVG_DICE_LOSS",
+    "AVG_DICE_LOSS_SOFTMAX",
     "WEIGHTED_CROSS_ENTROPY_LOSS",
     "WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS",
     "BINARY_CROSS_ENTROPY_LOSS",
@@ -48,7 +49,7 @@ def get_training_loss_from_str(loss_str: str):
         return DICE_LOSS
     elif loss_str == "MULTI_CLASS_DICE_LOSS":
         return MULTI_CLASS_DICE_LOSS
-    elif loss_str == "AVG_DICE_LOSS":
+    elif loss_str == "AVG_DICE_LOSS" or loss_str == "AVG_DICE_LOSS_SOFTMAX":
         return AVG_DICE_LOSS
     elif loss_str == "WEIGHTED_CROSS_ENTROPY_LOSS":
         return WEIGHTED_CROSS_ENTROPY_LOSS
@@ -73,7 +74,7 @@ def get_training_loss(loss, **kwargs):
         return dice_loss
     elif loss == MULTI_CLASS_DICE_LOSS:
         return multi_class_dice_loss(**kwargs)
-    elif loss == AVG_DICE_LOSS:
+    elif loss == AVG_DICE_LOSS or loss == AVG_DICE_LOSS_SOFTMAX:
         return avg_dice_loss(**kwargs)
     elif loss == WEIGHTED_CROSS_ENTROPY_LOSS:
         return weighted_categorical_crossentropy(**kwargs)
@@ -184,7 +185,7 @@ def multi_class_dice_loss(
     return d_loss
 
 
-def avg_dice_loss(weights=None, **kwargs):
+def avg_dice_loss(weights=None, remove_background: bool=False, **kwargs):
     use_weights = False
     if weights:
         weights = np.asarray(weights)[np.newaxis, ...]
@@ -193,10 +194,15 @@ def avg_dice_loss(weights=None, **kwargs):
 
     def d_loss(y_true, y_pred):
         szp = K.get_variable_shape(y_pred)
+        c_dim = szp[-1]  # class dimension
+        img_size = np.prod(szp[1:-1])  # vectorized image size
 
         # Keep batch and class dimensions.
-        y_true = K.reshape(y_true, (-1, szp[1] * szp[2], szp[3]))
-        y_pred = K.reshape(y_pred, (-1, szp[1] * szp[2], szp[3]))
+        y_true = K.reshape(y_true, (-1, img_size, c_dim))
+        y_pred = K.reshape(y_pred, (-1, img_size, c_dim))
+        if remove_background:
+            y_true = y_true[..., 1:]
+            y_pred = y_pred[..., 1:]
 
         ovlp = K.sum(y_true * y_pred, axis=1)
 

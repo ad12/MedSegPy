@@ -5,6 +5,7 @@ https://github.com/facebookresearch/detectron2
 """
 import argparse
 import os
+import shutil
 
 import keras.backend as K
 from fvcore.common.file_io import PathManager
@@ -76,6 +77,16 @@ def default_setup(cfg, args):
             "Experiment results exist at {}. "
             "To re-run the experiment, delete the folder".format(cfg.OUTPUT_DIR)
         )
+
+    if args.eval_only and args.overwrite:
+        raise ValueError(
+            "Cannot evaluate and overwrite the folder. "
+            "Test results will automatically be overwritten."
+        )
+
+    local_dir = PathManager.get_local_path(cfg.OUTPUT_DIR)
+    if args.overwrite and os.path.isdir(local_dir):
+        shutil.rmtree(local_dir)
 
     # Setup cuda visible devices.
     num_gpus = args.num_gpus
