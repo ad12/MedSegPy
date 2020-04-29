@@ -8,101 +8,33 @@ from abc import ABC, abstractmethod
 from collections import OrderedDict
 import inspect
 import logging
-from enum import Enum
 from typing import Collection, Callable, Sequence, Union, Dict
 import numpy as np
 import pandas as pd
-import scipy.stats as spstats
 import tabulate
 from medpy.metric import assd
 
 logger = logging.getLogger(__name__)
 
 
-def cv(y_pred: np.ndarray, y_true: np.ndarray, ):
-    """Coefficient of Variation.
+def flatten_non_category_dims(xs: Sequence[np.ndarray], category_dim: int=None):
+    """Flattens all non-category dimensions into a single dimension.
 
     Args:
-        y_true (ndarray): Binary ground truth
-        y_pred (ndarray): Binary prediction
+        xs (ndarrays): Sequence of ndarrays with the same category dimension.
+        category_dim: The dimension/axis corresponding to different categories.
+            If `None`, behaves like `np.flatten(x)`.
 
     Returns:
-        float
+        ndarray: Shape (C, -1)
     """
-    y_true = np.squeeze(y_true)
-    y_pred = np.squeeze(y_pred)
+    if category_dim is not None:
+        dims = (xs[0].shape[category_dim], -1)
+        xs = (np.moveaxis(x, category_dim, 0).reshape(dims) for x in xs)
+    else:
+        xs = (x.flatten() for x in xs)
 
-    cv = np.std([np.sum(y_true), np.sum(y_pred)]) / np.mean(
-        [np.sum(y_true), np.sum(y_pred)]
-    )
-    return cv
-
-
-def volumetric_overlap_error(y_pred, y_true):
-    """Volumetric overlap error
-
-    Args:
-        y_true (ndarray): Binary ground truth
-        y_pred (ndarray): Binary prediction
-
-    Returns:
-        float
-    """
-
-    y_true = y_true.flatten()
-    y_pred = y_pred.flatten()
-
-    y_true_bool = np.asarray(y_true, dtype=np.bool)
-    y_pred_bool = np.asarray(y_pred, dtype=np.bool)
-    TP = np.sum(y_true_bool * y_pred_bool, axis=-1)
-    FP = np.sum(~y_true_bool * y_pred_bool, axis=-1)
-    FN = np.sum(y_true_bool * ~y_pred_bool, axis=-1)
-
-    mu = 1e-07
-
-    voe = 1 - (TP + mu) / (TP + FP + FN + mu)
-
-    return voe
-
-
-def sem(x, **kwargs):
-    """Standard error of the mean.
-
-    Returns:
-        float
-    """
-    args = {"axis": 0, "ddof": 0}
-    args.update(**kwargs)
-    return spstats.sem(x, **args)
-
-
-class MetricOperation(Enum):
-    MEAN = 1, lambda x, **kwargs: np.mean(x, **kwargs)
-    MEDIAN = 2, lambda x, **kwargs: np.median(x, **kwargs)
-    RMS = 3, lambda x, **kwargs: np.sqrt(np.mean(x ** 2, **kwargs))
-
-    def __new__(cls, keycode, func):
-        obj = object.__new__(cls)
-        obj._value_ = keycode
-        obj.func = func
-        return obj
-
-    def __call__(self, x: np.ndarray, **kwargs):
-        return self.func(np.asarray(x), **kwargs)
-
-
-class MetricError(Enum):
-    STANDARD_DEVIATION = 1, lambda x, **kwargs: np.std(x, **kwargs)
-    STANDARD_ERROR = 2, lambda x, **kwargs: sem(x, **kwargs)
-
-    def __new__(cls, keycode, func):
-        obj = object.__new__(cls)
-        obj._value_ = keycode
-        obj.func = func
-        return obj
-
-    def __call__(self, x: np.ndarray, **kwargs):
-        return self.func(np.asarray(x), **kwargs)
+    return xs
 
 
 class Metric(Callable, ABC):
@@ -131,24 +63,13 @@ class Metric(Callable, ABC):
         pass
 
 
-def _flatten_non_category_dims(xs: Sequence[np.ndarray], category_dim: int=None):
-    """Assumes all arrays are of the same shape."""
-    if category_dim is not None:
-        dims = (xs[0].shape[category_dim], -1)
-        xs = (np.moveaxis(x, category_dim, 0).reshape(dims) for x in xs)
-    else:
-        xs = (x.flatten() for x in xs)
-
-    return xs
-
-
 class DSC(Metric):
     FULL_NAME = "Dice Score Coefficient"
 
     def __call__(self, y_pred, y_true, category_dim: int=None):
         y_pred = y_pred.astype(np.bool)
         y_true = y_true.astype(np.bool)
-        y_pred, y_true = _flatten_non_category_dims(
+        y_pred, y_true = flatten_non_category_dims(
             (y_pred, y_true), category_dim
         )
 
@@ -165,7 +86,7 @@ class VOE(Metric):
     def __call__(self, y_pred, y_true, category_dim: int=None):
         y_pred = y_pred.astype(np.bool)
         y_true = y_true.astype(np.bool)
-        y_pred, y_true = _flatten_non_category_dims(
+        y_pred, y_true = flatten_non_category_dims(
             (y_pred, y_true), category_dim
         )
 
@@ -181,7 +102,7 @@ class CV(Metric):
     def __call__(self, y_pred, y_true, category_dim: int=None):
         y_pred = y_pred.astype(np.bool)
         y_true = y_true.astype(np.bool)
-        y_pred, y_true = _flatten_non_category_dims(
+        y_pred, y_true = flatten_non_category_dims(
             (y_pred, y_true), category_dim
         )
 
@@ -209,7 +130,7 @@ class Precision(Metric):
     def __call__(self, y_pred, y_true, category_dim: int = None):
         y_pred = y_pred.astype(np.bool)
         y_true = y_true.astype(np.bool)
-        y_pred, y_true = _flatten_non_category_dims(
+        y_pred, y_true = flatten_non_category_dims(
             (y_pred, y_true), category_dim
         )
 
@@ -225,7 +146,7 @@ class Recall(Metric):
     def __call__(self, y_pred, y_true, category_dim: int = None):
         y_pred = y_pred.astype(np.bool)
         y_true = y_true.astype(np.bool)
-        y_pred, y_true = _flatten_non_category_dims(
+        y_pred, y_true = flatten_non_category_dims(
             (y_pred, y_true), category_dim
         )
 
@@ -304,7 +225,9 @@ class MetricsManager:
         for metric in self._metrics.values():
             args = inspect.getfullargspec(metric).args
 
-            params = {name: kwargs.get(name) for name in args if name not in ["self"]}
+            params = {
+                name: kwargs.get(name) for name in args if name not in ["self"]
+            }
 
             if num_classes > 1 and "category_dim" in args:
                 params["category_dim"] = self.category_dim
