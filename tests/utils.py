@@ -63,7 +63,7 @@ def register_oai_mini(name, scan_root):
 
     MetadataCatalog.get(name).set(
         scan_root=scan_root,
-        voxel_spacing=(0.3125, 0.3125, 0.7),
+        spacing=(0.3125, 0.3125, 0.7),
         category_ids=[x["id"] for x in OAI_CATEGORIES],
         category_abbreviations=[x["abbrev"] for x in OAI_CATEGORIES],
         categories=[x["name"] for x in OAI_CATEGORIES],
