@@ -907,6 +907,9 @@ def get_config(config_cp_save_tag: str, create_dirs: bool = True):
     Return:
         Config: A config.
     """
+    from medsegpy.modeling.meta_arch.build import LEGACY_MODEL_NAMES
+    if config_cp_save_tag in LEGACY_MODEL_NAMES:
+        config_cp_save_tag = LEGACY_MODEL_NAMES[config_cp_save_tag]
 
     configs = SUPPORTED_CONFIGS
     for config in configs:
