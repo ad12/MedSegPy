@@ -92,7 +92,7 @@
 <li class="toctree-l2"><a class="reference internal" href="datasets.html">Use Custom Datasets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="data_loading.html">Use Custom Dataloaders</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Use Models</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#models-and-generators">Models and Generators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#making-a-custom-model">Making a Custom Model</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="training.html">Training</a></li>
@@ -170,8 +170,8 @@
   <div class="section" id="use-models">
 <span id="use-models"></span><h1>Use Models<a class="headerlink" href="#use-models" title="Permalink to this headline">¶</a></h1>
 <p>Models (and their sub-models) in medsegpy are built by
-functions such as <code class="docutils literal notranslate"><span class="pre">get_model</span></code>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">medsegpy.modeling</span> <span class="kn">import</span> <span class="n">build_model</span>
+functions such as <code class="docutils literal notranslate"><span class="pre">build_model</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">medsegpy.modeling.meta_arch</span> <span class="kn">import</span> <span class="n">build_model</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">build_model</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>  <span class="c1"># returns a torch.nn.Module</span>
 </pre></div>
 </div>
@@ -181,9 +181,22 @@ To load an existing checkpoint to the model, set
 MedSegPy recognizes models in Keras’s <code class="docutils literal notranslate"><span class="pre">.h5</span></code> format.</p>
 <p>You can use a model by just <code class="docutils literal notranslate"><span class="pre">outputs</span> <span class="pre">=</span> <span class="pre">model.predict(inputs)</span></code>.
 Next, we explain the inputs/outputs format used by the builtin models in MedSegPy.</p>
-<div class="section" id="models-and-generators">
-<span id="models-and-generators"></span><h2>Models and Generators<a class="headerlink" href="#models-and-generators" title="Permalink to this headline">¶</a></h2>
-<p>The <a class="reference external" href="/modules/data.html#medsegpy.data.Generator.img_generator">Generator.img_generator</a> yields batches of input and ground truth masks in the expected Keras format. See <a class="reference external" href="/tutorials/data_loading.html">data_loading</a>] for an example of how this is done.</p>
+<p>For a detailed list of models see
+<a class="reference external" href="/modules/modeling.html#medsegpy.modeling.meta_arch">modeling/meta_arch</a></p>
+<div class="section" id="making-a-custom-model">
+<span id="making-a-custom-model"></span><h2>Making a Custom Model<a class="headerlink" href="#making-a-custom-model" title="Permalink to this headline">¶</a></h2>
+<p>MedSegPy is designed to support custom models and is built so that they can easily be integrated into
+the current structure.</p>
+<p>All models must extend the MedSegPy
+<a class="reference external" href="/modules/modeling.html#medsegpy.modeling.model.Model">Model</a> interface. This interface has a builtin
+method that makes testing on different scans and running inference relatively simple.</p>
+<p>Each model is associated with a unique config type (see the <a class="reference external" href="/tutorials/configs.html">config tutorial</a>).
+Here you will define fields that are specific to controlling properties of your model architecture.</p>
+<p>If your model is very similar to existing models, see if you can modify existing configs to include
+a handful of fields that can be used to control your additions. If you do, make sure to turn
+those options off by default so as to not interfere with expected default functionality. If your
+model behaves similarly to existing models but requires some pretty extensive additions, we recommend
+extending/subclassing your config from the existing config corresponding to the similar model.</p>
 </div>
 </div>
 

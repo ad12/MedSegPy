@@ -16,7 +16,7 @@ If augmentations are used, define different augmentations or series of augmentat
 Note that augmentation should only be done on the training data. If augmentations are done on the validation and testing data, medsegpy functionality cannot be guaranteed.
 
 ### Data format
-Currently, data must be stored as slices in the h5df format and must follow a specific naming convention:
+Currently, data must be stored as 2D slices in the h5df format and must follow a specific naming convention:
   * Subject id: 7 digits
   * Timepoint: 2 digits
   * Augmentation Number: 2 digits. Should be `00` for volumes that are not augmented
@@ -73,6 +73,61 @@ with h5py.File("0123456_V00-Aug00_999.seg") as f:
 Data is often split into training, validation, and testing data. Each split
 should be in a different directory. Image and segmentation files should be stored in the appropriate folder.
 
+### Register Dataset
+To let medsegpy know how to obtain a dataset named "my_dataset", you will impolement a function that
+returns the items in your dataset and then tell medsegpy about this function
+
+```python
+def get_dicts():
+    ...
+    return list[dict] in the following format
+
+from medsegpy.data import DatasetCatalog
+DatasetCatalog.register("my_dataset", get_dicts)
+```
+
+Here, the snippet associates "my_dataset" with a function that returns the data. The registration
+is effective as long as the process is running.
+
+The function can process data from its original format into either one of the following:
+
+1. MedSegPy's standard dataset dict, described below. This will work with many builtin features
+in MedSegPy, so it is recommended when it is sufficient for your task.
+2. Your custom dataset dict. You can choose to return arbitrary dicts that are designed to work
+with your custom dataloader.
+
+#### Standard Dataset Dicts
+For standard semantic segmentation tasks, we load the original dataset into `list[dict]`.
+Each dictionary is required to contain a set of keys. Because all data must currently be stored
+as 2D slices in the h5 format (as described above), the following keys are required for all
+dictionaries:
+
++ `file_name` (str): the full path to the image file for this slice.
++ `sem_seg_file` (str): the full path to the semantic segmentation file for this slice.
++ `scan_id` (str): the scan this slice belongs to
++ `slice_id` (int): The slice this file corresponds to. Should be 1-indexed, meaning the
+first slice of every volume has `slice_id=1`.
++ `total_num_slices`: the total number of slices in the volume.
+
+The following keys are optional:
++ `subject_id` (int): the subject id corresponding to this scan
++ `time_point` (int): the time point at which the scan was acquired
+
+All keys begining with `scan_` will be interpreted as special keys unique to the scan.
+These will be returned as part of the input dictionary during inference.
+In built-in medsegpy functions, these keys will also serve as override keys for any default
+metadata associated with the dataset (see metadata section below). For example, if the dataset has a metadata key
+`spacing`, the value for `spacing` is typically used for all elements in the dataset.
+However, if a dataset dictionary has the key `scan_spacing`, the value of `scan_spacing` will
+override the default metadata value.
+
+MedSegPy will be expanding to support data stored in 3D soon. We will update
+this section once that is complete.
+
+#### Examples
+For examples on registering datasets, see 
+[datasets/oai.py](../modules/engine.html#medsegpy.data.datasets.oai)
+
 ### Register Metadata for a Dataset
 
 To let medsegpy know how to obtain a dataset named "my_dataset", you will need
@@ -88,7 +143,7 @@ category ids to contiguous ids (0-indexed).
 + `evaluator_type` (`str`): value should be `"SemSegEvaluator"`
 
 Optional:
-+ `voxel_spacing` (tuple of `float`): the voxel spacing in millimeters for scan volumes `(dH, dW, ...)`. Required for some segmentation metrics.
++ `spacing` (tuple of `float`): the spacing in millimeters for scan volumes `(dH, dW, ...)`. Required for some segmentation metrics.
 + `category_abbreviations` (sequence of `str`): Abbreviations for categories.
 1-to-1 with `categories`.
 + `category_colors` (sequence of `(R,G,B)`): R,G,B colors for different categories.

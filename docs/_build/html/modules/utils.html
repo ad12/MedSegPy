@@ -89,12 +89,13 @@
 <li class="toctree-l2"><a class="reference internal" href="data.html">medsegpy.data package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="engine.html">medsegpy.engine package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="evaluation.html">medsegpy.evaluation package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html">medsegpy.modeling package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html">medsegpy.modeling.layers package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#module-medsegpy.modeling.meta_arch">medsegpy.modeling.meta_arch package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#module-medsegpy.modeling">medsegpy.modeling package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="solver.html">medsegpy.solver package</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">medsegpy.utils package</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#module-medsegpy.utils.logger">medsegpy.utils.logger module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-medsegpy.utils.dl_utils">medsegpy.utils.dl_utils module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#module-medsegpy.utils.metric_utils">medsegpy.utils.metric_utils module</a></li>
 </ul>
 </li>
 </ul>
@@ -176,12 +177,12 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>output</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – a file name or a directory to save log. If None, will not save log file.
-If ends with “.txt” or “.log”, assumed to be a file name.
-Otherwise, logs will be saved to <cite>output/log.txt</cite>.</p></li>
+<li><p><strong>output</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – a file name or a directory to save log. If None, will not
+save log file. If ends with “.txt” or “.log”, assumed to be a file
+name. Otherwise, logs will be saved to <cite>output/log.txt</cite>.</p></li>
 <li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – the root module name of this logger</p></li>
-<li><p><strong>abbrev_name</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – an abbreviation of the module, to avoid long names in logs.
-Set to “” to not log the root module in logs.
+<li><p><strong>abbrev_name</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – an abbreviation of the module, to avoid long names in
+logs. Set to “” to not log the root module in logs.
 By default, will abbreviate “detectron2” to “d2” and leave other
 modules unchanged.</p></li>
 </ul>
@@ -202,16 +203,19 @@ modules unchanged.</p></li>
 <li><p><strong>lvl</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – the logging level</p></li>
 <li><p><strong>msg</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – </p></li>
 <li><p><strong>n</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – </p></li>
-<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – name of the logger to use. Will use the caller’s module by default.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – name of the logger to use. Will use the caller’s module by
+default.</p></li>
 <li><p><strong>key</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#tuple" title="(in Python v3.6)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a><em>]</em>) – the string(s) can be one of “caller” or
 “message”, which defines how to identify duplicated logs.
 For example, if called with <cite>n=1, key=”caller”</cite>, this function
 will only log the first call from the same caller, regardless of
 the message content.
 If called with <cite>n=1, key=”message”</cite>, this function will log the
-same content only once, even if they are called from different places.
+same content only once, even if they are called from different
+places.
 If called with <cite>n=1, key=(“caller”, “message”)</cite>, this function
-will not log only if the same caller has logged the same message before.</p></li>
+will not log only if the same caller has logged the same message
+before.</p></li>
 </ul>
 </dd>
 </dl>
@@ -227,7 +231,8 @@ will not log only if the same caller has logged the same message before.</p></li
 <li><p><strong>lvl</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – the logging level</p></li>
 <li><p><strong>msg</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – </p></li>
 <li><p><strong>n</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – </p></li>
-<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – name of the logger to use. Will use the caller’s module by default.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – name of the logger to use. Will use the caller’s module by
+default.</p></li>
 </ul>
 </dd>
 </dl>
@@ -243,7 +248,8 @@ will not log only if the same caller has logged the same message before.</p></li
 <li><p><strong>lvl</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – the logging level</p></li>
 <li><p><strong>msg</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – </p></li>
 <li><p><strong>n</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – </p></li>
-<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – name of the logger to use. Will use the caller’s module by default.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – name of the logger to use. Will use the caller’s module by
+default.</p></li>
 </ul>
 </dd>
 </dl>
@@ -344,214 +350,6 @@ ids of all available gpu(s) are returned.</p>
 <dd><p>Override load and save methods to be used from the serial-model. The
 serial-model holds references to the weights in the multi-gpu model.</p>
 </dd></dl>
-
-</dd></dl>
-
-</div>
-<div class="section" id="module-medsegpy.utils.metric_utils">
-<span id="medsegpy-utils-metric-utils-module"></span><h2>medsegpy.utils.metric_utils module<a class="headerlink" href="#module-medsegpy.utils.metric_utils" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="medsegpy.utils.metric_utils.cv">
-<code class="sig-prename descclassname">medsegpy.utils.metric_utils.</code><code class="sig-name descname">cv</code><span class="sig-paren">(</span><em class="sig-param">y_true</em>, <em class="sig-param">y_pred</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/metric_utils.html#cv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.metric_utils.cv" title="Permalink to this definition">¶</a></dt>
-<dd><p>Coefficient of Variation
-:param y_true:
-:param y_pred:
-:return:</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="medsegpy.utils.metric_utils.dice_score_coefficient">
-<code class="sig-prename descclassname">medsegpy.utils.metric_utils.</code><code class="sig-name descname">dice_score_coefficient</code><span class="sig-paren">(</span><em class="sig-param">y_true</em>, <em class="sig-param">y_pred</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/metric_utils.html#dice_score_coefficient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.metric_utils.dice_score_coefficient" title="Permalink to this definition">¶</a></dt>
-<dd><p>Dice Score Coefficient
-:param y_true: binary ground truth
-:param y_pred: binary prediction
-:return:</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="medsegpy.utils.metric_utils.volumetric_overlap_error">
-<code class="sig-prename descclassname">medsegpy.utils.metric_utils.</code><code class="sig-name descname">volumetric_overlap_error</code><span class="sig-paren">(</span><em class="sig-param">y_true</em>, <em class="sig-param">y_pred</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/metric_utils.html#volumetric_overlap_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.metric_utils.volumetric_overlap_error" title="Permalink to this definition">¶</a></dt>
-<dd><p>Volumetric overlap error
-:param y_true:
-:param y_pred:
-:return:</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="medsegpy.utils.metric_utils.SegMetric">
-<em class="property">class </em><code class="sig-prename descclassname">medsegpy.utils.metric_utils.</code><code class="sig-name descname">SegMetric</code><a class="reference internal" href="../_modules/medsegpy/utils/metric_utils.html#SegMetric"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.metric_utils.SegMetric" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/enum.html#enum.Enum" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
-<p>An enumeration.</p>
-<dl class="attribute">
-<dt id="medsegpy.utils.metric_utils.SegMetric.DSC">
-<code class="sig-name descname">DSC</code><em class="property"> = 1</em><a class="headerlink" href="#medsegpy.utils.metric_utils.SegMetric.DSC" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="medsegpy.utils.metric_utils.SegMetric.VOE">
-<code class="sig-name descname">VOE</code><em class="property"> = 2</em><a class="headerlink" href="#medsegpy.utils.metric_utils.SegMetric.VOE" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="medsegpy.utils.metric_utils.SegMetric.CV">
-<code class="sig-name descname">CV</code><em class="property"> = 3</em><a class="headerlink" href="#medsegpy.utils.metric_utils.SegMetric.CV" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="medsegpy.utils.metric_utils.SegMetric.ASSD">
-<code class="sig-name descname">ASSD</code><em class="property"> = 4</em><a class="headerlink" href="#medsegpy.utils.metric_utils.SegMetric.ASSD" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="medsegpy.utils.metric_utils.SegMetric.PRECISION">
-<code class="sig-name descname">PRECISION</code><em class="property"> = 5</em><a class="headerlink" href="#medsegpy.utils.metric_utils.SegMetric.PRECISION" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="medsegpy.utils.metric_utils.SegMetric.RECALL">
-<code class="sig-name descname">RECALL</code><em class="property"> = 6</em><a class="headerlink" href="#medsegpy.utils.metric_utils.SegMetric.RECALL" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="medsegpy.utils.metric_utils.SegMetric.SENSITIVITY">
-<code class="sig-name descname">SENSITIVITY</code><em class="property"> = 7</em><a class="headerlink" href="#medsegpy.utils.metric_utils.SegMetric.SENSITIVITY" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="medsegpy.utils.metric_utils.SegMetric.SPECIFICITY">
-<code class="sig-name descname">SPECIFICITY</code><em class="property"> = 8</em><a class="headerlink" href="#medsegpy.utils.metric_utils.SegMetric.SPECIFICITY" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="medsegpy.utils.metric_utils.SegMetric.PPV">
-<code class="sig-name descname">PPV</code><em class="property"> = 9</em><a class="headerlink" href="#medsegpy.utils.metric_utils.SegMetric.PPV" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.utils.metric_utils.SegMetric.compute">
-<code class="sig-name descname">compute</code><span class="sig-paren">(</span><em class="sig-param">y_pred</em>, <em class="sig-param">y_true</em>, <em class="sig-param">voxel_spacing</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/metric_utils.html#SegMetric.compute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.metric_utils.SegMetric.compute" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="medsegpy.utils.metric_utils.MetricOperation">
-<em class="property">class </em><code class="sig-prename descclassname">medsegpy.utils.metric_utils.</code><code class="sig-name descname">MetricOperation</code><a class="reference internal" href="../_modules/medsegpy/utils/metric_utils.html#MetricOperation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.metric_utils.MetricOperation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/enum.html#enum.Enum" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
-<p>An enumeration.</p>
-<dl class="attribute">
-<dt id="medsegpy.utils.metric_utils.MetricOperation.MEAN">
-<code class="sig-name descname">MEAN</code><em class="property"> = 1</em><a class="headerlink" href="#medsegpy.utils.metric_utils.MetricOperation.MEAN" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="medsegpy.utils.metric_utils.MetricOperation.MEDIAN">
-<code class="sig-name descname">MEDIAN</code><em class="property"> = 2</em><a class="headerlink" href="#medsegpy.utils.metric_utils.MetricOperation.MEDIAN" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="medsegpy.utils.metric_utils.MetricOperation.RMS">
-<code class="sig-name descname">RMS</code><em class="property"> = 3</em><a class="headerlink" href="#medsegpy.utils.metric_utils.MetricOperation.RMS" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.utils.metric_utils.MetricOperation.compute">
-<code class="sig-name descname">compute</code><span class="sig-paren">(</span><em class="sig-param">x: numpy.ndarray</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/metric_utils.html#MetricOperation.compute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.metric_utils.MetricOperation.compute" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="medsegpy.utils.metric_utils.MetricError">
-<em class="property">class </em><code class="sig-prename descclassname">medsegpy.utils.metric_utils.</code><code class="sig-name descname">MetricError</code><a class="reference internal" href="../_modules/medsegpy/utils/metric_utils.html#MetricError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.metric_utils.MetricError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/enum.html#enum.Enum" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
-<p>An enumeration.</p>
-<dl class="attribute">
-<dt id="medsegpy.utils.metric_utils.MetricError.STANDARD_DEVIATION">
-<code class="sig-name descname">STANDARD_DEVIATION</code><em class="property"> = 1</em><a class="headerlink" href="#medsegpy.utils.metric_utils.MetricError.STANDARD_DEVIATION" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="medsegpy.utils.metric_utils.MetricError.STANDARD_ERROR">
-<code class="sig-name descname">STANDARD_ERROR</code><em class="property"> = 2</em><a class="headerlink" href="#medsegpy.utils.metric_utils.MetricError.STANDARD_ERROR" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.utils.metric_utils.MetricError.compute">
-<code class="sig-name descname">compute</code><span class="sig-paren">(</span><em class="sig-param">x: numpy.ndarray</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/metric_utils.html#MetricError.compute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.metric_utils.MetricError.compute" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="medsegpy.utils.metric_utils.MetricsManager">
-<em class="property">class </em><code class="sig-prename descclassname">medsegpy.utils.metric_utils.</code><code class="sig-name descname">MetricsManager</code><span class="sig-paren">(</span><em class="sig-param">class_names: Collection[str], metrics=[&lt;SegMetric.DSC: 1&gt;, &lt;SegMetric.VOE: 2&gt;, &lt;SegMetric.ASSD: 4&gt;, &lt;SegMetric.CV: 3&gt;]</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/metric_utils.html#MetricsManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.metric_utils.MetricsManager" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-<dl class="method">
-<dt id="medsegpy.utils.metric_utils.MetricsManager.analyze">
-<code class="sig-name descname">analyze</code><span class="sig-paren">(</span><em class="sig-param">scan_name: str</em>, <em class="sig-param">y_true: numpy.ndarray</em>, <em class="sig-param">y_pred: numpy.ndarray</em>, <em class="sig-param">voxel_spacing: tuple</em>, <em class="sig-param">runtime: float = nan</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/metric_utils.html#MetricsManager.analyze"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.metric_utils.MetricsManager.analyze" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.utils.metric_utils.MetricsManager.data">
-<em class="property">property </em><code class="sig-name descname">data</code><a class="headerlink" href="#medsegpy.utils.metric_utils.MetricsManager.data" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.utils.metric_utils.MetricsManager.seg_metrics_processor">
-<em class="property">property </em><code class="sig-name descname">seg_metrics_processor</code><a class="headerlink" href="#medsegpy.utils.metric_utils.MetricsManager.seg_metrics_processor" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="medsegpy.utils.metric_utils.SegMetricsProcessor">
-<em class="property">class </em><code class="sig-prename descclassname">medsegpy.utils.metric_utils.</code><code class="sig-name descname">SegMetricsProcessor</code><span class="sig-paren">(</span><em class="sig-param">metrics</em>, <em class="sig-param">class_names</em>, <em class="sig-param">metrics_to_operations={&lt;SegMetric.CV: 3&gt;: &lt;MetricOperation.RMS: 3&gt;}</em>, <em class="sig-param">error_metric=&lt;MetricError.STANDARD_DEVIATION: 1&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/metric_utils.html#SegMetricsProcessor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.metric_utils.SegMetricsProcessor" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-<dl class="method">
-<dt id="medsegpy.utils.metric_utils.SegMetricsProcessor.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">metrics</em>, <em class="sig-param">class_names</em>, <em class="sig-param">metrics_to_operations={&lt;SegMetric.CV: 3&gt;: &lt;MetricOperation.RMS: 3&gt;}</em>, <em class="sig-param">error_metric=&lt;MetricError.STANDARD_DEVIATION: 1&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/metric_utils.html#SegMetricsProcessor.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.metric_utils.SegMetricsProcessor.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Constructor</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>metrics</strong> – Metrics to analyze. Default is all supported metrics</p></li>
-<li><p><strong>class_names</strong> – Class names, in order of channels in input</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.utils.metric_utils.SegMetricsProcessor.compute_metrics">
-<code class="sig-name descname">compute_metrics</code><span class="sig-paren">(</span><em class="sig-param">scan_id</em>, <em class="sig-param">y_true: numpy.ndarray</em>, <em class="sig-param">y_pred: numpy.ndarray</em>, <em class="sig-param">voxel_spacing: tuple</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/metric_utils.html#SegMetricsProcessor.compute_metrics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.metric_utils.SegMetricsProcessor.compute_metrics" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute segmentation metrics for volume
-:param scan_id
-:param y_true:
-:param y_pred:
-:param voxel_spacing: Voxel spacing (in mm)
-:return:</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.utils.metric_utils.SegMetricsProcessor.scan_summary">
-<code class="sig-name descname">scan_summary</code><span class="sig-paren">(</span><em class="sig-param">scan_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/metric_utils.html#SegMetricsProcessor.scan_summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.metric_utils.SegMetricsProcessor.scan_summary" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.utils.metric_utils.SegMetricsProcessor.summary">
-<code class="sig-name descname">summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/metric_utils.html#SegMetricsProcessor.summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.metric_utils.SegMetricsProcessor.summary" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.utils.metric_utils.SegMetricsProcessor.scan_id_data">
-<em class="property">property </em><code class="sig-name descname">scan_id_data</code><a class="headerlink" href="#medsegpy.utils.metric_utils.SegMetricsProcessor.scan_id_data" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.utils.metric_utils.SegMetricsProcessor.data">
-<em class="property">property </em><code class="sig-name descname">data</code><a class="headerlink" href="#medsegpy.utils.metric_utils.SegMetricsProcessor.data" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 </dd></dl>
 

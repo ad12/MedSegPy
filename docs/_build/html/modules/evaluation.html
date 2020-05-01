@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="medsegpy.modeling package" href="modeling.html" />
+    <link rel="next" title="medsegpy.modeling.layers package" href="modeling.html" />
     <link rel="prev" title="medsegpy.engine package" href="engine.html" /> 
 </head>
 
@@ -90,7 +90,9 @@
 <li class="toctree-l2"><a class="reference internal" href="data.html">medsegpy.data package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="engine.html">medsegpy.engine package</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">medsegpy.evaluation package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html">medsegpy.modeling package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html">medsegpy.modeling.layers package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#module-medsegpy.modeling.meta_arch">medsegpy.modeling.meta_arch package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#module-medsegpy.modeling">medsegpy.modeling package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="solver.html">medsegpy.solver package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="utils.html">medsegpy.utils package</a></li>
 </ul>
@@ -161,8 +163,155 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="medsegpy-evaluation-package">
-<h1>medsegpy.evaluation package<a class="headerlink" href="#medsegpy-evaluation-package" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-medsegpy.evaluation">
+<span id="medsegpy-evaluation-package"></span><h1>medsegpy.evaluation package<a class="headerlink" href="#module-medsegpy.evaluation" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="medsegpy.evaluation.build_evaluator">
+<code class="sig-prename descclassname">medsegpy.evaluation.</code><code class="sig-name descname">build_evaluator</code><span class="sig-paren">(</span><em class="sig-param">dataset_name: str</em>, <em class="sig-param">cfg: medsegpy.config.Config</em>, <em class="sig-param">output_folder: str = None</em>, <em class="sig-param">save_raw_data: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/evaluation/build.html#build_evaluator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.evaluation.build_evaluator" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="medsegpy.evaluation.DatasetEvaluator">
+<em class="property">class </em><code class="sig-prename descclassname">medsegpy.evaluation.</code><code class="sig-name descname">DatasetEvaluator</code><a class="reference internal" href="../_modules/medsegpy/evaluation/evaluator.html#DatasetEvaluator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.evaluation.DatasetEvaluator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Base class for a dataset evaluator.</p>
+<p>The function <a class="reference internal" href="#medsegpy.evaluation.inference_on_dataset" title="medsegpy.evaluation.inference_on_dataset"><code class="xref py py-func docutils literal notranslate"><span class="pre">inference_on_dataset()</span></code></a> runs the model over
+all samples in the dataset, and have a DatasetEvaluator to process the</p>
+<blockquote>
+<div><p>inputs/outputs.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>This class will accumulate information of the inputs/outputs</dt><dd><p>(by <a class="reference internal" href="#medsegpy.evaluation.DatasetEvaluator.process" title="medsegpy.evaluation.DatasetEvaluator.process"><code class="xref py py-meth docutils literal notranslate"><span class="pre">process()</span></code></a>),</p>
+</dd>
+</dl>
+<p>and produce evaluation results in the end (by <a class="reference internal" href="#medsegpy.evaluation.DatasetEvaluator.evaluate" title="medsegpy.evaluation.DatasetEvaluator.evaluate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">evaluate()</span></code></a>).</p>
+<dl class="method">
+<dt id="medsegpy.evaluation.DatasetEvaluator.reset">
+<code class="sig-name descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/evaluation/evaluator.html#DatasetEvaluator.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.evaluation.DatasetEvaluator.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Preparation for a new round of evaluation.
+Should be called before starting a round of evaluation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="medsegpy.evaluation.DatasetEvaluator.process">
+<code class="sig-name descname">process</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">outputs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/evaluation/evaluator.html#DatasetEvaluator.process"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.evaluation.DatasetEvaluator.process" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process an input/output pair.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scan_id</strong> – the scan id corresponding to the input/output</p></li>
+<li><p><strong>(</strong><strong>List</strong><strong>[</strong><strong>Dict</strong><strong>]</strong><strong>]</strong> (<em>inputs</em>) – the inputs that are used to call the model.
+Can also contain scan specific fields. These fields
+should start with “<a href="#id1"><span class="problematic" id="id2">scan_</span></a>”.</p></li>
+<li><p><strong>outputs</strong> (<em>List</em><em>[</em><em>Dict</em><em>]</em>) – List of outputs from the model.
+Each dict should contain at least the following keys:
+* “y_true”: Ground truth results
+* “y_pred”: Predicted probabilities.
+* “time_elapsed”: Amount of time to load data and run model.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="medsegpy.evaluation.DatasetEvaluator.evaluate">
+<code class="sig-name descname">evaluate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/evaluation/evaluator.html#DatasetEvaluator.evaluate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.evaluation.DatasetEvaluator.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate/summarize the performance, after processing all input/output
+pairs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><p><em>dict</em> –     A new evaluator class can return a dict of arbitrary format
+as long as the user can process the results.
+In our train_net.py, we expect the following format:</p>
+<ul class="simple">
+<li><p>key: the name of the task (e.g., bbox)</p></li>
+<li><p>value: a dict of {metric name: score}, e.g.: {“AP50”: 80}</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="medsegpy.evaluation.inference_on_dataset">
+<code class="sig-prename descclassname">medsegpy.evaluation.</code><code class="sig-name descname">inference_on_dataset</code><span class="sig-paren">(</span><em class="sig-param">model, data_loader: Union[medsegpy.data.data_loader.DataLoader, medsegpy.data.im_gens.Generator], evaluator: medsegpy.evaluation.evaluator.DatasetEvaluator</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/evaluation/evaluator.html#inference_on_dataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.evaluation.inference_on_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run model on the data_loader and evaluate the metrics with evaluator.
+The model will be used in eval mode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>keras.Model</em>) – </p></li>
+<li><p><strong>generator</strong> – an iterable object with a length.
+The elements it generates will be the inputs to the model.</p></li>
+<li><p><strong>evaluator</strong> (<a class="reference internal" href="#medsegpy.evaluation.DatasetEvaluator" title="medsegpy.evaluation.DatasetEvaluator"><em>DatasetEvaluator</em></a>) – the evaluator to run. Use
+<code class="xref py py-class docutils literal notranslate"><span class="pre">DatasetEvaluators([])</span></code> if you only want to benchmark, but
+don’t want to do any evaluation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The return value of <cite>evaluator.evaluate()</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="medsegpy.evaluation.SemSegEvaluator">
+<em class="property">class </em><code class="sig-prename descclassname">medsegpy.evaluation.</code><code class="sig-name descname">SemSegEvaluator</code><span class="sig-paren">(</span><em class="sig-param">dataset_name: str</em>, <em class="sig-param">cfg: medsegpy.config.Config</em>, <em class="sig-param">output_folder: str = None</em>, <em class="sig-param">save_raw_data: bool = False</em>, <em class="sig-param">stream_evaluation: bool = True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/evaluation/sem_seg_evaluation.html#SemSegEvaluator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.evaluation.SemSegEvaluator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">medsegpy.evaluation.evaluator.DatasetEvaluator</span></code></p>
+<p>Evaluator for semantic segmentation-related tasks.</p>
+<dl class="method">
+<dt id="medsegpy.evaluation.SemSegEvaluator.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">dataset_name: str</em>, <em class="sig-param">cfg: medsegpy.config.Config</em>, <em class="sig-param">output_folder: str = None</em>, <em class="sig-param">save_raw_data: bool = False</em>, <em class="sig-param">stream_evaluation: bool = True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/evaluation/sem_seg_evaluation.html#SemSegEvaluator.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.evaluation.SemSegEvaluator.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset_name</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – name of the dataset to be evaluated.</p></li>
+<li><p><strong>cfg</strong> – </p></li>
+<li><p><strong>output_folder</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – an output directory to dump results.</p></li>
+<li><p><strong>save_raw_data</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional) – Save probs, labels, ground
+truth masks to h5 file.</p></li>
+<li><p><strong>stream_evaluation</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional) – If <cite>True</cite>, evaluates
+data as it comes in to avoid holding too many objects in memory.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="medsegpy.evaluation.SemSegEvaluator.reset">
+<code class="sig-name descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/evaluation/sem_seg_evaluation.html#SemSegEvaluator.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.evaluation.SemSegEvaluator.reset" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="medsegpy.evaluation.SemSegEvaluator.process">
+<code class="sig-name descname">process</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">outputs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/evaluation/sem_seg_evaluation.html#SemSegEvaluator.process"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.evaluation.SemSegEvaluator.process" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="#medsegpy.evaluation.DatasetEvaluator" title="medsegpy.evaluation.DatasetEvaluator"><code class="xref py py-class docutils literal notranslate"><span class="pre">DatasetEvaluator</span></code></a> in evaluator.py
+for argument details.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="medsegpy.evaluation.SemSegEvaluator.eval_single_scan">
+<code class="sig-name descname">eval_single_scan</code><span class="sig-paren">(</span><em class="sig-param">input</em>, <em class="sig-param">output</em>, <em class="sig-param">labels</em>, <em class="sig-param">time_elapsed</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/evaluation/sem_seg_evaluation.html#SemSegEvaluator.eval_single_scan"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.evaluation.SemSegEvaluator.eval_single_scan" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="medsegpy.evaluation.SemSegEvaluator.evaluate">
+<code class="sig-name descname">evaluate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/evaluation/sem_seg_evaluation.html#SemSegEvaluator.evaluate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.evaluation.SemSegEvaluator.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates popular medical segmentation metrics specified in config.</p>
+<ul class="simple">
+<li><p>Evaluate on popular medical segmentation metrics. For supported
+segmentation metrics, see <code class="xref py py-class docutils literal notranslate"><span class="pre">MetricsManager</span></code>.</p></li>
+<li><p>Save overlay images.</p></li>
+<li><p>Save probability predictions.</p></li>
+</ul>
+<p>Note, by default coefficient of variation (CV) is calculated as a
+root-mean-squared quantity rather than mean.</p>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 
 
@@ -173,7 +322,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="modeling.html" class="btn btn-neutral float-right" title="medsegpy.modeling package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="modeling.html" class="btn btn-neutral float-right" title="medsegpy.modeling.layers package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="engine.html" class="btn btn-neutral float-left" title="medsegpy.engine package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

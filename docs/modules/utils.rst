@@ -18,11 +18,4 @@ medsegpy.utils.dl_utils module
     :undoc-members:
     :show-inheritance:
 
-medsegpy.utils.metric_utils module
-----------------------------------
-
-.. automodule:: medsegpy.utils.metric_utils
-    :members:
-    :undoc-members:
-    :show-inheritance:
 

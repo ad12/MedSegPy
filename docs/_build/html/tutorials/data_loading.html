@@ -172,49 +172,45 @@
             
   <div class="section" id="use-custom-dataloaders">
 <span id="use-custom-dataloaders"></span><h1>Use Custom Dataloaders<a class="headerlink" href="#use-custom-dataloaders" title="Permalink to this headline">¶</a></h1>
-<p><em>Note</em>: The current data loading procedure is currently under refactoring.
-While the process below is currently supported, it is subject to change.</p>
 <div class="section" id="how-the-existing-dataloader-works">
 <span id="how-the-existing-dataloader-works"></span><h2>How the Existing Dataloader Works<a class="headerlink" href="#how-the-existing-dataloader-works" title="Permalink to this headline">¶</a></h2>
 <p>MedSegPy contains a builtin data loading pipeline.
 It’s good to understand how it works, in case you need to write a custom one.</p>
 <p>MedSegPy provides an interface for loading and structuring data stored in
 different ways (3D volumes, 2D slices, etc.). Data structuring consists of
-scattering a single element into multiple element (3D volume -&gt; 3D blocks) or
+scattering a single element into multiple elements (3D volume -&gt; 3D blocks) or
 gathering multiple elements into a single element
 (multiple 2D slices -&gt; 3D volume). For example, if data from a 3D scan is
 saved slice-wise across different h5 files and we want to train using a
 3D network, we can use MedSegPy’s interface for gathering data from different
-files into a single volume.</p>
+files into a single volume (note this functionality is still being built).</p>
 <p>MedSegPy’s loading/structuring interface is defined by the
-<a class="reference external" href="../modules/data.html#detectron2.data.Generator"><code class="docutils literal notranslate"><span class="pre">Generator</span></code></a> abstract class.
-Subclasses determine how the data is loaded/structured. The generator implements
-two generator methods <code class="docutils literal notranslate"><span class="pre">img_generator</span></code> and <code class="docutils literal notranslate"><span class="pre">img_generator_test</span></code> to be used for
-training and testing, respectively.</p>
-<p><code class="docutils literal notranslate"><span class="pre">img_generator</span></code> (used with <a class="reference external" href="https://keras.io/models/sequential/"><code class="docutils literal notranslate"><span class="pre">model.fit_generator</span></code></a>):</p>
+<a class="reference external" href="../modules/data.html#medsegpy.data.data_loader.DataLoader"><code class="docutils literal notranslate"><span class="pre">DataLoader</span></code></a> abstract class.
+This class extends the keras
+<a class="reference external" href="https://www.tensorflow.org/versions/r1.15/api_docs/python/tf/keras/utils/Sequence"><code class="docutils literal notranslate"><span class="pre">Sequence</span></code></a>
+class. Like Sequences, <code class="docutils literal notranslate"><span class="pre">DataLoaders</span></code> implement a <code class="docutils literal notranslate"><span class="pre">__getitem__</span></code> method that can be used for fetching
+batches. For training and validation purposes, we recommend following the keras API for loading
+data with sequences.</p>
+<p>As mentioned above, medical data often requires structuring. This can result in returning batches
+of elements that are subsets of a single scan. For example, a data loader that indexes over 2D slices
+of a 3D scan is incredibly useful for training 2D models. However, during inference, metrics are
+typically calculated per scan and restructuring data outside of the data loader can be difficult.</p>
+<p>To simplify inference and downstream metric calculation, each data loader implements an
+<code class="docutils literal notranslate"><span class="pre">inference</span></code> method, which takes in a medsegpy
+<a class="reference external" href="../modules/modeling.html#medsegpy.modeling.model.Model"><code class="docutils literal notranslate"><span class="pre">Model</span></code></a> and keyword arguments that
+are typically used with <a class="reference external" href="https://keras.io/models/sequential/#predict_generator"><code class="docutils literal notranslate"><span class="pre">predict_generator</span></code></a>.
+In <code class="docutils literal notranslate"><span class="pre">inference</span></code>, the data loader does the following:</p>
 <ol class="simple">
-<li><p>It takes the
-<a class="reference external" href="/modules/data.html#detectron2.data.GeneratorState">GeneratorState</a> and
-loads the registered dataset for that state. The dataset is a loaded as 2
-lists corresponding to the h5 files for the input and the masks.
-Details about the dataset format and dataset registration can be found in
-<a class="reference external" href="/tutorials/datasets.html">datasets</a>.</p></li>
-<li><p>Inputs/masks are read from h5 files and structured. Each generator
-structures data differently. This means that data stored in
-different ways (slice-wise, 3D, etc.) must be used with specific generators.</p></li>
-<li><p>The inputs/outputs are batched into an ndarray of dimensions <code class="docutils literal notranslate"><span class="pre">Nx...</span></code>, where
-<code class="docutils literal notranslate"><span class="pre">N</span></code> is the batch size.</p></li>
+<li><p>It loads all dataset dictionaries corresponding to a given scan</p></li>
+<li><p>Structures data in these dictionaries based on the data loader’s defined structuring method.</p></li>
+<li><p>Runs inference on scan data</p></li>
+<li><p>Reformats scan data. Images/volumes will be of the shape <code class="docutils literal notranslate"><span class="pre">HxWx...</span></code>. Semantic segmentation
+masks and predictions will have shape <code class="docutils literal notranslate"><span class="pre">HxWx...xC</span></code>.</p></li>
+<li><p>Yields a dictionary of inputs and outputs</p></li>
 </ol>
-<p><code class="docutils literal notranslate"><span class="pre">img_generator_test</span></code>:</p>
-<ol class="simple">
-<li><p>It takes the trained model and loads the registered dataset for the
-<code class="docutils literal notranslate"><span class="pre">GeneratorState.TESTING</span></code> state.</p></li>
-<li><p>Batches data by <code class="docutils literal notranslate"><span class="pre">scan_id</span></code>. Data corresponding to the same <code class="docutils literal notranslate"><span class="pre">scan_id</span></code> will be
-processed and structured into a 3D volume of shape <code class="docutils literal notranslate"><span class="pre">DxHxW</span></code>.</p></li>
-<li><p>Runs <code class="docutils literal notranslate"><span class="pre">model.predict</span></code> on data for a specific <code class="docutils literal notranslate"><span class="pre">scan_id</span></code>.</p></li>
-<li><p>Yields <code class="docutils literal notranslate"><span class="pre">x</span></code> (input), <code class="docutils literal notranslate"><span class="pre">y_true</span></code> (ground truth masks), <code class="docutils literal notranslate"><span class="pre">y_pred</span></code> (predicted mask)
-<code class="docutils literal notranslate"><span class="pre">scan_id</span></code>, <code class="docutils literal notranslate"><span class="pre">time_elapsed</span></code> (time to run prediction).</p></li>
-</ol>
+<p>This method continues to yield input and output data in the medsegpy format until data for all
+scans are yielded. For more information, see
+<a class="reference external" href="/modules/data.html#medsegpy.data.data_loader.DataLoader">DataLoader</a>.</p>
 </div>
 <div class="section" id="dataloader-example">
 <span id="dataloader-example"></span><h2>Dataloader example<a class="headerlink" href="#dataloader-example" title="Permalink to this headline">¶</a></h2>
@@ -223,7 +219,7 @@ OAI iMorphics 2D dataset, a dataset where data is stored
 as 2D slices. For more information on acceptable dataset h5 files, see
 <a class="reference external" href="/tutorials/datasets.html">datasets</a>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">medsegpy.config</span> <span class="kn">import</span> <span class="n">UNetConfig</span>
-<span class="kn">from</span> <span class="nn">medsegpy.data</span> <span class="kn">import</span> <span class="n">OAIGenerator</span><span class="p">,</span> <span class="n">GeneratorState</span>
+<span class="kn">from</span> <span class="nn">medsegpy.data</span> <span class="kn">import</span> <span class="n">build_loader</span><span class="p">,</span> <span class="n">DatasetCatalog</span><span class="p">,</span> <span class="n">DefaultDataLoader</span>
 <span class="kn">from</span> <span class="nn">medsegpy.modeling</span> <span class="kn">import</span> <span class="n">get_model</span>
 
 <span class="n">cfg</span> <span class="o">=</span> <span class="n">UNetConfig</span><span class="p">()</span>
@@ -234,42 +230,56 @@ as 2D slices. For more information on acceptable dataset h5 files, see
 <span class="n">model</span> <span class="o">=</span> <span class="n">get_model</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
 <span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>  <span class="c1"># compile with optimizer, loss, metrics, etc.</span>
 
-<span class="n">generator</span> <span class="o">=</span> <span class="n">OAIGenerator</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
-<span class="n">train_steps</span><span class="p">,</span> <span class="n">val_steps</span> <span class="o">=</span> <span class="n">generator</span><span class="o">.</span><span class="n">num_steps</span><span class="p">()</span>
+<span class="c1"># Using built-in methods to create loaders.</span>
+<span class="c1"># To build them from scratch, see implementation</span>
+<span class="c1"># of `build_loader`</span>
+<span class="n">train_loader</span> <span class="o">=</span> <span class="n">build_loader</span><span class="p">(</span>
+    <span class="n">cfg</span><span class="p">,</span> 
+    <span class="n">cfg</span><span class="o">.</span><span class="n">TRAIN_DATASET</span><span class="p">,</span> 
+    <span class="n">batch_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">is_test</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+    <span class="n">shuffle</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+    <span class="n">drop_last</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">val_loader</span> <span class="o">=</span> <span class="n">build_loader</span><span class="p">(</span>
+    <span class="n">cfg</span><span class="p">,</span> 
+    <span class="n">cfg</span><span class="o">.</span><span class="n">VAL_DATASET</span><span class="p">,</span> 
+    <span class="n">batch_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">is_test</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+    <span class="n">shuffle</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+    <span class="n">drop_last</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">test_loader</span> <span class="o">=</span> <span class="n">build_loader</span><span class="p">(</span>
+    <span class="n">cfg</span><span class="p">,</span> 
+    <span class="n">cfg</span><span class="o">.</span><span class="n">TEST_DATASET</span><span class="p">,</span> 
+    <span class="n">batch_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">is_test</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+    <span class="n">shuffle</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+    <span class="n">drop_last</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="c1"># Start training</span>
 <span class="n">model</span><span class="o">.</span><span class="n">fit_generator</span><span class="p">(</span>
-    <span class="n">generator</span><span class="o">=</span><span class="n">generator</span><span class="o">.</span><span class="n">img_generator</span><span class="p">(</span><span class="n">GeneratorState</span><span class="o">.</span><span class="n">TRAINING</span><span class="p">),</span>
-    <span class="n">steps_per_epoch</span><span class="o">=</span><span class="n">train_steps</span><span class="p">,</span>
-    <span class="n">validation_data</span><span class="o">=</span><span class="n">generator</span><span class="o">.</span><span class="n">img_generator</span><span class="p">(</span><span class="n">GeneratorState</span><span class="o">.</span><span class="n">VALIDATION</span><span class="p">),</span>
-    <span class="n">validation_steps</span><span class="o">=</span><span class="n">val_steps</span><span class="p">,</span>
-    <span class="o">...</span>  <span class="c1"># other params for fit_generator</span>
+    <span class="n">train_loader</span><span class="p">,</span>
+    <span class="n">validation_data</span><span class="o">=</span><span class="n">val_loader</span><span class="p">,</span>
+    <span class="o">...</span>
 <span class="p">)</span>
 
 <span class="c1"># Run inference.</span>
-<span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">scan_id</span><span class="p">,</span> <span class="n">time_elapsed</span> <span class="ow">in</span> <span class="n">generator</span><span class="o">.</span><span class="n">img_generator_test</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
-    <span class="c1"># x (ndarray): scan volume - shape DxHxW</span>
-    <span class="c1"># y_true (ndarray): ground truth masks - shape DxHxWxC</span>
-    <span class="c1"># y_pred (ndarray): predictions (probabilities) - DxHxWxC</span>
-    <span class="c1"># scan_id (str): scan id</span>
-    <span class="c1"># time_elapsed (float): Time for segmenting whole volume.</span>
-
+<span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">test_loader</span><span class="o">.</span><span class="n">inference</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
     <span class="c1"># Do inference related things.</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="write-a-custom-dataloader">
 <span id="write-a-custom-dataloader"></span><h2>Write a Custom Dataloader<a class="headerlink" href="#write-a-custom-dataloader" title="Permalink to this headline">¶</a></h2>
-<p>See the <a class="reference external" href="/modules/data.html#medsegpy.data.CTGenerator">abdominal CT generator</a>
-for an example.</p>
+<p>Coming soon!</p>
 </div>
 <div class="section" id="use-a-custom-dataloader">
 <span id="use-a-custom-dataloader"></span><h2>Use a Custom Dataloader<a class="headerlink" href="#use-a-custom-dataloader" title="Permalink to this headline">¶</a></h2>
 <p>If you use <a class="reference external" href="/modules/engine.html#medsegpy.engine.defaults.DefaultTrainer">DefaultTrainer</a>,
-you can overwrite its <code class="docutils literal notranslate"><span class="pre">_build_data_loaders</span></code> and <code class="docutils literal notranslate"><span class="pre">build_test_data_loader</span></code> methods to use your own dataloader.
-See the <a class="reference external" href="https://github.com/facebookresearch/detectron2/blob/master/tools/ct_train.py">abCT training</a>
-for an example.</p>
-<p>If you write your own training loop, you can plug in your data loader easily.</p>
+you can overwrite its <code class="docutils literal notranslate"><span class="pre">_build_data_loaders</span></code> and <code class="docutils literal notranslate"><span class="pre">build_test_data_loader</span></code> methods to use your own dataloader.</p>
+<p>If you write your own training loop, you can also plug in your data loader easily.</p>
 </div>
 </div>
 
