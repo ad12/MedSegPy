@@ -141,14 +141,59 @@ class DataLoader(k_utils.Sequence, ABC):
         return len({x["scan_id"] for x in self._dataset_dicts})
 
     @abstractmethod
-    def inference(self, model, **kwargs) -> Tuple[str, Any, Any, Any, float]:
-        """Yields x_in, y_true, y_pred, scan_id, time_elapsed in order.
+    def inference(self, model, **kwargs):
+        """Yields dictionaries of inputs, outputs per scan.
+
+        In medical settings, data is often processed per scan, not necessarily
+        per example. This distinction is critical. For example, a 2D
+        segmentation network may take in 2D slices of a scan as input.
+        However, during inference, it is standard to compute metrics on the full
+        scan, not individual slices.
+
+        This method should yield scan-specific inputs and outputs as
+        dictionaries. The following keys should be in the `input` and `output`
+        dictionaries for each scan at minimum.
+
+        Input keys:
+            * "scan_id" (str): the scan identifier
+            * "x" (ndarray): the raw (unprocessed) input. Shape HxWx...
+                If the network takes multiple inputs, each input should
+                correspond to a unique key that will be handled by your
+                specified evaluator.
+            * "scan_XXX" (optional) scan-related parameters that will simplify
+                evaluation. e.g. "scan_spacing". MedSegPy evaluators will
+                default to scan specific information, if provided. For example,
+                if "scan_spacing" is specified, the value specified will
+                override the default spacing for the dataset.
+            * "subject_id" (optional): the subject identifier for the scan.
+                Useful for grouping results by subject.
+
+        Output keys:
+            * "time_elapsed" (required): Amount of time required for inference
+                on scan.
+                This quantity typically includes data loading time as well.
+            * "sem_seg_gt_mask" (ndarray): Ground truth binary mask for semantic
+                segmentation. Shape HxWx...xC.
+                Required for semantic segmentation inference.
+            * "sem_seg_pred" (ndarray): Prediction probabilities for semantic
+                segmentation. Shape HxWx...xC.
+                Required for semantic segmentation inference.
+            * "class_gts" (Sequence): classification-related ground truth by
+                category id.
+            * "class_preds" (Sequence): classification-related predictions
+                (probabilities).
+
+        All output keys except "time_elapsed" are optional and task specific.
 
         Args:
             model: A model to run inference on.
             kwargs: Keyword arguments to `model.predict_generator()`
+
+        Yields:
+            dict, dict: Dictionaries of inputs and outputs corresponding to a
+                single scan.
         """
-        yield None, None, None, None, None
+        yield {}, {}
 
 
 @DATA_LOADER_REGISTRY.register()
@@ -254,6 +299,21 @@ class DefaultDataLoader(DataLoader):
             return inputs_preprocessed, outputs
 
     def _restructure_data(self, vols: Sequence[np.ndarray]):
+        """By default the batch dimension is moved to be the third dimension.
+
+        Args:
+            vols (ndarrays): Shapes of NxHxWx...
+
+        Returns:
+            vols (ndarrays): Shapes of HxWxNx...
+        """
+        new_vols = []
+        for v in vols:
+            axes = (1, 2, 0)
+            if v.ndim > 3:
+                axes = axes + tuple(i for i in range(3, v.ndim))
+            new_vols.append(v.transpose(axes))
+        vols = (np.squeeze(v) for v in new_vols)
         return tuple(vols)
 
     def inference(self, model: Model, **kwargs):
@@ -269,9 +329,9 @@ class DefaultDataLoader(DataLoader):
 
             start = time.perf_counter()
             x, y, preds = model.inference_generator(self, **kwargs)
+            time_elapsed = time.perf_counter() - start
 
             x, y, preds = self._restructure_data((x, y, preds))
-            time_elapsed = time.perf_counter() - start
 
             input = {"x": x, "scan_id": scan_id}
             scan_params = {

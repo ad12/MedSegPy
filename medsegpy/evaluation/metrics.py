@@ -23,10 +23,10 @@ def flatten_non_category_dims(xs: Sequence[np.ndarray], category_dim: int=None):
     Args:
         xs (ndarrays): Sequence of ndarrays with the same category dimension.
         category_dim: The dimension/axis corresponding to different categories.
-            If `None`, behaves like `np.flatten(x)`.
+            i.e. `C`. If `None`, behaves like `np.flatten(x)`.
 
     Returns:
-        ndarray: Shape (C, -1)
+        ndarray: Shape (C, -1) if `category_dim` specified else shape (-1,)
     """
     if category_dim is not None:
         dims = (xs[0].shape[category_dim], -1)
@@ -38,14 +38,35 @@ def flatten_non_category_dims(xs: Sequence[np.ndarray], category_dim: int=None):
 
 
 class Metric(Callable, ABC):
+    """Interface for new metrics.
+
+    A metric should be implemented as a callable with explicitly defined
+    arguments. In other words, metrics should not have `**kwargs` or `**args`
+    options in the `__call__` method.
+
+    While not explicitly constrained to the return type, metrics typically
+    return float value(s). The number of values returned corresponds to the
+    number of categories.
+
+    * metrics should have different name() for different functionality.
+    * `category_dim` duck type if metric can process multiple categories at once.
+
+    To compute metrics:
+
+    .. code-block:: python
+
+        metric = Metric()
+        results = metric(...)
+    """
     def __init__(self, units: str=""):
-        self.units = units  # can be changed at runtime.
+        self.units = units
 
     def name(self):
         return type(self).__name__
 
     def display_name(self):
-        """If `self.unit` is defined, appends it to the name."""
+        """Name to use for pretty printing and display purposes.
+        """
         name = self.name()
         return "{} {}".format(name, self.units) if self.units else name
 
@@ -55,6 +76,8 @@ class Metric(Callable, ABC):
 
 
 class DSC(Metric):
+    """Dice score coefficient.
+    """
     def __call__(self, y_pred, y_true, category_dim: int=None):
         y_pred = y_pred.astype(np.bool)
         y_true = y_true.astype(np.bool)
@@ -70,6 +93,8 @@ class DSC(Metric):
 
 
 class VOE(Metric):
+    """Volumetric overlap error.
+    """
     def __call__(self, y_pred, y_true, category_dim: int=None):
         y_pred = y_pred.astype(np.bool)
         y_true = y_true.astype(np.bool)
@@ -84,6 +109,8 @@ class VOE(Metric):
 
 
 class CV(Metric):
+    """Coefficient of variation.
+    """
     def __call__(self, y_pred, y_true, category_dim: int=None):
         y_pred = y_pred.astype(np.bool)
         y_true = y_true.astype(np.bool)
@@ -101,6 +128,8 @@ class CV(Metric):
 
 
 class ASSD(Metric):
+    """Average symmetric surface distance.
+    """
     def __call__(self, y_pred, y_true, spacing=None, connectivity=1):
         return assd(
             y_pred, y_true, voxelspacing=spacing, connectivity=connectivity
@@ -141,22 +170,39 @@ _BUILT_IN_METRICS = {
 
 
 class MetricsManager:
-    """A class to manage different metrics to use.
+    """A class to manage and compute metrics.
 
-    A metric is defined by it's name and a callable to execute when computing
-    that metric. We assume that all metrics return float values. It is
-    represented as a dictionary element with the following fields:
+    Metrics will be calculated for the categories specified during
+    instantiation. All metrics are assumed to be calculated for those
+    categories.
 
-        * "name": The name of the metric.
-        * "func": The callable to execute when computing this metric.
-        * "args": The ordered list of arguments names for the function.
-        * "defaults": An ordered dict of argument names to their default values.
-            If no default arguments are available, an empty dictionary.
-        * "full_name" (optional): The full name of the metric (optional).
-        * "unit": Unit of the metric.
+    Metrics are indexed by their string representation as returned by `name()`.
+    They are also computed in the order they were added.
 
-    A MetricsManager object keeps track of metrics that are to be computed for
-    a specific
+    To compute metrics, use this class as a callable. See `__call__` for more
+    details.
+
+    Attributes:
+        class_names (Sequence[str]): Category names (in order).
+
+    To calculate metrics:
+
+        .. code-block:: python
+
+        manager = MetricsManager(
+            category_names=("tumor", "no tumor")
+            metrics=(DSC(), VOE())
+        )
+
+        for scan_id, x, y_pred, y_true in zip(ids, xs, preds, ground_truths):
+            # Compute metrics per scan.
+            manager(scan_id, x=x, y_pred=y_pred, y_true=y_true)
+
+    To get number of scans that have been processed:
+
+        .. code-block:: python
+
+        num_scans = len(manager)
     """
     def __init__(
         self,
@@ -173,9 +219,23 @@ class MetricsManager:
         self._is_data_stale = False
 
     def metrics(self):
+        """Returns names of current metrics."""
         return self._metrics.keys()
 
     def add_metrics(self, metrics: Sequence[Union[Metric, str]]):
+        """Add metrics to compute.
+
+        Metrics with the same `name()` cannot be added.
+
+        Args:
+            metrics (Metric(s)/str(s)): Metrics to compute. `str` values should
+                only be used for built-in metrics.
+
+        Raises:
+            ValueError: If `metric.name()` already exists. Metrics with the
+                same name mean the same computation will be done twice, which
+                is not a supported feature.
+        """
         if isinstance(metrics, (Metric, str)):
             metrics = [metrics]
         for m in metrics:
@@ -187,6 +247,11 @@ class MetricsManager:
             self._metrics[m_name] = m
 
     def remove_metrics(self, metrics: Union[str, Sequence[str]]):
+        """Remove metrics to compute.
+
+        Args:
+            metrics (`str(s)`): Names of metrics to remove.
+        """
         if isinstance(metrics, str):
             metrics = [metrics]
         for m in metrics:
@@ -195,9 +260,35 @@ class MetricsManager:
     def __call__(
         self,
         scan_id: str,
+        x: np.ndarray=None,
+        y_pred: np.ndarray=None,
+        y_true: np.ndarray=None,
         runtime: float = np.nan,
         **kwargs,
     ) -> str:
+        """Compute metrics for a scan.
+
+        Args:
+            scan_id (str): The scan/example identifier
+            x (ndarray, optional): The input `x` accepted by most metrics.
+            y_pred (ndarray, optional): The predicted output.
+                For most metrics, should be binarized.
+                If computing for multiple classes, last dimension should
+                index different categories in the order of `self.class_names`.
+            y_true (ndarray, optional): The binarized ground truth output.
+                For multiple classes, format like `y_pred`.
+            runtime (float, optional): The compute time. If specified, logged
+                as an additional metric.
+
+        Returns:
+            str: A summary of the results for the scan.
+        """
+        # Hacky way to define some expected values but still add them
+        # to kwargs for future processing.
+        for k, v in locals().items():
+            if k in ["x", "y_pred", "y_true"] and v is not None:
+                kwargs[k] = v
+
         num_classes = len(self.class_names)
         metrics_names = [m.display_name() for m in self._metrics.values()]
         metrics_data = []
@@ -236,7 +327,17 @@ class MetricsManager:
 
         return ", ".join(strs)
 
-    def scan_summary(self, scan_id) -> str:
+    def scan_summary(self, scan_id, delimiter: str=", ") -> str:
+        """Get summary of results for a scan.
+
+        Args:
+            scan_id: Scan id for which to summarize results.
+            delimiter (`str`, optional): Delimiter between different metrics.
+
+        Returns:
+            str: A summary of metrics for the scan. Values are averaged across
+                all categories.
+        """
         scan_data = self._scan_data[scan_id]
         avg_data = scan_data.mean(axis=1)
 
@@ -245,9 +346,14 @@ class MetricsManager:
             for n in avg_data.index.tolist()
         ]
 
-        return ", ".join(strs)
+        return delimiter.join(strs)
 
     def summary(self):
+        """Get summary of results over all scans.
+
+        Returns:
+            str: Tabulated summary. Rows=metrics. Columns=classes.
+        """
         arr = np.stack(
             [np.asarray(x) for x in self._scan_data.values()], axis=0
         )
@@ -258,9 +364,11 @@ class MetricsManager:
         return tabulate.tabulate(df, headers=self.class_names) + "\n"
 
     def data(self):
+        """
+        TODO: Determine format
+        """
         df = pd.concat(self._scan_data.values(), keys=self._scan_data.keys())
         return {
-            "scan_ids": list(self._scan_data.keys()),
             "runtimes": self.runtimes,
             "scan_data": df,
         }
