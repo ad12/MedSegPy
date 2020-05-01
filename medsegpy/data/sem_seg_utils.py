@@ -31,7 +31,9 @@ def collect_mask(
 
     # TODO: Remove dependency on legacy OAI data structure
     # OAI masks are stored in shape (...)xHxWx1xC.
-    return np.squeeze(mask, axis=-2)
+    if mask.shape[-2] == 1:
+        mask = np.squeeze(mask, axis=-2)
+    return mask
 
 
 def add_background_labels(mask: np.ndarray, background_last=False):

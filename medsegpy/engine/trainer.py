@@ -8,11 +8,12 @@ from keras import callbacks as kc
 from keras.utils import plot_model
 
 from medsegpy import config, solver
-from medsegpy.data import im_gens
+from medsegpy.data import build_loader, im_gens
 from medsegpy.engine.callbacks import LossHistory, lr_callback
 from medsegpy.evaluation import build_evaluator, inference_on_dataset
 from medsegpy.losses import dice_loss, get_training_loss
 from medsegpy.modeling import get_model
+from medsegpy.modeling.meta_arch import build_model
 from medsegpy.utils import dl_utils, io_utils
 
 logger = logging.getLogger(__name__)
@@ -31,14 +32,23 @@ class DefaultTrainer(object):
             to_file=os.path.join(cfg.OUTPUT_DIR, "model.png"),
             show_shapes=True,
         )
+        model.summary(print_fn=lambda x: logger.info(x))
+        model_json = model.to_json()
+        model_json_save_path = os.path.join(cfg.OUTPUT_DIR, "model.json")
+        with open(model_json_save_path, "w") as json_file:
+            json_file.write(model_json)
+
         if cfg.INIT_WEIGHTS:
             self._init_model(model)
+
         # Replicate model on multiple gpus.
         # Note this does not solve issue of having too large of a model
         num_gpus = dl_utils.num_gpus()
         if num_gpus > 1:
             logger.info("Running multi gpu model")
             model = dl_utils.ModelMGPU(model, gpus=num_gpus)
+
+        self._train_loader, self._val_loader = self._build_data_loaders(cfg)
         self._model = model
 
     def train(self):
@@ -64,14 +74,6 @@ class DefaultTrainer(object):
             logger.info("Freezing layers [{}, {})".format(fl.start, fl.stop))
             for i in fl:
                 model.layers[i].trainable = False
-
-    def _build_data_loaders(
-        self, cfg
-    ) -> Tuple[im_gens.Generator, im_gens.Generator]:
-        """Builds train and val data loaders.
-        """
-        generator = im_gens.get_generator(cfg)
-        return generator, generator
 
     def build_callbacks(self):
         cfg = self._cfg
@@ -120,11 +122,15 @@ class DefaultTrainer(object):
         output_dir = cfg.OUTPUT_DIR
 
         model = self._model
-        model.summary(print_fn=lambda x: logger.info(x))
 
         # TODO: Add more options for metrics.
         optimizer = solver.build_optimizer(cfg)
-        loss_func = get_training_loss(loss, weights=class_weights)
+        # Remove computation on the background class.
+        loss_func = get_training_loss(
+            loss,
+            weights=class_weights,
+            remove_background=cfg.INCLUDE_BACKGROUND,
+        )
         model.compile(
             optimizer=optimizer,
             loss=loss_func,
@@ -132,29 +138,14 @@ class DefaultTrainer(object):
         )
         callbacks = self.build_callbacks()
 
-        train_loader, val_loader = self._build_data_loaders(cfg)
-        if isinstance(train_loader, im_gens.Generator):
-            train_nbatches, valid_nbatches = train_loader.num_steps()
-            train_loader.summary()
-            train_loader = train_loader.img_generator(
-                state=im_gens.GeneratorState.TRAINING
-            )
-            val_loader = val_loader.img_generator(
-                state=im_gens.GeneratorState.VALIDATION
-            )
-            use_multiprocessing = False
-        else:
-            raise ValueError(
-                "Unknown data loader {}".format(type(train_loader))
-            )
+        train_loader, val_loader = self._train_loader, self._val_loader
+        use_multiprocessing = num_workers > 1
 
         # Start training
         model.fit_generator(
             train_loader,
-            train_nbatches,
             epochs=n_epochs,
             validation_data=val_loader,
-            validation_steps=valid_nbatches,
             callbacks=callbacks,
             workers=num_workers,
             use_multiprocessing=use_multiprocessing,
@@ -172,15 +163,6 @@ class DefaultTrainer(object):
         pik_data_path = os.path.join(output_dir, "pik_data.dat")
         with open(pik_data_path, "wb") as f:
             pickle.dump(data, f)
-
-        model_json = model.to_json()
-        model_json_save_path = os.path.join(output_dir, "model.json")
-        with open(model_json_save_path, "w") as json_file:
-            json_file.write(model_json)
-
-        # if self.save_model:
-        #     model.save(filepath=os.path.join(output_dir, 'model.h5'),
-        #                overwrite=True)
 
     @classmethod
     def test(cls, cfg: config.Config, model):
@@ -201,8 +183,41 @@ class DefaultTrainer(object):
 
     @classmethod
     def build_model(cls, cfg):
-        return get_model(cfg)
+        try:
+            return build_model(cfg)
+        except KeyError:
+            return get_model(cfg)
+
+    def _build_data_loaders(
+        self, cfg
+    ) -> Tuple[im_gens.Generator, im_gens.Generator]:
+        """Builds train and val data loaders.
+        """
+        train_loader = build_loader(
+            cfg,
+            dataset_names=cfg.TRAIN_DATASET,
+            batch_size=cfg.TRAIN_BATCH_SIZE,
+            drop_last=True,
+            is_test=False,
+            shuffle=True,
+        )
+        val_loader = build_loader(
+            cfg,
+            dataset_names=cfg.VAL_DATASET,
+            batch_size=cfg.VALID_BATCH_SIZE,
+            drop_last=True,
+            is_test=False,
+            shuffle=False,
+        )
+        return train_loader, val_loader
 
     @classmethod
     def build_test_data_loader(cls, cfg):
-        return im_gens.get_generator(cfg)
+        return build_loader(
+            cfg,
+            dataset_names=cfg.TEST_DATASET,
+            batch_size=cfg.TEST_BATCH_SIZE,
+            drop_last=False,
+            is_test=True,
+            shuffle=False,
+        )

@@ -1,0 +1,550 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>medsegpy.data.data_loader &mdash; MedSegPy 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> MedSegPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/index.html">API Documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">MedSegPy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>medsegpy.data.data_loader</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for medsegpy.data.data_loader</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Sequence</span>
+
+<span class="kn">import</span> <span class="nn">h5py</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">fvcore.common.registry</span> <span class="k">import</span> <span class="n">Registry</span>
+<span class="kn">from</span> <span class="nn">keras</span> <span class="k">import</span> <span class="n">utils</span> <span class="k">as</span> <span class="n">k_utils</span>
+
+<span class="kn">from</span> <span class="nn">medsegpy.config</span> <span class="k">import</span> <span class="n">Config</span>
+<span class="kn">from</span> <span class="nn">medsegpy.modeling</span> <span class="k">import</span> <span class="n">Model</span>
+
+<span class="kn">from</span> <span class="nn">.sem_seg_utils</span> <span class="k">import</span> <span class="n">add_background_labels</span><span class="p">,</span> <span class="n">collect_mask</span>
+<span class="kn">from</span> <span class="nn">.transforms</span> <span class="k">import</span> <span class="n">apply_transform_gens</span><span class="p">,</span> <span class="n">build_preprocessing</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="n">DATA_LOADER_REGISTRY</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">(</span><span class="s2">&quot;DATA_LOADER&quot;</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Registry for data loaders, which can be used with `model.fit_generator()` and</span>
+<span class="sd">`model.predict_generator()`. The evaluator type should be registered with</span>
+<span class="sd">dataset_dicts, cfg, and other extra parameters.</span>
+
+<span class="sd">The registered object will be called with</span>
+<span class="sd">`obj(dataset_dicts, cfg, **kwargs)`.</span>
+<span class="sd">The call should return a :class:`DataLoader` object.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">_LEGACY_DATA_LOADER_MAP</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="p">(</span><span class="s2">&quot;oai_aug&quot;</span><span class="p">,</span> <span class="s2">&quot;oai&quot;</span><span class="p">,</span> <span class="s2">&quot;oai_2d&quot;</span><span class="p">,</span> <span class="s2">&quot;oai_aug_2d&quot;</span><span class="p">):</span> <span class="s2">&quot;DefaultDataLoader&quot;</span>
+<span class="p">}</span>
+
+<span class="n">LEGACY_DATA_LOADER_NAMES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">x</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">_LEGACY_DATA_LOADER_MAP</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">k</span>
+<span class="p">}</span>
+
+
+<span class="k">def</span> <span class="nf">build_data_loader</span><span class="p">(</span>
+    <span class="n">cfg</span><span class="p">:</span> <span class="n">Config</span><span class="p">,</span> <span class="n">dataset_dicts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;DataLoader&quot;</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Get data loader based on config `TAG` or name, value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">TAG</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">data_loader_cls</span> <span class="o">=</span> <span class="n">DATA_LOADER_REGISTRY</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">prev_name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">LEGACY_DATA_LOADER_NAMES</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">LEGACY_DATA_LOADER_NAMES</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">prev_name</span> <span class="o">!=</span> <span class="n">name</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="s2">&quot;TAG </span><span class="si">{}</span><span class="s2"> is deprecated. Use </span><span class="si">{}</span><span class="s2"> instead&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">prev_name</span><span class="p">,</span> <span class="n">name</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="n">data_loader_cls</span> <span class="o">=</span> <span class="n">DATA_LOADER_REGISTRY</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">data_loader_cls</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">dataset_dicts</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="DataLoader"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.DataLoader">[docs]</a><span class="k">class</span> <span class="nc">DataLoader</span><span class="p">(</span><span class="n">k_utils</span><span class="o">.</span><span class="n">Sequence</span><span class="p">,</span> <span class="n">ABC</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Data loader following :class:`keras.utils.Sequence` API.</span>
+
+<span class="sd">    Data loaders load data per batch in the following way:</span>
+<span class="sd">    1. Collate inputs and outputs</span>
+<span class="sd">    2. Optionally apply preprocessing</span>
+
+<span class="sd">    To avoid changing the order of the base list, we shuffle a list of indices</span>
+<span class="sd">    and query based on the index.</span>
+
+<span class="sd">    Data loaders in medsegpy also have the ability to yield inference results</span>
+<span class="sd">    per scan (see :meth:`inference`).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">ALIASES</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="DataLoader.__init__"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.DataLoader.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">cfg</span><span class="p">:</span> <span class="n">Config</span><span class="p">,</span>
+        <span class="n">dataset_dicts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">],</span>
+        <span class="n">is_test</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">shuffle</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">drop_last</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            cfg (Config): A config object.</span>
+<span class="sd">            dataset_dicts (List[Dict]): List of data in medsegpy dataset format.</span>
+<span class="sd">            is_test (:obj:`bool`, optional): If `True`, configures loader as a</span>
+<span class="sd">                testing/inference loader. This is typically used when running</span>
+<span class="sd">                evaluation.</span>
+<span class="sd">            shuffle (bool, optional): If `True`, shuffle data every epoch.</span>
+<span class="sd">            drop_last (:obj:`bool`, optional): Drop the last incomplete batch,</span>
+<span class="sd">                if the dataset size is not divisible by the batch size. If</span>
+<span class="sd">                `False` and the size of the dataset is not divisible by batch</span>
+<span class="sd">                size, then the last batch will be smaller. This can affect</span>
+<span class="sd">                loss calculations.</span>
+<span class="sd">            batch_size (:obj:`int`, optional): Batch size.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span> <span class="o">=</span> <span class="n">cfg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dataset_dicts</span> <span class="o">=</span> <span class="n">dataset_dicts</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shuffle</span> <span class="o">=</span> <span class="n">shuffle</span>
+        <span class="n">seed</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">SEED</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_random</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">Random</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span> <span class="k">if</span> <span class="n">seed</span> <span class="k">else</span> <span class="n">random</span><span class="o">.</span><span class="n">Random</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">drop_last</span> <span class="o">=</span> <span class="n">drop_last</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_batch_size</span> <span class="o">=</span> <span class="n">batch_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_category_idxs</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">CATEGORIES</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_test</span> <span class="o">=</span> <span class="n">is_test</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_idxs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_elements</span><span class="p">()))</span>
+        <span class="k">if</span> <span class="n">shuffle</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_idxs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DataLoader.on_epoch_end"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.DataLoader.on_epoch_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_epoch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shuffle</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_idxs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DataLoader.__len__"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.DataLoader.__len__">[docs]</a>    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Number of batches.</span>
+
+<span class="sd">        By default, each element in the dataset dict is independent.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_num_elements</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_elements</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_test</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">drop_last</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_num_elements</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">_batch_size</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">_num_elements</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_batch_size</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_num_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Number of elements in the data loader.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dataset_dicts</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DataLoader.num_scans"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.DataLoader.num_scans">[docs]</a>    <span class="k">def</span> <span class="nf">num_scans</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">({</span><span class="n">x</span><span class="p">[</span><span class="s2">&quot;scan_id&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset_dicts</span><span class="p">})</span></div>
+
+<div class="viewcode-block" id="DataLoader.inference"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.DataLoader.inference">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">inference</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Yields dictionaries of inputs, outputs per scan.</span>
+
+<span class="sd">        In medical settings, data is often processed per scan, not necessarily</span>
+<span class="sd">        per example. This distinction is critical. For example, a 2D</span>
+<span class="sd">        segmentation network may take in 2D slices of a scan as input.</span>
+<span class="sd">        However, during inference, it is standard to compute metrics on the full</span>
+<span class="sd">        scan, not individual slices.</span>
+
+<span class="sd">        This method does the following:</span>
+<span class="sd">            1. Loads dataset dicts corresponding to a scan</span>
+<span class="sd">            2. Structures data from these dicts</span>
+<span class="sd">            3. Runs predictions on the structured data</span>
+<span class="sd">            4. Restructures inputs. Images/volumes are restructured to HxWx...</span>
+<span class="sd">                Segmentation masks and predictions are restructured to</span>
+<span class="sd">                HxWx...xC.</span>
+<span class="sd">            5. Yield input, output dictionaries for the scan. Yielding continues</span>
+<span class="sd">                until all scans have been processed.</span>
+
+<span class="sd">        This method should yield scan-specific inputs and outputs as</span>
+<span class="sd">        dictionaries. The following keys should be in the `input` and `output`</span>
+<span class="sd">        dictionaries for each scan at minimum.</span>
+
+<span class="sd">        Input keys:</span>
+<span class="sd">            * &quot;scan_id&quot; (str): the scan identifier</span>
+<span class="sd">            * &quot;x&quot; (ndarray): the raw (unprocessed) input. Shape HxWx...</span>
+<span class="sd">                If the network takes multiple inputs, each input should</span>
+<span class="sd">                correspond to a unique key that will be handled by your</span>
+<span class="sd">                specified evaluator.</span>
+<span class="sd">            * &quot;scan_XXX&quot; (optional) scan-related parameters that will simplify</span>
+<span class="sd">                evaluation. e.g. &quot;scan_spacing&quot;. MedSegPy evaluators will</span>
+<span class="sd">                default to scan specific information, if provided. For example,</span>
+<span class="sd">                if &quot;scan_spacing&quot; is specified, the value specified will</span>
+<span class="sd">                override the default spacing for the dataset.</span>
+<span class="sd">            * &quot;subject_id&quot; (optional): the subject identifier for the scan.</span>
+<span class="sd">                Useful for grouping results by subject.</span>
+
+<span class="sd">        Output keys:</span>
+<span class="sd">            * &quot;time_elapsed&quot; (required): Amount of time required for inference</span>
+<span class="sd">                on scan.</span>
+<span class="sd">                This quantity typically includes data loading time as well.</span>
+<span class="sd">            * &quot;y_true&quot; (ndarray): Ground truth binary mask for semantic</span>
+<span class="sd">                segmentation. Shape HxWx...xC.</span>
+<span class="sd">                Required for semantic segmentation inference.</span>
+<span class="sd">            * &quot;y_pred&quot; (ndarray): Prediction probabilities for semantic</span>
+<span class="sd">                segmentation. Shape HxWx...xC.</span>
+<span class="sd">                Required for semantic segmentation inference.</span>
+
+<span class="sd">        All output keys except &quot;time_elapsed&quot; are optional and task specific.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            model: A model to run inference on.</span>
+<span class="sd">            kwargs: Keyword arguments to `model.predict_generator()`</span>
+
+<span class="sd">        Yields:</span>
+<span class="sd">            dict, dict: Dictionaries of inputs and outputs corresponding to a</span>
+<span class="sd">                single scan.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">yield</span> <span class="p">{},</span> <span class="p">{}</span></div></div>
+
+
+<div class="viewcode-block" id="DefaultDataLoader"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.DefaultDataLoader">[docs]</a><span class="nd">@DATA_LOADER_REGISTRY</span><span class="o">.</span><span class="n">register</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">DefaultDataLoader</span><span class="p">(</span><span class="n">DataLoader</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The default data loader functionality in medsegy.</span>
+
+<span class="sd">    This class takes a dataset dict in the MedSegPy Dataset format and maps it</span>
+<span class="sd">    to a format that can be used by the model for semantic segmentation.</span>
+
+<span class="sd">    This is the default data loader.</span>
+
+<span class="sd">    1. Read the input matrix from &quot;file_name&quot;</span>
+<span class="sd">    2. Read the ground truth mask matrix from &quot;sem_seg_file_name&quot;</span>
+<span class="sd">    3. If needed:</span>
+<span class="sd">        a. Add binary labels for background</span>
+<span class="sd">    4. Apply :class:`MedTransform` transforms to input and masks.</span>
+<span class="sd">    5. If training, return input (preprocessed), output.</span>
+<span class="sd">       If testing, return input (preprocessed), output, input (raw).</span>
+<span class="sd">       The testing structure is useful for tracking the original input</span>
+<span class="sd">       without any preprocessing. This return structure does not conflict with</span>
+<span class="sd">       existing Keras model functionality.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">cfg</span><span class="p">:</span> <span class="n">Config</span><span class="p">,</span>
+        <span class="n">dataset_dicts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">],</span>
+        <span class="n">is_test</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">shuffle</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">drop_last</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">cfg</span><span class="p">,</span> <span class="n">dataset_dicts</span><span class="p">,</span> <span class="n">is_test</span><span class="p">,</span> <span class="n">shuffle</span><span class="p">,</span> <span class="n">drop_last</span><span class="p">,</span> <span class="n">batch_size</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_image_size</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">IMG_SIZE</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_include_background</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">INCLUDE_BACKGROUND</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_num_neighboring_slices</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">num_neighboring_slices</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_num_classes</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get_num_classes</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_transform_gen</span> <span class="o">=</span> <span class="n">build_preprocessing</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_load_masks</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">_load_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_file</span><span class="p">,</span> <span class="n">sem_seg_file</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">image_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][:]</span>
+        <span class="k">if</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">sem_seg_file</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">sem_seg_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">mask</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][:]</span>
+
+            <span class="n">cat_idxs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_category_idxs</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">collect_mask</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">cat_idxs</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_include_background</span><span class="p">:</span>
+                <span class="n">mask</span> <span class="o">=</span> <span class="n">add_background_labels</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="n">image</span><span class="p">,</span> <span class="n">mask</span>
+
+    <span class="k">def</span> <span class="nf">_load_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idxs</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]):</span>
+        <span class="n">dataset_dicts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset_dicts</span>
+
+        <span class="n">images</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">masks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">file_idx</span> <span class="ow">in</span> <span class="n">idxs</span><span class="p">:</span>
+            <span class="n">dataset_dict</span> <span class="o">=</span> <span class="n">dataset_dicts</span><span class="p">[</span><span class="n">file_idx</span><span class="p">]</span>
+            <span class="n">file_name</span> <span class="o">=</span> <span class="n">dataset_dict</span><span class="p">[</span><span class="s2">&quot;file_name&quot;</span><span class="p">]</span>
+            <span class="n">sem_seg_file_name</span> <span class="o">=</span> <span class="n">dataset_dict</span><span class="p">[</span><span class="s2">&quot;sem_seg_file&quot;</span><span class="p">]</span>
+
+            <span class="n">image</span><span class="p">,</span> <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_input</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">sem_seg_file_name</span><span class="p">)</span>
+
+            <span class="n">images</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+            <span class="n">masks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">masks</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_preprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">outputs</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="n">img</span><span class="p">,</span> <span class="n">transforms</span> <span class="o">=</span> <span class="n">apply_transform_gens</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_transform_gen</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">apply_segmentation</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">img</span><span class="p">,</span> <span class="n">outputs</span>
+
+<div class="viewcode-block" id="DefaultDataLoader.__getitem__"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.DefaultDataLoader.__getitem__">[docs]</a>    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            idx: Batch index.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            ndarray, ndarray: images NxHxWx(...)x1, masks NxHxWx(...)x1</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">batch_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_batch_size</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">idx</span> <span class="o">*</span> <span class="n">batch_size</span>
+        <span class="n">stop</span> <span class="o">=</span> <span class="nb">min</span><span class="p">((</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">batch_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_elements</span><span class="p">())</span>
+
+        <span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_batch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_idxs</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">stop</span><span class="p">])</span>
+        <span class="n">inputs_preprocessed</span><span class="p">,</span> <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preprocess</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_test</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">inputs_preprocessed</span><span class="p">,</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">inputs</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">inputs_preprocessed</span><span class="p">,</span> <span class="n">outputs</span></div>
+
+    <span class="k">def</span> <span class="nf">_restructure_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vols</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;By default the batch dimension is moved to be the third dimension.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            vols (ndarrays): Shapes of NxHxWx...</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            vols (ndarrays): Shapes of HxWxNx...</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_vols</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vols</span><span class="p">:</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="n">axes</span> <span class="o">=</span> <span class="n">axes</span> <span class="o">+</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+            <span class="n">new_vols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">axes</span><span class="p">))</span>
+        <span class="n">vols</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">new_vols</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">vols</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DefaultDataLoader.inference"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.DefaultDataLoader.inference">[docs]</a>    <span class="k">def</span> <span class="nf">inference</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">scan_to_dict_mapping</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset_dicts</span><span class="p">:</span>
+            <span class="n">scan_to_dict_mapping</span><span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;scan_id&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+
+        <span class="n">scan_ids</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">scan_to_dict_mapping</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">dataset_dicts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset_dicts</span>
+
+        <span class="k">for</span> <span class="n">scan_id</span> <span class="ow">in</span> <span class="n">scan_ids</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_dataset_dicts</span> <span class="o">=</span> <span class="n">scan_to_dict_mapping</span><span class="p">[</span><span class="n">scan_id</span><span class="p">]</span>
+
+            <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">preds</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">inference_generator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">time_elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span>
+
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">preds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_restructure_data</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">preds</span><span class="p">))</span>
+
+            <span class="nb">input</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span> <span class="s2">&quot;scan_id&quot;</span><span class="p">:</span> <span class="n">scan_id</span><span class="p">}</span>
+            <span class="n">scan_params</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">k</span><span class="p">:</span> <span class="n">v</span>
+                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset_dicts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;scan&quot;</span><span class="p">)</span>
+            <span class="p">}</span>
+            <span class="nb">input</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">scan_params</span><span class="p">)</span>
+
+            <span class="n">output</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;y_pred&quot;</span><span class="p">:</span> <span class="n">preds</span><span class="p">,</span>
+                <span class="s2">&quot;y_true&quot;</span><span class="p">:</span> <span class="n">y</span><span class="p">,</span>
+                <span class="s2">&quot;time_elapsed&quot;</span><span class="p">:</span> <span class="n">time_elapsed</span><span class="p">,</span>
+            <span class="p">}</span>
+
+            <span class="k">yield</span> <span class="nb">input</span><span class="p">,</span> <span class="n">output</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dataset_dicts</span> <span class="o">=</span> <span class="n">dataset_dicts</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Arjun Desai
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

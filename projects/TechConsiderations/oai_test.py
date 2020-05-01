@@ -33,9 +33,11 @@ from medsegpy.utils import (
 from medsegpy.utils import utils as utils
 from medsegpy.utils.im_utils import MultiClassOverlay
 from medsegpy.utils.logger import setup_logger
-from medsegpy.utils.metric_utils import SegMetric
 
 from projects.TechConsiderations.scan_metadata import ScanMetadata
+
+# from medsegpy.utils.metric_utils import SegMetric
+
 
 matplotlib.use("Agg")
 # import matplotlib.pyplot as plt

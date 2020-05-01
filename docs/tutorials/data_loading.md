@@ -1,9 +1,6 @@
 
 # Use Custom Dataloaders
 
-*Note*: The current data loading procedure is currently under refactoring.
-While the process below is currently supported, it is subject to change.
-
 ## How the Existing Dataloader Works
 
 MedSegPy contains a builtin data loading pipeline.
@@ -11,40 +8,41 @@ It's good to understand how it works, in case you need to write a custom one.
 
 MedSegPy provides an interface for loading and structuring data stored in
 different ways (3D volumes, 2D slices, etc.). Data structuring consists of
-scattering a single element into multiple element (3D volume -> 3D blocks) or
+scattering a single element into multiple elements (3D volume -> 3D blocks) or
 gathering multiple elements into a single element
 (multiple 2D slices -> 3D volume). For example, if data from a 3D scan is
 saved slice-wise across different h5 files and we want to train using a
 3D network, we can use MedSegPy's interface for gathering data from different
-files into a single volume.
+files into a single volume (note this functionality is still being built).
 
 MedSegPy's loading/structuring interface is defined by the
-[`Generator`](../modules/data.html#detectron2.data.Generator) abstract class.
-Subclasses determine how the data is loaded/structured. The generator implements
-two generator methods `img_generator` and `img_generator_test` to be used for
-training and testing, respectively.
+[`DataLoader`](../modules/data.html#medsegpy.data.data_loader.DataLoader) abstract class.
+This class extends the keras 
+[`Sequence`](https://www.tensorflow.org/versions/r1.15/api_docs/python/tf/keras/utils/Sequence)
+class. Like Sequences, `DataLoaders` implement a `__getitem__` method that can be used for fetching
+batches. For training and validation purposes, we recommend following the keras API for loading
+data with sequences.
 
-`img_generator` (used with [`model.fit_generator`](https://keras.io/models/sequential/)):
-1. It takes the
-   [GeneratorState](../modules/data.html#detectron2.data.GeneratorState) and
-   loads the registered dataset for that state. The dataset is a loaded as 2
-   lists corresponding to the h5 files for the input and the masks.
-   Details about the dataset format and dataset registration can be found in
-   [datasets](datasets.html).
-2. Inputs/masks are read from h5 files and structured. Each generator
-   structures data differently. This means that data stored in
-   different ways (slice-wise, 3D, etc.) must be used with specific generators.
-3. The inputs/outputs are batched into an ndarray of dimensions `Nx...`, where
-   `N` is the batch size.
+As mentioned above, medical data often requires structuring. This can result in returning batches
+of elements that are subsets of a single scan. For example, a data loader that indexes over 2D slices
+of a 3D scan is incredibly useful for training 2D models. However, during inference, metrics are 
+typically calculated per scan and restructuring data outside of the data loader can be difficult.
 
-`img_generator_test`:
-1. It takes the trained model and loads the registered dataset for the
-   `GeneratorState.TESTING` state.
-2. Batches data by `scan_id`. Data corresponding to the same `scan_id` will be
-   processed and structured into a 3D volume of shape `DxHxW`.
-3. Runs `model.predict` on data for a specific `scan_id`.
-4. Yields `x` (input), `y_true` (ground truth masks), `y_pred` (predicted mask)
-   `scan_id`, `time_elapsed` (time to run prediction).
+To simplify inference and downstream metric calculation, each data loader implements an
+`inference` method, which takes in a medsegpy 
+[`Model`](../modules/modeling.html#medsegpy.modeling.model.Model) and keyword arguments that 
+are typically used with [`predict_generator`](https://keras.io/models/sequential/#predict_generator). 
+In `inference`, the data loader does the following:
+1. It loads all dataset dictionaries corresponding to a given scan
+2. Structures data in these dictionaries based on the data loader's defined structuring method.
+3. Runs inference on scan data
+4. Reformats scan data. Images/volumes will be of the shape `HxWx...`. Semantic segmentation
+masks and predictions will have shape `HxWx...xC`.
+5. Yields a dictionary of inputs and outputs
+
+This method continues to yield input and output data in the medsegpy format until data for all
+scans are yielded. For more information, see 
+[DataLoader](../modules/data.html#medsegpy.data.data_loader.DataLoader).
 
 ## Dataloader example
 Below we describe loading data and training a model using the for
@@ -54,7 +52,7 @@ as 2D slices. For more information on acceptable dataset h5 files, see
 
 ```python
 from medsegpy.config import UNetConfig
-from medsegpy.data import OAIGenerator, GeneratorState
+from medsegpy.data import build_loader, DatasetCatalog, DefaultDataLoader
 from medsegpy.modeling import get_model
 
 cfg = UNetConfig()
@@ -65,38 +63,52 @@ cfg.TEST_DATASET = "oai_2d_test"
 model = get_model(cfg)
 model.compile(...)  # compile with optimizer, loss, metrics, etc.
 
-generator = OAIGenerator(cfg)
-train_steps, val_steps = generator.num_steps()
+# Using built-in methods to create loaders.
+# To build them from scratch, see implementation
+# of `build_loader`
+train_loader = build_loader(
+    cfg, 
+    cfg.TRAIN_DATASET, 
+    batch_size=10,
+    is_test=False,
+    shuffle=True,
+    drop_last=True,
+)
+val_loader = build_loader(
+    cfg, 
+    cfg.VAL_DATASET, 
+    batch_size=10,
+    is_test=False,
+    shuffle=True,
+    drop_last=True,
+)
+test_loader = build_loader(
+    cfg, 
+    cfg.TEST_DATASET, 
+    batch_size=10,
+    is_test=False,
+    shuffle=True,
+    drop_last=False,
+)
 
 # Start training
 model.fit_generator(
-    generator=generator.img_generator(GeneratorState.TRAINING),
-    steps_per_epoch=train_steps,
-    validation_data=generator.img_generator(GeneratorState.VALIDATION),
-    validation_steps=val_steps,
-    ...  # other params for fit_generator
+    train_loader,
+    validation_data=val_loader,
+    ...
 )
 
 # Run inference.
-for x, y_true, y_pred, scan_id, time_elapsed in generator.img_generator_test(model):
-    # x (ndarray): scan volume - shape DxHxW
-    # y_true (ndarray): ground truth masks - shape DxHxWxC
-    # y_pred (ndarray): predictions (probabilities) - DxHxWxC
-    # scan_id (str): scan id
-    # time_elapsed (float): Time for segmenting whole volume.
-
+for input, output in test_loader.inference(model):
     # Do inference related things.
 ```
 
 ## Write a Custom Dataloader
-See the [abdominal CT generator](../modules/data.html#medsegpy.data.CTGenerator)
-for an example.
+Coming soon!
 
 ## Use a Custom Dataloader
 
 If you use [DefaultTrainer](../modules/engine.html#medsegpy.engine.defaults.DefaultTrainer),
 you can overwrite its `_build_data_loaders` and `build_test_data_loader` methods to use your own dataloader.
-See the [abCT training](../../tools/ct_train.py)
-for an example.
 
-If you write your own training loop, you can plug in your data loader easily.
+If you write your own training loop, you can also plug in your data loader easily.

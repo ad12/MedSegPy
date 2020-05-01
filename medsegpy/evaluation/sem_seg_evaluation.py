@@ -1,33 +1,33 @@
 import logging
 import os
 import time
+from typing import Sequence, Union
 
 import h5py
 import numpy as np
-import seaborn as sns
 from fvcore.common.file_io import PathManager
 
 from medsegpy.config import Config
 from medsegpy.data import MetadataCatalog
-from medsegpy.utils.metric_utils import MetricsManager, SegMetric
 
 from .build import EVALUATOR_REGISTRY
 from .evaluator import DatasetEvaluator
+from .metrics import Metric, MetricsManager
 
 
-def get_stats_string(mw: MetricsManager):
+def get_stats_string(manager: MetricsManager):
+    """Returns formatted metrics manager summary string.
+
+    Args:
+        manager (MetricsManager): The manager whose results to format.
+
+    Returns:
+        str: A formatted string detailing manager results.
     """
-    Return string detailing statistics
-    :param mw:
-    :param skipped_count:
-    :param testing_time:
-    :return:
-    """
-    seg_metrics_processor = mw.seg_metrics_processor
-    inference_runtimes = np.asarray(mw.runtimes)
+    inference_runtimes = np.asarray(manager.runtimes)
 
     s = "============ Overall Summary ============\n"
-    s += "%s\n" % seg_metrics_processor.summary()
+    s += "%s\n" % manager.summary()
     s += (
         "Inference time (Mean +/- Std. Dev.): "
         "{:0.2f} +/- {:0.2f} seconds.\n".format(
@@ -39,15 +39,14 @@ def get_stats_string(mw: MetricsManager):
 
 @EVALUATOR_REGISTRY.register()
 class SemSegEvaluator(DatasetEvaluator):
-    """
-    Evaluate semantic segmentation
+    """Evaluator for semantic segmentation-related tasks.
     """
 
     def __init__(
         self,
-        dataset_name,
+        dataset_name: str,
         cfg: Config,
-        output_folder=None,
+        output_folder: str = None,
         save_raw_data: bool = False,
         stream_evaluation: bool = True,
     ):
@@ -56,7 +55,7 @@ class SemSegEvaluator(DatasetEvaluator):
             dataset_name (str): name of the dataset to be evaluated.
             cfg:
             output_folder (str): an output directory to dump results.
-            save_raw_data (:obj:`bool`, optional): Save recon, labels, ground
+            save_raw_data (:obj:`bool`, optional): Save probs, labels, ground
                 truth masks to h5 file.
             stream_evaluation (:obj:`bool`, optional): If `True`, evaluates
                 data as it comes in to avoid holding too many objects in memory.
@@ -82,23 +81,16 @@ class SemSegEvaluator(DatasetEvaluator):
             contiguous_id_map[tuple(x) if isinstance(x, list) else x]
             for x in cat_ids
         ]
-
         categories = meta.get("categories")
         categories = [categories[c_id] for c_id in contiguous_ids]
-        category_colors = meta.get("category_colors")
-        if category_colors:
-            category_colors = [category_colors[c_id] for c_id in contiguous_ids]
-        else:
-            category_colors = sns.color_palette("bright")
+        self.spacing = meta.get("spacing", None)
+
         self._categories = categories
-        self._category_colors = category_colors
-        self._metrics = [SegMetric[m] for m in cfg.TEST_METRICS]
 
         self._metrics_manager = None
         self._predictions = None
         self._scan_cnt = 0
         self._results_str = ""
-        self._voxel_spacing = meta.get("voxel_spacing", None)
 
         self._save_raw_data = save_raw_data
         self.stream_evaluation = stream_evaluation
@@ -106,34 +98,34 @@ class SemSegEvaluator(DatasetEvaluator):
         self._output_activation = cfg.LOSS[1]
         self._output_includes_background = cfg.INCLUDE_BACKGROUND
 
+    def _get_metrics(self) -> Sequence[Union[str, Metric]]:
+        """"""
+        return self._config.TEST_METRICS
+
     def reset(self):
         self._metrics_manager = MetricsManager(
-            class_names=self._categories, metrics=self._metrics
+            class_names=self._categories, metrics=self._get_metrics()
         )
         self._predictions = []
         self._scan_cnt = 0
         self._results_str = ""
 
-    def process(self, inputs, outputs, times_elapsed):
+    def process(self, inputs, outputs):
         """
-        Args:
-            inputs (List[Dict[str, Any]]): The inputs to the model.
-                Each dict corresponds to a scan id, input volume/image, and
-                (Dx)HxWxC ground truth mask.
-            outputs (List[ndarray]): The outputs of the model.
-                Each ndarray corresponds to the (Dx)HxWxC probability tensor
-                output by semantic segmentation models.
-            times_elapsed (List[float]): The segmentation times per input.
+        See :class:`DatasetEvaluator` in evaluator.py
+        for argument details.
         """
         output_activation = self._output_activation
         includes_bg = self._output_includes_background
 
-        for input, output, time_elapsed in zip(inputs, outputs, times_elapsed):
+        for input, output in zip(inputs, outputs):
+            y_pred = output["y_pred"]
+
             if output_activation == "sigmoid":
-                labels = (output > 0.5).astype(np.uint8)
+                labels = (y_pred > 0.5).astype(np.uint8)
             elif output_activation == "softmax":
-                labels = np.zeros_like(output, dtype=np.uint8)
-                l_argmax = np.argmax(output, axis=-1)
+                labels = np.zeros_like(y_pred, dtype=np.uint8)
+                l_argmax = np.argmax(y_pred, axis=-1)
                 for c in range(labels.shape[-1]):
                     labels[l_argmax == c, c] = 1
                 labels = labels.astype(np.uint)
@@ -146,15 +138,17 @@ class SemSegEvaluator(DatasetEvaluator):
 
             # background is always excluded from analysis
             if includes_bg:
-                y_true = input["y_true"][..., 1:]
-                output = output[..., 1:]
+                y_true = output["y_true"][..., 1:]
+                y_pred = output["y_pred"][..., 1:]
                 labels = labels[..., 1:]
                 if y_true.ndim == 3:
                     y_true = y_true[..., np.newaxis]
-                    output = output[..., np.newaxis]
+                    y_pred = y_pred[..., np.newaxis]
                     labels = labels[..., np.newaxis]
-                input["y_true"] = y_true
+                output["y_true"] = y_true
+                output["y_pred"] = y_pred
 
+            time_elapsed = output["time_elapsed"]
             if self.stream_evaluation:
                 self.eval_single_scan(input, output, labels, time_elapsed)
             else:
@@ -162,7 +156,9 @@ class SemSegEvaluator(DatasetEvaluator):
 
     def eval_single_scan(self, input, output, labels, time_elapsed):
         metrics_manager = self._metrics_manager
-        voxel_spacing = self._voxel_spacing
+        spacing = (
+            input["scan_spacing"] if "scan_spacing" in input else self.spacing
+        )
         logger = self._logger
         save_raw_data = self._save_raw_data
         output_dir = self._output_folder
@@ -170,14 +166,18 @@ class SemSegEvaluator(DatasetEvaluator):
         self._scan_cnt += 1
         scan_cnt = self._scan_cnt
         scan_id = input["scan_id"]
-        y_true = input["y_true"]
+        y_true: np.ndarray = output["y_true"]
+        x: np.ndarray = np.squeeze(input["x"])
 
-        summary = metrics_manager.analyze(
+        metrics_kwargs = {"spacing": spacing} if spacing is not None else {}
+
+        summary = metrics_manager(
             scan_id,
-            np.transpose(y_true, axes=[1, 2, 0, 3]),
-            np.transpose(labels, axes=[1, 2, 0, 3]),
-            voxel_spacing=voxel_spacing,
+            y_true=y_true,
+            y_pred=labels,
+            x=x,
             runtime=time_elapsed,
+            **metrics_kwargs,
         )
 
         logger_info_str = "Scan #{:03d} (name = {}, {:0.2f}s) = {}".format(
@@ -189,7 +189,7 @@ class SemSegEvaluator(DatasetEvaluator):
         if output_dir and save_raw_data:
             save_name = "{}/{}.pred".format(output_dir, scan_id)
             with h5py.File(save_name, "w") as h5f:
-                h5f.create_dataset("recon", data=output)
+                h5f.create_dataset("probs", data=output["y_pred"])
                 h5f.create_dataset("labels", data=labels)
 
     def evaluate(self):
@@ -204,7 +204,6 @@ class SemSegEvaluator(DatasetEvaluator):
         root-mean-squared quantity rather than mean.
         """
         output_dir = self._output_folder
-        voxel_spacing = self._voxel_spacing
         logger = self._logger
 
         if self._predictions:
@@ -226,8 +225,7 @@ class SemSegEvaluator(DatasetEvaluator):
                     "Weights Loaded: %s\n"
                     % os.path.basename(self._config.TEST_WEIGHT_PATH)
                 )
-                if voxel_spacing:
-                    f.write("Voxel Spacing: %s\n" % str(voxel_spacing))
+
                 f.write("--" * 20)
                 f.write("\n")
                 f.write(results_str)

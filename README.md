@@ -7,7 +7,8 @@ See [INSTALL.md](INSTALL.md).
 
 ## Quick Start
 
-See [GETTING_STARTED.md](GETTING_STARTED.md) and learn more at our [documentation](https://ad12.github.io/MedSegPy/).
+See [GETTING_STARTED.md](GETTING_STARTED.md) and learn more at our 
+[documentation](https://ad12.github.io/MedSegPy/_build/html/index.html).
 
 
 ## How To Cite

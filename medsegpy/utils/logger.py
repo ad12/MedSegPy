@@ -10,6 +10,8 @@ from fvcore.common.file_io import PathManager
 from tabulate import tabulate
 from termcolor import colored
 
+logging.captureWarnings(True)
+
 
 class _ColorfulFormatter(logging.Formatter):
     def __init__(self, *args, **kwargs):
@@ -62,7 +64,6 @@ def setup_logger(
     logger = logging.getLogger(name)
     logger.setLevel(logging.DEBUG)
     logger.propagate = False
-
     if abbrev_name is None:
         abbrev_name = name
 

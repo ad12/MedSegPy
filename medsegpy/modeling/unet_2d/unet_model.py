@@ -1,5 +1,6 @@
 import logging
 import os
+import warnings
 
 import numpy as np
 from keras.engine.topology import get_source_inputs
@@ -13,7 +14,8 @@ from keras.layers import (
     Input,
     MaxPooling2D,
 )
-from keras.models import Model
+
+from ..model import Model
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +59,10 @@ def unet_2d_model(
 
     :raise ValueError if input_size is not tuple or dimensions of input_size do not match (height, width, 1)
     """
+    warnings.warn(
+        "unet_2d_model is deprecated. Use `UNet2D(cfg).build_model()`.",
+        DeprecationWarning,
+    )
     from medsegpy import glob_constants
 
     logger.info("Initializing unet with seed: %s" % str(glob_constants.SEED))
@@ -191,6 +197,10 @@ def unet_2d_model_v2(
 
     :raise ValueError if input_size is not tuple or dimensions of input_size do not match (height, width, 1)
     """
+    warnings.warn(
+        "unet_2d_model_v2 is deprecated. Use `UNet2D(cfg).build_model()`.",
+        DeprecationWarning,
+    )
     from medsegpy import glob_constants
 
     logger.info("Initializing unet with seed: %s" % str(glob_constants.SEED))

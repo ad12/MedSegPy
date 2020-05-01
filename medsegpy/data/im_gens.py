@@ -66,6 +66,11 @@ class Generator(ABC):
     SUPPORTED_TAGS = [""]
 
     def __init__(self, cfg: Config):
+        warnings.warn(
+            "Generator is deprecated, use DataLoader instead",
+            DeprecationWarning,
+        )
+
         if cfg.TAG not in self.SUPPORTED_TAGS:
             raise ValueError(
                 "Tag mismatch: config must have tag in %s" % self.SUPPORTED_TAGS

@@ -1,6 +1,18 @@
-# -*- coding: utf-8 -*-
+"""Pooling layers.
+
+MaxPoolingMask2D, MaxPoolingWithArgmax2D, and MaxUnpooling2D are based on are
+based on code from the open-source repo below. We thank the authors for making
+the code publicly available.
+
+https://github.com/ykamikawa/tf-keras-SegNet/tree/648ee1aa6870e8280a5f24ee193caa585adde9cd.
+"""
+
 from keras import backend as K
-from keras.layers import Layer
+from keras.layers.convolutional import UpSampling2D
+from keras.layers.core import Layer
+from keras.layers.pooling import MaxPooling2D
+
+__all__ = ["MaxPoolingWithArgmax2D", "MaxUnpooling2D"]
 
 
 class MaxPoolingWithArgmax2D(Layer):
@@ -43,11 +55,22 @@ class MaxPoolingWithArgmax2D(Layer):
     def compute_mask(self, inputs, mask=None):
         return self.pool_size[0] * [None]
 
+    def get_config(self):
+        base_cfg = super().get_config()
+        base_cfg.update(
+            {
+                "padding": self.padding,
+                "pool_size": self.pool_size,
+                "strides": self.strides,
+            }
+        )
+        return base_cfg
+
 
 class MaxUnpooling2D(Layer):
     def __init__(self, size=(2, 2), **kwargs):
         super(MaxUnpooling2D, self).__init__(**kwargs)
-        self.size = size
+        self.pool_size = size
 
     def call(self, inputs, output_shape=None):
         updates, mask = inputs[0], inputs[1]
@@ -58,8 +81,8 @@ class MaxUnpooling2D(Layer):
             if output_shape is None:
                 output_shape = (
                     input_shape[0],
-                    input_shape[1] * self.size[0],
-                    input_shape[2] * self.size[1],
+                    input_shape[1] * self.pool_size[0],
+                    input_shape[2] * self.pool_size[1],
                     input_shape[3],
                 )
             self.output_shape1 = output_shape
@@ -91,7 +114,12 @@ class MaxUnpooling2D(Layer):
         mask_shape = input_shape[1]
         return (
             mask_shape[0],
-            mask_shape[1] * self.size[0],
-            mask_shape[2] * self.size[1],
+            mask_shape[1] * self.pool_size[0],
+            mask_shape[2] * self.pool_size[1],
             mask_shape[3],
         )
+
+    def get_config(self):
+        base_cfg = super().get_config()
+        base_cfg.update({"pool_size": self.pool_size})
+        return base_cfg

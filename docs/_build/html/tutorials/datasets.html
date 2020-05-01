@@ -99,6 +99,11 @@
 <li class="toctree-l4"><a class="reference internal" href="#data-paths">Data paths</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#register-dataset">Register Dataset</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#standard-dataset-dicts">Standard Dataset Dicts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#examples">Examples</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#register-metadata-for-a-dataset">Register Metadata for a Dataset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#update-the-config-for-new-datasets">Update the Config for New Datasets</a></li>
 </ul>
@@ -195,7 +200,7 @@ If augmentations are used, define different augmentations or series of augmentat
 </div>
 <div class="section" id="data-format">
 <span id="data-format"></span><h2>Data format<a class="headerlink" href="#data-format" title="Permalink to this headline">¶</a></h2>
-<p>Currently, data must be stored as slices in the h5df format and must follow a specific naming convention:</p>
+<p>Currently, data must be stored as 2D slices in the h5df format and must follow a specific naming convention:</p>
 <ul class="simple">
 <li><p>Subject id: 7 digits</p></li>
 <li><p>Timepoint: 2 digits</p></li>
@@ -253,6 +258,62 @@ at index <code class="docutils literal notranslate"><span class="pre">0</span></
 should be in a different directory. Image and segmentation files should be stored in the appropriate folder.</p>
 </div>
 </div>
+<div class="section" id="register-dataset">
+<span id="register-dataset"></span><h2>Register Dataset<a class="headerlink" href="#register-dataset" title="Permalink to this headline">¶</a></h2>
+<p>To let medsegpy know how to obtain a dataset named “my_dataset”, you will impolement a function that
+returns the items in your dataset and then tell medsegpy about this function</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">get_dicts</span><span class="p">():</span>
+    <span class="o">...</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">following</span> <span class="n">format</span>
+
+<span class="kn">from</span> <span class="nn">medsegpy.data</span> <span class="kn">import</span> <span class="n">DatasetCatalog</span>
+<span class="n">DatasetCatalog</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;my_dataset&quot;</span><span class="p">,</span> <span class="n">get_dicts</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Here, the snippet associates “my_dataset” with a function that returns the data. The registration
+is effective as long as the process is running.</p>
+<p>The function can process data from its original format into either one of the following:</p>
+<ol class="simple">
+<li><p>MedSegPy’s standard dataset dict, described below. This will work with many builtin features
+in MedSegPy, so it is recommended when it is sufficient for your task.</p></li>
+<li><p>Your custom dataset dict. You can choose to return arbitrary dicts that are designed to work
+with your custom dataloader.</p></li>
+</ol>
+<div class="section" id="standard-dataset-dicts">
+<span id="standard-dataset-dicts"></span><h3>Standard Dataset Dicts<a class="headerlink" href="#standard-dataset-dicts" title="Permalink to this headline">¶</a></h3>
+<p>For standard semantic segmentation tasks, we load the original dataset into <code class="docutils literal notranslate"><span class="pre">list[dict]</span></code>.
+Each dictionary is required to contain a set of keys. Because all data must currently be stored
+as 2D slices in the h5 format (as described above), the following keys are required for all
+dictionaries:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">file_name</span></code> (str): the full path to the image file for this slice.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sem_seg_file</span></code> (str): the full path to the semantic segmentation file for this slice.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scan_id</span></code> (str): the scan this slice belongs to</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">slice_id</span></code> (int): The slice this file corresponds to. Should be 1-indexed, meaning the
+first slice of every volume has <code class="docutils literal notranslate"><span class="pre">slice_id=1</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">total_num_slices</span></code>: the total number of slices in the volume.</p></li>
+</ul>
+<p>The following keys are optional:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">subject_id</span></code> (int): the subject id corresponding to this scan</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">time_point</span></code> (int): the time point at which the scan was acquired</p></li>
+</ul>
+<p>All keys begining with <code class="docutils literal notranslate"><span class="pre">scan_</span></code> will be interpreted as special keys unique to the scan.
+These will be returned as part of the input dictionary during inference.
+In built-in medsegpy functions, these keys will also serve as override keys for any default
+metadata associated with the dataset (see metadata section below). For example, if the dataset has a metadata key
+<code class="docutils literal notranslate"><span class="pre">spacing</span></code>, the value for <code class="docutils literal notranslate"><span class="pre">spacing</span></code> is typically used for all elements in the dataset.
+However, if a dataset dictionary has the key <code class="docutils literal notranslate"><span class="pre">scan_spacing</span></code>, the value of <code class="docutils literal notranslate"><span class="pre">scan_spacing</span></code> will
+override the default metadata value.</p>
+<p>MedSegPy will be expanding to support data stored in 3D soon. We will update
+this section once that is complete.</p>
+</div>
+<div class="section" id="examples">
+<span id="examples"></span><h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
+<p>For examples on registering datasets, see
+<a class="reference external" href="/modules/engine.html#medsegpy.data.datasets.oai">datasets/oai.py</a></p>
+</div>
+</div>
 <div class="section" id="register-metadata-for-a-dataset">
 <span id="register-metadata-for-a-dataset"></span><h2>Register Metadata for a Dataset<a class="headerlink" href="#register-metadata-for-a-dataset" title="Permalink to this headline">¶</a></h2>
 <p>To let medsegpy know how to obtain a dataset named “my_dataset”, you will need
@@ -269,7 +330,7 @@ category ids to contiguous ids (0-indexed).</p></li>
 </ul>
 <p>Optional:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">voxel_spacing</span></code> (tuple of <code class="docutils literal notranslate"><span class="pre">float</span></code>): the voxel spacing in millimeters for scan volumes <code class="docutils literal notranslate"><span class="pre">(dH,</span> <span class="pre">dW,</span> <span class="pre">...)</span></code>. Required for some segmentation metrics.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">spacing</span></code> (tuple of <code class="docutils literal notranslate"><span class="pre">float</span></code>): the spacing in millimeters for scan volumes <code class="docutils literal notranslate"><span class="pre">(dH,</span> <span class="pre">dW,</span> <span class="pre">...)</span></code>. Required for some segmentation metrics.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">category_abbreviations</span></code> (sequence of <code class="docutils literal notranslate"><span class="pre">str</span></code>): Abbreviations for categories.
 1-to-1 with <code class="docutils literal notranslate"><span class="pre">categories</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">category_colors</span></code> (sequence of <code class="docutils literal notranslate"><span class="pre">(R,G,B)</span></code>): R,G,B colors for different categories.</p></li>

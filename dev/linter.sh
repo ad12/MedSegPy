@@ -36,8 +36,4 @@ else
   python3 -m flake8 .
 fi
 
-# echo "Running mypy ..."
-# Pytorch does not have enough type annotations
-# mypy detectron2/solver detectron2/structures detectron2/config
-
 command -v arc > /dev/null && arc lint

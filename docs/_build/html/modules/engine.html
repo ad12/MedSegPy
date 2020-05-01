@@ -89,13 +89,15 @@
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">API Documentation</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="data.html">medsegpy.data package</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">medsegpy.engine package</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#medsegpy-engine-trainer-module">medsegpy.engine.trainer module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-medsegpy.engine.trainer">medsegpy.engine.trainer module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-medsegpy.engine.defaults">medsegpy.engine.defaults module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-medsegpy.engine.callbacks">medsegpy.engine.callbacks module</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="evaluation.html">medsegpy.evaluation package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html">medsegpy.modeling package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html">medsegpy.modeling.layers package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#module-medsegpy.modeling.meta_arch">medsegpy.modeling.meta_arch package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#module-medsegpy.modeling">medsegpy.modeling package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="solver.html">medsegpy.solver package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="utils.html">medsegpy.utils package</a></li>
 </ul>
@@ -166,10 +168,43 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="medsegpy-engine-package">
-<h1>medsegpy.engine package<a class="headerlink" href="#medsegpy-engine-package" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="medsegpy-engine-trainer-module">
-<h2>medsegpy.engine.trainer module<a class="headerlink" href="#medsegpy-engine-trainer-module" title="Permalink to this headline">¶</a></h2>
+  <div class="section" id="module-medsegpy.engine">
+<span id="medsegpy-engine-package"></span><h1>medsegpy.engine package<a class="headerlink" href="#module-medsegpy.engine" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-medsegpy.engine.trainer">
+<span id="medsegpy-engine-trainer-module"></span><h2>medsegpy.engine.trainer module<a class="headerlink" href="#module-medsegpy.engine.trainer" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="medsegpy.engine.trainer.DefaultTrainer">
+<em class="property">class </em><code class="sig-prename descclassname">medsegpy.engine.trainer.</code><code class="sig-name descname">DefaultTrainer</code><span class="sig-paren">(</span><em class="sig-param">cfg: medsegpy.config.Config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/engine/trainer.html#DefaultTrainer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.engine.trainer.DefaultTrainer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Default trainer for medical semantic segmentation.</p>
+<dl class="method">
+<dt id="medsegpy.engine.trainer.DefaultTrainer.train">
+<code class="sig-name descname">train</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/engine/trainer.html#DefaultTrainer.train"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.engine.trainer.DefaultTrainer.train" title="Permalink to this definition">¶</a></dt>
+<dd><p>Train model specified by config.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="medsegpy.engine.trainer.DefaultTrainer.build_callbacks">
+<code class="sig-name descname">build_callbacks</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/engine/trainer.html#DefaultTrainer.build_callbacks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.engine.trainer.DefaultTrainer.build_callbacks" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="medsegpy.engine.trainer.DefaultTrainer.test">
+<em class="property">classmethod </em><code class="sig-name descname">test</code><span class="sig-paren">(</span><em class="sig-param">cfg: medsegpy.config.Config</em>, <em class="sig-param">model</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/engine/trainer.html#DefaultTrainer.test"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.engine.trainer.DefaultTrainer.test" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="medsegpy.engine.trainer.DefaultTrainer.build_model">
+<em class="property">classmethod </em><code class="sig-name descname">build_model</code><span class="sig-paren">(</span><em class="sig-param">cfg</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/engine/trainer.html#DefaultTrainer.build_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.engine.trainer.DefaultTrainer.build_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="medsegpy.engine.trainer.DefaultTrainer.build_test_data_loader">
+<em class="property">classmethod </em><code class="sig-name descname">build_test_data_loader</code><span class="sig-paren">(</span><em class="sig-param">cfg</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/engine/trainer.html#DefaultTrainer.build_test_data_loader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.engine.trainer.DefaultTrainer.build_test_data_loader" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </div>
 <div class="section" id="module-medsegpy.engine.defaults">
 <span id="medsegpy-engine-defaults-module"></span><h2>medsegpy.engine.defaults module<a class="headerlink" href="#module-medsegpy.engine.defaults" title="Permalink to this headline">¶</a></h2>
@@ -235,12 +270,12 @@
 <p>A Keras callback to log training history</p>
 <dl class="method">
 <dt id="medsegpy.engine.callbacks.LossHistory.on_train_begin">
-<code class="sig-name descname">on_train_begin</code><span class="sig-paren">(</span><em class="sig-param">logs={}</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/engine/callbacks.html#LossHistory.on_train_begin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.engine.callbacks.LossHistory.on_train_begin" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">on_train_begin</code><span class="sig-paren">(</span><em class="sig-param">logs=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/engine/callbacks.html#LossHistory.on_train_begin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.engine.callbacks.LossHistory.on_train_begin" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="medsegpy.engine.callbacks.LossHistory.on_epoch_end">
-<code class="sig-name descname">on_epoch_end</code><span class="sig-paren">(</span><em class="sig-param">epoch</em>, <em class="sig-param">logs={}</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/engine/callbacks.html#LossHistory.on_epoch_end"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.engine.callbacks.LossHistory.on_epoch_end" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">on_epoch_end</code><span class="sig-paren">(</span><em class="sig-param">epoch</em>, <em class="sig-param">logs=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/engine/callbacks.html#LossHistory.on_epoch_end"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.engine.callbacks.LossHistory.on_epoch_end" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>

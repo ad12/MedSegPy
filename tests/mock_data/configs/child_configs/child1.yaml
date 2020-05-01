@@ -1,0 +1,2 @@
+_BASE_: "../deeplabv3_2d.ini"
+N_EPOCHS: 12

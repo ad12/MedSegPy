@@ -1,0 +1,415 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>medsegpy.engine.trainer &mdash; MedSegPy 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> MedSegPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/index.html">API Documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">MedSegPy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>medsegpy.engine.trainer</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for medsegpy.engine.trainer</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Tuple</span>
+
+<span class="kn">from</span> <span class="nn">keras</span> <span class="k">import</span> <span class="n">callbacks</span> <span class="k">as</span> <span class="n">kc</span>
+<span class="kn">from</span> <span class="nn">keras.utils</span> <span class="k">import</span> <span class="n">plot_model</span>
+
+<span class="kn">from</span> <span class="nn">medsegpy</span> <span class="k">import</span> <span class="n">config</span><span class="p">,</span> <span class="n">solver</span>
+<span class="kn">from</span> <span class="nn">medsegpy.data</span> <span class="k">import</span> <span class="n">build_loader</span><span class="p">,</span> <span class="n">im_gens</span>
+<span class="kn">from</span> <span class="nn">medsegpy.engine.callbacks</span> <span class="k">import</span> <span class="n">LossHistory</span><span class="p">,</span> <span class="n">lr_callback</span>
+<span class="kn">from</span> <span class="nn">medsegpy.evaluation</span> <span class="k">import</span> <span class="n">build_evaluator</span><span class="p">,</span> <span class="n">inference_on_dataset</span>
+<span class="kn">from</span> <span class="nn">medsegpy.losses</span> <span class="k">import</span> <span class="n">dice_loss</span><span class="p">,</span> <span class="n">get_training_loss</span>
+<span class="kn">from</span> <span class="nn">medsegpy.modeling</span> <span class="k">import</span> <span class="n">get_model</span>
+<span class="kn">from</span> <span class="nn">medsegpy.modeling.meta_arch</span> <span class="k">import</span> <span class="n">build_model</span>
+<span class="kn">from</span> <span class="nn">medsegpy.utils</span> <span class="k">import</span> <span class="n">dl_utils</span><span class="p">,</span> <span class="n">io_utils</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="DefaultTrainer"><a class="viewcode-back" href="../../../modules/engine.html#medsegpy.engine.trainer.DefaultTrainer">[docs]</a><span class="k">class</span> <span class="nc">DefaultTrainer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Default trainer for medical semantic segmentation.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">Config</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span> <span class="o">=</span> <span class="n">cfg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_loss_history</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">model</span> <span class="o">=</span> <span class="n">get_model</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+        <span class="n">plot_model</span><span class="p">(</span>
+            <span class="n">model</span><span class="p">,</span>
+            <span class="n">to_file</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">OUTPUT_DIR</span><span class="p">,</span> <span class="s2">&quot;model.png&quot;</span><span class="p">),</span>
+            <span class="n">show_shapes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">summary</span><span class="p">(</span><span class="n">print_fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="n">model_json</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span>
+        <span class="n">model_json_save_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">OUTPUT_DIR</span><span class="p">,</span> <span class="s2">&quot;model.json&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">model_json_save_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+            <span class="n">json_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">model_json</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">INIT_WEIGHTS</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_init_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+        <span class="c1"># Replicate model on multiple gpus.</span>
+        <span class="c1"># Note this does not solve issue of having too large of a model</span>
+        <span class="n">num_gpus</span> <span class="o">=</span> <span class="n">dl_utils</span><span class="o">.</span><span class="n">num_gpus</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">num_gpus</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Running multi gpu model&quot;</span><span class="p">)</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">dl_utils</span><span class="o">.</span><span class="n">ModelMGPU</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">gpus</span><span class="o">=</span><span class="n">num_gpus</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_train_loader</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_val_loader</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_data_loaders</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="o">=</span> <span class="n">model</span>
+
+<div class="viewcode-block" id="DefaultTrainer.train"><a class="viewcode-back" href="../../../modules/engine.html#medsegpy.engine.trainer.DefaultTrainer.train">[docs]</a>    <span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Train model specified by config.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_train_model</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">TEST_DATASET</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{}</span></div>
+
+    <span class="k">def</span> <span class="nf">_init_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize model with weights and apply any freezing necessary.&quot;&quot;&quot;</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Loading weights from </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">INIT_WEIGHTS</span><span class="p">))</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">load_weights</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">INIT_WEIGHTS</span><span class="p">)</span>
+        <span class="n">frozen_layers</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">FREEZE_LAYERS</span>
+        <span class="k">if</span> <span class="n">frozen_layers</span><span class="p">:</span>
+            <span class="n">fl</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">frozen_layers</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">frozen_layers</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Freezing layers [</span><span class="si">{}</span><span class="s2">, </span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fl</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">fl</span><span class="o">.</span><span class="n">stop</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">fl</span><span class="p">:</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">trainable</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="DefaultTrainer.build_callbacks"><a class="viewcode-back" href="../../../modules/engine.html#medsegpy.engine.trainer.DefaultTrainer.build_callbacks">[docs]</a>    <span class="k">def</span> <span class="nf">build_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span>
+        <span class="n">output_dir</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">OUTPUT_DIR</span>
+        <span class="n">callbacks</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">LR_SCHEDULER_NAME</span><span class="p">:</span>
+            <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">solver</span><span class="o">.</span><span class="n">build_lr_scheduler</span><span class="p">(</span><span class="n">cfg</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">USE_EARLY_STOPPING</span><span class="p">:</span>
+            <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">kc</span><span class="o">.</span><span class="n">EarlyStopping</span><span class="p">(</span>
+                    <span class="n">monitor</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">EARLY_STOPPING_CRITERION</span><span class="p">,</span>
+                    <span class="n">min_delta</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">EARLY_STOPPING_MIN_DELTA</span><span class="p">,</span>
+                    <span class="n">patience</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">EARLY_STOPPING_PATIENCE</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_loss_history</span> <span class="o">=</span> <span class="n">LossHistory</span><span class="p">()</span>
+
+        <span class="n">callbacks</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">kc</span><span class="o">.</span><span class="n">ModelCheckpoint</span><span class="p">(</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                        <span class="n">output_dir</span><span class="p">,</span> <span class="s2">&quot;weights.</span><span class="si">{epoch:03d}</span><span class="s2">-</span><span class="si">{val_loss:.4f}</span><span class="s2">.h5&quot;</span>
+                    <span class="p">),</span>
+                    <span class="n">save_best_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">save_weights_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="n">kc</span><span class="o">.</span><span class="n">TensorBoard</span><span class="p">(</span>
+                    <span class="n">output_dir</span><span class="p">,</span> <span class="n">write_grads</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">write_images</span><span class="o">=</span><span class="kc">False</span>
+                <span class="p">),</span>
+                <span class="n">kc</span><span class="o">.</span><span class="n">CSVLogger</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s2">&quot;metrics.log&quot;</span><span class="p">)),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_loss_history</span><span class="p">,</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">callbacks</span></div>
+
+    <span class="k">def</span> <span class="nf">_train_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Train model.&quot;&quot;&quot;</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span>
+        <span class="n">n_epochs</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">N_EPOCHS</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">LOSS</span>
+        <span class="n">class_weights</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">CLASS_WEIGHTS</span>
+        <span class="n">num_workers</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">NUM_WORKERS</span>
+        <span class="n">output_dir</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">OUTPUT_DIR</span>
+
+        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span>
+
+        <span class="c1"># TODO: Add more options for metrics.</span>
+        <span class="n">optimizer</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">build_optimizer</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+        <span class="c1"># Remove computation on the background class.</span>
+        <span class="n">loss_func</span> <span class="o">=</span> <span class="n">get_training_loss</span><span class="p">(</span>
+            <span class="n">loss</span><span class="p">,</span>
+            <span class="n">weights</span><span class="o">=</span><span class="n">class_weights</span><span class="p">,</span>
+            <span class="n">remove_background</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">INCLUDE_BACKGROUND</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+            <span class="n">optimizer</span><span class="o">=</span><span class="n">optimizer</span><span class="p">,</span>
+            <span class="n">loss</span><span class="o">=</span><span class="n">loss_func</span><span class="p">,</span>
+            <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">lr_callback</span><span class="p">(</span><span class="n">optimizer</span><span class="p">),</span> <span class="n">dice_loss</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="n">callbacks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_callbacks</span><span class="p">()</span>
+
+        <span class="n">train_loader</span><span class="p">,</span> <span class="n">val_loader</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_train_loader</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_val_loader</span>
+        <span class="n">use_multiprocessing</span> <span class="o">=</span> <span class="n">num_workers</span> <span class="o">&gt;</span> <span class="mi">1</span>
+
+        <span class="c1"># Start training</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">fit_generator</span><span class="p">(</span>
+            <span class="n">train_loader</span><span class="p">,</span>
+            <span class="n">epochs</span><span class="o">=</span><span class="n">n_epochs</span><span class="p">,</span>
+            <span class="n">validation_data</span><span class="o">=</span><span class="n">val_loader</span><span class="p">,</span>
+            <span class="n">callbacks</span><span class="o">=</span><span class="n">callbacks</span><span class="p">,</span>
+            <span class="n">workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
+            <span class="n">use_multiprocessing</span><span class="o">=</span><span class="n">use_multiprocessing</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Save optimizer state</span>
+        <span class="n">io_utils</span><span class="o">.</span><span class="n">save_optimizer</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">optimizer</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">)</span>
+
+        <span class="c1"># Save files to write as output</span>
+        <span class="c1"># TODO: refactor to save dataframe.</span>
+        <span class="n">hist_cb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loss_history</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">hist_cb</span><span class="o">.</span><span class="n">epoch</span><span class="p">,</span> <span class="n">hist_cb</span><span class="o">.</span><span class="n">losses</span><span class="p">,</span> <span class="n">hist_cb</span><span class="o">.</span><span class="n">val_losses</span><span class="p">]</span>
+        <span class="n">pik_data_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s2">&quot;pik_data.dat&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pik_data_path</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DefaultTrainer.test"><a class="viewcode-back" href="../../../modules/engine.html#medsegpy.engine.trainer.DefaultTrainer.test">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">test</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">cfg</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">Config</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Beginning testing...&quot;</span><span class="p">)</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>  <span class="c1"># will be modified below.</span>
+        <span class="n">cfg</span><span class="o">.</span><span class="n">change_to_test</span><span class="p">()</span>
+
+        <span class="n">weights</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">TEST_WEIGHT_PATH</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">cfg</span><span class="o">.</span><span class="n">TEST_WEIGHT_PATH</span><span class="p">:</span>
+            <span class="n">weights</span> <span class="o">=</span> <span class="n">dl_utils</span><span class="o">.</span><span class="n">get_weights</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">OUTPUT_DIR</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Best weights: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">weights</span><span class="p">))</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">load_weights</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+
+        <span class="n">test_dataset</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">TEST_DATASET</span>
+        <span class="n">test_gen</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">build_test_data_loader</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+        <span class="n">evaluator</span> <span class="o">=</span> <span class="n">build_evaluator</span><span class="p">(</span><span class="n">test_dataset</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">save_raw_data</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">inference_on_dataset</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">test_gen</span><span class="p">,</span> <span class="n">evaluator</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DefaultTrainer.build_model"><a class="viewcode-back" href="../../../modules/engine.html#medsegpy.engine.trainer.DefaultTrainer.build_model">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">build_model</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">cfg</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">build_model</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">get_model</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_build_data_loaders</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">cfg</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">im_gens</span><span class="o">.</span><span class="n">Generator</span><span class="p">,</span> <span class="n">im_gens</span><span class="o">.</span><span class="n">Generator</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Builds train and val data loaders.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">train_loader</span> <span class="o">=</span> <span class="n">build_loader</span><span class="p">(</span>
+            <span class="n">cfg</span><span class="p">,</span>
+            <span class="n">dataset_names</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">TRAIN_DATASET</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">TRAIN_BATCH_SIZE</span><span class="p">,</span>
+            <span class="n">drop_last</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">is_test</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">val_loader</span> <span class="o">=</span> <span class="n">build_loader</span><span class="p">(</span>
+            <span class="n">cfg</span><span class="p">,</span>
+            <span class="n">dataset_names</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">VAL_DATASET</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">VALID_BATCH_SIZE</span><span class="p">,</span>
+            <span class="n">drop_last</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">is_test</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">train_loader</span><span class="p">,</span> <span class="n">val_loader</span>
+
+<div class="viewcode-block" id="DefaultTrainer.build_test_data_loader"><a class="viewcode-back" href="../../../modules/engine.html#medsegpy.engine.trainer.DefaultTrainer.build_test_data_loader">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">build_test_data_loader</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">cfg</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">build_loader</span><span class="p">(</span>
+            <span class="n">cfg</span><span class="p">,</span>
+            <span class="n">dataset_names</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">TEST_DATASET</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">TEST_BATCH_SIZE</span><span class="p">,</span>
+            <span class="n">drop_last</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">is_test</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Arjun Desai
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
