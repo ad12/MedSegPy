@@ -126,7 +126,11 @@ class DefaultTrainer(object):
         # TODO: Add more options for metrics.
         optimizer = solver.build_optimizer(cfg)
         # Remove computation on the background class.
-        loss_func = get_training_loss(loss, weights=class_weights, remove_background=cfg.INCLUDE_BACKGROUND)
+        loss_func = get_training_loss(
+            loss,
+            weights=class_weights,
+            remove_background=cfg.INCLUDE_BACKGROUND,
+        )
         model.compile(
             optimizer=optimizer,
             loss=loss_func,

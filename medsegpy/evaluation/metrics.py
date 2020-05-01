@@ -4,11 +4,12 @@ A processor keeps track of task-specific metrics for different classes.
 It should not be used to keep track of non-class-specific metrics, such as
 runtime.
 """
-from abc import ABC, abstractmethod
-from collections import OrderedDict
 import inspect
 import logging
-from typing import Collection, Callable, Sequence, Union, Dict
+from abc import ABC, abstractmethod
+from collections import OrderedDict
+from typing import Callable, Collection, Dict, Sequence, Union
+
 import numpy as np
 import pandas as pd
 import tabulate
@@ -17,7 +18,9 @@ from medpy.metric import assd
 logger = logging.getLogger(__name__)
 
 
-def flatten_non_category_dims(xs: Sequence[np.ndarray], category_dim: int=None):
+def flatten_non_category_dims(
+    xs: Sequence[np.ndarray], category_dim: int = None
+):
     """Flattens all non-category dimensions into a single dimension.
 
     Args:
@@ -49,7 +52,8 @@ class Metric(Callable, ABC):
     number of categories.
 
     * metrics should have different name() for different functionality.
-    * `category_dim` duck type if metric can process multiple categories at once.
+    * `category_dim` duck type if metric can process multiple categories at
+        once.
 
     To compute metrics:
 
@@ -58,7 +62,8 @@ class Metric(Callable, ABC):
         metric = Metric()
         results = metric(...)
     """
-    def __init__(self, units: str=""):
+
+    def __init__(self, units: str = ""):
         self.units = units
 
     def name(self):
@@ -78,7 +83,8 @@ class Metric(Callable, ABC):
 class DSC(Metric):
     """Dice score coefficient.
     """
-    def __call__(self, y_pred, y_true, category_dim: int=None):
+
+    def __call__(self, y_pred, y_true, category_dim: int = None):
         y_pred = y_pred.astype(np.bool)
         y_true = y_true.astype(np.bool)
         y_pred, y_true = flatten_non_category_dims(
@@ -89,13 +95,14 @@ class DSC(Metric):
         size_i2 = np.count_nonzero(y_true, -1)
         intersection = np.count_nonzero(y_pred & y_true, -1)
 
-        return 2. * intersection / (size_i1 + size_i2)
+        return 2.0 * intersection / (size_i1 + size_i2)
 
 
 class VOE(Metric):
     """Volumetric overlap error.
     """
-    def __call__(self, y_pred, y_true, category_dim: int=None):
+
+    def __call__(self, y_pred, y_true, category_dim: int = None):
         y_pred = y_pred.astype(np.bool)
         y_true = y_true.astype(np.bool)
         y_pred, y_true = flatten_non_category_dims(
@@ -111,7 +118,8 @@ class VOE(Metric):
 class CV(Metric):
     """Coefficient of variation.
     """
-    def __call__(self, y_pred, y_true, category_dim: int=None):
+
+    def __call__(self, y_pred, y_true, category_dim: int = None):
         y_pred = y_pred.astype(np.bool)
         y_true = y_true.astype(np.bool)
         y_pred, y_true = flatten_non_category_dims(
@@ -130,6 +138,7 @@ class CV(Metric):
 class ASSD(Metric):
     """Average symmetric surface distance.
     """
+
     def __call__(self, y_pred, y_true, spacing=None, connectivity=1):
         return assd(
             y_pred, y_true, voxelspacing=spacing, connectivity=connectivity
@@ -164,9 +173,7 @@ class Recall(Metric):
         return tp / (tp + fn)
 
 
-_BUILT_IN_METRICS = {
-    x.__name__: x for x in Metric.__subclasses__()
-}
+_BUILT_IN_METRICS = {x.__name__: x for x in Metric.__subclasses__()}
 
 
 class MetricsManager:
@@ -204,6 +211,7 @@ class MetricsManager:
 
         num_scans = len(manager)
     """
+
     def __init__(
         self,
         class_names: Collection[str],
@@ -260,9 +268,9 @@ class MetricsManager:
     def __call__(
         self,
         scan_id: str,
-        x: np.ndarray=None,
-        y_pred: np.ndarray=None,
-        y_true: np.ndarray=None,
+        x: np.ndarray = None,
+        y_pred: np.ndarray = None,
+        y_true: np.ndarray = None,
         runtime: float = np.nan,
         **kwargs,
     ) -> str:
@@ -303,16 +311,22 @@ class MetricsManager:
                 params["category_dim"] = self.category_dim
                 metrics_data.append(metric(**params))
             else:
-                metrics_data.append([
-                    metric(**{
-                        k: v[..., c] if k in ["y_pred", "y_true", "x"] else v
-                        for k, v in params.items()
-                    })
-                    for c in range(num_classes)
-                ])
+                metrics_data.append(
+                    [
+                        metric(
+                            **{
+                                k: v[..., c]
+                                if k in ["y_pred", "y_true", "x"]
+                                else v
+                                for k, v in params.items()
+                            }
+                        )
+                        for c in range(num_classes)
+                    ]
+                )
 
         metrics_data = pd.DataFrame(
-            metrics_data, index=metrics_names, columns=self.class_names,
+            metrics_data, index=metrics_names, columns=self.class_names
         )
         metrics_data.replace([np.inf, -np.inf], np.nan)
         self.runtimes.append(runtime)
@@ -327,7 +341,7 @@ class MetricsManager:
 
         return ", ".join(strs)
 
-    def scan_summary(self, scan_id, delimiter: str=", ") -> str:
+    def scan_summary(self, scan_id, delimiter: str = ", ") -> str:
         """Get summary of results for a scan.
 
         Args:
@@ -368,10 +382,7 @@ class MetricsManager:
         TODO: Determine format
         """
         df = pd.concat(self._scan_data.values(), keys=self._scan_data.keys())
-        return {
-            "runtimes": self.runtimes,
-            "scan_data": df,
-        }
+        return {"runtimes": self.runtimes, "scan_data": df}
 
     def __len__(self):
         return len(self._scan_data)

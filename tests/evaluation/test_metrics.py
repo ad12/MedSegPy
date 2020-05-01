@@ -22,22 +22,18 @@ overlapping functionality:
 
 import inspect
 import unittest
+
 import numpy as np
-from medpy.metric import (
-    dc,
-    assd,
-    precision,
-    recall,
-)
+from medpy.metric import assd, dc, precision, recall
 
 from medsegpy.evaluation.metrics import (
+    ASSD,
+    CV,
     DSC,
     VOE,
-    CV,
-    ASSD,
+    Metric,
     Precision,
     Recall,
-    Metric,
 )
 
 _SHAPE = (300, 300, 40)
@@ -58,9 +54,7 @@ def _binary_arr(shape):
     return (np.random.random_sample(shape) > 0.5).astype(np.uint8)
 
 
-def _is_consistent_medpy(
-    metric: Metric, func, supports_multiclass: bool,
-):
+def _is_consistent_medpy(metric: Metric, func, supports_multiclass: bool):
     """Test consistency between metric and medpy implementation.
 
     Args:
@@ -88,15 +82,16 @@ def _is_consistent_medpy(
         args = {"y_pred": y_pred, "y_true": y_true}
         metrics_vals = metric(category_dim=category_dim, **args)
     else:
-        metrics_vals = np.asarray([
-            metric(y_pred[..., c], y_true[..., c])
-            for c in range(num_classes)
-        ])
+        metrics_vals = np.asarray(
+            [metric(y_pred[..., c], y_true[..., c]) for c in range(num_classes)]
+        )
 
-    base_vals = np.asarray([
-        func(result=y_pred[..., c], reference=y_true[..., c])
-        for c in range(num_classes)
-    ])
+    base_vals = np.asarray(
+        [
+            func(result=y_pred[..., c], reference=y_true[..., c])
+            for c in range(num_classes)
+        ]
+    )
 
     assert np.allclose(base_vals, metrics_vals)
 
@@ -116,15 +111,15 @@ def _test_multiclass(metric: Metric):
 
     """
     arg_names = inspect.getfullargspec(metric).args
-    assert "category_dim" in arg_names, (
-        "Metrics supporting multiple categories must have 'category_dim' arg"
-    )
+    assert (
+        "category_dim" in arg_names
+    ), "Metrics supporting multiple categories must have 'category_dim' arg"
 
     idx = arg_names.index("category_dim") - len(arg_names)
     defaults = inspect.getfullargspec(metric).defaults
-    assert defaults[idx] is None, (
-        "Default value for 'category_dim' should be `None`."
-    )
+    assert (
+        defaults[idx] is None
+    ), "Default value for 'category_dim' should be `None`."
 
     # Standard category_dim=-1
     shape = (100, 100, 100, 4)
@@ -135,11 +130,11 @@ def _test_multiclass(metric: Metric):
 
     args = {"y_pred": y_pred, "y_true": y_true}
     metrics_vals = metric(category_dim=category_dim, **args)
-    base_vals = np.asarray([
-        metric(y_pred[..., c], y_true[..., c]) for c in range(num_classes)
-    ])
-    assert np.allclose(base_vals, metrics_vals), (
-        "category_dim={}".format(category_dim)
+    base_vals = np.asarray(
+        [metric(y_pred[..., c], y_true[..., c]) for c in range(num_classes)]
+    )
+    assert np.allclose(base_vals, metrics_vals), "category_dim={}".format(
+        category_dim
     )
 
     # Standard category_dim=1
@@ -151,11 +146,14 @@ def _test_multiclass(metric: Metric):
 
     args = {"y_pred": y_pred, "y_true": y_true}
     metrics_vals = metric(category_dim=category_dim, **args)
-    base_vals = np.asarray([
-        metric(y_pred[:, c, ...], y_true[:, c, ...]) for c in range(num_classes)
-    ])
-    assert np.allclose(base_vals, metrics_vals), (
-        "category_dim={}".format(category_dim)
+    base_vals = np.asarray(
+        [
+            metric(y_pred[:, c, ...], y_true[:, c, ...])
+            for c in range(num_classes)
+        ]
+    )
+    assert np.allclose(base_vals, metrics_vals), "category_dim={}".format(
+        category_dim
     )
 
 

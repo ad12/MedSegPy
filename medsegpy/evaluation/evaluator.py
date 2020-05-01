@@ -101,9 +101,7 @@ def inference_on_dataset(
 
     start_compute_time = time.perf_counter()
     logger = logging.getLogger(__name__)
-    for idx, (input, output) in enumerate(
-        iter_loader(model)
-    ):
+    for idx, (input, output) in enumerate(iter_loader(model)):
         total_compute_time += time.perf_counter() - start_compute_time
 
         start_processing_time = time.perf_counter()

@@ -5,7 +5,7 @@ import time
 import warnings
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from typing import Any, Dict, List, Sequence, Tuple
+from typing import Dict, List, Sequence
 
 import h5py
 import numpy as np
@@ -150,6 +150,16 @@ class DataLoader(k_utils.Sequence, ABC):
         However, during inference, it is standard to compute metrics on the full
         scan, not individual slices.
 
+        This method does the following:
+            1. Loads dataset dicts corresponding to a scan
+            2. Structures data from these dicts
+            3. Runs predictions on the structured data
+            4. Restructures inputs. Images/volumes are restructured to HxWx...
+                Segmentation masks and predictions are restructured to
+                HxWx...xC.
+            5. Yield input, output dictionaries for the scan. Yielding continues
+                until all scans have been processed.
+
         This method should yield scan-specific inputs and outputs as
         dictionaries. The following keys should be in the `input` and `output`
         dictionaries for each scan at minimum.
@@ -172,16 +182,12 @@ class DataLoader(k_utils.Sequence, ABC):
             * "time_elapsed" (required): Amount of time required for inference
                 on scan.
                 This quantity typically includes data loading time as well.
-            * "sem_seg_gt_mask" (ndarray): Ground truth binary mask for semantic
+            * "y_true" (ndarray): Ground truth binary mask for semantic
                 segmentation. Shape HxWx...xC.
                 Required for semantic segmentation inference.
-            * "sem_seg_pred" (ndarray): Prediction probabilities for semantic
+            * "y_pred" (ndarray): Prediction probabilities for semantic
                 segmentation. Shape HxWx...xC.
                 Required for semantic segmentation inference.
-            * "class_gts" (Sequence): classification-related ground truth by
-                category id.
-            * "class_preds" (Sequence): classification-related predictions
-                (probabilities).
 
         All output keys except "time_elapsed" are optional and task specific.
 
@@ -335,7 +341,8 @@ class DefaultDataLoader(DataLoader):
 
             input = {"x": x, "scan_id": scan_id}
             scan_params = {
-                k: v for k, v in self._dataset_dicts[0].items()
+                k: v
+                for k, v in self._dataset_dicts[0].items()
                 if isinstance(k, str) and k.startswith("scan")
             }
             input.update(scan_params)

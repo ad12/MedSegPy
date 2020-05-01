@@ -12,7 +12,7 @@ from medsegpy.data import MetadataCatalog
 
 from .build import EVALUATOR_REGISTRY
 from .evaluator import DatasetEvaluator
-from .metrics import MetricsManager, Metric
+from .metrics import Metric, MetricsManager
 
 
 def get_stats_string(manager: MetricsManager):
@@ -41,11 +41,12 @@ def get_stats_string(manager: MetricsManager):
 class SemSegEvaluator(DatasetEvaluator):
     """Evaluator for semantic segmentation-related tasks.
     """
+
     def __init__(
         self,
         dataset_name: str,
         cfg: Config,
-        output_folder: str=None,
+        output_folder: str = None,
         save_raw_data: bool = False,
         stream_evaluation: bool = True,
     ):
@@ -155,7 +156,9 @@ class SemSegEvaluator(DatasetEvaluator):
 
     def eval_single_scan(self, input, output, labels, time_elapsed):
         metrics_manager = self._metrics_manager
-        spacing = input["scan_spacing"] if "scan_spacing" in input else self.spacing
+        spacing = (
+            input["scan_spacing"] if "scan_spacing" in input else self.spacing
+        )
         logger = self._logger
         save_raw_data = self._save_raw_data
         output_dir = self._output_folder
@@ -200,7 +203,6 @@ class SemSegEvaluator(DatasetEvaluator):
         root-mean-squared quantity rather than mean.
         """
         output_dir = self._output_folder
-        spacing = self.spacing
         logger = self._logger
 
         if self._predictions:

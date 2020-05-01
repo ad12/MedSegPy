@@ -185,7 +185,7 @@ def multi_class_dice_loss(
     return d_loss
 
 
-def avg_dice_loss(weights=None, remove_background: bool=False, **kwargs):
+def avg_dice_loss(weights=None, remove_background: bool = False, **kwargs):
     use_weights = False
     if weights:
         weights = np.asarray(weights)[np.newaxis, ...]
