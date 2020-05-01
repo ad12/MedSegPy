@@ -33,16 +33,21 @@ class DatasetEvaluator:
         """
         pass
 
-    def process(self, inputs, outputs, time_elapsed):
+    def process(self, inputs, outputs):
         """
         Process an input/output pair.
 
         Args:
             scan_id: the scan id corresponding to the input/output
-            input: the input that's used to call the model.
-            output: the return value of `model(input)`
+            inputs (List[Dict]]: the inputs that are used to call the model.
+                Can also contain scan specific fields. These fields
+                should start with "scan_".
+            outputs (List[Dict]): List of outputs from the model.
+                Each dict should contain at least the following keys:
+                * "y_true": Ground truth results
+                * "y_pred": Predicted probabilities.
+                * "time_elapsed": Amount of time to load data and run model.
         """
-
         pass
 
     def evaluate(self):
@@ -85,6 +90,8 @@ def inference_on_dataset(
     num_warmup = 1
     start_time = time.perf_counter()
     total_compute_time = 0
+    total_processing_time = 0
+    total_inference_time = 0
     if isinstance(data_loader, Generator):
         iter_loader = data_loader.img_generator_test
         total = data_loader.num_scans(GeneratorState.TESTING)
@@ -94,16 +101,21 @@ def inference_on_dataset(
 
     start_compute_time = time.perf_counter()
     logger = logging.getLogger(__name__)
-    for idx, (x_test, y_test, recon, fname, time_elapsed) in enumerate(
+    for idx, (input, output) in enumerate(
         iter_loader(model)
     ):
         total_compute_time += time.perf_counter() - start_compute_time
-        input = {"scan_id": fname, "y_true": y_test, "scan": x_test}
+
         start_processing_time = time.perf_counter()
-        evaluator.process([input], [recon], [time_elapsed])
-        total_processing_time = time.perf_counter() - start_processing_time
+        evaluator.process([input], [output])
+        total_processing_time += time.perf_counter() - start_processing_time
+
+        total_inference_time += output["time_elapsed"]
         iters_after_start = idx + 1 - num_warmup * int(idx >= num_warmup)
         seconds_per_scan = total_compute_time / iters_after_start
+        seconds_per_inference = total_inference_time / iters_after_start
+        seconds_per_processing = total_processing_time / iters_after_start
+
         if idx >= num_warmup * 2 or seconds_per_scan > 5:
             total_seconds_per_img = (
                 time.perf_counter() - start_time
@@ -118,8 +130,8 @@ def inference_on_dataset(
                     idx + 1,
                     total,
                     seconds_per_scan,
-                    time_elapsed,
-                    total_processing_time,
+                    seconds_per_inference,
+                    seconds_per_processing,
                     str(eta),
                 ),
                 n=5,

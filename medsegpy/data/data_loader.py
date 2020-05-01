@@ -273,6 +273,19 @@ class DefaultDataLoader(DataLoader):
             x, y, preds = self._restructure_data((x, y, preds))
             time_elapsed = time.perf_counter() - start
 
-            yield x, y, preds, scan_id, time_elapsed
+            input = {"x": x, "scan_id": scan_id}
+            scan_params = {
+                k: v for k, v in self._dataset_dicts[0].items()
+                if isinstance(k, str) and k.startswith("scan")
+            }
+            input.update(scan_params)
+
+            output = {
+                "y_pred": preds,
+                "y_true": y,
+                "time_elapsed": time_elapsed,
+            }
+
+            yield input, output
 
         self._dataset_dicts = dataset_dicts

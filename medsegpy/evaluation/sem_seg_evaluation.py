@@ -109,29 +109,22 @@ class SemSegEvaluator(DatasetEvaluator):
         self._scan_cnt = 0
         self._results_str = ""
 
-    def process(self, inputs, outputs, times_elapsed):
+    def process(self, inputs, outputs):
         """
-        Args:
-            inputs (List[Dict[str, Any]]): The inputs to the model. At minimum,
-                each dict should contain the following key/value pairs:
-                * "scan_id" (str): unique scan/example identifier
-                * "x" (ndarray): Input image/volume of shape (Dx)HxW(x1)
-                * "y_true" (ndarray): (Dx)HxWxC ground truth mask
-            outputs (List[ndarray]): The outputs of the model.
-                Each ndarray corresponds to the (Dx)HxWxC probability tensor
-                output by semantic segmentation models.
-            times_elapsed (List[float]): The segmentation times per input.
-                By convention, this time should also consist of loading time.
+        See :class:`DatasetEvaluator` in evaluator.py
+        for argument details.
         """
         output_activation = self._output_activation
         includes_bg = self._output_includes_background
 
-        for input, output, time_elapsed in zip(inputs, outputs, times_elapsed):
+        for input, output in zip(inputs, outputs):
+            y_pred = output["y_pred"]
+
             if output_activation == "sigmoid":
-                labels = (output > 0.5).astype(np.uint8)
+                labels = (y_pred > 0.5).astype(np.uint8)
             elif output_activation == "softmax":
-                labels = np.zeros_like(output, dtype=np.uint8)
-                l_argmax = np.argmax(output, axis=-1)
+                labels = np.zeros_like(y_pred, dtype=np.uint8)
+                l_argmax = np.argmax(y_pred, axis=-1)
                 for c in range(labels.shape[-1]):
                     labels[l_argmax == c, c] = 1
                 labels = labels.astype(np.uint)
@@ -144,15 +137,17 @@ class SemSegEvaluator(DatasetEvaluator):
 
             # background is always excluded from analysis
             if includes_bg:
-                y_true = input["y_true"][..., 1:]
-                output = output[..., 1:]
+                y_true = output["y_true"][..., 1:]
+                y_pred = output["y_pred"][..., 1:]
                 labels = labels[..., 1:]
                 if y_true.ndim == 3:
                     y_true = y_true[..., np.newaxis]
-                    output = output[..., np.newaxis]
+                    y_pred = y_pred[..., np.newaxis]
                     labels = labels[..., np.newaxis]
-                input["y_true"] = y_true
+                output["y_true"] = y_true
+                output["y_pred"] = y_pred
 
+            time_elapsed = output["time_elapsed"]
             if self.stream_evaluation:
                 self.eval_single_scan(input, output, labels, time_elapsed)
             else:
@@ -160,7 +155,7 @@ class SemSegEvaluator(DatasetEvaluator):
 
     def eval_single_scan(self, input, output, labels, time_elapsed):
         metrics_manager = self._metrics_manager
-        spacing = self.spacing
+        spacing = input["scan_spacing"] if "scan_spacing" in input else self.spacing
         logger = self._logger
         save_raw_data = self._save_raw_data
         output_dir = self._output_folder
@@ -168,13 +163,12 @@ class SemSegEvaluator(DatasetEvaluator):
         self._scan_cnt += 1
         scan_cnt = self._scan_cnt
         scan_id = input["scan_id"]
-        y_true: np.ndarray = input["y_true"]
+        y_true: np.ndarray = output["y_true"]
         x: np.ndarray = np.squeeze(input["x"])
-
-        summary = metrics_manager.analyze(
+        summary = metrics_manager(
             scan_id,
-            y_true=np.transpose(y_true, axes=[1, 2, 0, 3]),
-            y_pred=np.transpose(labels, axes=[1, 2, 0, 3]),
+            y_true=np.squeeze(np.transpose(y_true, axes=[1, 2, 0, 3])),
+            y_pred=np.squeeze(np.transpose(labels, axes=[1, 2, 0, 3])),
             x=x,
             spacing=spacing,
             runtime=time_elapsed,
@@ -189,7 +183,7 @@ class SemSegEvaluator(DatasetEvaluator):
         if output_dir and save_raw_data:
             save_name = "{}/{}.pred".format(output_dir, scan_id)
             with h5py.File(save_name, "w") as h5f:
-                h5f.create_dataset("probs", data=output)
+                h5f.create_dataset("probs", data=output["y_pred"])
                 h5f.create_dataset("labels", data=labels)
 
     def evaluate(self):
@@ -226,8 +220,7 @@ class SemSegEvaluator(DatasetEvaluator):
                     "Weights Loaded: %s\n"
                     % os.path.basename(self._config.TEST_WEIGHT_PATH)
                 )
-                if spacing:
-                    f.write("Spacing: %s\n" % str(spacing))
+
                 f.write("--" * 20)
                 f.write("\n")
                 f.write(results_str)

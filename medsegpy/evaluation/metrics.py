@@ -38,25 +38,16 @@ def flatten_non_category_dims(xs: Sequence[np.ndarray], category_dim: int=None):
 
 
 class Metric(Callable, ABC):
-    NAME = ""
-    FULL_NAME = ""
+    def __init__(self, units: str=""):
+        self.units = units  # can be changed at runtime.
 
-    def __init__(self, unit: str=""):
-        assert self.FULL_NAME
-        self.unit = unit  # can be changed at runtime.
-
-    @classmethod
-    def name(cls):
-        return cls.NAME if cls.NAME else cls.__name__
-
-    @classmethod
-    def full_name(cls):
-        return cls.FULL_NAME
+    def name(self):
+        return type(self).__name__
 
     def display_name(self):
         """If `self.unit` is defined, appends it to the name."""
         name = self.name()
-        return "{} {}".format(name, self.unit) if self.unit else name
+        return "{} {}".format(name, self.units) if self.units else name
 
     @abstractmethod
     def __call__(self, *args, **kwargs):
@@ -64,8 +55,6 @@ class Metric(Callable, ABC):
 
 
 class DSC(Metric):
-    FULL_NAME = "Dice Score Coefficient"
-
     def __call__(self, y_pred, y_true, category_dim: int=None):
         y_pred = y_pred.astype(np.bool)
         y_true = y_true.astype(np.bool)
@@ -81,8 +70,6 @@ class DSC(Metric):
 
 
 class VOE(Metric):
-    FULL_NAME = "Volumetric Overlap Error"
-
     def __call__(self, y_pred, y_true, category_dim: int=None):
         y_pred = y_pred.astype(np.bool)
         y_true = y_true.astype(np.bool)
@@ -97,8 +84,6 @@ class VOE(Metric):
 
 
 class CV(Metric):
-    FULL_NAME = "Coefficient of Variation"
-
     def __call__(self, y_pred, y_true, category_dim: int=None):
         y_pred = y_pred.astype(np.bool)
         y_true = y_true.astype(np.bool)
@@ -116,8 +101,6 @@ class CV(Metric):
 
 
 class ASSD(Metric):
-    FULL_NAME = "Average Symmetric Surface Distance"
-
     def __call__(self, y_pred, y_true, spacing=None, connectivity=1):
         return assd(
             y_pred, y_true, voxelspacing=spacing, connectivity=connectivity
@@ -125,8 +108,6 @@ class ASSD(Metric):
 
 
 class Precision(Metric):
-    FULL_NAME = "Precision"
-
     def __call__(self, y_pred, y_true, category_dim: int = None):
         y_pred = y_pred.astype(np.bool)
         y_true = y_true.astype(np.bool)
@@ -141,8 +122,6 @@ class Precision(Metric):
 
 
 class Recall(Metric):
-    FULL_NAME = "Recall"
-
     def __call__(self, y_pred, y_true, category_dim: int = None):
         y_pred = y_pred.astype(np.bool)
         y_true = y_true.astype(np.bool)
@@ -157,7 +136,7 @@ class Recall(Metric):
 
 
 _BUILT_IN_METRICS = {
-    x.name(): x for x in Metric.__subclasses__()
+    x.__name__: x for x in Metric.__subclasses__()
 }
 
 
