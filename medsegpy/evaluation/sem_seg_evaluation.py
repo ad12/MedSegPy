@@ -170,10 +170,11 @@ class SemSegEvaluator(DatasetEvaluator):
         x: np.ndarray = np.squeeze(input["x"])
 
         metrics_kwargs = {"spacing": spacing} if spacing is not None else {}
+
         summary = metrics_manager(
             scan_id,
-            y_true=np.squeeze(np.transpose(y_true, axes=[1, 2, 0, 3])),
-            y_pred=np.squeeze(np.transpose(labels, axes=[1, 2, 0, 3])),
+            y_true=y_true,
+            y_pred=labels,
             x=x,
             runtime=time_elapsed,
             **metrics_kwargs,
