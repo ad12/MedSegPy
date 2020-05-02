@@ -908,6 +908,7 @@ SUPPORTED_CONFIGS = [
     UNet3DConfig,
     UNet2_5DConfig,
     DeeplabV3_2_5DConfig,
+    FCDenseNetConfig,
 ]
 
 
