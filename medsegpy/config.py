@@ -832,6 +832,19 @@ class RefineNetConfig(Config):
         super().__init__(self.MODEL_NAME, state, create_dirs=create_dirs)
 
 
+class FCDenseNetConfig(Config):
+    MODEL_NAME = "FCDenseNet"
+
+    DEPTH = 5
+    NUM_LAYERS = (5,)
+    NUM_FILTERS = (12,)
+    NUM_FILTERS_HEAD_CONV = 48
+    DROPOUT = 0.2
+
+    def __init__(self, state="training", create_dirs=True):
+        super().__init__(self.MODEL_NAME, state, create_dirs=create_dirs)
+
+
 def _check_and_coerce_cfg_value_type(replacement, original, full_key):
     """Checks that `replacement`, which is intended to replace `original` is of
     the right type. The type is correct if it matches exactly or is one of a few

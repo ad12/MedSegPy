@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 DATA_LOADER_REGISTRY = Registry("DATA_LOADER")
-"""
+DATA_LOADER_REGISTRY.__doc__ = """
 Registry for data loaders, which can be used with `model.fit_generator()` and
 `model.predict_generator()`. The evaluator type should be registered with
 dataset_dicts, cfg, and other extra parameters.
