@@ -11,7 +11,7 @@ import keras.backend as K
 from fvcore.common.file_io import PathManager
 
 from medsegpy import glob_constants
-from medsegpy.utils import dl_utils
+from medsegpy.utils import dl_utils, env
 from medsegpy.utils.collect_env import collect_env_info
 from medsegpy.utils.logger import setup_logger
 
@@ -97,6 +97,10 @@ def default_setup(cfg, args):
     else:
         os.environ["CUDA_VISIBLE_DEVICES"] = ""
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+
+    # Set seed.
+    if cfg.SEED == -1:
+        cfg.SEED = env.generate_seed()
 
     output_dir = cfg.OUTPUT_DIR
     PathManager.mkdirs(output_dir)

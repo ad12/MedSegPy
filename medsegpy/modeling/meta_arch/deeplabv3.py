@@ -40,9 +40,22 @@ class DeeplabV3Plus(ModelBuilder):
     def __init__(self, cfg: DeeplabV3Config):
         super().__init__(cfg)
         self._seed = cfg.SEED
-        self._kernel_initializer = utils.build_keras_config(
-            cfg.KERNEL_INITIALIZER, seed=cfg.SEED
+
+    def _get_seed(self):
+
+        # We change the seed to avoid initializing all kernels with the same
+        # seed, but still keeping the individual seeds deterministic.
+        seed = self._seed
+        if self._seed is not None:
+            self._seed += 1
+        return seed
+
+    def _kernel_initializer(self):
+        kernel_initializer = utils.build_keras_config(
+            self._cfg.KERNEL_INITIALIZER, seed=self._get_seed(),
         )
+
+        return kernel_initializer
 
     def sep_conv_bn(
         self,
@@ -89,7 +102,7 @@ class DeeplabV3Plus(ModelBuilder):
             dilation_rate=(rate, rate),
             padding=depth_padding,
             use_bias=False,
-            kernel_initializer=self._kernel_initializer,
+            kernel_initializer=self._kernel_initializer(),
             name=prefix + "_depthwise",
         )(x)
         x = BatchNormalization(name=prefix + "_depthwise_BN", epsilon=epsilon)(
@@ -102,7 +115,7 @@ class DeeplabV3Plus(ModelBuilder):
             (1, 1),
             padding="same",
             use_bias=False,
-            kernel_initializer=self._kernel_initializer,
+            kernel_initializer=self._kernel_initializer(),
             name=prefix + "_pointwise",
         )(x)
         x = BatchNormalization(name=prefix + "_pointwise_BN", epsilon=epsilon)(
@@ -132,7 +145,7 @@ class DeeplabV3Plus(ModelBuilder):
                 padding="same",
                 use_bias=False,
                 dilation_rate=(rate, rate),
-                kernel_initializer=self._kernel_initializer,
+                kernel_initializer=self._kernel_initializer(),
                 name=prefix,
             )(x)
         else:
@@ -148,7 +161,7 @@ class DeeplabV3Plus(ModelBuilder):
                 padding="valid",
                 use_bias=False,
                 dilation_rate=(rate, rate),
-                kernel_initializer=self._kernel_initializer,
+                kernel_initializer=self._kernel_initializer(),
                 name=prefix,
             )(x)
 
@@ -241,7 +254,7 @@ class DeeplabV3Plus(ModelBuilder):
                 padding="same",
                 use_bias=False,
                 activation=None,
-                kernel_initializer=self._kernel_initializer,
+                kernel_initializer=self._kernel_initializer(),
                 name=prefix + "expand",
             )(x)
             x = BatchNormalization(
@@ -258,7 +271,7 @@ class DeeplabV3Plus(ModelBuilder):
             use_bias=False,
             padding="same",
             dilation_rate=(rate, rate),
-            kernel_initializer=self._kernel_initializer,
+            kernel_initializer=self._kernel_initializer(),
             name=prefix + "depthwise",
         )(x)
         x = BatchNormalization(
@@ -274,7 +287,7 @@ class DeeplabV3Plus(ModelBuilder):
             padding="same",
             use_bias=False,
             activation=None,
-            kernel_initializer=self._kernel_initializer,
+            kernel_initializer=self._kernel_initializer(),
             name=prefix + "project",
         )(x)
         x = BatchNormalization(
@@ -384,7 +397,7 @@ class DeeplabV3Plus(ModelBuilder):
                 name="entry_flow_conv1_1",
                 use_bias=False,
                 padding="same",
-                kernel_initializer=self._kernel_initializer,
+                kernel_initializer=self._kernel_initializer(),
             )(img_input)
             x = BatchNormalization(name="entry_flow_conv1_1_BN")(x)
             x = Activation("relu")(x)
@@ -461,7 +474,7 @@ class DeeplabV3Plus(ModelBuilder):
                 padding="same",
                 use_bias=False,
                 name="Conv",
-                kernel_initializer=self._kernel_initializer,
+                kernel_initializer=self._kernel_initializer(),
             )(img_input)
             x = BatchNormalization(
                 epsilon=1e-3, momentum=0.999, name="Conv_BN"
@@ -656,7 +669,7 @@ class DeeplabV3Plus(ModelBuilder):
             (1, 1),
             padding="same",
             use_bias=False,
-            kernel_initializer=self._kernel_initializer,
+            kernel_initializer=self._kernel_initializer(),
             name="image_pooling",
         )(b4)
         b4 = BatchNormalization(name="image_pooling_BN", epsilon=1e-5)(b4)
@@ -674,7 +687,7 @@ class DeeplabV3Plus(ModelBuilder):
             (1, 1),
             padding="same",
             use_bias=False,
-            kernel_initializer=self._kernel_initializer,
+            kernel_initializer=self._kernel_initializer(),
             name="aspp0",
         )(x)
         b0 = BatchNormalization(name="aspp0_BN", epsilon=1e-5)(b0)
@@ -720,12 +733,12 @@ class DeeplabV3Plus(ModelBuilder):
             (1, 1),
             padding="same",
             use_bias=False,
-            kernel_initializer=self._kernel_initializer,
+            kernel_initializer=self._kernel_initializer(),
             name="concat_projection",
         )(x)
         x = BatchNormalization(name="concat_projection_BN", epsilon=1e-5)(x)
         x = Activation("relu")(x)
-        x = Dropout(dropout_rate, seed=self._seed)(x)
+        x = Dropout(dropout_rate, seed=self._get_seed())(x)
 
         # DeepLab v.3+ decoder
 
@@ -743,7 +756,7 @@ class DeeplabV3Plus(ModelBuilder):
                 (1, 1),
                 padding="same",
                 use_bias=False,
-                kernel_initializer=self._kernel_initializer,
+                kernel_initializer=self._kernel_initializer(),
                 name="feature_projection0",
             )(skip1)
             dec_skip1 = BatchNormalization(
@@ -768,7 +781,7 @@ class DeeplabV3Plus(ModelBuilder):
             classes,
             (1, 1),
             padding="same",
-            kernel_initializer=self._kernel_initializer,
+            kernel_initializer=self._kernel_initializer(),
             name=last_layer_name,
         )(x)
         x = BilinearUpsampling(output_size=(input_shape[0], input_shape[1]))(x)

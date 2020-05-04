@@ -1,9 +1,28 @@
+from datetime import datetime
 import importlib
 import importlib.util
+import logging
 import os
 import sys
 
 __all__ = []
+
+
+def generate_seed():
+    """
+    Set the random seed for the RNG in torch, numpy and python.
+
+    Args:
+        seed (int): if None, will use a strong random seed.
+    """
+    seed = (
+        os.getpid()
+        + int(datetime.now().strftime("%S%f"))
+        + int.from_bytes(os.urandom(2), "big")
+    )
+    logger = logging.getLogger(__name__)
+    logger.info("Using a generated random seed {}".format(seed))
+    return seed
 
 
 # from https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path  # noqa
