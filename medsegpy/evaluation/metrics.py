@@ -140,8 +140,11 @@ class ASSD(Metric):
     """
 
     def __call__(self, y_pred, y_true, spacing=None, connectivity=1):
+        # TODO: check why this statement is needed.
+        if not connectivity:
+            connectivity = 1
         return assd(
-            y_pred, y_true, voxelspacing=spacing, connectivity=connectivity
+            y_pred, y_true, voxelspacing=spacing, connectivity=connectivity,
         )
 
 

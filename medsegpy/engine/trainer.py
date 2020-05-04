@@ -26,7 +26,7 @@ class DefaultTrainer(object):
         self._cfg = cfg
         self._loss_history = None
 
-        model = get_model(cfg)
+        model = self.build_model(cfg)
         plot_model(
             model,
             to_file=os.path.join(cfg.OUTPUT_DIR, "model.png"),

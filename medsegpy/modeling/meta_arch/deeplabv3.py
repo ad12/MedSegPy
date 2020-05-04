@@ -786,6 +786,16 @@ class DeeplabV3Plus(ModelBuilder):
         )(x)
         x = BilinearUpsampling(output_size=(input_shape[0], input_shape[1]))(x)
 
+        # 1x1 convolution to get pixel-wise semantic segmentation.
+        x = utils.add_sem_seg_activation(
+            x,
+            classes,
+            conv_type=Conv2D,
+            activation=self._cfg.LOSS[1],
+            kernel_initializer="glorot_uniform",
+            seed=self._cfg.SEED,
+        )
+
         # Ensure that the model takes into account
         # any potential predecessors of `input_tensor`.
         if input_tensor is not None:
