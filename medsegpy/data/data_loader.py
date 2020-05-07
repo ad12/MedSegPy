@@ -241,7 +241,6 @@ class DefaultDataLoader(DataLoader):
         self._num_neighboring_slices = cfg.num_neighboring_slices()
         self._num_classes = cfg.get_num_classes()
         self._transform_gen = build_preprocessing(cfg)
-        self._load_masks = True
 
     def _load_input(self, image_file, sem_seg_file):
         with h5py.File(image_file, "r") as f:
@@ -330,11 +329,18 @@ class DefaultDataLoader(DataLoader):
         scan_ids = sorted(scan_to_dict_mapping.keys())
         dataset_dicts = self._dataset_dicts
 
+        workers = kwargs.pop("workers", self._cfg.NUM_WORKERS)
+        use_multiprocessing = kwargs.pop("use_multiprocessing", workers > 1)
         for scan_id in scan_ids:
             self._dataset_dicts = scan_to_dict_mapping[scan_id]
 
             start = time.perf_counter()
-            x, y, preds = model.inference_generator(self, **kwargs)
+            x, y, preds = model.inference_generator(
+                self,
+                workers=workers,
+                use_multiprocessing=use_multiprocessing,
+                **kwargs
+            )
             time_elapsed = time.perf_counter() - start
 
             x, y, preds = self._restructure_data((x, y, preds))
