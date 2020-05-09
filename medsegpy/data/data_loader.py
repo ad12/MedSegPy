@@ -15,7 +15,7 @@ from keras import utils as k_utils
 from medsegpy.config import Config
 from medsegpy.modeling import Model
 
-from .sem_seg_utils import add_background_labels, collect_mask
+from .data_utils import add_background_labels, collect_mask, compute_patches
 from .transforms import apply_transform_gens, build_preprocessing
 
 logger = logging.getLogger(__name__)
@@ -236,13 +236,14 @@ class DefaultDataLoader(DataLoader):
             cfg, dataset_dicts, is_test, shuffle, drop_last, batch_size
         )
 
-        self._image_size = cfg.IMG_SIZE
         self._include_background = cfg.INCLUDE_BACKGROUND
-        self._num_neighboring_slices = cfg.num_neighboring_slices()
         self._num_classes = cfg.get_num_classes()
         self._transform_gen = build_preprocessing(cfg)
 
-    def _load_input(self, image_file, sem_seg_file):
+    def _load_input(self, dataset_dict):
+        image_file = dataset_dict["file_name"]
+        sem_seg_file = dataset_dict.get("sem_seg_file", None)
+
         with h5py.File(image_file, "r") as f:
             image = f["data"][:]
         if image.shape[-1] != 1:
@@ -268,10 +269,7 @@ class DefaultDataLoader(DataLoader):
         masks = []
         for file_idx in idxs:
             dataset_dict = dataset_dicts[file_idx]
-            file_name = dataset_dict["file_name"]
-            sem_seg_file_name = dataset_dict["sem_seg_file"]
-
-            image, mask = self._load_input(file_name, sem_seg_file_name)
+            image, mask = self._load_input(dataset_dict)
 
             images.append(image)
             masks.append(mask)
@@ -362,3 +360,116 @@ class DefaultDataLoader(DataLoader):
             yield input, output
 
         self._dataset_dicts = dataset_dicts
+
+
+_SUPPORTED_PADDING_MODES = (
+    "constant", "edge", "reflect", "symmetric", "warp", "empty",
+)
+
+
+@DATA_LOADER_REGISTRY.register()
+class PatchDataLoader(DefaultDataLoader):
+    def __init__(
+        self,
+        cfg: Config,
+        dataset_dicts: List[Dict],
+        is_test: bool = False,
+        shuffle: bool = True,
+        drop_last: bool = False,
+        batch_size: int = 1,
+    ):
+        use_channel = True  # use last dimension as a channel.
+
+        # Create patch elements from dataset dict.
+        # TODO: change pad/patching based on test/train
+        patch_size = cfg.IMG_SIZE if use_channel else cfg.IMG_SIZE[:-1]
+        self._patch_size = patch_size
+        self._pad_mode = cfg.IMG_PAD_MODE
+        if self._pad_mode not in _SUPPORTED_PADDING_MODES:
+            raise ValueError(
+                "pad mode {} not supported".format(cfg.IMG_PAD_MODE)
+            )
+        pad_size = cfg.IMG_PAD_SIZE if cfg.IMG_PAD_SIZE else None
+        stride = cfg.IMG_STRIDE if cfg.IMG_STRIDE else (1,) * len(patch_size)
+
+        dd_patched = []
+        for dd in dataset_dicts:
+            patches = compute_patches(
+                dd["image_size"],
+                self._patch_size,
+                pad_size,
+                stride,
+            )
+            for patch, pad in patches:
+                dataset_dict = dd.copy()
+                dataset_dict.update({"_patch": patch, "_pad": pad})
+                dd_patched.append(dataset_dict)
+
+        super().__init__(
+            cfg, dd_patched, is_test, shuffle, drop_last, batch_size
+        )
+
+    def _load_input(
+        self,
+        dataset_dict
+    ):
+        image_file = dataset_dict["file_name"]
+        sem_seg_file = dataset_dict.get("sem_seg_file", None)
+        patch = dataset_dict["_patch"]
+        pad = dataset_dict["_pad"]
+
+        mask = None
+        is_single_file = image_file == sem_seg_file
+        with h5py.File(image_file, "r") as f:
+            image = f["volume"][patch]
+            if sem_seg_file and is_single_file:
+                mask = f["seg"][patch, :]
+
+        if sem_seg_file and not is_single_file:
+            with h5py.File(sem_seg_file, "r") as f:
+                mask = f["data"][:]
+
+        if mask is not None:
+            cat_idxs = self._category_idxs
+            mask = collect_mask(mask, index=cat_idxs)
+            if self._include_background:
+                mask = add_background_labels(mask)
+
+        if pad is not None:
+            image = np.pad(image, pad, self._pad_mode)
+            if mask is not None:
+                mask = np.pad(image, tuple(pad) + (0, 0), self._pad_mode)
+
+        return image, mask
+
+    def _restructure_data(
+        self, vols_patched: Sequence[np.ndarray]
+    ):
+        """By default the batch dimension is moved to be the third dimension.
+
+        This method assumes that `self._dataset_dicts` is limited to dataset
+        dictionaries for only one scan. It also assumes that the order of
+        each patch in `vols_patches` is ordered based on the dataset dictionary.
+
+        Args:
+            vols_patched (ndarrays): Each has shape of NxP1xP2x...
+
+        Returns:
+            vols (ndarrays): Shapes of HxWxDx...
+        """
+        assert self._is_test
+
+        image_size = self._dataset_dicts[0]["image_size"]
+        coords = [dd["_patch"] for dd in self._dataset_dicts]
+
+        num_patches = vols_patched[0].shape[0]
+        assert len(coords) == num_patches, (
+            "{} patches, {} coords".format(num_patches, len(coords))
+        )
+        num_vols = len(vols_patched)
+        new_vols = np.zeros((num_vols,) + tuple(image_size))  # VxNxHxWx...
+
+        for idx, c in enumerate(coords):
+            new_vols[:, c] = [P[idx] for P in vols_patched]
+
+        return tuple(new_vols[i] for i in range(num_vols))

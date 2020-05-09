@@ -69,6 +69,10 @@ class Config(object):
 
     # Training and validation image size
     IMG_SIZE = (288, 288, 1)
+    # Patch-based image loading params used with PatchDataLoader
+    IMG_PAD_SIZE = ()
+    IMG_PAD_MODE = "edge"
+    IMG_STRIDE = ()
 
     # Training parameters
     N_EPOCHS = 100

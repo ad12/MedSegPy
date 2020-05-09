@@ -115,6 +115,7 @@ def load_oai_3d_from_dir(scan_root, dataset_name=None):
                 "scan_id": "{:07d}_V{:02d}".format(pid, time_point),
                 "subject_id": pid,
                 "time_point": time_point,
+                "image_size": (384, 384, 160),
             }
         )
 
