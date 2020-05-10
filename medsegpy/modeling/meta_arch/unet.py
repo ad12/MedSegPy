@@ -195,7 +195,6 @@ class UNet2D(ModelBuilder):
                 if depth_cnt > 0 and self.add_attention:
                     attn_blocks.append(
                         self._multi_attention_module(
-                            num_attention_gates=1,
                             in_channels=num_filters[depth_cnt],
                             intermediate_channels=num_filters[depth_cnt],
                         )

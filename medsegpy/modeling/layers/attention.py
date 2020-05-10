@@ -345,7 +345,6 @@ class GridAttentionModule3D(_GridAttentionModuleND):
 class _MultiAttentionModuleND(Layer):
     def __init__(self,
                  dimension: int,
-                 num_attention_gates: int,
                  in_channels: int,
                  intermediate_channels: int,
                  sub_sample_factor: Union[int, Sequence[int]],
@@ -355,12 +354,8 @@ class _MultiAttentionModuleND(Layer):
                  ):
         super(_MultiAttentionModuleND, self).__init__(**kwargs)
 
-        assert num_attention_gates > 0, \
-            "num_attention_gates must be > 0"
-
         # Store parameters
         self.dimension = dimension
-        self.num_attention_gates = num_attention_gates
         self.in_channels = in_channels
         self.intermediate_channels = intermediate_channels
         self.sub_sample_factor = sub_sample_factor
@@ -375,12 +370,19 @@ class _MultiAttentionModuleND(Layer):
         else:
             raise ValueError("Only 2D and 3D are supported")
 
-        self.attn_gates = [self.attn_module_type(
+        self.attn_gate_1 = self.attn_module_type(
             in_channels=in_channels,
             intermediate_channels=intermediate_channels,
             sub_sample_factor=sub_sample_factor,
             kernel_initializer=kernel_initializer
-        )] * self.num_attention_gates
+        )
+
+        self.attn_gate_2 = self.attn_module_type(
+            in_channels=in_channels,
+            intermediate_channels=intermediate_channels,
+            sub_sample_factor=sub_sample_factor,
+            kernel_initializer=kernel_initializer
+        )
 
         self.combine_gates_conv = self.conv_type(
             in_channels,
@@ -391,15 +393,15 @@ class _MultiAttentionModuleND(Layer):
         self.combine_gates_bn = BN(axis=-1, momentum=0.95, epsilon=0.001)
 
     def build(self, input_shape):
-        self._trainable_weights = []
-        for i in range(self.num_attention_gates):
-            self.attn_gates[i].build(input_shape)
-            self._trainable_weights += self.attn_gates[i].trainable_weights
-            output_attn_shape = self.attn_gates[i].compute_output_shape(
-                input_shape
-            )
+        # Build attention gates
+        self.attn_gate_1.build(input_shape)
+        self._trainable_weights = self.attn_gate_1.trainable_weights
+        self.attn_gate_2.build(input_shape)
+        self._trainable_weights += self.attn_gate_2.trainable_weights
+        output_attn_shape = self.attn_gate_2.compute_output_shape(input_shape)
+
         concatenate_gate_shape = list(output_attn_shape)
-        concatenate_gate_shape[-1] *= self.num_attention_gates
+        concatenate_gate_shape[-1] *= 2
         self.combine_gates_conv.build(concatenate_gate_shape)
         self._trainable_weights += self.combine_gates_conv.trainable_weights
         conv_output_shape = self.combine_gates_conv.compute_output_shape(
@@ -411,24 +413,20 @@ class _MultiAttentionModuleND(Layer):
 
     def call(self, inputs):
         x, gating_signal = inputs
-        gate_outputs = []
-        for i in range(self.num_attention_gates):
-            gate_out = self.attn_gates[i]([x, gating_signal])
-            gate_outputs.append(gate_out)
-        if self.num_attention_gates > 1:
-            total_gate_outputs = Concatenate(axis=-1)(gate_outputs)
-        else:
-            total_gate_outputs = gate_outputs[0]
+        gate_1_out = self.attn_gate_1([x, gating_signal])
+        gate_2_out = self.attn_gate_2([x, gating_signal])
+
+        total_gate_outputs = Concatenate(axis=-1)([gate_1_out, gate_2_out])
         output = self.combine_gates_conv(total_gate_outputs)
         output = self.combine_gates_bn(output)
         return output
 
     def compute_output_shape(self, input_shape):
-        output_attn_shape = self.attn_gates[0].compute_output_shape(
+        output_attn_shape = self.attn_gate_2.compute_output_shape(
             input_shape
         )
         concatenate_gate_shape = list(output_attn_shape)
-        concatenate_gate_shape[-1] *= self.num_attention_gates
+        concatenate_gate_shape[-1] *= 2
         conv_output_shape = self.combine_gates_conv.compute_output_shape(
             concatenate_gate_shape
         )
@@ -442,7 +440,6 @@ class _MultiAttentionModuleND(Layer):
         base_cfg.update(
             {
                 'dimension': self.dimension,
-                'num_attention_gates': self.num_attention_gates,
                 'in_channels': self.in_channels,
                 'intermediate_channels': self.intermediate_channels,
                 'sub_sample_factor': self.sub_sample_factor,
@@ -454,7 +451,6 @@ class _MultiAttentionModuleND(Layer):
 
 class MultiAttentionModule2D(_MultiAttentionModuleND):
     def __init__(self,
-                 num_attention_gates: int,
                  in_channels: int,
                  intermediate_channels: int,
                  sub_sample_factor: Union[int, Sequence[int]] = 2,
@@ -464,7 +460,6 @@ class MultiAttentionModule2D(_MultiAttentionModuleND):
                  ):
         super(MultiAttentionModule2D, self).__init__(
             dimension=2,
-            num_attention_gates=num_attention_gates,
             in_channels=in_channels,
             intermediate_channels=intermediate_channels,
             sub_sample_factor=sub_sample_factor,
@@ -476,7 +471,6 @@ class MultiAttentionModule2D(_MultiAttentionModuleND):
 
 class MultiAttentionModule3D(_MultiAttentionModuleND):
     def __init__(self,
-                 num_attention_gates: int,
                  in_channels: int,
                  intermediate_channels: int,
                  sub_sample_factor: Union[int, Sequence[int]] = 2,
@@ -486,7 +480,6 @@ class MultiAttentionModule3D(_MultiAttentionModuleND):
                  ):
         super(MultiAttentionModule3D, self).__init__(
             dimension=3,
-            num_attention_gates=num_attention_gates,
             in_channels=in_channels,
             intermediate_channels=intermediate_channels,
             sub_sample_factor=sub_sample_factor,
