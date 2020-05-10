@@ -107,7 +107,7 @@ dictionaries:
 + `scan_id` (str): the scan this slice belongs to
 + `slice_id` (int): The slice this file corresponds to. Should be 1-indexed, meaning the
 first slice of every volume has `slice_id=1`.
-+ `total_num_slices`: the total number of slices in the volume.
++ `scan_num_slices`: the total number of slices in the scan volume.
 
 The following keys are optional:
 + `subject_id` (int): the subject id corresponding to this scan
