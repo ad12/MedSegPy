@@ -369,6 +369,11 @@ _SUPPORTED_PADDING_MODES = (
 
 @DATA_LOADER_REGISTRY.register()
 class PatchDataLoader(DefaultDataLoader):
+    """
+    Assumptions:
+    - all dataset dictionaries have the same image dimensions
+    - "image_size" in dataset dict
+    """
     def __init__(
         self,
         cfg: Config,
@@ -378,11 +383,22 @@ class PatchDataLoader(DefaultDataLoader):
         drop_last: bool = False,
         batch_size: int = 1,
     ):
-        use_channel = True  # use last dimension as a channel.
 
         # Create patch elements from dataset dict.
         # TODO: change pad/patching based on test/train
-        patch_size = cfg.IMG_SIZE if use_channel else cfg.IMG_SIZE[:-1]
+        expected_img_dim = len(dataset_dicts[0]["image_size"])
+        img_dim = len(cfg.IMG_SIZE)
+        self._add_dim = False
+        if img_dim > expected_img_dim:
+            assert img_dim - expected_img_dim == 1
+            patch_size = cfg.IMG_SIZE[:-1]
+            self._add_dim = True
+        elif len(cfg.IMG_SIZE) == expected_img_dim:
+            patch_size = cfg.IMG_SIZE
+        else:
+            extra_dims = (1,) * (expected_img_dim - img_dim)
+            patch_size = tuple(cfg.IMG_SIZE) + extra_dims
+
         self._patch_size = patch_size
         self._pad_mode = cfg.IMG_PAD_MODE
         if self._pad_mode not in _SUPPORTED_PADDING_MODES:
@@ -421,9 +437,9 @@ class PatchDataLoader(DefaultDataLoader):
         mask = None
         is_single_file = image_file == sem_seg_file
         with h5py.File(image_file, "r") as f:
-            image = f["volume"][patch]
+            image = f["volume"][patch]  # HxWxDx...
             if sem_seg_file and is_single_file:
-                mask = f["seg"][patch, :]
+                mask = f["seg"][patch]  # HxWxDx...xC
 
         if sem_seg_file and not is_single_file:
             with h5py.File(sem_seg_file, "r") as f:
@@ -438,7 +454,11 @@ class PatchDataLoader(DefaultDataLoader):
         if pad is not None:
             image = np.pad(image, pad, self._pad_mode)
             if mask is not None:
-                mask = np.pad(image, tuple(pad) + (0, 0), self._pad_mode)
+                mask = np.pad(mask, tuple(pad) + ((0, 0),), self._pad_mode)
+
+        if self._add_dim:
+            image = image[..., np.newaxis]
+            mask = mask[..., np.newaxis, :]
 
         return image, mask
 
@@ -473,3 +493,51 @@ class PatchDataLoader(DefaultDataLoader):
             new_vols[:, c] = [P[idx] for P in vols_patched]
 
         return tuple(new_vols[i] for i in range(num_vols))
+
+
+@DATA_LOADER_REGISTRY.register()
+class N5dDataLoader(PatchDataLoader):
+    """n.5D data loader.
+
+    Use this for 2.5D, 3.5D, etc. implementations.
+    Currently only last dimension is supported as the channel dimension.
+    """
+    def __init__(
+        self,
+        cfg: Config,
+        dataset_dicts: List[Dict],
+        is_test: bool = False,
+        shuffle: bool = True,
+        drop_last: bool = False,
+        batch_size: int = 1,
+    ):
+        expected_img_dim = len(dataset_dicts[0]["image_size"])
+        img_dim = len(cfg.IMG_SIZE)
+        if img_dim != expected_img_dim:
+            raise ValueError(
+                "Data has {} dimensions. cfg.IMG_SIZE is {} dimensions".format(
+                    expected_img_dim, img_dim
+                )
+            )
+        if cfg.IMG_SIZE[-1] % 2 != 1:
+            raise ValueError("channel dimension must be odd")
+
+        super().__init__(
+            cfg,
+            dataset_dicts,
+            is_test,
+            shuffle,
+            drop_last,
+            batch_size
+        )
+
+    def _load_input(
+        self,
+        dataset_dict
+    ):
+        image, mask = super()._load_input(dataset_dict)
+        dim = mask.shape[-2]
+        mask = mask[..., dim // 2, :]
+        return image, mask
+
+
