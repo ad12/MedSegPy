@@ -16,7 +16,7 @@ from keras.layers import (
 )
 
 from medsegpy.config import UNet3DConfig, UNetConfig
-from medsegpy.modeling import add_sem_seg_activation, zero_pad_like
+from medsegpy.modeling.model_utils import add_sem_seg_activation, zero_pad_like
 
 from ..model import Model
 from .build import META_ARCH_REGISTRY, ModelBuilder

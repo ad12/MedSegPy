@@ -25,6 +25,7 @@ from .unet_2d.anisotropic_unet_model import anisotropic_unet_2d
 from .unet_2d.residual_unet_model import residual_unet_2d
 from .unet_2d.unet_model import unet_2d_model, unet_2d_model_v2
 from .unet_3d_model import unet_3d_model
+from .meta_arch.build import build_model
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +41,8 @@ def get_model(config):
     elif type(config) is SegnetConfig:
         model = segnet_2d(config)
     elif type(config) is UNetConfig:
-        model = unet_2d(config)
+        #model = unet_2d(config)
+        model = build_model(config)
     elif type(config) is UNet2_5DConfig:
         model = unet_2_5d(config)
     elif type(config) is DeeplabV3_2_5DConfig:
