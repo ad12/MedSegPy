@@ -1,6 +1,7 @@
 from typing import Dict, Sequence, Union
 
 import tensorflow as tf
+import numpy as np
 from keras import Input
 from keras.engine import get_source_inputs
 from keras.layers import BatchNormalization as BN
@@ -134,7 +135,7 @@ class UNet2D(ModelBuilder):
     def __init__(self,
                  cfg: UNetConfig,
                  add_attention: bool = True,
-                 use_deep_supervision: bool = False):
+                 use_deep_supervision: bool = True):
         super().__init__(cfg)
         self._pooler_type = MaxPooling2D
         self._conv_type = Conv2D
@@ -179,7 +180,7 @@ class UNet2D(ModelBuilder):
         x = inputs
         attn_blocks = []
         deep_supervision_outputs = []
-        scale_factors = [[1] * self._dim] * (depth - 1)
+        scale_factors = np.ones(((depth - 1), self._dim), dtype=int)
         for depth_cnt in range(depth):
             x = build_encoder_block(
                 x,
@@ -203,9 +204,7 @@ class UNet2D(ModelBuilder):
                 pool_size = self._get_pool_size(x)
                 pool_sizes.append(pool_size)
                 if depth_cnt < depth - 2:
-                    for dim_idx in range(self._dim):
-                        scale_factors[
-                            depth_cnt + 1][dim_idx] = scale_factors[depth_cnt][dim_idx] * pool_size[dim_idx]
+                    scale_factors[depth_cnt + 1] = scale_factors[depth_cnt] * pool_size
                 x = self._pooler_type(pool_size=pool_size)(x)
 
         # Decoder.
@@ -241,7 +240,7 @@ class UNet2D(ModelBuilder):
                 deep_supervision_outputs.append(
                     self._deep_supervision(
                         out_channels=num_classes,
-                        scale_factor=scale_factors[depth_cnt]
+                        scale_factor=tuple(scale_factors[depth_cnt])
                     )(x)
                 )
 

@@ -490,20 +490,26 @@ class MultiAttentionModule3D(_MultiAttentionModuleND):
 
 
 class _DeepSupervisionND(Layer):
-    def __init_(self,
-                dimension: int,
-                out_channels: int,
-                scale_factor: Union[int, Sequence[int]],
-                kernel_initializer: Union[str, Dict],
-                **kwargs
-                ):
+    def __init__(self,
+                 dimension: int,
+                 out_channels: int,
+                 scale_factor: Union[int, Sequence[int]],
+                 kernel_initializer: Union[str, Dict],
+                 **kwargs
+                 ):
         super(_DeepSupervisionND, self).__init__(**kwargs)
 
         # Store parameters
         self.dimension = dimension
         self.out_channels = out_channels
+
+        assert isinstance(scale_factor, list) or isinstance(
+            scale_factor, tuple), "scale_factor must be a list or tuple"
+
         if isinstance(scale_factor, list):
             self.scale_factor = tuple(scale_factor)
+        else:
+            self.scale_factor = scale_factor
 
         if self.dimension == 2:
             self.conv_type = Conv2D
