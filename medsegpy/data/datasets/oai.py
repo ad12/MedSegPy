@@ -16,12 +16,18 @@ if CLUSTER in (Cluster.ROMA, Cluster.VIGATA):
         "oai_2d_train": "/bmrNAS/people/arjun/data/oai_data/h5_files_2d/train",
         "oai_2d_val": "/bmrNAS/people/arjun/data/oai_data/h5_files_2d/valid",
         "oai_2d_test": "/bmrNAS/people/arjun/data/oai_data/h5_files_2d/test",
+
         "oai_2d_whitened_train": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_2d/train",  # noqa
         "oai_2d_whitened_val": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_2d/valid",  # noqa
         "oai_2d_whitened_test": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_2d/test",  # noqa
+
         "oai_3d_train": "/bmrNAS/people/arjun/data/oai_data/h5_files_3d/train",
         "oai_3d_val": "/bmrNAS/people/arjun/data/oai_data/h5_files_3d/val",
         "oai_3d_test": "/bmrNAS/people/arjun/data/oai_data/h5_files_3d/test",
+
+        "oai_3d_whitened_train": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d/train",
+        "oai_3d_whitened_val": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d/val",
+        "oai_3d_whitened_test": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d/test",
     }
     _TEST_SET_METADATA_PIK = (
         "/bmrNAS/people/arjun/msk_seg_networks/oai_metadata/oai_data.dat"
@@ -102,16 +108,15 @@ def load_oai_3d_from_dir(scan_root, dataset_name=None):
 
     files = sorted(os.listdir(scan_root))
     filepaths = [os.path.join(scan_root, f) for f in files]
-
     dataset_dicts = []
     for fp in filepaths:
-        pid, time_point = tuple(re.split(FNAME_REGEX, fp))
+        _, pid, time_point, _ = tuple(re.split(FNAME_REGEX, fp))
         pid = int(pid)
         time_point = int(time_point)
         dataset_dicts.append(
             {
-                "image_file": fp,
-                "sem_seg_file": "{}.seg".format(os.path.splitext(fp)[0]),
+                "file_name": fp,
+                "sem_seg_file": fp,
                 "scan_id": "{:07d}_V{:02d}".format(pid, time_point),
                 "subject_id": pid,
                 "time_point": time_point,
