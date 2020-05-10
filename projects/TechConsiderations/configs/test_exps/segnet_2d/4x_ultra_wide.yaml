@@ -1,7 +1,7 @@
 _BASE_: "./4x_wide.yaml"
 MODEL_NAME: "segnet_2d"
 DEPTH: 3
-NUM_CONV_LAYERS: [3, 3, 3]
-NUM_FILTERS: [32, 512, 1024]
+NUM_CONV_LAYERS: [2, 3, 4]
+NUM_FILTERS: [32, 128, 512]
 USE_BOTTLENECK: True
 OUTPUT_DIR: "tcv3://test_exps/segnet_2d/4x_ultra_wide"
