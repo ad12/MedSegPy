@@ -412,8 +412,8 @@ class _MultiAttentionModuleND(Layer):
     def call(self, inputs):
         x, gating_signal = inputs
         gate_outputs = []
-        for attn_gate in self.attn_gates:
-            gate_out = attn_gate([x, gating_signal])
+        for i in range(self.num_attention_gates):
+            gate_out = self.attn_gates[i]([x, gating_signal])
             gate_outputs.append(gate_out)
         if self.num_attention_gates > 1:
             total_gate_outputs = Concatenate(axis=-1)(gate_outputs)
