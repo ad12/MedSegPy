@@ -276,21 +276,33 @@ class _GridAttentionModuleND(Layer):
         output = self.output_conv(attn_weighted_output)
         output = self.output_bn(output)
 
-        return output
+        return [output, up_sampled_attn_coeff]
 
     def compute_output_shape(self, input_shape):
         x_shape, gating_signal_shape = input_shape
 
+        theta_gating_output_shape = self.theta_gating.compute_output_shape(
+            gating_signal_shape
+        )
+        up_gating_output_shape = self.upsample_gating.compute_output_shape(
+            theta_gating_output_shape
+        )
+        phi_output_shape = self.phi.compute_output_shape(
+            up_gating_output_shape
+        )
+        up_attn_output_shape = self.upsample_attn_coeff.compute_output_shape(
+            phi_output_shape
+        )
         # Output shape for output_conv
         output_conv_output_shape = self.output_conv.compute_output_shape(
             x_shape
         )
-
         # Output shape for output_bn
         output_bn_output_shape = self.output_bn.compute_output_shape(
             output_conv_output_shape
         )
-        return output_bn_output_shape
+
+        return [output_bn_output_shape, up_attn_output_shape]
 
     def get_config(self):
         base_cfg = super().get_config()
@@ -398,7 +410,9 @@ class _MultiAttentionModuleND(Layer):
         self._trainable_weights = self.attn_gate_1.trainable_weights
         self.attn_gate_2.build(input_shape)
         self._trainable_weights += self.attn_gate_2.trainable_weights
-        output_attn_shape = self.attn_gate_2.compute_output_shape(input_shape)
+        output_attn_shape, _ = self.attn_gate_2.compute_output_shape(
+            input_shape
+        )
 
         concatenate_gate_shape = list(output_attn_shape)
         concatenate_gate_shape[-1] *= 2
@@ -413,27 +427,30 @@ class _MultiAttentionModuleND(Layer):
 
     def call(self, inputs):
         x, gating_signal = inputs
-        gate_1_out = self.attn_gate_1([x, gating_signal])
-        gate_2_out = self.attn_gate_2([x, gating_signal])
+        gate_1_out, attn_coeff_1 = self.attn_gate_1([x, gating_signal])
+        gate_2_out, attn_coeff_2 = self.attn_gate_2([x, gating_signal])
 
         total_gate_outputs = Concatenate(axis=-1)([gate_1_out, gate_2_out])
+        total_attn_coeffs = Concatenate(axis=-1)([attn_coeff_1, attn_coeff_2])
         output = self.combine_gates_conv(total_gate_outputs)
         output = self.combine_gates_bn(output)
-        return output
+        return [output, total_attn_coeffs]
 
     def compute_output_shape(self, input_shape):
-        output_attn_shape = self.attn_gate_2.compute_output_shape(
+        output_attn_shape, coeff_shape = self.attn_gate_2.compute_output_shape(
             input_shape
         )
         concatenate_gate_shape = list(output_attn_shape)
+        concatenate_coeff_shape = list(coeff_shape)
         concatenate_gate_shape[-1] *= 2
+        concatenate_coeff_shape[-1] *= 2
         conv_output_shape = self.combine_gates_conv.compute_output_shape(
             concatenate_gate_shape
         )
         bn_output_shape = self.combine_gates_bn.compute_output_shape(
             conv_output_shape
         )
-        return bn_output_shape
+        return [bn_output_shape, concatenate_coeff_shape]
 
     def get_config(self):
         base_cfg = super().get_config()

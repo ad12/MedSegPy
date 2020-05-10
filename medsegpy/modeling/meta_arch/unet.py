@@ -134,8 +134,8 @@ def build_decoder_block(
 class UNet2D(ModelBuilder):
     def __init__(self,
                  cfg: UNetConfig,
-                 add_attention: bool = False,
-                 use_deep_supervision: bool = False):
+                 add_attention: bool = True,
+                 use_deep_supervision: bool = True):
         super().__init__(cfg)
         self._pooler_type = MaxPooling2D
         self._conv_type = Conv2D
@@ -220,7 +220,7 @@ class UNet2D(ModelBuilder):
                     )(x)
                 else:
                     gating_signal = x
-                attn_out = attn_blocks[depth_cnt - 1]([x_skip, gating_signal])
+                attn_out, attn_coeffs = attn_blocks[depth_cnt - 1]([x_skip, gating_signal])
                 skip_connect = attn_out
 
             x = build_decoder_block(
