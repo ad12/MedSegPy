@@ -85,7 +85,7 @@ def load_oai_2d_from_dir(scan_root, dataset_name=None):
                 "subject_id": pid,
                 "time_point": time_point,
                 "slice_id": int(slice_id),
-                "total_num_slices": 160,
+                "scan_num_slices": 160,
             }
         )
 

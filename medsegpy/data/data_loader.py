@@ -304,6 +304,10 @@ class DefaultDataLoader(DataLoader):
     def _restructure_data(self, vols: Sequence[np.ndarray]):
         """By default the batch dimension is moved to be the third dimension.
 
+        TODO: Change signature to specify if it is a segmentation volume or
+        image volume. Downstream data loaders need to distinguish between the
+        two (i.e. 2.5D networks).
+
         Args:
             vols (ndarrays): Shapes of NxHxWx...
 
@@ -541,3 +545,128 @@ class N5dDataLoader(PatchDataLoader):
         return image, mask
 
 
+class S25dDataLoader(DefaultDataLoader):
+    """Special case of 2.5D data loader.
+
+    Each dataset dict should represent a slice and must have the additional
+    keys:
+    - "slice_id" (int): Slice id (1-indexed) that the dataset corresponds to.
+    - "scan_num_slices" (int): Number of total slices in the scan that the
+        dataset dict is derived from
+
+    Padding is automatically applied to ensure all slices are considered.
+
+    This is a temporary solution until the slow loading speeds of the
+    :class:`N5dDataLoader` are properly debugged.
+    """
+    def __init__(
+        self,
+        cfg: Config,
+        dataset_dicts: List[Dict],
+        is_test: bool = False,
+        shuffle: bool = True,
+        drop_last: bool = False,
+        batch_size: int = 1,
+    ):
+        self._window = cfg.IMG_SIZE[-1]
+        assert len(cfg.IMG_SIZE) == 3
+        assert self._window % 2 == 1
+        self._pad_mode = cfg.IMG_PAD_MODE
+
+        # Create a mapping from scan_id to list of dataset dicts in order of
+        # slice.
+        # TODO: remove copying dictionaries if runtime speed issues found
+        mapping = defaultdict(list)
+        sorted_dataset_dicts = sorted(
+            dataset_dicts, key=lambda d: (d["scan_id"], d["slice_id"])
+        )
+        for dd in sorted_dataset_dicts:
+            mapping[dd["scan_id"]].append(dd)
+        for scan_id, dds in mapping.items():
+            slice_order = [dd["slice_id"] for dd in dds]
+            assert sorted(slice_order) == slice_order, (
+                "Error in sorting dataset dictionaries "
+                "for scan {} by slice id".format(
+                    scan_id,
+                )
+            )
+
+        self._scan_to_dicts = mapping
+
+        super().__init__(
+            cfg, dataset_dicts, is_test, shuffle, drop_last, batch_size
+        )
+
+    def _load_input(
+        self,
+        dataset_dict
+    ):
+        """Find dataset dicts corresponding to flanking/neighboring slices and
+        load.
+        """
+        slice_id = dataset_dict["slice_id"]  # 1-indexed
+        scan_id = dataset_dict["scan_id"]
+        total_num_slices = dataset_dict["scan_num_slices"]  # 1-indexed
+
+        num_flank_slices = self._window // 2
+        l_pad = r_pad = 0
+        if total_num_slices - slice_id < num_flank_slices:
+            # Right pad the volume.
+            r_pad = num_flank_slices - (total_num_slices - slice_id)
+        if slice_id - num_flank_slices <= 0:
+            # Left pad the volume.
+            l_pad = num_flank_slices - slice_id + 1
+        pad = ((0, 0), (0, 0), (l_pad, r_pad)) if l_pad or r_pad else None
+
+        # Load images for neighboring slices.
+        idx = slice_id - 1
+        start = max(0, idx - num_flank_slices)
+        end = min(total_num_slices, idx + 1 + num_flank_slices)
+        dataset_dicts = self._scan_to_dicts[scan_id][start:end]
+
+        images = []
+        for dd in dataset_dicts:
+            image_file = dd["file_name"]
+            with h5py.File(image_file, "r") as f:
+                image = f["data"][:]
+            if image.shape[-1] == 1:
+                image = np.squeeze(image)
+            images.append(image)
+        image = np.stack(images, axis=-1)
+        if pad is not None:
+            image = np.pad(image, pad, self._pad_mode)
+
+        # Load segmentation only for center slice
+        sem_seg_file = dataset_dict.get("sem_seg_file", None)
+        if sem_seg_file:
+            with h5py.File(sem_seg_file, "r") as f:
+                mask = f["data"][:]
+
+            cat_idxs = self._category_idxs
+            mask = collect_mask(mask, index=cat_idxs)
+            if self._include_background:
+                mask = add_background_labels(mask)
+        else:
+            mask = None
+
+        return image, mask
+
+    def _restructure_data(
+        self, vols: Sequence[np.ndarray]
+    ):
+        """By default the batch dimension is moved to be the third dimension.
+
+        This method assumes that `self._dataset_dicts` is limited to dataset
+        dictionaries for only one scan. It also assumes that the order of
+        each patch in `vols_patches` is ordered based on the dataset dictionary.
+
+        Args:
+            vols_patched (ndarrays): Each has shape of NxP1xP2x...
+
+        Returns:
+            vols (ndarrays): Shapes of HxWxDx...
+        """
+        x, y, preds = vols
+        x = x[..., self._window // 2]
+        assert x.ndim == 3, "NxHxW"
+        return super()._restructure_data((x, y, preds))
