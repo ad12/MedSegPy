@@ -134,8 +134,8 @@ def build_decoder_block(
 class UNet2D(ModelBuilder):
     def __init__(self,
                  cfg: UNetConfig,
-                 add_attention: bool = True,
-                 use_deep_supervision: bool = True):
+                 add_attention: bool = False,
+                 use_deep_supervision: bool = False):
         super().__init__(cfg)
         self._pooler_type = MaxPooling2D
         self._conv_type = Conv2D

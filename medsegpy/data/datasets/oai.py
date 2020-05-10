@@ -42,9 +42,9 @@ else:
     pass
 
 _DATA_CATALOG = {
-    "oai_2d_train": "/Users/floradom/stanford_coding_assess/sample_data/train",
-    "oai_2d_val": "/Users/floradom/stanford_coding_assess/sample_data/train",
-    "oai_2d_test": "/Users/floradom/stanford_coding_assess/sample_data/train"
+    "oai_2d_train": "/home/paperspace/data",
+    "oai_2d_val": "/home/paperspace/data",
+    "oai_2d_test": "/home/paperspace/data"
 }
 
 OAI_CATEGORIES = [
