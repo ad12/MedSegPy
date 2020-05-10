@@ -385,7 +385,8 @@ class _MultiAttentionModuleND(Layer):
         self.combine_gates_conv = self.conv_type(
             in_channels,
             kernel_size=1,
-            activation=activation
+            activation=activation,
+            kernel_initializer=kernel_initializer
         )
         self.combine_gates_bn = BN(axis=-1, momentum=0.95, epsilon=0.001)
 
