@@ -41,6 +41,12 @@ elif CLUSTER == CLUSTER.NERO:
 else:
     pass
 
+_DATA_CATALOG = {
+    "oai_2d_train": "/Users/floradom/stanford_coding_assess/sample_data/train",
+    "oai_2d_val": "/Users/floradom/stanford_coding_assess/sample_data/train",
+    "oai_2d_test": "/Users/floradom/stanford_coding_assess/sample_data/train"
+}
+
 OAI_CATEGORIES = [
     {
         "color": [220, 20, 60],
