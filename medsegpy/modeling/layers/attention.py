@@ -1,7 +1,7 @@
 """ Attention Layers
 
 The following layers implement grid attention based on the paper
-"Attention UNet: Learning Where to Look For the Pancreas" (Oktay et. al).
+"Attention U-Net: Learning Where to Look For the Pancreas" (Oktay et. al).
 The code below is based on a PyTorch implementation of this technique
 by the paper's authors:
 
@@ -40,7 +40,7 @@ class _CreateGatingSignalNDim(Layer):
         This layer creates the first gating signal for attention based on
         a feature map. This feature map should contain contextual information
         that will help the network focus on important regions in the image.
-        In the paper, the feature map chosen for a UNet is the coarsest
+        In the paper, the feature map chosen for a U-Net is the coarsest
         feature map at end of the encoding arch.
 
         The layer performs a simple operation to transform the feature map
@@ -52,7 +52,7 @@ class _CreateGatingSignalNDim(Layer):
             dimension: the dimension of the model's input images
             out_channels: the number of channels for the gating signal
             kernel_size: the kernel size used in the convolutional layer
-            kernel_initializer: the method for initializing the weights for the
+            kernel_initializer: the method for initializing the weights of the
                                     convolutional layer
             activation: the activation function used after the convolutional
                             layer
@@ -619,6 +619,34 @@ class _DeepSupervisionND(Layer):
                  kernel_initializer: Union[str, Dict],
                  **kwargs
                  ):
+        """
+        This layer implements deep-supervision, as mentioned in the paper
+        under the section "Attention Gates in U-Net Model". The
+        structure of the implementation follows the same structure as
+        the author's PyTorch implementation (GitHub URL included above).
+
+        The layer takes a feature map as input, passes it through a
+        convolutional layer, and upsamples the output of convolution
+        by the user-inputted scale factor.
+
+        In a U-Net, deep-supervision is used to transform the outputs of
+        all levels in the decoding arch to have a number of channels equal
+        to the number of classes for segmentation, and upsamples these
+        outputs to have the same resolution as the input image. These
+        transformed outputs are then concatenated along the channel dimension.
+        The concatenated outputs are passed through the final step of
+        the U-Net to obtain probabilities for segmentation.
+
+        Parameters:
+            dimension: the dimension of the model's input images
+            out_channels: the number of channels for the output of the
+                            convolutional layer. For a U-Net, this will
+                            be the number of classes.
+            scale_factor: the factor by which the input feature map is
+                            upsampled
+            kernel_initializer: the method for initializing the weights of the
+                                    convolutional layer
+        """
         super(_DeepSupervisionND, self).__init__(**kwargs)
 
         # Store parameters
