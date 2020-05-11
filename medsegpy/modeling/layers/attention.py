@@ -46,7 +46,7 @@ class _CreateGatingSignalNDim(Layer):
         The layer performs a simple operation to transform the feature map
         into the first gating signal:
 
-        Convolution -> Activation -> BatchNorm
+        Convolution --> Activation --> BatchNorm
 
         Parameters:
             dimension: the dimension of the model's input images
@@ -81,11 +81,11 @@ class _CreateGatingSignalNDim(Layer):
                 "If list/tuple, kernel_size must have length %d" % self.dimension
 
         self.conv = conv_type(
-            out_channels,
-            kernel_size,
+            self.out_channels,
+            self.kernel_size,
             padding='same',
-            activation=activation,
-            kernel_initializer=kernel_initializer
+            activation=self.activation,
+            kernel_initializer=self.kernel_initializer
         )
         if self.add_batchnorm:
             self.bn = BN(axis=-1, momentum=0.95, epsilon=0.001)
@@ -440,6 +440,30 @@ class _MultiAttentionModuleND(Layer):
                  activation: str,
                  **kwargs
                  ):
+        """
+        This layer combines the outputs of two attention gates that
+        each receive the same inputs. The outputs are concatenated
+        along the channel axis and passed through a convolutional layer
+        and a batch normalization layer. The operation is as follows:
+
+        Concatenated Gate Outputs --> Convolution --> Activation --> BatchNorm
+
+        Due to the concatenation operation, the layer learns
+        multi-dimensional attention coefficients, as described in the
+        paper under the section "Attention Gates for Image Analysis".
+        After concatenation, the total attention coefficients are the
+        coefficients for each gate, concatenated along the channel
+        dimension. The "multi-dimensional" aspect comes from how
+        each attention coefficient is now a vector with two elements.
+
+        The number of attention gates (2) was chosen because the authors
+        of the paper used the same number in their PyTorch implementation
+        (GitHub URL included above).
+
+        Parameters:
+            activation: the activation function after the convolutional layer
+            all other parameters: same as in _GridAttentionModuleND
+        """
         super(_MultiAttentionModuleND, self).__init__(**kwargs)
 
         # Store parameters
@@ -448,6 +472,7 @@ class _MultiAttentionModuleND(Layer):
         self.intermediate_channels = intermediate_channels
         self.sub_sample_factor = sub_sample_factor
         self.kernel_initializer = kernel_initializer
+        self.activation = activation
 
         if self.dimension == 2:
             self.conv_type = Conv2D
@@ -459,24 +484,24 @@ class _MultiAttentionModuleND(Layer):
             raise ValueError("Only 2D and 3D are supported")
 
         self.attn_gate_1 = self.attn_module_type(
-            in_channels=in_channels,
-            intermediate_channels=intermediate_channels,
-            sub_sample_factor=sub_sample_factor,
-            kernel_initializer=kernel_initializer
+            in_channels=self.in_channels,
+            intermediate_channels=self.intermediate_channels,
+            sub_sample_factor=self.sub_sample_factor,
+            kernel_initializer=self.kernel_initializer
         )
 
         self.attn_gate_2 = self.attn_module_type(
-            in_channels=in_channels,
-            intermediate_channels=intermediate_channels,
-            sub_sample_factor=sub_sample_factor,
-            kernel_initializer=kernel_initializer
+            in_channels=self.in_channels,
+            intermediate_channels=self.intermediate_channels,
+            sub_sample_factor=self.sub_sample_factor,
+            kernel_initializer=self.kernel_initializer
         )
 
         self.combine_gates_conv = self.conv_type(
-            in_channels,
+            self.in_channels,
             kernel_size=1,
-            activation=activation,
-            kernel_initializer=kernel_initializer
+            activation=self.activation,
+            kernel_initializer=self.kernel_initializer
         )
         self.combine_gates_bn = BN(axis=-1, momentum=0.95, epsilon=0.001)
 
@@ -536,7 +561,8 @@ class _MultiAttentionModuleND(Layer):
                 'in_channels': self.in_channels,
                 'intermediate_channels': self.intermediate_channels,
                 'sub_sample_factor': self.sub_sample_factor,
-                'kernel_initializer': self.kernel_initializer
+                'kernel_initializer': self.kernel_initializer,
+                'activation': self.activation
             }
         )
         return base_cfg
@@ -595,32 +621,32 @@ class _DeepSupervisionND(Layer):
         # Store parameters
         self.dimension = dimension
         self.out_channels = out_channels
+        self.scale_factor = scale_factor
+        self.kernel_initializer = kernel_initializer
 
-        assert isinstance(scale_factor, list) or isinstance(
-            scale_factor, tuple), "scale_factor must be a list or tuple"
+        assert isinstance(self.scale_factor, list) or isinstance(
+            self.scale_factor, tuple), "scale_factor must be a list or tuple"
 
-        if isinstance(scale_factor, list):
-            self.scale_factor = tuple(scale_factor)
-        else:
-            self.scale_factor = scale_factor
+        if isinstance(self.scale_factor, list):
+            self.scale_factor = tuple(self.scale_factor)
 
         if self.dimension == 2:
             self.conv_type = Conv2D
             self.upsample = UpSampling2D(
-                size=scale_factor
+                size=self.scale_factor
             )
         elif self.dimension == 3:
             self.conv_type = Conv3D
             self.upsample = UpSampling3D(
-                size=scale_factor
+                size=self.scale_factor
             )
         else:
             raise ValueError("Only 2D and 3D are supported")
 
         self.conv = self.conv_type(
-            out_channels,
+            self.out_channels,
             kernel_size=1,
-            kernel_initializer=kernel_initializer
+            kernel_initializer=self.kernel_initializer
         )
 
     def build(self, input_shape):
@@ -649,7 +675,8 @@ class _DeepSupervisionND(Layer):
             {
                 'dimension': self.dimension,
                 'out_channels': self.out_channels,
-                'scale_factor': self.scale_factor
+                'scale_factor': self.scale_factor,
+                'kernel_initializer': self.kernel_initializer
             }
         )
         return base_cfg
