@@ -680,6 +680,9 @@ class UNetConfig(Config):
     DEPTH = 6
     NUM_FILTERS = None
 
+    ADD_ATTENTION = False
+    USE_DEEP_SUPERVISION = False
+
     def __init__(self, state="training", create_dirs=True):
         super().__init__(self.MODEL_NAME, state, create_dirs=create_dirs)
 

@@ -132,10 +132,7 @@ def build_decoder_block(
 
 @META_ARCH_REGISTRY.register()
 class UNet2D(ModelBuilder):
-    def __init__(self,
-                 cfg: UNetConfig,
-                 add_attention: bool = True,
-                 use_deep_supervision: bool = True):
+    def __init__(self, cfg: UNetConfig):
         super().__init__(cfg)
         self._pooler_type = MaxPooling2D
         self._conv_type = Conv2D
@@ -145,8 +142,8 @@ class UNet2D(ModelBuilder):
 
         self._dim = 2
         self.kernel_size = (3, 3)
-        self.add_attention = add_attention
-        self.use_deep_supervision = use_deep_supervision
+        self.add_attention = False
+        self.use_deep_supervision = False
 
     def build_model(self, input_tensor=None) -> Model:
         cfg = self._cfg
@@ -154,6 +151,8 @@ class UNet2D(ModelBuilder):
         input_size = cfg.IMG_SIZE
         depth = cfg.DEPTH
         kernel_size = self.kernel_size
+        self.add_attention = cfg.ADD_ATTENTION
+        self.use_deep_supervision = cfg.USE_DEEP_SUPERVISION
 
         kernel_initializer = {
             "class_name": cfg.KERNEL_INITIALIZER,
@@ -281,13 +280,8 @@ class UNet2D(ModelBuilder):
 
 @META_ARCH_REGISTRY.register()
 class UNet3D(UNet2D):
-    def __init__(self,
-                 cfg: UNet3DConfig,
-                 add_attention: bool = False,
-                 use_deep_supervision: bool = False):
-        super().__init__(cfg,
-                         add_attention=add_attention,
-                         use_deep_supervision=use_deep_supervision)
+    def __init__(self, cfg: UNet3DConfig):
+        super().__init__(cfg)
         self._pooler_type = MaxPooling3D
         self._conv_type = Conv3D
         self._multi_attention_module = MultiAttentionModule3D
