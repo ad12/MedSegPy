@@ -41,12 +41,6 @@ elif CLUSTER == CLUSTER.NERO:
 else:
     pass
 
-_DATA_CATALOG = {
-    "oai_2d_train": "/home/paperspace/data",
-    "oai_2d_val": "/home/paperspace/data",
-    "oai_2d_test": "/home/paperspace/data"
-}
-
 OAI_CATEGORIES = [
     {
         "color": [220, 20, 60],
