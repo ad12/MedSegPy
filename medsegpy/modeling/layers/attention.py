@@ -1,9 +1,9 @@
 """ Attention Layers
 
-The following layers implement grid attention based on the paper
-"Attention U-Net: Learning Where to Look For the Pancreas" (Oktay et. al).
-The code below is based on a PyTorch implementation of this technique
-by the paper's authors:
+The following layers implement an attention gating module based on the
+paper "Attention U-Net: Learning Where to Look For the Pancreas"
+(Oktay et al.). The code below is based on a PyTorch implementation of
+this technique by the paper's authors:
 
 https://github.com/ozan-oktay/Attention-Gated-Networks/tree/a96edb72622274f6705097d70cfaa7f2bf818a5a
 
