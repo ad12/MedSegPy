@@ -9,7 +9,7 @@ from keras.utils import plot_model
 
 from medsegpy import config, solver
 from medsegpy.data import build_loader, im_gens
-from medsegpy.engine.callbacks import LossHistory, lr_callback
+from medsegpy.engine.callbacks import LossHistory, lr_callback, GetAttnCoeff
 from medsegpy.evaluation import build_evaluator, inference_on_dataset
 from medsegpy.losses import dice_loss, get_training_loss
 from medsegpy.modeling import get_model
@@ -25,6 +25,7 @@ class DefaultTrainer(object):
     def __init__(self, cfg: config.Config):
         self._cfg = cfg
         self._loss_history = None
+        self._get_attn_coeff = None
 
         model = self.build_model(cfg)
         plot_model(
@@ -92,6 +93,7 @@ class DefaultTrainer(object):
             )
 
         self._loss_history = LossHistory()
+        self._get_attn_coeff = GetAttnCoeff()
 
         callbacks.extend(
             [
@@ -107,6 +109,7 @@ class DefaultTrainer(object):
                 ),
                 kc.CSVLogger(os.path.join(output_dir, "metrics.log")),
                 self._loss_history,
+                self._get_attn_coeff
             ]
         )
 

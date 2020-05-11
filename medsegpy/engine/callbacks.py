@@ -1,8 +1,9 @@
 import logging
 
 from keras import callbacks as kc
+import matplotlib.pyplot as plt
 
-__all__ = ["lr_callback", "LossHistory"]
+__all__ = ["lr_callback", "LossHistory", "GetAttnCoeff"]
 
 logger = logging.getLogger(__name__)
 
@@ -46,3 +47,17 @@ class LossHistory(kc.Callback):
             ]
         )
         logger.info("Epoch {} - {}".format(epoch + 1, metrics))
+
+
+class GetAttnCoeff(kc.Callback):
+    def on_epoch_end(self, epoch, logs=None):
+        _, attn_coeffs = self.model.get_layer('multi_attention_module2d_1').output
+        #input_data = self.model.get_layer('conv2d_1').input
+        coeffs_1 = attn_coeffs[-1, ..., 0]
+        #input_last = input_data[-1, ..., 0]
+        #attn_hmap = plt.imshow(coeffs_1, cmap='jet', interpolation='nearest',
+        #                       vmin=0, vmax=1)
+        print("Saving Attention Coefficient...")
+        plt.imsave('/home/paperspace/attn_coeff_imgs/coeff_%d' % epoch,
+                   coeffs_1, cmap='jet', vmin=0, vmax=1)
+        #input_last = plt.imshow()
