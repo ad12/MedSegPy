@@ -192,6 +192,9 @@ class UNet2D(ModelBuilder):
             )
             # Maxpool until penultimate depth.
             if depth_cnt < depth - 1:
+                # The first skip connection is not passed through
+                # an attention gate, as mentioned in the paper under
+                # the section "Attention Gates in U-Net Model"
                 if depth_cnt > 0 and self.add_attention:
                     attn_blocks.append(
                         self._multi_attention_module(
