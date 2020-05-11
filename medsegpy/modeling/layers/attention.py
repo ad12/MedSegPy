@@ -1,3 +1,12 @@
+""" Attention Layers
+
+The following layers implement grid attention based on the paper
+"Attention UNet: Learning Where to Look For the Pancreas" (Oktay et. al).
+The code below is based on a PyTorch implementation of this technique
+by the paper's authors:
+
+https://github.com/ozan-oktay/Attention-Gated-Networks/tree/a96edb72622274f6705097d70cfaa7f2bf818a5a
+"""
 from typing import Dict, Sequence, Union
 
 from keras import backend as K
@@ -24,6 +33,9 @@ class _CreateGatingSignalNDim(Layer):
                  add_batchnorm: bool,
                  **kwargs
                  ):
+        """
+        This layer creates the first gating signal for attention.
+        """
         super(_CreateGatingSignalNDim, self).__init__(**kwargs)
 
         # Store parameters
@@ -176,7 +188,7 @@ class _GridAttentionModuleND(Layer):
             kernel_initializer=self.kernel_initializer
         )
 
-        self.phi = self.conv_type(
+        self.psi = self.conv_type(
             1,
             kernel_size=1,
             kernel_initializer=self.kernel_initializer
@@ -216,21 +228,21 @@ class _GridAttentionModuleND(Layer):
         self.upsample_gating.build(theta_gating_output_shape)
         self._trainable_weights += self.upsample_gating.trainable_weights
 
-        # Build phi
-        self.phi.build(theta_x_output_shape)
-        self._trainable_weights += self.phi.trainable_weights
-        phi_output_shape = self.phi.compute_output_shape(
+        # Build psi
+        self.psi.build(theta_x_output_shape)
+        self._trainable_weights += self.psi.trainable_weights
+        psi_output_shape = self.psi.compute_output_shape(
             theta_x_output_shape
         )
 
         # Build upsample_attn_coeff
         up_ratio_attn_coeff = np.divide(
-            x_shape[1:-1], phi_output_shape[1:-1]
+            x_shape[1:-1], psi_output_shape[1:-1]
         )
         self.upsample_attn_coeff = self.upsample_type(
             size=up_ratio_attn_coeff
         )
-        self.upsample_attn_coeff.build(phi_output_shape)
+        self.upsample_attn_coeff.build(psi_output_shape)
         self._trainable_weights += self.upsample_attn_coeff.trainable_weights
 
         # Build output_conv
@@ -258,15 +270,15 @@ class _GridAttentionModuleND(Layer):
         # ourselves or use transposed convolution and learn the
         # upsampling operation.
         up_sampled_gating = self.upsample_gating(theta_gating_out)
-        phi_out = self.phi(
+        psi_out = self.psi(
             K.relu(theta_x_out + up_sampled_gating)
         )
-        sigmoid_phi = K.sigmoid(phi_out)
+        sigmoid_psi = K.sigmoid(psi_out)
         x_size = K.int_shape(x)
 
         # Need to upsample to size of inputs, such that
         # attention coefficients can be multiplied with inputs
-        up_sampled_attn_coeff = self.upsample_attn_coeff(sigmoid_phi)
+        up_sampled_attn_coeff = self.upsample_attn_coeff(sigmoid_psi)
         attn_weighted_output = Multiply()([
             K.repeat_elements(up_sampled_attn_coeff,
                               rep=x_size[-1],
@@ -287,11 +299,11 @@ class _GridAttentionModuleND(Layer):
         up_gating_output_shape = self.upsample_gating.compute_output_shape(
             theta_gating_output_shape
         )
-        phi_output_shape = self.phi.compute_output_shape(
+        psi_output_shape = self.psi.compute_output_shape(
             up_gating_output_shape
         )
         up_attn_output_shape = self.upsample_attn_coeff.compute_output_shape(
-            phi_output_shape
+            psi_output_shape
         )
         # Output shape for output_conv
         output_conv_output_shape = self.output_conv.compute_output_shape(

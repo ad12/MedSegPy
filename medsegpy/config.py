@@ -680,6 +680,7 @@ class UNetConfig(Config):
     DEPTH = 6
     NUM_FILTERS = None
 
+    # Boolean arguments for attention and deep supervision
     ADD_ATTENTION = False
     USE_DEEP_SUPERVISION = False
 

@@ -42,6 +42,7 @@ def get_model(config):
         model = segnet_2d(config)
     elif type(config) is UNetConfig:
         #model = unet_2d(config)
+        # Get newer version of UNet
         model = build_model(config)
     elif type(config) is UNet2_5DConfig:
         model = unet_2_5d(config)
