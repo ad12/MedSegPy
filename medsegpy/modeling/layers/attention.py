@@ -371,11 +371,9 @@ class _GridAttentionModuleND(Layer):
         up_attn_output_shape = self.upsample_attn_coeff.compute_output_shape(
             psi_output_shape
         )
-        # Output shape for output_conv
         output_conv_output_shape = self.output_conv.compute_output_shape(
             x_shape
         )
-        # Output shape for output_bn
         output_bn_output_shape = self.output_bn.compute_output_shape(
             output_conv_output_shape
         )
