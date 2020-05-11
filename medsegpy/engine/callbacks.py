@@ -1,13 +1,8 @@
 import logging
 
 from keras import callbacks as kc
-import tensorflow as tf
-import numpy as np
-import matplotlib.pyplot as plt
-import io
-from PIL import Image
 
-__all__ = ["lr_callback", "LossHistory", "GetAttnCoeff"]
+__all__ = ["lr_callback", "LossHistory"]
 
 logger = logging.getLogger(__name__)
 
@@ -51,32 +46,3 @@ class LossHistory(kc.Callback):
             ]
         )
         logger.info("Epoch {} - {}".format(epoch + 1, metrics))
-
-
-class GetAttnCoeff(kc.Callback):
-
-    def tf_summary_image(self, tensor):
-        tensor = tensor.astype(np.uint8)
-        height, width = tensor.shape
-        channel = 1
-        image = Image.fromarray(tensor)
-        output = io.BytesIO()
-        image.save(output, format='PNG')
-        image_string = output.getvalue()
-        output.close()
-        return tf.Summary.Image(height=height,
-                                width=width,
-                                colorspace=channel,
-                                encoded_image_string=image_string)
-
-    def on_epoch_end(self, epoch, logs=None):
-        _, attn_coeffs = self.model.get_layer('multi_attention_module2d_1').output
-        coeffs_1 = attn_coeffs[-1, ..., 0]
-        coeffs_1 = coeffs_1 * 255
-        image = self.tf_summary_image(coeffs_1)
-        summary = tf.Summary(value=[tf.Summary.Value(image=image)])
-        writer = tf.summary.FileWriter('./logs')
-        writer.add_summary(summary, epoch)
-        writer.close()
-        return
-
