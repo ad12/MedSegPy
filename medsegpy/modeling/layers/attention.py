@@ -95,8 +95,9 @@ class _CreateGatingSignalNDim(Layer):
         self._trainable_weights = self.conv.trainable_weights
         conv_output_shape = self.conv.compute_output_shape(input_shape)
 
-        self.bn.build(conv_output_shape)
-        self._trainable_weights += self.bn.trainable_weights
+        if self.add_batchnorm:
+            self.bn.build(conv_output_shape)
+            self._trainable_weights += self.bn.trainable_weights
         super(_CreateGatingSignalNDim, self).build(input_shape)
 
     def call(self, inputs):
@@ -107,8 +108,11 @@ class _CreateGatingSignalNDim(Layer):
 
     def compute_output_shape(self, input_shape):
         conv_output_shape = self.conv.compute_output_shape(input_shape)
-        bn_output_shape = self.bn.compute_output_shape(conv_output_shape)
-        return bn_output_shape
+        final_output_shape = conv_output_shape
+        if self.add_batchnorm:
+            bn_output_shape = self.bn.compute_output_shape(conv_output_shape)
+            final_output_shape = bn_output_shape
+        return final_output_shape
 
     def get_config(self):
         base_cfg = super().get_config()
@@ -506,7 +510,6 @@ class _MultiAttentionModuleND(Layer):
         self.combine_gates_bn = BN(axis=-1, momentum=0.95, epsilon=0.001)
 
     def build(self, input_shape):
-        # Build attention gates
         self.attn_gate_1.build(input_shape)
         self._trainable_weights = self.attn_gate_1.trainable_weights
         self.attn_gate_2.build(input_shape)
