@@ -47,6 +47,16 @@ class _CreateGatingSignalNDim(Layer):
         into the first gating signal:
 
         Convolution -> Activation -> BatchNorm
+
+        Parameters:
+            dimension: the dimension of the model's input images
+            out_channels: the number of channels for the gating signal
+            kernel_size: the kernel size used in the convolutional layer
+            kernel_initializer: the method for initializing the weights for the
+                                    convolutional layer
+            activation: the activation function used after the convolutional
+                            layer
+            add_batchnorm: specifies if batch normalization should be used
         """
         super(_CreateGatingSignalNDim, self).__init__(**kwargs)
 
@@ -172,8 +182,8 @@ class _GridAttentionModuleND(Layer):
         the feature map and the attention coefficients to down weight
         unimportant feature vectors, based on contextual information
         from the gating signal. The pruned feature map is then
-        linearly transformed using a Convolutional layer, which is
-        followed by a Batch Normalization layer.
+        linearly transformed using a convolutional layer, which is
+        followed by a batch normalization layer.
 
         The formulas for computing the attention coefficients are
         Equations 1 and 2 in the paper. The code below uses the variables
@@ -181,6 +191,19 @@ class _GridAttentionModuleND(Layer):
         found in Equations 1 and 2. Sigma_1 in Equation 1 is fixed
         as the ReLU activation function and Sigma_2 in Equation 2 is
         fixed as the sigmoid activation function.
+
+        Parameters:
+            dimension: the dimension of the model's input images
+            in_channels: the number of channels in the input feature map
+            intermediate_channels: F_int (in Figure 2 of the paper)
+            sub_sample_factor: the factor by which the input feature map
+                                should be downsampled. This should be chosen
+                                such that the input feature map is downsampled
+                                to the resolution of the gating signal,
+                                as described in the paper under the section
+                                "Attention Gates in U-Net Model".
+            kernel_initializer: the method used for initializing the weights
+                                    of convolutional layers
         """
         super(_GridAttentionModuleND, self).__init__(**kwargs)
 
@@ -196,6 +219,10 @@ class _GridAttentionModuleND(Layer):
             self.upsample_type = UpSampling2D
         elif self.dimension == 3:
             self.conv_type = Conv3D
+            # NOTE: The authors of the paper state they use trilinear
+            # interpolation for upsampling 3D images. However, there
+            # does not exist a trilinear interpolation
+            # mode for UpSampling3D.
             self.upsample_type = UpSampling3D
         else:
             raise ValueError("Only 2D and 3D are supported")
@@ -249,7 +276,7 @@ class _GridAttentionModuleND(Layer):
         )
 
         # Build upsample_gating
-        up_ratio_gating = np.divide(
+        up_ratio_gating = np.floor_divide(
             theta_x_output_shape[1:-1], theta_gating_output_shape[1:-1]
         )
         self.upsample_gating = self.upsample_type(
@@ -257,6 +284,11 @@ class _GridAttentionModuleND(Layer):
         )
         self.upsample_gating.build(theta_gating_output_shape)
         self._trainable_weights += self.upsample_gating.trainable_weights
+        up_gating_output_shape = self.upsample_gating.compute_output_shape(
+            theta_gating_output_shape
+        )
+        assert up_gating_output_shape == theta_x_output_shape, \
+            "Cannot upsample output of theta_gating to match size of output of theta_x"
 
         # Build psi
         self.psi.build(theta_x_output_shape)
@@ -266,7 +298,7 @@ class _GridAttentionModuleND(Layer):
         )
 
         # Build upsample_attn_coeff
-        up_ratio_attn_coeff = np.divide(
+        up_ratio_attn_coeff = np.floor_divide(
             x_shape[1:-1], psi_output_shape[1:-1]
         )
         self.upsample_attn_coeff = self.upsample_type(
@@ -274,6 +306,11 @@ class _GridAttentionModuleND(Layer):
         )
         self.upsample_attn_coeff.build(psi_output_shape)
         self._trainable_weights += self.upsample_attn_coeff.trainable_weights
+        up_coeff_output_shape = self.upsample_attn_coeff.compute_output_shape(
+            psi_output_shape
+        )
+        assert up_coeff_output_shape == x_shape, \
+            "Cannot upsample output of psi to match size of input feature map (x)"
 
         # Build output_conv
         self.output_conv.build(x_shape)
@@ -294,11 +331,9 @@ class _GridAttentionModuleND(Layer):
         theta_gating_out = self.theta_gating(gating_signal)
 
         # If theta_gating_out is smaller than theta_x_out,
-        # then upsample using Upsample2D or Upsample3D.
-        # NOTE: There does not exist a trilinear interpolation
-        # mode for UpSample3D. We may need to make one
-        # ourselves or use transposed convolution and learn the
-        # upsampling operation.
+        # then upsample using UpSampling2D or UpSampling3D. This should
+        # not be needed if the right value is chosen for
+        # sub_sample_factor.
         up_sampled_gating = self.upsample_gating(theta_gating_out)
         psi_out = self.psi(
             K.relu(theta_x_out + up_sampled_gating)
@@ -306,8 +341,9 @@ class _GridAttentionModuleND(Layer):
         sigmoid_psi = K.sigmoid(psi_out)
         x_size = K.int_shape(x)
 
-        # Need to upsample to size of inputs, such that
-        # attention coefficients can be multiplied with inputs
+        # Need to upsample to size of the input feature map (x), such that
+        # the attention coefficients can be multiplied with the input
+        # feature map
         up_sampled_attn_coeff = self.upsample_attn_coeff(sigmoid_psi)
         attn_weighted_output = Multiply()([
             K.repeat_elements(up_sampled_attn_coeff,
