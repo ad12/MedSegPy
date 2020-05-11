@@ -280,7 +280,7 @@ class _GridAttentionModuleND(Layer):
             theta_x_output_shape[1:-1], theta_gating_output_shape[1:-1]
         )
         self.upsample_gating = self.upsample_type(
-            size=up_ratio_gating
+            size=tuple(up_ratio_gating)
         )
         self.upsample_gating.build(theta_gating_output_shape)
         self._trainable_weights += self.upsample_gating.trainable_weights
@@ -302,7 +302,7 @@ class _GridAttentionModuleND(Layer):
             x_shape[1:-1], psi_output_shape[1:-1]
         )
         self.upsample_attn_coeff = self.upsample_type(
-            size=up_ratio_attn_coeff
+            size=tuple(up_ratio_attn_coeff)
         )
         self.upsample_attn_coeff.build(psi_output_shape)
         self._trainable_weights += self.upsample_attn_coeff.trainable_weights
