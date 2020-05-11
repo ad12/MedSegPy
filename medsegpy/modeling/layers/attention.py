@@ -291,7 +291,7 @@ class _GridAttentionModuleND(Layer):
         up_gating_output_shape = self.upsample_gating.compute_output_shape(
             theta_gating_output_shape
         )
-        assert up_gating_output_shape == theta_x_output_shape, \
+        assert up_gating_output_shape[1:-1] == theta_x_output_shape[1:-1], \
             "Cannot upsample output of theta_gating to match size of output of theta_x"
 
         # Build psi
@@ -313,7 +313,7 @@ class _GridAttentionModuleND(Layer):
         up_coeff_output_shape = self.upsample_attn_coeff.compute_output_shape(
             psi_output_shape
         )
-        assert up_coeff_output_shape == x_shape, \
+        assert up_coeff_output_shape[1:-1] == x_shape[1:-1], \
             "Cannot upsample output of psi to match size of input feature map (x)"
 
         # Build output_conv
