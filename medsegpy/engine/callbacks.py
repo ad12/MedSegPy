@@ -1,7 +1,11 @@
 import logging
 
 from keras import callbacks as kc
+import tensorflow as tf
+import numpy as np
 import matplotlib.pyplot as plt
+import io
+from PIL import Image
 
 __all__ = ["lr_callback", "LossHistory", "GetAttnCoeff"]
 
@@ -50,14 +54,29 @@ class LossHistory(kc.Callback):
 
 
 class GetAttnCoeff(kc.Callback):
+
+    def tf_summary_image(self, tensor):
+        tensor = tensor.astype(np.uint8)
+        height, width = tensor.shape
+        channel = 1
+        image = Image.fromarray(tensor)
+        output = io.BytesIO()
+        image.save(output, format='PNG')
+        image_string = output.getvalue()
+        output.close()
+        return tf.Summary.Image(height=height,
+                                width=width,
+                                colorspace=channel,
+                                encoded_image_string=image_string)
+
     def on_epoch_end(self, epoch, logs=None):
         _, attn_coeffs = self.model.get_layer('multi_attention_module2d_1').output
-        #input_data = self.model.get_layer('conv2d_1').input
         coeffs_1 = attn_coeffs[-1, ..., 0]
-        #input_last = input_data[-1, ..., 0]
-        #attn_hmap = plt.imshow(coeffs_1, cmap='jet', interpolation='nearest',
-        #                       vmin=0, vmax=1)
-        print("Saving Attention Coefficient...")
-        plt.imsave('/home/paperspace/attn_coeff_imgs/coeff_%d' % epoch,
-                   coeffs_1, cmap='jet', vmin=0, vmax=1)
-        #input_last = plt.imshow()
+        coeffs_1 = coeffs_1 * 255
+        image = self.tf_summary_image(coeffs_1)
+        summary = tf.Summary(value=[tf.Summary.Value(image=image)])
+        writer = tf.summary.FileWriter('./logs')
+        writer.add_summary(summary, epoch)
+        writer.close()
+        return
+
