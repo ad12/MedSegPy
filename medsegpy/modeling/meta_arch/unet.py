@@ -177,7 +177,6 @@ class UNet2D(ModelBuilder):
         x_skips = []
         pool_sizes = []
         x = inputs
-        attn_blocks = []
         deep_supervision_outputs = []
         scale_factors = np.ones(((depth - 1), self._dim), dtype=int)
         for depth_cnt in range(depth):
@@ -192,16 +191,6 @@ class UNet2D(ModelBuilder):
             )
             # Maxpool until penultimate depth.
             if depth_cnt < depth - 1:
-                # The first skip connection is not passed through
-                # an attention gate, as mentioned in the paper under
-                # the section "Attention Gates in U-Net Model"
-                if depth_cnt > 0 and self.add_attention:
-                    attn_blocks.append(
-                        self._multi_attention_module(
-                            in_channels=num_filters[depth_cnt],
-                            intermediate_channels=num_filters[depth_cnt],
-                        )
-                    )
                 x_skips.append(x)
                 pool_size = self._get_pool_size(x)
                 pool_sizes.append(pool_size)
@@ -215,14 +204,20 @@ class UNet2D(ModelBuilder):
         ):
             depth_cnt = depth - i - 2
             skip_connect = x_skip
+            # The first skip connection is not passed through
+            # an attention gate, as mentioned in the paper under
+            # the section "Attention Gates in U-Net Model"
             if depth_cnt > 0 and self.add_attention:
                 if i == 0:
                     gating_signal = self._create_gating_signal(
-                        out_channels=num_filters[depth_cnt + 1],
+                        out_channels=num_filters[depth_cnt + 1]
                     )(x)
                 else:
                     gating_signal = x
-                attn_out, attn_coeffs = attn_blocks[depth_cnt - 1]([x_skip, gating_signal])
+                attn_out, attn_coeffs = self._multi_attention_module(
+                    in_channels=num_filters[depth_cnt],
+                    intermediate_channels=num_filters[depth_cnt]
+                )([x_skip, gating_signal])
                 skip_connect = attn_out
 
             x = build_decoder_block(
