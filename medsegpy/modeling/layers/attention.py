@@ -6,6 +6,9 @@ The code below is based on a PyTorch implementation of this technique
 by the paper's authors:
 
 https://github.com/ozan-oktay/Attention-Gated-Networks/tree/a96edb72622274f6705097d70cfaa7f2bf818a5a
+
+Each layer has 2D and 3D versions. Only the 2D versions have been tested
+so far.
 """
 from typing import Dict, Sequence, Union
 
@@ -34,7 +37,16 @@ class _CreateGatingSignalNDim(Layer):
                  **kwargs
                  ):
         """
-        This layer creates the first gating signal for attention.
+        This layer creates the first gating signal for attention based on
+        a feature map. This feature map should contain contextual information
+        that will help the network focus on important regions in the image.
+        In the paper, the feature map chosen for a UNet is the coarsest
+        feature map at end of the encoding arch.
+
+        The layer performs a simple operation to transform the feature map
+        into the first gating signal:
+
+        Convolution -> Activation -> BatchNorm
         """
         super(_CreateGatingSignalNDim, self).__init__(**kwargs)
 
@@ -72,6 +84,7 @@ class _CreateGatingSignalNDim(Layer):
         self.conv.build(input_shape)
         self._trainable_weights = self.conv.trainable_weights
         conv_output_shape = self.conv.compute_output_shape(input_shape)
+
         self.bn.build(conv_output_shape)
         self._trainable_weights += self.bn.trainable_weights
         super(_CreateGatingSignalNDim, self).build(input_shape)
@@ -151,6 +164,24 @@ class _GridAttentionModuleND(Layer):
                  kernel_initializer: Union[str, Dict],
                  **kwargs
                  ):
+        """
+        This layer implements the additive attention gate proposed
+        in the paper and displayed in Figure 2 of the paper. The gate
+        takes in a feature map and a gating signal, calculates
+        the attention coefficients (ranging from 0 to 1), and multiplies
+        the feature map and the attention coefficients to down weight
+        unimportant feature vectors, based on contextual information
+        from the gating signal. The pruned feature map is then
+        linearly transformed using a Convolutional layer, which is
+        followed by a Batch Normalization layer.
+
+        The formulas for computing the attention coefficients are
+        Equations 1 and 2 in the paper. The code below uses the variables
+        "theta_x" and "theta_gating" to represent W_x and W_g (and b_g)
+        found in Equations 1 and 2. Sigma_1 in Equation 1 is fixed
+        as the ReLU activation function and Sigma_2 in Equation 2 is
+        fixed as the sigmoid activation function.
+        """
         super(_GridAttentionModuleND, self).__init__(**kwargs)
 
         # Store parameters
@@ -194,7 +225,6 @@ class _GridAttentionModuleND(Layer):
             kernel_initializer=self.kernel_initializer
         )
 
-        # Output Transform: Conv -> BN
         self.output_conv = self.conv_type(
             self.in_channels,
             kernel_size=1,
