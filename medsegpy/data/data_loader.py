@@ -615,6 +615,7 @@ class N5dDataLoader(PatchDataLoader):
         return image, mask
 
 
+@DATA_LOADER_REGISTRY.register()
 class S25dDataLoader(DefaultDataLoader):
     """Special case of 2.5D data loader.
 

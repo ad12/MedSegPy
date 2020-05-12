@@ -1,0 +1,3 @@
+_BASE_: "./oai_whitened_seed-11725701.yaml"
+SEED: 14645997
+OUTPUT_DIR: tcv3://architecture/unet_2d/oai_whitened_seed-14645997
