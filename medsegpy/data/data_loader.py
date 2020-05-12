@@ -1,6 +1,7 @@
 import logging
 import math
 import random
+import threading
 import time
 import warnings
 from abc import ABC, abstractmethod
@@ -9,7 +10,6 @@ from typing import Dict, List, Sequence
 
 import h5py
 import numpy as np
-import scipy.sparse as sps
 from fvcore.common.registry import Registry
 from keras import utils as k_utils
 from tqdm import tqdm
@@ -242,37 +242,12 @@ class DefaultDataLoader(DataLoader):
         self._num_classes = cfg.get_num_classes()
         self._transform_gen = build_preprocessing(cfg)
 
-        self._preload_data = cfg.PRELOAD_DATA
-        self._cached_data = None
-        if self._preload_data:
-            logger.info("Pre-loading data...")
-            self._cached_data = self._load_all_data(dataset_dicts)
-
-    def _load_all_data(self, dataset_dicts) -> Dict:
-        """Internal method for loading data into memory before beginning
-        training/testing.
-
-        Note that pre-loading is memory intensive.
-        """
-        cache = {}
-        for dd in tqdm(dataset_dicts):
-            image, mask = self._load_input(dd)
-            if np.unique(mask) == [0, 1]:
-                mask = mask.astype(np.bool)
-            mask = sps.csr_matrix(mask)
-            cache[(dd["file_name"], dd["sem_seg_file"])] = {
-                "image": image, "mask": mask
-            }
-
-        return cache
-
     def _load_input(self, dataset_dict):
         image_file = dataset_dict["file_name"]
         sem_seg_file = dataset_dict.get("sem_seg_file", None)
 
         if self._cached_data is not None:
             image, mask = self._cached_data[(image_file, sem_seg_file)]
-            mask = sps.csr_matrix.todense(mask)
         else:
             with h5py.File(image_file, "r") as f:
                 image = f["data"][:]
@@ -420,7 +395,6 @@ class PatchDataLoader(DefaultDataLoader):
         drop_last: bool = False,
         batch_size: int = 1,
     ):
-
         # Create patch elements from dataset dict.
         # TODO: change pad/patching based on test/train
         expected_img_dim = len(dataset_dicts[0]["image_size"])
@@ -462,26 +436,30 @@ class PatchDataLoader(DefaultDataLoader):
             cfg, dd_patched, is_test, shuffle, drop_last, batch_size
         )
 
-    def _load_all_data(self, dataset_dicts) -> Dict:
+        self._preload_data = cfg.PRELOAD_DATA
+        self._cached_data = None
+        if self._preload_data:
+            if threading.current_thread() is not threading.main_thread():
+                raise ValueError("Data pre-loading can only be done on the main thread.")
+            logger.info("Pre-loading data...")
+            self._cached_data = self._load_all_data(dataset_dicts, cfg.NUM_WORKERS)
+
+    def _load_all_data(self, dataset_dicts, num_workers: int = 1) -> Dict:
         """
         We assume that that the tuple `("file_name", "sem_seg_file")`
         is sufficient for determining the uniqueness of each base dataset
         dictionary.
         """
-        tot_dicts = {
-            (dd["file_name"], dd["sem_seg_file"]): dd
-            for dd in dataset_dicts
-        }
-        cache = {}
-        for dd in tqdm(tot_dicts):
-            image, mask = self._load_patch(dd)
+        def _load(dataset_dict):
+            image, mask = self._load_patch(dataset_dict, skip_patch=True)
             if set(np.unique(mask)) == {0, 1}:
                 mask = mask.astype(np.bool)
-            mask = sps.csr_matrix(mask)
-            cache[(dd["file_name"], dd["sem_seg_file"])] = {
+            return {
                 "image": image, "mask": mask
             }
 
+        cache = [_load(dd) for dd in tqdm(dataset_dicts)]
+        cache = {(dd["file_name"], dd["sem_seg_file"]): x for dd, x in zip(dataset_dicts, cache)}
         return cache
 
     def _load_patch(self, dataset_dict, skip_patch: bool=False):
@@ -519,7 +497,8 @@ class PatchDataLoader(DefaultDataLoader):
             patch = dataset_dict["_patch"]
             image_file = dataset_dict["file_name"]
             sem_seg_file = dataset_dict.get("sem_seg_file", None)
-            image, mask = self._cached_data[(image_file, sem_seg_file)]
+            data = self._cached_data[(image_file, sem_seg_file)]
+            image, mask = data["image"], data["mask"]
             image, mask = image[patch], mask[patch]
         else:
             image, mask = self._load_patch(dataset_dict)
