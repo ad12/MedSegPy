@@ -136,6 +136,7 @@ class Config(object):
 
     # DataLoader tag.
     TAG = "DefaultDataLoader"
+    PRELOAD_DATA = False
 
     # Weights kernel initializer.
     KERNEL_INITIALIZER = "he_normal"

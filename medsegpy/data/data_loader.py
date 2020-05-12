@@ -9,8 +9,10 @@ from typing import Dict, List, Sequence
 
 import h5py
 import numpy as np
+import scipy.sparse as sps
 from fvcore.common.registry import Registry
 from keras import utils as k_utils
+from tqdm import tqdm
 
 from medsegpy.config import Config
 from medsegpy.modeling import Model
@@ -240,29 +242,60 @@ class DefaultDataLoader(DataLoader):
         self._num_classes = cfg.get_num_classes()
         self._transform_gen = build_preprocessing(cfg)
 
+        self._preload_data = cfg.PRELOAD_DATA
+        self._cached_data = None
+        if self._preload_data:
+            logger.info("Pre-loading data...")
+            self._cached_data = self._load_all_data(dataset_dicts)
+
+    def _load_all_data(self, dataset_dicts) -> Dict:
+        """Internal method for loading data into memory before beginning
+        training/testing.
+
+        Note that pre-loading is memory intensive.
+        """
+        cache = {}
+        for dd in tqdm(dataset_dicts):
+            image, mask = self._load_input(dd)
+            if np.unique(mask) == [0, 1]:
+                mask = mask.astype(np.bool)
+            mask = sps.csr_matrix(mask)
+            cache[(dd["file_name"], dd["sem_seg_file"])] = {
+                "image": image, "mask": mask
+            }
+
+        return cache
+
     def _load_input(self, dataset_dict):
         image_file = dataset_dict["file_name"]
         sem_seg_file = dataset_dict.get("sem_seg_file", None)
 
-        with h5py.File(image_file, "r") as f:
-            image = f["data"][:]
-        if image.shape[-1] != 1:
-            image = image[..., np.newaxis]
-
-        if sem_seg_file:
-            with h5py.File(sem_seg_file, "r") as f:
-                mask = f["data"][:]
-
-            cat_idxs = self._category_idxs
-            mask = collect_mask(mask, index=cat_idxs)
-            if self._include_background:
-                mask = add_background_labels(mask)
+        if self._cached_data is not None:
+            image, mask = self._cached_data[(image_file, sem_seg_file)]
+            mask = sps.csr_matrix.todense(mask)
         else:
-            mask = None
+            with h5py.File(image_file, "r") as f:
+                image = f["data"][:]
+            if image.shape[-1] != 1:
+                image = image[..., np.newaxis]
+
+            if sem_seg_file:
+                with h5py.File(sem_seg_file, "r") as f:
+                    mask = f["data"][:]
+
+                cat_idxs = self._category_idxs
+                mask = collect_mask(mask, index=cat_idxs)
+                if self._include_background:
+                    mask = add_background_labels(mask)
+            else:
+                mask = None
 
         return image, mask
 
     def _load_batch(self, idxs: Sequence[int]):
+        """
+        TODO: run test to determine if casting inputs/outputs is required.
+        """
         dataset_dicts = self._dataset_dicts
 
         images = []
@@ -429,25 +462,46 @@ class PatchDataLoader(DefaultDataLoader):
             cfg, dd_patched, is_test, shuffle, drop_last, batch_size
         )
 
-    def _load_input(
-        self,
-        dataset_dict
-    ):
+    def _load_all_data(self, dataset_dicts) -> Dict:
+        """
+        We assume that that the tuple `("file_name", "sem_seg_file")`
+        is sufficient for determining the uniqueness of each base dataset
+        dictionary.
+        """
+        tot_dicts = {
+            (dd["file_name"], dd["sem_seg_file"]): dd
+            for dd in dataset_dicts
+        }
+        cache = {}
+        for dd in tqdm(tot_dicts):
+            image, mask = self._load_patch(dd)
+            if set(np.unique(mask)) == {0, 1}:
+                mask = mask.astype(np.bool)
+            mask = sps.csr_matrix(mask)
+            cache[(dd["file_name"], dd["sem_seg_file"])] = {
+                "image": image, "mask": mask
+            }
+
+        return cache
+
+    def _load_patch(self, dataset_dict, skip_patch: bool=False):
         image_file = dataset_dict["file_name"]
         sem_seg_file = dataset_dict.get("sem_seg_file", None)
-        patch = dataset_dict["_patch"]
-        pad = dataset_dict["_pad"]
+        patch = Ellipsis if skip_patch else dataset_dict["_patch"]
 
         mask = None
+
         is_single_file = image_file == sem_seg_file
+        seg_key = "seg" if is_single_file else "data"
+        img_key = "volume" if is_single_file else "data"
         with h5py.File(image_file, "r") as f:
-            image = f["volume"][patch]  # HxWxDx...
+            image = f[img_key][patch]  # HxWxDx...
             if sem_seg_file and is_single_file:
-                mask = f["seg"][patch]  # HxWxDx...xC
+                mask = f[seg_key][patch]  # HxWxDx...xC
 
         if sem_seg_file and not is_single_file:
             with h5py.File(sem_seg_file, "r") as f:
-                mask = f["data"][:]
+                mask = f[seg_key][:]
 
         if mask is not None:
             cat_idxs = self._category_idxs
@@ -455,6 +509,22 @@ class PatchDataLoader(DefaultDataLoader):
             if self._include_background:
                 mask = add_background_labels(mask)
 
+        return image, mask
+
+    def _load_input(
+        self,
+        dataset_dict
+    ):
+        if self._cached_data is not None:
+            patch = dataset_dict["_patch"]
+            image_file = dataset_dict["file_name"]
+            sem_seg_file = dataset_dict.get("sem_seg_file", None)
+            image, mask = self._cached_data[(image_file, sem_seg_file)]
+            image, mask = image[patch], mask[patch]
+        else:
+            image, mask = self._load_patch(dataset_dict)
+
+        pad = dataset_dict["_pad"]
         if pad is not None:
             image = np.pad(image, pad, self._pad_mode)
             if mask is not None:
