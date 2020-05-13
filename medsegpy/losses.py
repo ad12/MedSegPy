@@ -104,7 +104,7 @@ def dice_focal_loss(y_true, y_pred):
 # Dice function loss optimizer
 def dice_loss(y_true, y_pred):
     szp = K.get_variable_shape(y_pred)
-    img_len = szp[1] * szp[2] * szp[3]
+    img_len = np.product(szp[1:])
 
     y_true = K.reshape(y_true, (-1, img_len))
     y_pred = K.reshape(y_pred, (-1, img_len))
@@ -122,6 +122,7 @@ def dice_loss(y_true, y_pred):
 
 def dice_median_loss(y_true, y_pred):
     """Get the median dice loss"""
+    raise DeprecationWarning()
     lambda1 = 2
     mu = K.epsilon()
 

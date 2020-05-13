@@ -511,7 +511,7 @@ class PatchDataLoader(DefaultDataLoader):
 
         if self._add_dim:
             image = image[..., np.newaxis]
-            mask = mask[..., np.newaxis, :]
+            # mask = mask[..., np.newaxis, :]
 
         return image, mask
 
