@@ -681,7 +681,7 @@ class UNetConfig(Config):
     NUM_FILTERS = None
 
     # Boolean arguments for attention and deep supervision
-    ADD_ATTENTION = False
+    USE_ATTENTION = False
     USE_DEEP_SUPERVISION = False
 
     def __init__(self, state="training", create_dirs=True):

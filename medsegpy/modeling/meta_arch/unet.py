@@ -142,7 +142,7 @@ class UNet2D(ModelBuilder):
 
         self._dim = 2
         self.kernel_size = (3, 3)
-        self.add_attention = False
+        self.use_attention = False
         self.use_deep_supervision = False
 
     def build_model(self, input_tensor=None) -> Model:
@@ -151,7 +151,7 @@ class UNet2D(ModelBuilder):
         input_size = cfg.IMG_SIZE
         depth = cfg.DEPTH
         kernel_size = self.kernel_size
-        self.add_attention = cfg.ADD_ATTENTION
+        self.use_attention = cfg.USE_ATTENTION
         self.use_deep_supervision = cfg.USE_DEEP_SUPERVISION
 
         kernel_initializer = {
@@ -207,7 +207,7 @@ class UNet2D(ModelBuilder):
             # The first skip connection is not passed through
             # an attention gate, as mentioned in the paper under
             # the section "Attention Gates in U-Net Model"
-            if depth_cnt > 0 and self.add_attention:
+            if depth_cnt > 0 and self.use_attention:
                 if i == 0:
                     gating_signal = self._create_gating_signal(
                         out_channels=num_filters[depth_cnt + 1]
