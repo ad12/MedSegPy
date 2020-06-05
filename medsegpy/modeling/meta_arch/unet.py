@@ -1,7 +1,7 @@
 from typing import Dict, Sequence, Union
 
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 from keras import Input
 from keras.engine import get_source_inputs
 from keras.layers import BatchNormalization as BN
@@ -17,15 +17,16 @@ from keras.layers import (
 )
 
 from medsegpy.config import UNet3DConfig, UNetConfig
-from medsegpy.modeling.model_utils import add_sem_seg_activation, zero_pad_like
 from medsegpy.modeling.layers.attention import (
     CreateGatingSignal2D,
     CreateGatingSignal3D,
+    DeepSupervision2D,
+    DeepSupervision3D,
     MultiAttentionModule2D,
     MultiAttentionModule3D,
-    DeepSupervision2D,
-    DeepSupervision3D
 )
+from medsegpy.modeling.model_utils import add_sem_seg_activation, zero_pad_like
+
 from ..model import Model
 from .build import META_ARCH_REGISTRY, ModelBuilder
 
@@ -195,7 +196,9 @@ class UNet2D(ModelBuilder):
                 pool_size = self._get_pool_size(x)
                 pool_sizes.append(pool_size)
                 if depth_cnt < depth - 2:
-                    scale_factors[depth_cnt + 1] = scale_factors[depth_cnt] * pool_size
+                    scale_factors[depth_cnt + 1] = (
+                        scale_factors[depth_cnt] * pool_size
+                    )
                 x = self._pooler_type(pool_size=pool_size)(x)
 
         # Decoder.
@@ -216,7 +219,7 @@ class UNet2D(ModelBuilder):
                     gating_signal = x
                 attn_out, attn_coeffs = self._multi_attention_module(
                     in_channels=num_filters[depth_cnt],
-                    intermediate_channels=num_filters[depth_cnt]
+                    intermediate_channels=num_filters[depth_cnt],
                 )([x_skip, gating_signal])
                 skip_connect = attn_out
 
@@ -237,7 +240,7 @@ class UNet2D(ModelBuilder):
                 deep_supervision_outputs.append(
                     self._deep_supervision(
                         out_channels=num_classes,
-                        scale_factor=tuple(scale_factors[depth_cnt])
+                        scale_factor=tuple(scale_factors[depth_cnt]),
                     )(x)
                 )
 
