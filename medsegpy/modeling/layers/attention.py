@@ -49,7 +49,7 @@ class _CreateGatingSignalNDim(Layer):
 
         Convolution --> Activation --> BatchNorm
 
-        Parameters:
+        Args:
             dimension: the dimension of the model's input images
             out_channels: the number of channels for the gating signal
             kernel_size: the kernel size used in the convolutional layer
@@ -203,7 +203,7 @@ class _GridAttentionModuleND(Layer):
         as the ReLU activation function and Sigma_2 in Equation 2 is
         fixed as the sigmoid activation function.
 
-        Parameters:
+        Args:
             dimension: the dimension of the model's input images
             in_channels: the number of channels in the input feature map
             intermediate_channels: F_int (in Figure 2 of the paper)
@@ -471,7 +471,7 @@ class _MultiAttentionModuleND(Layer):
         of the paper used the same number in their PyTorch implementation
         (GitHub URL included above).
 
-        Parameters:
+        Args:
             activation: the activation function after the convolutional layer
             all other parameters: same as in _GridAttentionModuleND
         """
@@ -647,7 +647,7 @@ class _DeepSupervisionND(Layer):
         The concatenated outputs are passed through the final step of
         the U-Net to obtain probabilities for segmentation.
 
-        Parameters:
+        Args:
             dimension: the dimension of the model's input images
             out_channels: the number of channels for the output of the
                             convolutional layer. For a U-Net, this will
