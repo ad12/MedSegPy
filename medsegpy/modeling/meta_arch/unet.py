@@ -190,6 +190,7 @@ class UNet2D(ModelBuilder):
                 kernel_initializer=kernel_initializer,
                 dropout=0.0,
             )
+
             # Maxpool until penultimate depth.
             if depth_cnt < depth - 1:
                 x_skips.append(x)
