@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-from keras import Model
+from medsegpy.modeling.model import Model
 from keras.utils import multi_gpu_model
 
 
