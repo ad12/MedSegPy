@@ -25,6 +25,10 @@ def generate_seed():
     return seed
 
 
+def is_debug():
+    return os.environ.get("MEDSEGPY_RUN_MODE", "") == "debug"
+
+
 # from https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path  # noqa
 def _import_file(module_name, file_path, make_importable=False):
     spec = importlib.util.spec_from_file_location(module_name, file_path)

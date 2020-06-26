@@ -4,13 +4,23 @@ This document provides a brief intro of the usage of builtin command-line tools 
 
 For more advanced tutorials, refer to our [documentation](https://ad12.github.io/MedSegPy/).
 
+
+### Minimal Setup
+##### Registering New Users
+To register users to existing machines/clusters, add your username and machines to support with that username to the `_USER_PATHS` dictionary in
+[medsegpy/utils/cluster.py](medsegpy/utils/cluster.py).
+
+To register new machines, you will have to find the regex pattern(s) that can be used to uniquely identify the machine or set of machines you want to add functionality for. See [medsegpy/utils/cluster.py](medsegpy/utils/cluster.py) for more details.
+
+
 ### Training & Evaluation in Command Line
 
-We provide a script in "medsegpy/nn_train.py", that is made to train
+We provide a script in "medsegpy/train_net.py", that is made to train
 all the configs provided in medsegpy.
-You may want to use it as a reference to write your own training script for a new research.
+You may want to use it as a reference to write your own training script for
+new research.
 
-To train a model with "nn_train.py", first
+To train a model with "train_net.py", first
 setup the corresponding datasets following
 [datasets/README.md](datasets/),
 then run:

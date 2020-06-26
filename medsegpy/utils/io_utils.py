@@ -103,10 +103,4 @@ class TechConsiderationsHandler(GeneralPathHandler):
     def _project_name(self):
         return "tech-considerations"
 
-
-class abCTHandler(GeneralPathHandler):
-    PREFIX = "abCT://"
-
-
 PathManager.register_handler(TechConsiderationsHandler())
-PathManager.register_handler(abCTHandler())

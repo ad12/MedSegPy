@@ -44,6 +44,9 @@ def default_argument_parser():
     parser.add_argument(
         "--overwrite", action="store_true", help="overwrite previous experiment"
     )
+    parser.add_argument(
+        "--debug", action="store_true", help="run in debug mode"
+    )
 
     parser.add_argument(
         "opts",
@@ -71,6 +74,7 @@ def default_setup(cfg, args):
     if (
         not args.eval_only
         and not args.overwrite
+        and not args.debug
         and config_exists(cfg.OUTPUT_DIR)
     ):
         raise ValueError(
@@ -83,6 +87,10 @@ def default_setup(cfg, args):
             "Cannot evaluate and overwrite the folder. "
             "Test results will automatically be overwritten."
         )
+
+    if args.debug:
+        os.environ["MEDSEGPY_RUN_MODE"] = "debug"
+        cfg.OUTPUT_DIR = cfg.OUTPUT_DIR.rstrip("/") + "-debug"
 
     local_dir = PathManager.get_local_path(cfg.OUTPUT_DIR)
     if args.overwrite and os.path.isdir(local_dir):

@@ -29,4 +29,4 @@ git clone https://github.com/ad12/MedSegPy.git
 cd MedSegPy && python -m pip install -e .
 ```
 
-You often need to rebuild medsegpy after reinstalling TensorFlow and/or Keras.
+You may need to rebuild medsegpy after reinstalling TensorFlow and/or Keras.
