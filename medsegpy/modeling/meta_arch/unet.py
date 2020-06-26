@@ -1,5 +1,6 @@
 from typing import Dict, Sequence, Union
 
+import numpy as np
 import tensorflow as tf
 from keras import Input
 from keras.engine import get_source_inputs
@@ -16,7 +17,15 @@ from keras.layers import (
 )
 
 from medsegpy.config import UNet3DConfig, UNetConfig
-from medsegpy.modeling import add_sem_seg_activation, zero_pad_like
+from medsegpy.modeling.layers.attention import (
+    CreateGatingSignal2D,
+    CreateGatingSignal3D,
+    DeepSupervision2D,
+    DeepSupervision3D,
+    MultiAttentionModule2D,
+    MultiAttentionModule3D,
+)
+from medsegpy.modeling.model_utils import add_sem_seg_activation, zero_pad_like
 
 from ..model import Model
 from .build import META_ARCH_REGISTRY, ModelBuilder
@@ -128,9 +137,14 @@ class UNet2D(ModelBuilder):
         super().__init__(cfg)
         self._pooler_type = MaxPooling2D
         self._conv_type = Conv2D
+        self._multi_attention_module = MultiAttentionModule2D
+        self._create_gating_signal = CreateGatingSignal2D
+        self._deep_supervision = DeepSupervision2D
 
         self._dim = 2
         self.kernel_size = (3, 3)
+        self.use_attention = False
+        self.use_deep_supervision = False
 
     def build_model(self, input_tensor=None) -> Model:
         cfg = self._cfg
@@ -138,6 +152,8 @@ class UNet2D(ModelBuilder):
         input_size = cfg.IMG_SIZE
         depth = cfg.DEPTH
         kernel_size = self.kernel_size
+        self.use_attention = cfg.USE_ATTENTION
+        self.use_deep_supervision = cfg.USE_DEEP_SUPERVISION
 
         kernel_initializer = {
             "class_name": cfg.KERNEL_INITIALIZER,
@@ -162,6 +178,8 @@ class UNet2D(ModelBuilder):
         x_skips = []
         pool_sizes = []
         x = inputs
+        deep_supervision_outputs = []
+        scale_factors = np.ones(((depth - 1), self._dim), dtype=int)
         for depth_cnt in range(depth):
             x = build_encoder_block(
                 x,
@@ -178,6 +196,10 @@ class UNet2D(ModelBuilder):
                 x_skips.append(x)
                 pool_size = self._get_pool_size(x)
                 pool_sizes.append(pool_size)
+                if depth_cnt < depth - 2:
+                    scale_factors[depth_cnt + 1] = (
+                        scale_factors[depth_cnt] * pool_size
+                    )
                 x = self._pooler_type(pool_size=pool_size)(x)
 
         # Decoder.
@@ -185,9 +207,26 @@ class UNet2D(ModelBuilder):
             zip(x_skips[::-1], pool_sizes[::-1])
         ):
             depth_cnt = depth - i - 2
+            skip_connect = x_skip
+            # The first skip connection is not passed through
+            # an attention gate, as mentioned in the paper under
+            # the section "Attention Gates in U-Net Model"
+            if depth_cnt > 0 and self.use_attention:
+                if i == 0:
+                    gating_signal = self._create_gating_signal(
+                        out_channels=num_filters[depth_cnt + 1]
+                    )(x)
+                else:
+                    gating_signal = x
+                attn_out, attn_coeffs = self._multi_attention_module(
+                    in_channels=num_filters[depth_cnt],
+                    intermediate_channels=num_filters[depth_cnt],
+                )([x_skip, gating_signal])
+                skip_connect = attn_out
+
             x = build_decoder_block(
                 x,
-                x_skip,
+                skip_connect,
                 num_filters[depth_cnt],
                 unpool_size,
                 kernel_size=kernel_size,
@@ -196,6 +235,18 @@ class UNet2D(ModelBuilder):
                 kernel_initializer=kernel_initializer,
                 dropout=0.0,
             )
+
+            if self.use_deep_supervision:
+                # Determine scale factor for deep supervision
+                deep_supervision_outputs.append(
+                    self._deep_supervision(
+                        out_channels=num_classes,
+                        scale_factor=tuple(scale_factors[depth_cnt]),
+                    )(x)
+                )
+
+        if self.use_deep_supervision:
+            x = Concatenate(axis=-1)(deep_supervision_outputs)
 
         # 1x1 convolution to get pixel-wise semantic segmentation.
         x = add_sem_seg_activation(
@@ -235,6 +286,9 @@ class UNet3D(UNet2D):
         super().__init__(cfg)
         self._pooler_type = MaxPooling3D
         self._conv_type = Conv3D
+        self._multi_attention_module = MultiAttentionModule3D
+        self._create_gating_signal = CreateGatingSignal3D
+        self._deep_supervision = DeepSupervision3D
 
         self._dim = 3
         self.kernel_size = (3, 3, 3)
