@@ -14,6 +14,7 @@ from .build import EVALUATOR_REGISTRY
 from .evaluator import DatasetEvaluator
 from .metrics import Metric, MetricsManager
 
+import copy
 
 def get_stats_string(manager: MetricsManager):
     """Returns formatted metrics manager summary string.
@@ -119,6 +120,10 @@ class SemSegEvaluator(DatasetEvaluator):
         includes_bg = self._output_includes_background
 
         for input, output in zip(inputs, outputs):
+            # Copy because we may modify below
+            input = copy.deepcopy(input)
+            output = copy.deepcopy(output)
+
             y_pred = output["y_pred"]
 
             if output_activation == "sigmoid":
@@ -141,10 +146,10 @@ class SemSegEvaluator(DatasetEvaluator):
                 y_true = output["y_true"][..., 1:]
                 y_pred = output["y_pred"][..., 1:]
                 labels = labels[..., 1:]
-                if y_true.ndim == 3:
-                    y_true = y_true[..., np.newaxis]
-                    y_pred = y_pred[..., np.newaxis]
-                    labels = labels[..., np.newaxis]
+                # if y_true.ndim == 3:
+                #     y_true = y_true[..., np.newaxis]
+                #     y_pred = y_pred[..., np.newaxis]
+                #     labels = labels[..., np.newaxis]
                 output["y_true"] = y_true
                 output["y_pred"] = y_pred
 
@@ -232,6 +237,12 @@ class SemSegEvaluator(DatasetEvaluator):
                 f.write("--" * 20)
                 f.write("\n")
                 f.write(stats_string)
+
+        # df = self._metrics_manager.data_frame()
+        # df.to_csv(os.path.join(output_dir, "metrics.csv"), header=True, index=True)
+
+        df = self._metrics_manager.data()["scan_data"]
+        df.to_csv(os.path.join(output_dir, "metrics.csv"), header=True, index=True)
 
         # TODO: Convert segmentation metrics to valid results matrix.
         return {}

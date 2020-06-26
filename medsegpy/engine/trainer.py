@@ -32,7 +32,7 @@ class DefaultTrainer(object):
             to_file=os.path.join(cfg.OUTPUT_DIR, "model.png"),
             show_shapes=True,
         )
-        model.summary(print_fn=lambda x: logger.info(x))
+        model.summary(line_length=120, print_fn=lambda x: logger.info(x))
         model_json = model.to_json()
         model_json_save_path = os.path.join(cfg.OUTPUT_DIR, "model.json")
         with open(model_json_save_path, "w") as json_file:

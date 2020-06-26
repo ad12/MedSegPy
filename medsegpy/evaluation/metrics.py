@@ -4,6 +4,7 @@ A processor keeps track of task-specific metrics for different classes.
 It should not be used to keep track of non-class-specific metrics, such as
 runtime.
 """
+from enum import Enum
 import inspect
 import logging
 from abc import ABC, abstractmethod
@@ -31,13 +32,85 @@ def flatten_non_category_dims(
     Returns:
         ndarray: Shape (C, -1) if `category_dim` specified else shape (-1,)
     """
+    single_input = isinstance(xs, np.ndarray)
+    if single_input:
+        xs = [xs]
     if category_dim is not None:
         dims = (xs[0].shape[category_dim], -1)
         xs = (np.moveaxis(x, category_dim, 0).reshape(dims) for x in xs)
     else:
         xs = (x.flatten() for x in xs)
 
+    if single_input:
+        xs = list(xs)[0]
+
     return xs
+
+
+def rms_cv(y_pred: np.ndarray, y_true: np.ndarray, dim=None):
+    """Compute root-mean-squared coefficient of variation.
+
+    This is typically done to compare intra-method variability.
+    For example if multiple measurements are taken using the same method.
+    However, in many segmentation manuscripts, this is equation is also
+    used.
+
+    This quantity is symmetric.
+
+    Args:
+        y_pred (ndarray): Measurements from trial 1.
+        y_true (ndarray): Measurements from trial 2.
+        dim (int, optional): Dimension/axis over which to compute metric.
+            If `None`, all dimensions will be reduced.
+
+    Returns:
+        ndarray: If `dim=None`, scalar value. 
+    """
+    stds = np.std([y_pred, y_true], axis=0)
+    means = np.mean([y_pred, y_true], axis=0)
+    cv = stds / means
+    return np.sqrt(np.mean(cv**2, axis=dim))
+
+
+def rmse_cv(y_pred: np.ndarray, y_true: np.ndarray, dim=None):
+    """Compute root-mean-squared error coefficient of variation.
+
+    This quantity is not symmetric.
+
+    Args:
+        y_pred (ndarray): Predicted measurements.
+        y_true (ndarray): Ground-truth/baseline measurements.
+        dim (int, optional): Dimension/axis over which to compute metric.
+            If `None`, all dimensions will be reduced.
+
+    Returns:
+        ndarray: If `dim=None`, scalar value.
+    """
+    rmse = np.sqrt(np.mean((y_pred - y_true)**2, axis=dim))
+    means = np.absolute(np.mean(y_true, axis=dim))
+    return rmse / means
+
+
+class Reductions(Enum):
+    RMS_CV = 1, "RMS-CV", rms_cv
+    RMSE_CV = 2, "RMSE-CV", rmse_cv
+
+    def __new__(cls, value: int, display_name: str, func: Callable):
+        """
+        Args:
+            value (int): Unique integer value.
+            patterns (`List[str]`): List of regex patterns that would match the
+                hostname on the compute cluster. There can be multiple hostnames
+                per compute cluster because of the different nodes.
+            save_dir (str): Directory to save data to.
+        """
+        obj = object.__new__(cls)
+        obj._value_ = value
+
+        obj.display_name = display_name
+        obj.func = func
+
+        return obj
 
 
 class Metric(Callable, ABC):
@@ -223,6 +296,7 @@ class MetricsManager:
         self._scan_data = OrderedDict()
         self.class_names = class_names
         self._metrics: Dict[str, Metric] = OrderedDict()
+        self._metric_pairs: Dict[(str, str), Sequence[Reductions]] = OrderedDict()  # noqa
         if metrics:
             self.add_metrics(metrics)
         self.category_dim = -1 if len(class_names) > 1 else None
@@ -257,6 +331,32 @@ class MetricsManager:
                 raise ValueError("Metric {} already exists".format(m_name))
             self._metrics[m_name] = m
 
+    def register_pairs(
+        self, 
+        pred_metric: str, 
+        base_metric: str, 
+        reductions: Union[Reductions, Sequence[Reductions]],
+        name: str = None
+    ):
+        if pred_metric not in self._metrics:
+            raise ValueError(
+                "`pred_metric` '{}' not found".format(pred_metric)
+            )
+        if base_metric not in self._metrics:
+            raise ValueError(
+                "`base_metric` '{}' not found".format(base_metric)
+            )
+
+        key = (pred_metric, base_metric)
+        if key in self._metric_pairs:
+            raise ValueError(
+                "Pair {} already registered".format(key)
+            )
+
+        if name is None:
+            name = self._metrics[pred_metric].__class__.__name__
+        self._metric_pairs[key] = (reductions, name)
+
     def remove_metrics(self, metrics: Union[str, Sequence[str]]):
         """Remove metrics to compute.
 
@@ -265,8 +365,13 @@ class MetricsManager:
         """
         if isinstance(metrics, str):
             metrics = [metrics]
+        pairs_to_remove = []
         for m in metrics:
             del self._metrics[m]
+            pairs_to_remove.extend([x for x in self._metric_pairs if m in x])
+
+        for pair in pairs_to_remove:
+            del self._metric_pairs[pair]
 
     def __call__(
         self,
@@ -344,6 +449,23 @@ class MetricsManager:
 
         return ", ".join(strs)
 
+    def _compute_metric_pairs(self, arr):
+        pair_names = []
+        vals = []
+        names = list(self._metrics.keys())
+        for (pred_key, base_key), (reds, name) in self._metric_pairs.items():
+            pred_idx, base_idx = names.index(pred_key), names.index(base_key)
+            preds = arr[:, pred_idx, ...]
+            base = arr[:, base_idx, ...]
+
+            vals.extend([r.func(preds, base, dim=0) for r in reds])
+            e_names = ["{} {}".format(r.display_name, name) for r in reds]
+            pair_names.extend(e_names)
+
+        vals = np.stack(vals, axis=0)
+        df = pd.DataFrame(vals, index=pair_names, columns=self.class_names)
+        return df
+
     def scan_summary(self, scan_id, delimiter: str = ", ") -> str:
         """Get summary of results for a scan.
 
@@ -365,19 +487,28 @@ class MetricsManager:
 
         return delimiter.join(strs)
 
+    def data_frame(self):
+        raw_arr = np.stack(
+            [np.asarray(x) for x in self._scan_data.values()], axis=0
+        )
+        arr = np.nanmean(raw_arr, axis=0)
+        names = [m.display_name() for m in self._metrics.values()]
+
+        df = pd.DataFrame(arr, index=names, columns=self.class_names)
+        if self._metric_pairs:
+            df_pairs = self._compute_metric_pairs(raw_arr)
+            df = pd.concat([df, df_pairs])
+
+        return df
+
     def summary(self):
-        """Get summary of results over all scans.
+        """Get summary of results overall scans.
 
         Returns:
             str: Tabulated summary. Rows=metrics. Columns=classes.
         """
-        arr = np.stack(
-            [np.asarray(x) for x in self._scan_data.values()], axis=0
-        )
-        arr = np.nanmean(arr, axis=0)
-        names = [m.display_name() for m in self._metrics.values()]
+        df = self.data_frame()
 
-        df = pd.DataFrame(arr, index=names, columns=self.class_names)
         return tabulate.tabulate(df, headers=self.class_names) + "\n"
 
     def data(self):
