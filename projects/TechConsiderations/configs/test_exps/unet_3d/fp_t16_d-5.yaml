@@ -1,0 +1,7 @@
+_BASE_: "./fp_t16.yaml"
+IMG_SIZE: (384, 384, 16, 1)
+DEPTH: 5
+NUM_FILTERS: [32, 64, 128, 256, 512]
+OUTPUT_DIR: "tcv3://test_exps/unet_3d/fp_t-16_d-4"
+TRAIN_BATCH_SIZE: 2
+TRAIN_DATASET: "oai_3d_whitened_train"

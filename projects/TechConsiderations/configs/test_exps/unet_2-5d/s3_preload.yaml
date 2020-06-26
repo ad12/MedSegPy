@@ -1,0 +1,3 @@
+_BASE_: "./s3.yaml"
+PRELOAD_DATA: True
+OUTPUT_DIR: "tcv3://test_exps/unet_2-5d/s3_preload"
