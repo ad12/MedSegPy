@@ -241,6 +241,7 @@ class DefaultDataLoader(DataLoader):
         self._include_background = cfg.INCLUDE_BACKGROUND
         self._num_classes = cfg.get_num_classes()
         self._transform_gen = build_preprocessing(cfg)
+        self._cached_data = None
 
     def _load_input(self, dataset_dict):
         image_file = dataset_dict["file_name"]
@@ -540,12 +541,14 @@ class PatchDataLoader(DefaultDataLoader):
             "{} patches, {} coords".format(num_patches, len(coords))
         )
         num_vols = len(vols_patched)
-        new_vols = np.zeros((num_vols,) + tuple(image_size))  # VxNxHxWx...
+        # TODO: fix in case that v.shape[-1] is not actually a channel dimension
+        new_vols = [np.zeros(tuple(image_size) + (v.shape[-1],)) for v in vols_patched]  # VxNxHxWx...
 
         for idx, c in enumerate(coords):
-            new_vols[:, c] = [P[idx] for P in vols_patched]
+            for vol_id in range(len(new_vols)):
+                new_vols[vol_id][c] = vols_patched[vol_id][idx]
 
-        return tuple(new_vols[i] for i in range(num_vols))
+        return tuple(new_vols)
 
 
 @DATA_LOADER_REGISTRY.register()
