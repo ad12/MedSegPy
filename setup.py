@@ -9,13 +9,9 @@ import keras
 import tensorflow as tf
 
 tf_ver = [int(x) for x in tf.__version__.split(".")[:2]]
-assert tf_ver >= [1, 8] and tf_ver < [2, 0], "Requires TensorFlow >=1.8,<2.0"
+assert [1, 8] <= tf_ver < [2, 0], "Requires TensorFlow >=1.8,<2.0"
 keras_ver = [int(x) for x in keras.__version__.split(".")[:3]]
-assert keras_ver >= [2, 1, 6] and keras_ver < [
-    2,
-    2,
-    0,
-], "Requires Keras >=2.1.6, <2.2.0"
+assert [2, 1, 6] <= keras_ver < [2, 2, 0], "Requires Keras >=2.1.6, <2.2.0"
 
 
 def get_version():
@@ -63,6 +59,7 @@ setup(
         "pydot",
         "pandas",
         "medpy",
+        "numpy",
         "h5py",
         "natsort",
         "scipy",
