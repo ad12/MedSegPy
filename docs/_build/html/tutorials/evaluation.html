@@ -167,9 +167,9 @@
   <div class="section" id="evaluation">
 <span id="evaluation"></span><h1>Evaluation<a class="headerlink" href="#evaluation" title="Permalink to this headline">¶</a></h1>
 <p>Evaluation is a process that takes a number of input/output/time triplets and aggregate them.
-You can always <a class="reference external" href="/tutorials/models.html">use the model</a> directly and just parse its inputs/outputs manually to perform
+You can always <a class="reference external" href="../tutorials/models.html">use the model</a> directly and just parse its inputs/outputs manually to perform
 evaluation.
-Alternatively, evaluation is implemented in medsegpy using the <a class="reference external" href="/modules/evaluation.html#medsegpy.evaluation.DatasetEvaluator">DatasetEvaluator</a>
+Alternatively, evaluation is implemented in medsegpy using the <a class="reference external" href="../modules/evaluation.html#medsegpy.evaluation.DatasetEvaluator">DatasetEvaluator</a>
 interface.</p>
 <p>MedSegPy includes <a class="reference external" href="../modules/evaluation.html#medsegpy.evaluation.SemSegEvaluator"><code class="docutils literal notranslate"><span class="pre">SemSegEvaluator</span></code></a>, an extension of <code class="docutils literal notranslate"><span class="pre">DatasetEvaluator</span></code> that computes popular semantic segmentation metrics for medical images.
 You can also implement your own <code class="docutils literal notranslate"><span class="pre">DatasetEvaluator</span></code> that performs some other jobs
@@ -187,7 +187,7 @@ For example, to count how many instances are detected on the validation set:</p>
 </pre></div>
 </div>
 <p>Once you have some <code class="docutils literal notranslate"><span class="pre">DatasetEvaluator</span></code>, you can run it with
-<a class="reference external" href="/modules/evaluation.html#medsegpy.evaluation.inference_on_dataset">inference_on_dataset</a>.
+<a class="reference external" href="../modules/evaluation.html#medsegpy.evaluation.inference_on_dataset">inference_on_dataset</a>.
 For example,</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">val_results</span> <span class="o">=</span> <span class="n">inference_on_dataset</span><span class="p">(</span>
     <span class="n">model</span><span class="p">,</span>

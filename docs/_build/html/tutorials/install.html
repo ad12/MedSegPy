@@ -89,6 +89,7 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Installation</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#requirements">Requirements</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#build-medsegpy-from-source">Build MedSegPy from Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#configuring-output-paths-optional">Configuring Output Paths (optional)</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="getting_started.html">Getting Started with MedSegPy</a></li>
@@ -172,7 +173,7 @@
 <span id="installation"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
 <p>We recommend using the Anaconda virtual environment to control package
 visibility. For a detailed list of requirements, see
-<a class="reference external" href="https://github.com/facebookresearch/detectron2/blob/master/tutorials/environment.yml">environment.yml</a>.</p>
+<a class="reference external" href="https://github.com/ad12/MedSegPy/blob/master/environment.yml">environment.yml</a>.</p>
 <p><em>Disclaimer</em>: The installation process has not been verified on cuda
 versions &gt;9.0.</p>
 <div class="section" id="requirements">
@@ -201,6 +202,17 @@ git clone https://github.com/ad12/MedSegPy.git
 </pre></div>
 </div>
 <p>You often need to rebuild medsegpy after reinstalling TensorFlow and/or Keras.</p>
+</div>
+<div class="section" id="configuring-output-paths-optional">
+<span id="configuring-output-paths-optional"></span><h2>Configuring Output Paths (optional)<a class="headerlink" href="#configuring-output-paths-optional" title="Permalink to this headline">¶</a></h2>
+<p>When running multiple experiments, you may want to set a default prefix for storing
+results related to MedSegPy.</p>
+<p>As a shortcut, we designate the prefix <code class="docutils literal notranslate"><span class="pre">results://</span></code> to point
+to a result directory of your choosing. This directory is determined by the user and the machine/cluster name.
+The paths in the config <code class="docutils literal notranslate"><span class="pre">OUTPUT_DIR</span></code> beginning with the prefix <code class="docutils literal notranslate"><span class="pre">results://</span></code> will be redirected under the
+<code class="docutils literal notranslate"><span class="pre">results</span></code> path.</p>
+<p>To register your username/cluster, see
+<a class="reference external" href="https://github.com/ad12/MedSegPy/blob/dev/medsegpy/utils/cluster.py">cluster.py</a>.</p>
 </div>
 </div>
 

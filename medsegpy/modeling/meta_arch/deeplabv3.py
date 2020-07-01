@@ -52,7 +52,7 @@ class DeeplabV3Plus(ModelBuilder):
 
     def _kernel_initializer(self):
         kernel_initializer = utils.build_keras_config(
-            self._cfg.KERNEL_INITIALIZER, seed=self._get_seed(),
+            self._cfg.KERNEL_INITIALIZER, seed=self._get_seed()
         )
 
         return kernel_initializer

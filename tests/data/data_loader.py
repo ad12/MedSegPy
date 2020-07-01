@@ -2,13 +2,12 @@ import os
 import shutil
 import unittest
 
-from fvcore.common.file_io import PathManager
 import h5py
 import numpy as np
+from fvcore.common.file_io import PathManager
 
-from medsegpy.config import Config, UNetConfig
-from medsegpy.data import build_loader, N5dDataLoader, PatchDataLoader
-from medsegpy.data.im_gens import GeneratorState, get_generator
+from medsegpy.config import Config
+from medsegpy.data import N5dDataLoader, PatchDataLoader
 
 from .. import utils  # noqa
 
@@ -38,12 +37,14 @@ class TestPatchDataLoader(unittest.TestCase):
 
     def get_dataset_dicts(self):
         file_path = PathManager.get_local_path(self.FILE_PATH)
-        return [{
-            "file_name": file_path,
-            "sem_seg_file": file_path,
-            "scan_id": os.path.splitext(os.path.basename(file_path))[0],
-            "image_size": self.IMG_SIZE,
-         }]
+        return [
+            {
+                "file_name": file_path,
+                "sem_seg_file": file_path,
+                "scan_id": os.path.splitext(os.path.basename(file_path))[0],
+                "image_size": self.IMG_SIZE,
+            }
+        ]
 
     def test_slicing(self):
         """Test selecting slices.
@@ -61,7 +62,7 @@ class TestPatchDataLoader(unittest.TestCase):
 
         # Simple slice
         data_loader = PatchDataLoader(
-            cfg, dataset_dicts, is_test=False, shuffle=False,
+            cfg, dataset_dicts, is_test=False, shuffle=False
         )
         assert len(data_loader) == 30
         for i in range(30):
@@ -96,12 +97,14 @@ class TestN5dDataLoader(unittest.TestCase):
 
     def get_dataset_dicts(self):
         file_path = PathManager.get_local_path(self.FILE_PATH)
-        return [{
-            "file_name": file_path,
-            "sem_seg_file": file_path,
-            "scan_id": os.path.splitext(os.path.basename(file_path))[0],
-            "image_size": self.IMG_SIZE,
-         }]
+        return [
+            {
+                "file_name": file_path,
+                "sem_seg_file": file_path,
+                "scan_id": os.path.splitext(os.path.basename(file_path))[0],
+                "image_size": self.IMG_SIZE,
+            }
+        ]
 
     def test_simple(self):
         """Test simple 2.5d configuration.
@@ -120,13 +123,13 @@ class TestN5dDataLoader(unittest.TestCase):
         # No padding
         # First and last slices will be skipped b/c no padding is used
         data_loader = N5dDataLoader(
-            cfg, dataset_dicts, is_test=False, shuffle=False,
+            cfg, dataset_dicts, is_test=False, shuffle=False
         )
         assert len(data_loader) == 30 - 2 * (num_slices // 2)
         for idx, i in enumerate(range(1, 29)):
             img, seg = data_loader[idx]
             img, seg = np.squeeze(img, axis=0), np.squeeze(seg, axis=0)
-            assert np.all(img == volume[:, :, i-window:i+window+1])
+            assert np.all(img == volume[:, :, i - window : i + window + 1])
             assert np.all(seg == mask[:, :, i, cfg.CATEGORIES])
 
     def test_padding(self):
@@ -146,7 +149,7 @@ class TestN5dDataLoader(unittest.TestCase):
         cfg.IMG_PAD_SIZE = (0, 0, window)
         cfg.IMG_PAD_MODE = pad_mode
         data_loader = N5dDataLoader(
-            cfg, dataset_dicts, is_test=False, shuffle=False,
+            cfg, dataset_dicts, is_test=False, shuffle=False
         )
         _s_volume = np.pad(volume, pad_size, pad_mode)
         _s_mask = np.pad(mask, pad_size + ((0, 0),), pad_mode)
@@ -154,7 +157,7 @@ class TestN5dDataLoader(unittest.TestCase):
         for idx, i in enumerate(range(window, 30 + window)):
             img, seg = data_loader[idx]
             img, seg = np.squeeze(img, axis=0), np.squeeze(seg, axis=0)
-            assert np.all(img == _s_volume[:, :, i-window:i+window+1])
+            assert np.all(img == _s_volume[:, :, i - window : i + window + 1])
             assert np.all(seg == _s_mask[:, :, i, cfg.CATEGORIES])
 
 

@@ -1,3 +1,6 @@
+"""
+THIS FILE IS DEPRECATED. DO NOT ADD ANY NEW MODELS HERE.
+"""
 import logging
 import warnings
 

@@ -178,7 +178,7 @@
 It’s good to understand how it works, in case you need to write a custom one.</p>
 <p>MedSegPy provides an interface for loading and structuring data stored in
 different ways (3D volumes, 2D slices, etc.). Data structuring consists of
-scattering a single element into multiple elements (3D volume -&gt; 3D blocks) or
+scattering a single element into multiple elements (3D volume -&gt; 2D/3D patches) or
 gathering multiple elements into a single element
 (multiple 2D slices -&gt; 3D volume). For example, if data from a 3D scan is
 saved slice-wise across different h5 files and we want to train using a
@@ -191,7 +191,7 @@ This class extends the keras
 class. Like Sequences, <code class="docutils literal notranslate"><span class="pre">DataLoaders</span></code> implement a <code class="docutils literal notranslate"><span class="pre">__getitem__</span></code> method that can be used for fetching
 batches. For training and validation purposes, we recommend following the keras API for loading
 data with sequences.</p>
-<p>As mentioned above, medical data often requires structuring. This can result in returning batches
+<p>As mentioned above, medical data often requires structuring/patching. This can result in returning batches
 of elements that are subsets of a single scan. For example, a data loader that indexes over 2D slices
 of a 3D scan is incredibly useful for training 2D models. However, during inference, metrics are
 typically calculated per scan and restructuring data outside of the data loader can be difficult.</p>
@@ -210,19 +210,23 @@ masks and predictions will have shape <code class="docutils literal notranslate"
 </ol>
 <p>This method continues to yield input and output data in the medsegpy format until data for all
 scans are yielded. For more information, see
-<a class="reference external" href="/modules/data.html#medsegpy.data.data_loader.DataLoader">DataLoader</a>.</p>
+<a class="reference external" href="../modules/data.html#medsegpy.data.DataLoader">DataLoader</a>.</p>
 </div>
 <div class="section" id="dataloader-example">
 <span id="dataloader-example"></span><h2>Dataloader example<a class="headerlink" href="#dataloader-example" title="Permalink to this headline">¶</a></h2>
 <p>Below we describe loading data and training a model using the for
-OAI iMorphics 2D dataset, a dataset where data is stored
+OAI iMorphics 2D dataset, a dataset where 3D volumes are stored
 as 2D slices. For more information on acceptable dataset h5 files, see
-<a class="reference external" href="/tutorials/datasets.html">datasets</a>.</p>
+<a class="reference external" href="../tutorials/datasets.html">datasets</a>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">DefaultDataLoader</span></code> handles both 2D single-slice scans
+and 3D scans stored as 2D slices. For more information on other dataloaders,
+see data loaders in <a class="reference external" href="../modules/data.html#medsegpy.data.DataLoader">medsegpy.data.data_loader</a>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">medsegpy.config</span> <span class="kn">import</span> <span class="n">UNetConfig</span>
 <span class="kn">from</span> <span class="nn">medsegpy.data</span> <span class="kn">import</span> <span class="n">build_loader</span><span class="p">,</span> <span class="n">DatasetCatalog</span><span class="p">,</span> <span class="n">DefaultDataLoader</span>
 <span class="kn">from</span> <span class="nn">medsegpy.modeling</span> <span class="kn">import</span> <span class="n">get_model</span>
 
 <span class="n">cfg</span> <span class="o">=</span> <span class="n">UNetConfig</span><span class="p">()</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">TAG</span> <span class="o">=</span> <span class="s2">&quot;DefaultDataLoader&quot;</span>  <span class="c1"># Specify the data loader type</span>
 <span class="n">cfg</span><span class="o">.</span><span class="n">TRAIN_DATASET</span> <span class="o">=</span> <span class="s2">&quot;oai_2d_train&quot;</span>
 <span class="n">cfg</span><span class="o">.</span><span class="n">VAL_DATASET</span> <span class="o">=</span> <span class="s2">&quot;oai_2d_val&quot;</span>
 <span class="n">cfg</span><span class="o">.</span><span class="n">TEST_DATASET</span> <span class="o">=</span> <span class="s2">&quot;oai_2d_test&quot;</span>
@@ -232,7 +236,7 @@ as 2D slices. For more information on acceptable dataset h5 files, see
 
 <span class="c1"># Using built-in methods to create loaders.</span>
 <span class="c1"># To build them from scratch, see implementation</span>
-<span class="c1"># of `build_loader`</span>
+<span class="c1"># of `build_loader`.</span>
 <span class="n">train_loader</span> <span class="o">=</span> <span class="n">build_loader</span><span class="p">(</span>
     <span class="n">cfg</span><span class="p">,</span> 
     <span class="n">cfg</span><span class="o">.</span><span class="n">TRAIN_DATASET</span><span class="p">,</span> 
@@ -277,7 +281,7 @@ as 2D slices. For more information on acceptable dataset h5 files, see
 </div>
 <div class="section" id="use-a-custom-dataloader">
 <span id="use-a-custom-dataloader"></span><h2>Use a Custom Dataloader<a class="headerlink" href="#use-a-custom-dataloader" title="Permalink to this headline">¶</a></h2>
-<p>If you use <a class="reference external" href="/modules/engine.html#medsegpy.engine.defaults.DefaultTrainer">DefaultTrainer</a>,
+<p>If you use <a class="reference external" href="../modules/engine.html#medsegpy.engine.trainer.DefaultTrainer">DefaultTrainer</a>,
 you can overwrite its <code class="docutils literal notranslate"><span class="pre">_build_data_loaders</span></code> and <code class="docutils literal notranslate"><span class="pre">build_test_data_loader</span></code> methods to use your own dataloader.</p>
 <p>If you write your own training loop, you can also plug in your data loader easily.</p>
 </div>

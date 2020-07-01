@@ -161,7 +161,7 @@
 <span class="kn">from</span> <span class="nn">fvcore.common.file_io</span> <span class="k">import</span> <span class="n">PathManager</span>
 
 <span class="kn">from</span> <span class="nn">medsegpy</span> <span class="k">import</span> <span class="n">glob_constants</span>
-<span class="kn">from</span> <span class="nn">medsegpy.utils</span> <span class="k">import</span> <span class="n">dl_utils</span>
+<span class="kn">from</span> <span class="nn">medsegpy.utils</span> <span class="k">import</span> <span class="n">dl_utils</span><span class="p">,</span> <span class="n">env</span>
 <span class="kn">from</span> <span class="nn">medsegpy.utils.collect_env</span> <span class="k">import</span> <span class="n">collect_env_info</span>
 <span class="kn">from</span> <span class="nn">medsegpy.utils.logger</span> <span class="k">import</span> <span class="n">setup_logger</span>
 
@@ -194,6 +194,9 @@
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--overwrite&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;overwrite previous experiment&quot;</span>
     <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--debug&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;run in debug mode&quot;</span>
+    <span class="p">)</span>
 
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;opts&quot;</span><span class="p">,</span>
@@ -221,6 +224,7 @@
     <span class="k">if</span> <span class="p">(</span>
         <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">eval_only</span>
         <span class="ow">and</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">overwrite</span>
+        <span class="ow">and</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">debug</span>
         <span class="ow">and</span> <span class="n">config_exists</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">OUTPUT_DIR</span><span class="p">)</span>
     <span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -233,6 +237,10 @@
             <span class="s2">&quot;Cannot evaluate and overwrite the folder. &quot;</span>
             <span class="s2">&quot;Test results will automatically be overwritten.&quot;</span>
         <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;MEDSEGPY_RUN_MODE&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;debug&quot;</span>
+        <span class="n">cfg</span><span class="o">.</span><span class="n">OUTPUT_DIR</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">OUTPUT_DIR</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;-debug&quot;</span>
 
     <span class="n">local_dir</span> <span class="o">=</span> <span class="n">PathManager</span><span class="o">.</span><span class="n">get_local_path</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">OUTPUT_DIR</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">overwrite</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">local_dir</span><span class="p">):</span>
@@ -247,6 +255,10 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;CUDA_VISIBLE_DEVICES&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
     <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;TF_CPP_MIN_LOG_LEVEL&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;2&quot;</span>
+
+    <span class="c1"># Set seed.</span>
+    <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">SEED</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">cfg</span><span class="o">.</span><span class="n">SEED</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">generate_seed</span><span class="p">()</span>
 
     <span class="n">output_dir</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">OUTPUT_DIR</span>
     <span class="n">PathManager</span><span class="o">.</span><span class="n">mkdirs</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span>

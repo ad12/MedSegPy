@@ -2,16 +2,16 @@
 
 In MedSegPy's config structure, config types are 1-to-1 with model architectures.
 This means that different architectures have different config types. For a list
-of config types, see [modules/config][../modules/config]. The base `Config`
+of config types, see [modules/config](../modules/config). The base `Config`
 class is abstract; use the config type corresponding to the architecture
 you would like to build.
 
-Configs support ini/yaml files and uses [config parser](https://docs.python.org/2/library/configparser.html) for reading and writing configs.
+Configs can either be in `yaml` (recommended) or `ini` format.
 
 ### Use Configs
 
-Some basic usage of the `Config` object is shown below. We use the 2D U-Net
-config for clarity.:
+Some basic usage of the `Config` object is shown below. 
+We use the 2D U-Net config for clarity.
 ```python
 from medsegpy.config import UNetConfig
 cfg = UNetConfig()    # obtain medsegpy's default config for 2d U-Net
@@ -23,7 +23,7 @@ cfg.merge_from_list(["USE_EARLY_STOPPING", True])  # can also load values from a
 cfg.summary()  # print a formatted summary
 ```
 
-To see a list of example configs in medsegpy, see [configs](../../configs).
+To see a list of example configs in medsegpy, see [configs](https://github.com/ad12/MedSegPy/tree/master/configs/).
 
 
 ### Best Practice with Configs

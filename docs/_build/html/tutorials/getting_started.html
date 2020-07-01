@@ -170,15 +170,15 @@
   <div class="section" id="getting-started-with-medsegpy">
 <span id="getting-started-with-medsegpy"></span><h1>Getting Started with MedSegPy<a class="headerlink" href="#getting-started-with-medsegpy" title="Permalink to this headline">¶</a></h1>
 <p>This document provides a brief intro of the usage of builtin command-line tools in medsegpy.</p>
-<p>For more advanced tutorials, refer to our <a class="reference external" href="https://ad12.github.io/MedSegPy/">documentation</a>.</p>
 <div class="section" id="training-evaluation-in-command-line">
 <span id="training-evaluation-in-command-line"></span><h2>Training &amp; Evaluation in Command Line<a class="headerlink" href="#training-evaluation-in-command-line" title="Permalink to this headline">¶</a></h2>
-<p>We provide a script in “medsegpy/nn_train.py”, that is made to train
+<p>We provide a script in <code class="docutils literal notranslate"><span class="pre">medsegpy/nn_train.py</span></code>, that is made to train
 all the configs provided in medsegpy.
 You may want to use it as a reference to write your own training script for a new research.</p>
-<p>To train a model with “nn_train.py”, first
+<p>To train a model with <code class="docutils literal notranslate"><span class="pre">nn_train.py</span></code>, first
 setup the corresponding datasets following
-<a class="reference external" href="https://github.com/ad12/MedSegPy/tree/master/datasets">datasets/README.md</a>,
+<a class="reference external" href="https://github.com/ad12/MedSegPy/tree/master/datasets">datasets/README.md</a>
+and optionally <a class="reference external" href="../tutorials/install.html#configuring-output-paths-optional">set output paths</a>,
 then run:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">tools</span><span class="o">/</span><span class="n">train_net</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">num</span><span class="o">-</span><span class="n">gpus</span> <span class="mi">1</span> \
     <span class="o">--</span><span class="n">config</span><span class="o">-</span><span class="n">file</span> <span class="n">configs</span><span class="o">/</span><span class="n">OAI</span><span class="o">-</span><span class="n">iMorphics</span><span class="o">/</span><span class="n">unet_2d</span><span class="o">.</span><span class="n">ini</span> \

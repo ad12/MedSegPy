@@ -16,18 +16,15 @@ if CLUSTER in (Cluster.ROMA, Cluster.VIGATA):
         "oai_2d_train": "/bmrNAS/people/arjun/data/oai_data/h5_files_2d/train",
         "oai_2d_val": "/bmrNAS/people/arjun/data/oai_data/h5_files_2d/valid",
         "oai_2d_test": "/bmrNAS/people/arjun/data/oai_data/h5_files_2d/test",
-
         "oai_2d_whitened_train": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_2d/train",  # noqa
         "oai_2d_whitened_val": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_2d/valid",  # noqa
         "oai_2d_whitened_test": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_2d/test",  # noqa
-
         "oai_3d_train": "/bmrNAS/people/arjun/data/oai_data/h5_files_3d/train",
         "oai_3d_val": "/bmrNAS/people/arjun/data/oai_data/h5_files_3d/val",
         "oai_3d_test": "/bmrNAS/people/arjun/data/oai_data/h5_files_3d/test",
-
-        "oai_3d_whitened_train": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d/train",
-        "oai_3d_whitened_val": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d/val",
-        "oai_3d_whitened_test": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d/test",
+        "oai_3d_whitened_train": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d/train",  # noqa
+        "oai_3d_whitened_val": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d/val",  # noqa
+        "oai_3d_whitened_test": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d/test",  # noqa
     }
     _TEST_SET_METADATA_PIK = (
         "/bmrNAS/people/arjun/msk_seg_networks/oai_metadata/oai_data.dat"

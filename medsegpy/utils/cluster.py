@@ -58,9 +58,7 @@ class Cluster(Enum):
 
         return cls.UNKNOWN
 
-    def register_user(
-        self, user_id: str, results_dir: str = "",
-    ):
+    def register_user(self, user_id: str, results_dir: str = ""):
         """Register user preferences for paths.
 
         Args:
@@ -76,15 +74,17 @@ class Cluster(Enum):
         if not results_dir:
             results_dir = os.path.abspath(os.path.join(_REPO_DIR, "results"))
 
-        self.dir_map[user_id] = {
-            "results_dir": results_dir,
-        }
+        self.dir_map[user_id] = {"results_dir": results_dir}
 
     @property
     def save_dir(self):
         user_id = getpass.getuser()
         if user_id not in self.dir_map:
-            raise ValueError("User {} is not registered".format(user_id))
+            raise ValueError(
+                "User {} is not registered on cluster {}".format(
+                    user_id, self.name
+                )
+            )
         return self.dir_map[user_id]["results_dir"]
 
 

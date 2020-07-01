@@ -38,7 +38,14 @@ class TestComputePatches(unittest.TestCase):
         expected_patches = itertools.product(
             (slice(0, 2), slice(2, 4), slice(4, 6), slice(6, 8), slice(8, 10)),
             (slice(0, 10), slice(10, 20)),
-            (slice(0, 5), slice(5, 10), slice(10, 15), slice(15, 20), slice(20, 25), slice(25, 30)),  # noqa
+            (
+                slice(0, 5),
+                slice(5, 10),
+                slice(10, 15),
+                slice(15, 20),
+                slice(20, 25),
+                slice(25, 30),
+            ),  # noqa
         )
         assert all(patch in expected_patches for patch, _ in patches)
         assert all(pad is None for _, pad in patches)
@@ -56,9 +63,7 @@ class TestComputePatches(unittest.TestCase):
         )
         assert all(patch in expected_patches for patch, _ in patches)
         expected_pads = itertools.product(
-            ((1, 0), (0, 0)),
-            ((1, 0), (0, 0)),
-            ((1, 0), (0, 0)),
+            ((1, 0), (0, 0)), ((1, 0), (0, 0)), ((1, 0), (0, 0))
         )
         expected_pads = tuple(
             None if all(px == (0, 0) for px in p) else p for p in expected_pads
@@ -76,9 +81,7 @@ class TestComputePatches(unittest.TestCase):
         )
         assert all(patch in expected_patches for patch, _ in patches)
         expected_pads = itertools.product(
-            ((1, 0), (0, 0)),
-            ((0, 0), (0, 0)),
-            ((0, 0), (0, 0)),
+            ((1, 0), (0, 0)), ((0, 0), (0, 0)), ((0, 0), (0, 0))
         )
         expected_pads = tuple(
             None if all(px == (0, 0) for px in p) else p for p in expected_pads
@@ -86,9 +89,7 @@ class TestComputePatches(unittest.TestCase):
         assert tuple(pad for _, pad in patches) == expected_pads
 
         # Pad such that dimensions have padding on both front and end
-        patches = compute_patches(
-            image_size, patch_size, pad_size=(3, 5, 8),
-        )
+        patches = compute_patches(image_size, patch_size, pad_size=(3, 5, 8))
         expected_patches = itertools.product(
             (slice(0, 2), slice(2, 7), slice(7, 10)),
             (slice(0, 5), slice(5, 15), slice(15, 20)),
@@ -121,13 +122,36 @@ class TestComputePatches(unittest.TestCase):
 
         # Variable strides with padding.
         patches = compute_patches(
-            image_size, patch_size, pad_size=(3, 5, 8), strides=(2, 4, 6),
+            image_size, patch_size, pad_size=(3, 5, 8), strides=(2, 4, 6)
         )
-        expected_patches = list(itertools.product(
-            (slice(0, 2), slice(0, 4), slice(1, 6), slice(3, 8), slice(5, 10), slice(7, 10)),  # noqa
-            (slice(0, 5), slice(0, 9), slice(3, 13), slice(7, 17), slice(11, 20), slice(15, 20)),  # noqa
-            (slice(0, 7), slice(0, 13), slice(4, 19), slice(10, 25), slice(16, 30), slice(22, 30)),  # noqa
-        ))
+        expected_patches = list(
+            itertools.product(
+                (
+                    slice(0, 2),
+                    slice(0, 4),
+                    slice(1, 6),
+                    slice(3, 8),
+                    slice(5, 10),
+                    slice(7, 10),
+                ),  # noqa
+                (
+                    slice(0, 5),
+                    slice(0, 9),
+                    slice(3, 13),
+                    slice(7, 17),
+                    slice(11, 20),
+                    slice(15, 20),
+                ),  # noqa
+                (
+                    slice(0, 7),
+                    slice(0, 13),
+                    slice(4, 19),
+                    slice(10, 25),
+                    slice(16, 30),
+                    slice(22, 30),
+                ),  # noqa
+            )
+        )
         assert all(patch in expected_patches for patch, _ in patches)
         expected_pads = itertools.product(
             ((3, 0), (1, 0), (0, 0), (0, 0), (0, 0), (0, 2)),

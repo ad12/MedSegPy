@@ -92,8 +92,8 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Use Custom Datasets</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#data-augmentation">Data Augmentation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#data-format">Data format</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#image-files">Image files</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#segmentation-files">Segmentation files</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#d-data">2D Data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#d-data">3D Data</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#collating-segmentations">Collating segmentations</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#how-h5-files-are-read">How h5 files are read</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#data-paths">Data paths</a></li>
@@ -200,7 +200,13 @@ If augmentations are used, define different augmentations or series of augmentat
 </div>
 <div class="section" id="data-format">
 <span id="data-format"></span><h2>Data format<a class="headerlink" href="#data-format" title="Permalink to this headline">¶</a></h2>
-<p>Currently, data must be stored as 2D slices in the h5df format and must follow a specific naming convention:</p>
+<p>Currently, data can be stored as 2D slices or 3D volumes in the h5df format.</p>
+<div class="section" id="d-data">
+<span id="d-data"></span><h3>2D Data<a class="headerlink" href="#d-data" title="Permalink to this headline">¶</a></h3>
+<p>Many medical imaging modalities acquire single-slice acquisitions (CT, Xray, etc.).
+Additionally, 3D volumes are often split into 2D slices when training 2D networks to
+increase data speeds.</p>
+<p>Data stored in the 2D format must follow a specific naming convention:</p>
 <ul class="simple">
 <li><p>Subject id: 7 digits</p></li>
 <li><p>Timepoint: 2 digits</p></li>
@@ -217,38 +223,64 @@ If augmentations are used, define different augmentations or series of augmentat
 <li><p><code class="docutils literal notranslate"><span class="pre">0123456_V00-Aug04_001</span></code>: Subject 0123456, Timepoint 0, Augmentation 4, Slice 1</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">0123456_V00-Aug00_999</span></code>: Subject 0123456, Timepoint 0, Augmentation 4, Slice 999</p></li>
 </ul>
-<p>The augmentation number is used to keep track of what augmentations are done. When naming files, note that slices should start at slice 1.</p>
+<p>The augmentation number is used to keep track of what augmentations are done.
+When naming files, note that slices should start at slice 1.</p>
 <div class="section" id="image-files">
-<span id="image-files"></span><h3>Image files<a class="headerlink" href="#image-files" title="Permalink to this headline">¶</a></h3>
+<span id="image-files"></span><h4>Image files<a class="headerlink" href="#image-files" title="Permalink to this headline">¶</a></h4>
 <p>Image files should end with a <code class="docutils literal notranslate"><span class="pre">.im</span></code> extension. The file should contain a dataset
 <code class="docutils literal notranslate"><span class="pre">data</span></code>, which contains a <code class="docutils literal notranslate"><span class="pre">HxWx1</span></code> shaped array corresponding to the slice.</p>
 <p>For example, <code class="docutils literal notranslate"><span class="pre">0123456_V00-Aug00_999.im</span></code> contains slice 999 from the volume
 <code class="docutils literal notranslate"><span class="pre">0123456_V00-Aug00</span></code>.</p>
 </div>
 <div class="section" id="segmentation-files">
-<span id="segmentation-files"></span><h3>Segmentation files<a class="headerlink" href="#segmentation-files" title="Permalink to this headline">¶</a></h3>
+<span id="segmentation-files"></span><h4>Segmentation files<a class="headerlink" href="#segmentation-files" title="Permalink to this headline">¶</a></h4>
 <p>Ground truth masks should end with a <code class="docutils literal notranslate"><span class="pre">.seg</span></code> extension. The file should contain a
 dataset <code class="docutils literal notranslate"><span class="pre">data</span></code>, which contains a <code class="docutils literal notranslate"><span class="pre">HxWx1xC</span></code> shaped binary array corresponding to the segmentation for the slice. Here, <code class="docutils literal notranslate"><span class="pre">C</span></code> refers to masks for different classes.</p>
 <p>For example, <code class="docutils literal notranslate"><span class="pre">0123456_V00-Aug00_999.seg</span></code> contains segmentations for slice 999 from the volume <code class="docutils literal notranslate"><span class="pre">0123456_V00-Aug00</span></code>.</p>
+</div>
+</div>
+<div class="section" id="d-data">
+<span id="id1"></span><h3>3D Data<a class="headerlink" href="#d-data" title="Permalink to this headline">¶</a></h3>
+<p>Data stored in the 3D format must follow a slightly different naming convention:</p>
+<ul class="simple">
+<li><p>Subject id: 7 digits</p></li>
+<li><p>Timepoint: 2 digits</p></li>
+</ul>
+<p><strong>Readable format:</strong> <code class="docutils literal notranslate"><span class="pre">SubjectID_Timepoint</span></code></p>
+<p><strong>String format:</strong> <code class="docutils literal notranslate"><span class="pre">%07d_V%02d</span></code></p>
+<p><strong>Regex:</strong> <code class="docutils literal notranslate"><span class="pre">([\d]+)_V([\d]+)</span></code></p>
+<p>Unlike the 2D files, where image and segmentation data are separated into different files,
+3D data will have both in a single h5df file under different keys: <code class="docutils literal notranslate"><span class="pre">volume</span></code> for image data and <code class="docutils literal notranslate"><span class="pre">seg</span></code>
+for segmentation masks.</p>
+<p>We are working on adding the augmentation number (<code class="docutils literal notranslate"><span class="pre">Aug</span></code> flag) for parsing in 3D data!</p>
 </div>
 <div class="section" id="collating-segmentations">
 <span id="collating-segmentations"></span><h3>Collating segmentations<a class="headerlink" href="#collating-segmentations" title="Permalink to this headline">¶</a></h3>
 <p>Segmentations can also be collated (combined) to form segmentations for
 superclasses. For example, if segmentations for “dog” and “cat” were stored
-at index <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">2</span></code> in the segmentation file, to segment the both classes as a single class, specify the tuple <code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">2)</span></code> as the index to segment.</p>
+at index <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">2</span></code> in the segmentation file, to segment the both classes as a single class, specify the
+tuple <code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">2)</span></code> as the index to segment.</p>
 </div>
 <div class="section" id="how-h5-files-are-read">
 <span id="how-h5-files-are-read"></span><h3>How h5 files are read<a class="headerlink" href="#how-h5-files-are-read" title="Permalink to this headline">¶</a></h3>
-<p>Below is an example of how slice 999 for volume <code class="docutils literal notranslate"><span class="pre">0123456_V00-Aug00</span></code> will be read by current data loaders.</p>
+<p>Below are examples detailing the h5df structure for 2D and 3D data.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">h5py</span>
+
+<span class="c1"># ========= 2D Data =========</span>
+<span class="c1"># Read slice 999 for volume 0123456_V00-Aug00.</span>
 
 <span class="c1"># Read image slice.</span>
 <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="s2">&quot;0123456_V00-Aug00_999.im&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
     <span class="n">image</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][:]</span>  <span class="c1"># shape: HxWx1</span>
 
-<span class="c1"># Read segmentations</span>
+<span class="c1"># Read segmentations.</span>
 <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="s2">&quot;0123456_V00-Aug00_999.seg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
     <span class="n">mask</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][:]</span>  <span class="c1"># shape: HxWx1xC</span>
+    
+<span class="c1"># ========= 3D Data =========</span>
+<span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="s2">&quot;0123456_V00.h5&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">volume</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;volume&quot;</span><span class="p">][:]</span>  <span class="c1"># shape: HxWxD</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;seg&quot;</span><span class="p">][:]</span>  <span class="c1"># shape: HxWxDxC</span>
 </pre></div>
 </div>
 </div>
@@ -291,7 +323,7 @@ dictionaries:</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">scan_id</span></code> (str): the scan this slice belongs to</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">slice_id</span></code> (int): The slice this file corresponds to. Should be 1-indexed, meaning the
 first slice of every volume has <code class="docutils literal notranslate"><span class="pre">slice_id=1</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">total_num_slices</span></code>: the total number of slices in the volume.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scan_num_slices</span></code>: the total number of slices in the scan volume.</p></li>
 </ul>
 <p>The following keys are optional:</p>
 <ul class="simple">
@@ -311,7 +343,7 @@ this section once that is complete.</p>
 <div class="section" id="examples">
 <span id="examples"></span><h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
 <p>For examples on registering datasets, see
-<a class="reference external" href="/modules/engine.html#medsegpy.data.datasets.oai">datasets/oai.py</a></p>
+<a class="reference external" href="../modules/engine.html#medsegpy.data.datasets.oai">datasets/oai.py</a></p>
 </div>
 </div>
 <div class="section" id="register-metadata-for-a-dataset">

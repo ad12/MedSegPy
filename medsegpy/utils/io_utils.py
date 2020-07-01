@@ -103,4 +103,5 @@ class TechConsiderationsHandler(GeneralPathHandler):
     def _project_name(self):
         return "tech-considerations"
 
+
 PathManager.register_handler(TechConsiderationsHandler())

@@ -172,14 +172,14 @@
 <span id="use-configs"></span><h1>Use Configs<a class="headerlink" href="#use-configs" title="Permalink to this headline">¶</a></h1>
 <p>In MedSegPy’s config structure, config types are 1-to-1 with model architectures.
 This means that different architectures have different config types. For a list
-of config types, see [modules/config][../modules/config]. The base <code class="docutils literal notranslate"><span class="pre">Config</span></code>
+of config types, see <a class="reference external" href="https://ad12.github.io/MedSegPy/master/blob/modules/config">modules/config</a>. The base <code class="docutils literal notranslate"><span class="pre">Config</span></code>
 class is abstract; use the config type corresponding to the architecture
 you would like to build.</p>
-<p>Configs support ini/yaml files and uses <a class="reference external" href="https://docs.python.org/2/library/configparser.html">config parser</a> for reading and writing configs.</p>
+<p>Configs can either be in <code class="docutils literal notranslate"><span class="pre">yaml</span></code> (recommended) or <code class="docutils literal notranslate"><span class="pre">ini</span></code> format.</p>
 <div class="section" id="use-configs">
 <span id="id1"></span><h2>Use Configs<a class="headerlink" href="#use-configs" title="Permalink to this headline">¶</a></h2>
-<p>Some basic usage of the <code class="docutils literal notranslate"><span class="pre">Config</span></code> object is shown below. We use the 2D U-Net
-config for clarity.:</p>
+<p>Some basic usage of the <code class="docutils literal notranslate"><span class="pre">Config</span></code> object is shown below.
+We use the 2D U-Net config for clarity.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">medsegpy.config</span> <span class="kn">import</span> <span class="n">UNetConfig</span>
 <span class="n">cfg</span> <span class="o">=</span> <span class="n">UNetConfig</span><span class="p">()</span>    <span class="c1"># obtain medsegpy&#39;s default config for 2d U-Net</span>
 <span class="n">cfg</span><span class="o">.</span><span class="n">xxx</span> <span class="o">=</span> <span class="n">yyy</span>      <span class="c1"># set values for data</span>
@@ -190,7 +190,7 @@ config for clarity.:</p>
 <span class="n">cfg</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>  <span class="c1"># print a formatted summary</span>
 </pre></div>
 </div>
-<p>To see a list of example configs in medsegpy, see <a class="reference external" href="https://github.com/facebookresearch/detectron2/blob/master/configs">configs</a>.</p>
+<p>To see a list of example configs in medsegpy, see <a class="reference external" href="https://github.com/ad12/MedSegPy/tree/master/configs/">configs</a>.</p>
 </div>
 <div class="section" id="best-practice-with-configs">
 <span id="best-practice-with-configs"></span><h2>Best Practice with Configs<a class="headerlink" href="#best-practice-with-configs" title="Permalink to this headline">¶</a></h2>

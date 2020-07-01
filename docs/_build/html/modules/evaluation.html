@@ -236,7 +236,7 @@ In our train_net.py, we expect the following format:</p>
 
 <dl class="function">
 <dt id="medsegpy.evaluation.inference_on_dataset">
-<code class="sig-prename descclassname">medsegpy.evaluation.</code><code class="sig-name descname">inference_on_dataset</code><span class="sig-paren">(</span><em class="sig-param">model, data_loader: Union[medsegpy.data.data_loader.DataLoader, medsegpy.data.im_gens.Generator], evaluator: medsegpy.evaluation.evaluator.DatasetEvaluator</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/evaluation/evaluator.html#inference_on_dataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.evaluation.inference_on_dataset" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">medsegpy.evaluation.</code><code class="sig-name descname">inference_on_dataset</code><span class="sig-paren">(</span><em class="sig-param">model, data_loader: Union[medsegpy.data.data_loader.DataLoader, medsegpy.data.im_gens.Generator], evaluator: Union[medsegpy.evaluation.evaluator.DatasetEvaluator, Sequence[medsegpy.evaluation.evaluator.DatasetEvaluator]]</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/evaluation/evaluator.html#inference_on_dataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.evaluation.inference_on_dataset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run model on the data_loader and evaluate the metrics with evaluator.
 The model will be used in eval mode.</p>
 <dl class="field-list simple">

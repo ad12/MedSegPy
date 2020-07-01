@@ -1,6 +1,6 @@
 import itertools
-from typing import Sequence, Union
 import warnings
+from typing import Sequence, Union
 
 import numpy as np
 
@@ -134,7 +134,8 @@ def compute_patches(
 
     start_idxs = [
         list(range(-px, Dx + px - Px + 1, stride))
-        if Px is not None and Px != -1 else [None]
+        if Px is not None and Px != -1
+        else [None]
         for Dx, Px, px, stride in zip(img_size, patch_size, pad_size, strides)
     ]
     start_idxs = list(itertools.product(*start_idxs))
@@ -157,12 +158,14 @@ def compute_patches(
     patches = []
     padding = []
     for block in blocks:
-        patches.append(tuple(
-            slice(max(0, s), min(e, Dx)) if s is not None else slice(None)
-            for (s, e), Dx in zip(block, img_size)
-        ))
+        patches.append(
+            tuple(
+                slice(max(0, s), min(e, Dx)) if s is not None else slice(None)
+                for (s, e), Dx in zip(block, img_size)
+            )
+        )
         pad = tuple(
-            (max(0, -s), max(0, e-Dx)) if s is not None else (0, 0)
+            (max(0, -s), max(0, e - Dx)) if s is not None else (0, 0)
             for (s, e), Dx, px in zip(block, img_size, pad_size)
         )
         valid_pad = any(p != (0, 0) for p in pad)

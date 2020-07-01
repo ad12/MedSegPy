@@ -2,17 +2,17 @@
 
 This document provides a brief intro of the usage of builtin command-line tools in medsegpy.
 
-For more advanced tutorials, refer to our [documentation](https://ad12.github.io/MedSegPy/).
 
 ### Training & Evaluation in Command Line
 
-We provide a script in "medsegpy/nn_train.py", that is made to train
+We provide a script in `medsegpy/nn_train.py`, that is made to train
 all the configs provided in medsegpy.
 You may want to use it as a reference to write your own training script for a new research.
 
-To train a model with "nn_train.py", first
+To train a model with `nn_train.py`, first
 setup the corresponding datasets following
-[datasets/README.md](https://github.com/ad12/MedSegPy/tree/master/datasets),
+[datasets/README.md](https://github.com/ad12/MedSegPy/tree/master/datasets)
+and optionally [set output paths](install.html#configuring-output-paths-optional),
 then run:
 ```
 python tools/train_net.py --num-gpus 1 \

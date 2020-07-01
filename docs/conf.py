@@ -217,16 +217,17 @@ def autodoc_skip_member(app, what, name, obj, skip, options):
 
 
 def url_resolver(url):
-    if ".html" not in url:
+    if "code://" in url:
+        url = url.replace("code://", "")
+        return "https://github.com/ad12/MedSegPy/blob/master/" + url
+    elif ".html" not in url:
         url = url.replace("../", "")
-        return (
-            "https://github.com/facebookresearch/detectron2/blob/master/" + url
-        )
+        return "https://ad12.github.io/MedSegPy/master/blob/" + url
     else:
         if DEPLOY:
             return "http://detectron2.readthedocs.io/" + url
         else:
-            return "/" + url
+            return "../" + url
 
 
 def setup(app):

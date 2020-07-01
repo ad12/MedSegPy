@@ -208,8 +208,8 @@ class DataLoader(k_utils.Sequence, ABC):
 class DefaultDataLoader(DataLoader):
     """The default data loader functionality in medsegy.
 
-    This class takes a dataset dict in the MedSegPy Dataset format and maps it
-    to a format that can be used by the model for semantic segmentation.
+    This class takes a dataset dict in the MedSegPy 2D Dataset format and maps
+    it to a format that can be used by the model for semantic segmentation.
 
     This is the default data loader.
 
@@ -376,17 +376,28 @@ class DefaultDataLoader(DataLoader):
 
 
 _SUPPORTED_PADDING_MODES = (
-    "constant", "edge", "reflect", "symmetric", "warp", "empty",
+    "constant",
+    "edge",
+    "reflect",
+    "symmetric",
+    "warp",
+    "empty",
 )
 
 
 @DATA_LOADER_REGISTRY.register()
 class PatchDataLoader(DefaultDataLoader):
     """
+    This data loader pre-computes patch locations and padding based on
+    patch size (`cfg.IMG_SIZE`), pad type (`cfg.IMG_PAD_MODE`), pad size
+    (`cfg.IMG_PAD_SIZE`), and stride (`cfg.IMG_STRIDE`) parameters specified
+    in the config.
+
     Assumptions:
-    - all dataset dictionaries have the same image dimensions
-    - "image_size" in dataset dict
+        * all dataset dictionaries have the same image dimensions
+        * "image_size" in dataset dict
     """
+
     def __init__(
         self,
         cfg: Config,
@@ -423,10 +434,7 @@ class PatchDataLoader(DefaultDataLoader):
         dd_patched = []
         for dd in dataset_dicts:
             patches = compute_patches(
-                dd["image_size"],
-                self._patch_size,
-                pad_size,
-                stride,
+                dd["image_size"], self._patch_size, pad_size, stride
             )
             for patch, pad in patches:
                 dataset_dict = dd.copy()
@@ -441,9 +449,13 @@ class PatchDataLoader(DefaultDataLoader):
         self._cached_data = None
         if self._preload_data:
             if threading.current_thread() is not threading.main_thread():
-                raise ValueError("Data pre-loading can only be done on the main thread.")
+                raise ValueError(
+                    "Data pre-loading can only be done on the main thread."
+                )
             logger.info("Pre-loading data...")
-            self._cached_data = self._load_all_data(dataset_dicts, cfg.NUM_WORKERS)
+            self._cached_data = self._load_all_data(
+                dataset_dicts, cfg.NUM_WORKERS
+            )
 
     def _load_all_data(self, dataset_dicts, num_workers: int = 1) -> Dict:
         """
@@ -451,19 +463,21 @@ class PatchDataLoader(DefaultDataLoader):
         is sufficient for determining the uniqueness of each base dataset
         dictionary.
         """
+
         def _load(dataset_dict):
             image, mask = self._load_patch(dataset_dict, skip_patch=True)
             if set(np.unique(mask)) == {0, 1}:
                 mask = mask.astype(np.bool)
-            return {
-                "image": image, "mask": mask
-            }
+            return {"image": image, "mask": mask}
 
         cache = [_load(dd) for dd in tqdm(dataset_dicts)]
-        cache = {(dd["file_name"], dd["sem_seg_file"]): x for dd, x in zip(dataset_dicts, cache)}
+        cache = {
+            (dd["file_name"], dd["sem_seg_file"]): x
+            for dd, x in zip(dataset_dicts, cache)
+        }
         return cache
 
-    def _load_patch(self, dataset_dict, skip_patch: bool=False):
+    def _load_patch(self, dataset_dict, skip_patch: bool = False):
         image_file = dataset_dict["file_name"]
         sem_seg_file = dataset_dict.get("sem_seg_file", None)
         patch = Ellipsis if skip_patch else dataset_dict["_patch"]
@@ -490,10 +504,7 @@ class PatchDataLoader(DefaultDataLoader):
 
         return image, mask
 
-    def _load_input(
-        self,
-        dataset_dict
-    ):
+    def _load_input(self, dataset_dict):
         if self._cached_data is not None:
             patch = dataset_dict["_patch"]
             image_file = dataset_dict["file_name"]
@@ -516,9 +527,7 @@ class PatchDataLoader(DefaultDataLoader):
 
         return image, mask
 
-    def _restructure_data(
-        self, vols_patched: Sequence[np.ndarray]
-    ):
+    def _restructure_data(self, vols_patched: Sequence[np.ndarray]):
         """By default the batch dimension is moved to be the third dimension.
 
         This method assumes that `self._dataset_dicts` is limited to dataset
@@ -537,12 +546,14 @@ class PatchDataLoader(DefaultDataLoader):
         coords = [dd["_patch"] for dd in self._dataset_dicts]
 
         num_patches = vols_patched[0].shape[0]
-        assert len(coords) == num_patches, (
-            "{} patches, {} coords".format(num_patches, len(coords))
+        assert len(coords) == num_patches, "{} patches, {} coords".format(
+            num_patches, len(coords)
         )
-        num_vols = len(vols_patched)
+        # num_vols = len(vols_patched)
         # TODO: fix in case that v.shape[-1] is not actually a channel dimension
-        new_vols = [np.zeros(tuple(image_size) + (v.shape[-1],)) for v in vols_patched]  # VxNxHxWx...
+        new_vols = [
+            np.zeros(tuple(image_size) + (v.shape[-1],)) for v in vols_patched
+        ]  # VxNxHxWx...
 
         for idx, c in enumerate(coords):
             for vol_id in range(len(new_vols)):
@@ -558,6 +569,7 @@ class N5dDataLoader(PatchDataLoader):
     Use this for 2.5D, 3.5D, etc. implementations.
     Currently only last dimension is supported as the channel dimension.
     """
+
     def __init__(
         self,
         cfg: Config,
@@ -579,18 +591,10 @@ class N5dDataLoader(PatchDataLoader):
             raise ValueError("channel dimension must be odd")
 
         super().__init__(
-            cfg,
-            dataset_dicts,
-            is_test,
-            shuffle,
-            drop_last,
-            batch_size
+            cfg, dataset_dicts, is_test, shuffle, drop_last, batch_size
         )
 
-    def _load_input(
-        self,
-        dataset_dict
-    ):
+    def _load_input(self, dataset_dict):
         image, mask = super()._load_input(dataset_dict)
         dim = mask.shape[-2]
         mask = mask[..., dim // 2, :]
@@ -599,7 +603,7 @@ class N5dDataLoader(PatchDataLoader):
 
 @DATA_LOADER_REGISTRY.register()
 class S25dDataLoader(DefaultDataLoader):
-    """Special case of 2.5D data loader.
+    """Special case of 2.5D data loader compatible with 2D MedSegPy data format.
 
     Each dataset dict should represent a slice and must have the additional
     keys:
@@ -612,6 +616,7 @@ class S25dDataLoader(DefaultDataLoader):
     This is a temporary solution until the slow loading speeds of the
     :class:`N5dDataLoader` are properly debugged.
     """
+
     def __init__(
         self,
         cfg: Config,
@@ -639,9 +644,7 @@ class S25dDataLoader(DefaultDataLoader):
             slice_order = [dd["slice_id"] for dd in dds]
             assert sorted(slice_order) == slice_order, (
                 "Error in sorting dataset dictionaries "
-                "for scan {} by slice id".format(
-                    scan_id,
-                )
+                "for scan {} by slice id".format(scan_id)
             )
 
         self._scan_to_dicts = mapping
@@ -650,10 +653,7 @@ class S25dDataLoader(DefaultDataLoader):
             cfg, dataset_dicts, is_test, shuffle, drop_last, batch_size
         )
 
-    def _load_input(
-        self,
-        dataset_dict
-    ):
+    def _load_input(self, dataset_dict):
         """Find dataset dicts corresponding to flanking/neighboring slices and
         load.
         """
@@ -704,9 +704,7 @@ class S25dDataLoader(DefaultDataLoader):
 
         return image, mask
 
-    def _restructure_data(
-        self, vols: Sequence[np.ndarray]
-    ):
+    def _restructure_data(self, vols: Sequence[np.ndarray]):
         """By default the batch dimension is moved to be the third dimension.
 
         This method assumes that `self._dataset_dicts` is limited to dataset

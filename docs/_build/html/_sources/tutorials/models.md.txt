@@ -4,10 +4,10 @@ Models (and their sub-models) in medsegpy are built by
 functions such as `build_model`:
 ```python
 from medsegpy.modeling.meta_arch import build_model
-model = build_model(cfg)  # returns a torch.nn.Module
+model = build_model(cfg)  # returns a medsegpy.modeling.Model
 ```
 
-Note that `build_model` only builds the model structure, and fill it with random parameters.
+Note that `build_model` only builds the model structure, and fills it with random parameters.
 To load an existing checkpoint to the model, set
 `cfg.INIT_WEIGHTS` to the appropriate weights file.
 MedSegPy recognizes models in Keras's `.h5` format.

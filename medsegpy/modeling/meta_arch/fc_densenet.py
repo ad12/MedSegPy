@@ -2,28 +2,30 @@
 
 Built from paper: https://arxiv.org/pdf/1611.09326.pdf
 """
-from keras.layers import (
-    Activation,
-    BatchNormalization as BN,
-    Conv2D,
-    Dropout,
-    Concatenate,
-    MaxPooling2D,
-    MaxPooling3D,
-    Conv3D,
-    Conv2DTranspose,
-    Conv3DTranspose,
-    Input,
-)
-from keras.engine import get_source_inputs
-from keras import backend as K
-import tensorflow as tf
 from typing import Dict, Sequence, Union
 
+import tensorflow as tf
+from keras import backend as K
+from keras.engine import get_source_inputs
+from keras.layers import Activation
+from keras.layers import BatchNormalization as BN
+from keras.layers import (
+    Concatenate,
+    Conv2D,
+    Conv2DTranspose,
+    Conv3D,
+    Conv3DTranspose,
+    Dropout,
+    Input,
+    MaxPooling2D,
+    MaxPooling3D,
+)
+
 from medsegpy.config import FCDenseNetConfig
-from .build import ModelBuilder, META_ARCH_REGISTRY
+
 from ..model import Model
 from ..model_utils import add_sem_seg_activation
+from .build import META_ARCH_REGISTRY, ModelBuilder
 
 
 def build_fc_dense_block(
@@ -134,7 +136,7 @@ class FCDenseNet(ModelBuilder):
         self,
         counts: Union[Sequence[int], Sequence[Sequence[int]]],
         depth: int,
-        cfg_field: str
+        cfg_field: str,
     ):
         """Returns the count for the encoder and decoder.
 
@@ -146,7 +148,7 @@ class FCDenseNet(ModelBuilder):
         elif len(counts) == depth:
             num_enc_counts = counts
             num_dec_counts = counts[-2::-1]
-        elif len(counts) == 2*depth-1:
+        elif len(counts) == 2 * depth - 1:
             num_enc_counts = counts[:depth]
             num_dec_counts = counts[depth:]
         else:
@@ -167,10 +169,10 @@ class FCDenseNet(ModelBuilder):
         num_layers = cfg.NUM_LAYERS
         dropout = cfg.DROPOUT
         enc_num_filters, dec_num_filters = self._get_enc_dec_counts(
-            num_filters, depth, "NUM_FILTERS",
+            num_filters, depth, "NUM_FILTERS"
         )
         enc_num_layers, dec_num_layers = self._get_enc_dec_counts(
-            num_layers, depth, "NUM_LAYERS",
+            num_layers, depth, "NUM_LAYERS"
         )
         kernel_initializer = {
             "class_name": cfg.KERNEL_INITIALIZER,
@@ -203,7 +205,7 @@ class FCDenseNet(ModelBuilder):
         skip_connections = []
         running_n_filters = [cfg.NUM_FILTERS_HEAD_CONV]
         running_pool_sizes = []
-        for i in range(depth-1):
+        for i in range(depth - 1):
             n_filters = enc_num_filters[i]
             n_layers = enc_num_layers[i]
             x = build_fc_dense_block(
@@ -242,8 +244,8 @@ class FCDenseNet(ModelBuilder):
             x = pool_type(pool_size=pool_size)(x)
 
         # Bottleneck.
-        n_filters = enc_num_filters[depth-1]
-        n_layers = enc_num_layers[depth-1]
+        n_filters = enc_num_filters[depth - 1]
+        n_layers = enc_num_layers[depth - 1]
         x = build_fc_dense_block(
             x,
             filters=n_filters,
@@ -265,14 +267,14 @@ class FCDenseNet(ModelBuilder):
         running_n_filters = running_n_filters[:0:-1]  # remove head
         skip_connections = skip_connections[::-1]
         running_pool_sizes = running_pool_sizes[::-1]
-        for i in range(depth-1):
+        for i in range(depth - 1):
             # Transition Up.
             x = ct_type(
                 filters=running_n_filters[i],
                 kernel_size=kernel_size,
                 padding="same",
                 strides=running_pool_sizes[i],
-                kernel_initializer=kernel_initializer
+                kernel_initializer=kernel_initializer,
             )(x)
             # TODO: add padding layer.
 
@@ -325,4 +327,3 @@ class FCDenseNet(ModelBuilder):
             )
 
         return Input(input_size)
-

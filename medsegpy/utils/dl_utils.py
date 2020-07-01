@@ -1,8 +1,9 @@
 import os
 import subprocess
 
-from medsegpy.modeling.model import Model
 from keras.utils import multi_gpu_model
+
+from medsegpy.modeling.model import Model
 
 
 def get_weights(experiment_dir):

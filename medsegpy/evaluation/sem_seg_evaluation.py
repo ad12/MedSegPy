@@ -1,3 +1,4 @@
+import copy
 import logging
 import os
 import time
@@ -14,7 +15,6 @@ from .build import EVALUATOR_REGISTRY
 from .evaluator import DatasetEvaluator
 from .metrics import Metric, MetricsManager
 
-import copy
 
 def get_stats_string(manager: MetricsManager):
     """Returns formatted metrics manager summary string.
@@ -239,10 +239,12 @@ class SemSegEvaluator(DatasetEvaluator):
                 f.write(stats_string)
 
         # df = self._metrics_manager.data_frame()
-        # df.to_csv(os.path.join(output_dir, "metrics.csv"), header=True, index=True)
+        # df.to_csv(os.path.join(output_dir, "metrics.csv"), header=True, index=True)  # noqa
 
         df = self._metrics_manager.data()["scan_data"]
-        df.to_csv(os.path.join(output_dir, "metrics.csv"), header=True, index=True)
+        df.to_csv(
+            os.path.join(output_dir, "metrics.csv"), header=True, index=True
+        )
 
         # TODO: Convert segmentation metrics to valid results matrix.
         return {}

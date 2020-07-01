@@ -13,3 +13,11 @@ medsegpy.data.datasets module
     :members:
     :undoc-members:
     :show-inheritance:
+
+medsegpy.data.transforms module
+---------------------------------------
+
+.. automodule:: medsegpy.data.transforms
+    :members:
+    :undoc-members:
+    :show-inheritance:

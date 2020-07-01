@@ -156,7 +156,7 @@
 <span class="kn">import</span> <span class="nn">datetime</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">time</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">from</span> <span class="nn">medsegpy.data</span> <span class="k">import</span> <span class="n">DataLoader</span>
 <span class="kn">from</span> <span class="nn">medsegpy.data.im_gens</span> <span class="k">import</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">GeneratorState</span>
@@ -219,7 +219,7 @@
 <div class="viewcode-block" id="inference_on_dataset"><a class="viewcode-back" href="../../../modules/evaluation.html#medsegpy.evaluation.inference_on_dataset">[docs]</a><span class="k">def</span> <span class="nf">inference_on_dataset</span><span class="p">(</span>
     <span class="n">model</span><span class="p">,</span>
     <span class="n">data_loader</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">DataLoader</span><span class="p">,</span> <span class="n">Generator</span><span class="p">],</span>
-    <span class="n">evaluator</span><span class="p">:</span> <span class="n">DatasetEvaluator</span><span class="p">,</span>
+    <span class="n">evaluator</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">DatasetEvaluator</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">DatasetEvaluator</span><span class="p">]],</span>
 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Run model on the data_loader and evaluate the metrics with evaluator.</span>
@@ -236,7 +236,11 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        The return value of `evaluator.evaluate()`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">evaluator</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">evaluator</span><span class="p">,</span> <span class="n">DatasetEvaluator</span><span class="p">):</span>
+        <span class="n">evaluator</span> <span class="o">=</span> <span class="p">[</span><span class="n">evaluator</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">evaluator</span><span class="p">:</span>
+        <span class="n">e</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
     <span class="n">num_warmup</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
     <span class="n">total_compute_time</span> <span class="o">=</span> <span class="mi">0</span>
@@ -255,7 +259,8 @@
         <span class="n">total_compute_time</span> <span class="o">+=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_compute_time</span>
 
         <span class="n">start_processing_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
-        <span class="n">evaluator</span><span class="o">.</span><span class="n">process</span><span class="p">([</span><span class="nb">input</span><span class="p">],</span> <span class="p">[</span><span class="n">output</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">evaluator</span><span class="p">:</span>
+            <span class="n">e</span><span class="o">.</span><span class="n">process</span><span class="p">([</span><span class="nb">input</span><span class="p">],</span> <span class="p">[</span><span class="n">output</span><span class="p">])</span>
         <span class="n">total_processing_time</span> <span class="o">+=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_processing_time</span>
 
         <span class="n">total_inference_time</span> <span class="o">+=</span> <span class="n">output</span><span class="p">[</span><span class="s2">&quot;time_elapsed&quot;</span><span class="p">]</span>
@@ -288,7 +293,7 @@
 
     <span class="n">eval_start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Begin evaluation...&quot;</span><span class="p">)</span>
-    <span class="n">results</span> <span class="o">=</span> <span class="n">evaluator</span><span class="o">.</span><span class="n">evaluate</span><span class="p">()</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="p">{</span><span class="n">e</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">evaluate</span><span class="p">()</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">evaluator</span><span class="p">}</span>
     <span class="n">total_eval_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">eval_start</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
         <span class="s2">&quot;Time Elapsed: </span><span class="si">{:.4f}</span><span class="s2"> seconds&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>

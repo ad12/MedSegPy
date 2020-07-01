@@ -4,11 +4,11 @@ A processor keeps track of task-specific metrics for different classes.
 It should not be used to keep track of non-class-specific metrics, such as
 runtime.
 """
-from enum import Enum
 import inspect
 import logging
 from abc import ABC, abstractmethod
 from collections import OrderedDict
+from enum import Enum
 from typing import Callable, Collection, Dict, Sequence, Union
 
 import numpy as np
@@ -64,12 +64,12 @@ def rms_cv(y_pred: np.ndarray, y_true: np.ndarray, dim=None):
             If `None`, all dimensions will be reduced.
 
     Returns:
-        ndarray: If `dim=None`, scalar value. 
+        ndarray: If `dim=None`, scalar value.
     """
     stds = np.std([y_pred, y_true], axis=0)
     means = np.mean([y_pred, y_true], axis=0)
     cv = stds / means
-    return np.sqrt(np.mean(cv**2, axis=dim))
+    return np.sqrt(np.mean(cv ** 2, axis=dim))
 
 
 def rmse_cv(y_pred: np.ndarray, y_true: np.ndarray, dim=None):
@@ -86,7 +86,7 @@ def rmse_cv(y_pred: np.ndarray, y_true: np.ndarray, dim=None):
     Returns:
         ndarray: If `dim=None`, scalar value.
     """
-    rmse = np.sqrt(np.mean((y_pred - y_true)**2, axis=dim))
+    rmse = np.sqrt(np.mean((y_pred - y_true) ** 2, axis=dim))
     means = np.absolute(np.mean(y_true, axis=dim))
     return rmse / means
 
@@ -217,7 +217,7 @@ class ASSD(Metric):
         if not connectivity:
             connectivity = 1
         return assd(
-            y_pred, y_true, voxelspacing=spacing, connectivity=connectivity,
+            y_pred, y_true, voxelspacing=spacing, connectivity=connectivity
         )
 
 
@@ -296,7 +296,9 @@ class MetricsManager:
         self._scan_data = OrderedDict()
         self.class_names = class_names
         self._metrics: Dict[str, Metric] = OrderedDict()
-        self._metric_pairs: Dict[(str, str), Sequence[Reductions]] = OrderedDict()  # noqa
+        self._metric_pairs: Dict[
+            (str, str), Sequence[Reductions]
+        ] = OrderedDict()  # noqa
         if metrics:
             self.add_metrics(metrics)
         self.category_dim = -1 if len(class_names) > 1 else None
@@ -332,26 +334,20 @@ class MetricsManager:
             self._metrics[m_name] = m
 
     def register_pairs(
-        self, 
-        pred_metric: str, 
-        base_metric: str, 
+        self,
+        pred_metric: str,
+        base_metric: str,
         reductions: Union[Reductions, Sequence[Reductions]],
-        name: str = None
+        name: str = None,
     ):
         if pred_metric not in self._metrics:
-            raise ValueError(
-                "`pred_metric` '{}' not found".format(pred_metric)
-            )
+            raise ValueError("`pred_metric` '{}' not found".format(pred_metric))
         if base_metric not in self._metrics:
-            raise ValueError(
-                "`base_metric` '{}' not found".format(base_metric)
-            )
+            raise ValueError("`base_metric` '{}' not found".format(base_metric))
 
         key = (pred_metric, base_metric)
         if key in self._metric_pairs:
-            raise ValueError(
-                "Pair {} already registered".format(key)
-            )
+            raise ValueError("Pair {} already registered".format(key))
 
         if name is None:
             name = self._metrics[pred_metric].__class__.__name__

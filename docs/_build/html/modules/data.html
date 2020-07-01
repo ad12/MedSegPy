@@ -89,6 +89,7 @@
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">API Documentation</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">medsegpy.data package</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#module-medsegpy.data.datasets">medsegpy.data.datasets module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-medsegpy.data.transforms">medsegpy.data.transforms module</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="engine.html">medsegpy.engine package</a></li>
@@ -430,8 +431,8 @@ Required for semantic segmentation inference.</p>
 <em class="property">class </em><code class="sig-prename descclassname">medsegpy.data.</code><code class="sig-name descname">DefaultDataLoader</code><span class="sig-paren">(</span><em class="sig-param">cfg: medsegpy.config.Config, dataset_dicts: List[Dict], is_test: bool = False, shuffle: bool = True, drop_last: bool = False, batch_size: int = 1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#DefaultDataLoader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.DefaultDataLoader" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">medsegpy.data.data_loader.DataLoader</span></code></p>
 <p>The default data loader functionality in medsegy.</p>
-<p>This class takes a dataset dict in the MedSegPy Dataset format and maps it
-to a format that can be used by the model for semantic segmentation.</p>
+<p>This class takes a dataset dict in the MedSegPy 2D Dataset format and maps
+it to a format that can be used by the model for semantic segmentation.</p>
 <p>This is the default data loader.</p>
 <ol class="arabic simple">
 <li><p>Read the input matrix from “file_name”</p></li>
@@ -468,6 +469,32 @@ existing Keras model functionality.</p></li>
 <code class="sig-name descname">inference</code><span class="sig-paren">(</span><em class="sig-param">model: medsegpy.modeling.model.Model</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#DefaultDataLoader.inference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.DefaultDataLoader.inference" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+</dd></dl>
+
+<dl class="class">
+<dt id="medsegpy.data.PatchDataLoader">
+<em class="property">class </em><code class="sig-prename descclassname">medsegpy.data.</code><code class="sig-name descname">PatchDataLoader</code><span class="sig-paren">(</span><em class="sig-param">cfg: medsegpy.config.Config, dataset_dicts: List[Dict], is_test: bool = False, shuffle: bool = True, drop_last: bool = False, batch_size: int = 1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#PatchDataLoader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.PatchDataLoader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">medsegpy.data.data_loader.DefaultDataLoader</span></code></p>
+<p>This data loader pre-computes patch locations and padding based on
+patch size (<cite>cfg.IMG_SIZE</cite>), pad type (<cite>cfg.IMG_PAD_MODE</cite>), pad size
+(<cite>cfg.IMG_PAD_SIZE</cite>), and stride (<cite>cfg.IMG_STRIDE</cite>) parameters specified
+in the config.</p>
+<dl class="simple">
+<dt>Assumptions:</dt><dd><ul class="simple">
+<li><p>all dataset dictionaries have the same image dimensions</p></li>
+<li><p>“image_size” in dataset dict</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="medsegpy.data.N5dDataLoader">
+<em class="property">class </em><code class="sig-prename descclassname">medsegpy.data.</code><code class="sig-name descname">N5dDataLoader</code><span class="sig-paren">(</span><em class="sig-param">cfg: medsegpy.config.Config, dataset_dicts: List[Dict], is_test: bool = False, shuffle: bool = True, drop_last: bool = False, batch_size: int = 1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#N5dDataLoader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.N5dDataLoader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">medsegpy.data.data_loader.PatchDataLoader</span></code></p>
+<p>n.5D data loader.</p>
+<p>Use this for 2.5D, 3.5D, etc. implementations.
+Currently only last dimension is supported as the channel dimension.</p>
 </dd></dl>
 
 <dl class="function">
@@ -825,6 +852,9 @@ seg_volume block: a 3D numpy array of size Y/Yi, X/Xi, Z/Zi, #masks  # noqa</p>
 
 <div class="section" id="module-medsegpy.data.datasets">
 <span id="medsegpy-data-datasets-module"></span><h2>medsegpy.data.datasets module<a class="headerlink" href="#module-medsegpy.data.datasets" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-medsegpy.data.transforms">
+<span id="medsegpy-data-transforms-module"></span><h2>medsegpy.data.transforms module<a class="headerlink" href="#module-medsegpy.data.transforms" title="Permalink to this headline">¶</a></h2>
 </div>
 </div>
 

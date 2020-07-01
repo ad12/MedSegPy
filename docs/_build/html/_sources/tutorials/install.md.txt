@@ -1,7 +1,7 @@
 ## Installation
 We recommend using the Anaconda virtual environment to control package
 visibility. For a detailed list of requirements, see
-[environment.yml](environment.yml).
+[environment.yml](https://github.com/ad12/MedSegPy/blob/master/environment.yml).
 
 *Disclaimer*: The installation process has not been verified on cuda
 versions >9.0.
@@ -30,3 +30,15 @@ cd MedSegPy && python -m pip install -e .
 ```
 
 You often need to rebuild medsegpy after reinstalling TensorFlow and/or Keras.
+
+### Configuring Output Paths (optional)
+When running multiple experiments, you may want to set a default prefix for storing
+results related to MedSegPy. 
+
+As a shortcut, we designate the prefix `results://` to point 
+to a result directory of your choosing. This directory is determined by the user and the machine/cluster name. 
+The paths in the config `OUTPUT_DIR` beginning with the prefix `results://` will be redirected under the
+`results` path.
+
+To register your username/cluster, see 
+[cluster.py](https://github.com/ad12/MedSegPy/blob/dev/medsegpy/utils/cluster.py). 

@@ -148,7 +148,9 @@
            <div itemprop="articleBody">
             
   <h1>Source code for medsegpy.evaluation.build</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">fvcore.common.registry</span> <span class="k">import</span> <span class="n">Registry</span>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Sequence</span>
+
+<span class="kn">from</span> <span class="nn">fvcore.common.registry</span> <span class="k">import</span> <span class="n">Registry</span>
 
 <span class="kn">from</span> <span class="nn">medsegpy.config</span> <span class="k">import</span> <span class="n">Config</span>
 <span class="kn">from</span> <span class="nn">medsegpy.data</span> <span class="k">import</span> <span class="n">MetadataCatalog</span>
@@ -172,9 +174,18 @@
     <span class="n">save_raw_data</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">):</span>
     <span class="n">name</span> <span class="o">=</span> <span class="n">MetadataCatalog</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dataset_name</span><span class="p">)</span><span class="o">.</span><span class="n">evaluator_type</span>
-    <span class="n">evaluator_cls</span> <span class="o">=</span> <span class="n">EVALUATOR_REGISTRY</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">evaluator_cls</span><span class="p">(</span><span class="n">dataset_name</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">output_folder</span><span class="p">,</span> <span class="n">save_raw_data</span><span class="p">)</span></div>
+    <span class="n">evaluators</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">name</span><span class="p">:</span>
+        <span class="n">evaluator_cls</span> <span class="o">=</span> <span class="n">EVALUATOR_REGISTRY</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">evaluators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">evaluator_cls</span><span class="p">(</span><span class="n">dataset_name</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">output_folder</span><span class="p">,</span> <span class="n">save_raw_data</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">evaluators</span></div>
 </pre></div>
 
            </div>
