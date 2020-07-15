@@ -19,12 +19,20 @@ if CLUSTER in (Cluster.ROMA, Cluster.VIGATA):
         "oai_2d_whitened_train": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_2d/train",  # noqa
         "oai_2d_whitened_val": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_2d/valid",  # noqa
         "oai_2d_whitened_test": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_2d/test",  # noqa
-        "oai_3d_train": "/bmrNAS/people/arjun/data/oai_data/h5_files_3d/train",
-        "oai_3d_val": "/bmrNAS/people/arjun/data/oai_data/h5_files_3d/val",
-        "oai_3d_test": "/bmrNAS/people/arjun/data/oai_data/h5_files_3d/test",
+        "oai_3d_train": "/bmrNAS/people/arjun/data/oai_data/h5_files_3d_orig/train",
+        "oai_3d_val": "/bmrNAS/people/arjun/data/oai_data/h5_files_3d_orig/val",
+        "oai_3d_test": "/bmrNAS/people/arjun/data/oai_data/h5_files_3d_orig/test",
         "oai_3d_whitened_train": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d/train",  # noqa
         "oai_3d_whitened_val": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d/val",  # noqa
         "oai_3d_whitened_test": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d/test",  # noqa
+        "oai_3d_whitened_sep_train": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d_sep/train",  # noqa
+        "oai_3d_whitened_sep_val": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d_sep/val",  # noqa
+        "oai_3d_whitened_sep_test": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d_sep/test",  # noqa
+        "oai_3d_whitened_train_sf": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d_sf/train",  # noqa
+        "oai_3d_whitened_val_sf": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d_sf/val",  # noqa
+        "oai_3d_whitened_test_sf": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d_sf/test",  # noqa
+
+
     }
     _TEST_SET_METADATA_PIK = (
         "/bmrNAS/people/arjun/msk_seg_networks/oai_metadata/oai_data.dat"
