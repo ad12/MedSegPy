@@ -237,9 +237,6 @@ class DefaultDataLoader(DataLoader):
         shuffle: bool = True,
         drop_last: bool = False,
         batch_size: int = 1,
-        # TODO: singlefile currently only functional for 
-        # PatchDataLoader; implement for 2D / DefaultDataLoader
-        singlefile: bool = False 
     ):
         super().__init__(
             cfg, dataset_dicts, is_test, shuffle, drop_last, batch_size
@@ -249,18 +246,7 @@ class DefaultDataLoader(DataLoader):
         self._num_classes = cfg.get_num_classes()
         self._transform_gen = build_preprocessing(cfg)
         self._cached_data = None
-        self._singlefile = singlefile
-
-        if singlefile:
-            parent_dir = os.path.abspath(
-                os.path.join(dataset_dicts[0]["file_name"], os.pardir))
-            ext = os.path.splitext(dataset_dicts[0]["file_name"])[1]
-            self._singlefile_fp = parent_dir + ext
-
-    def __del__(self):
-        if hasattr(self, "_f"):
-            self._f.close()
-
+ 
     def _load_input(self, dataset_dict):
         image_file = dataset_dict["file_name"]
         sem_seg_file = dataset_dict.get("sem_seg_file", None)
@@ -300,6 +286,7 @@ class DefaultDataLoader(DataLoader):
 
             images.append(image)
             masks.append(mask)
+
         return np.stack(images, axis=0), np.stack(masks, axis=0)
 
     def _preprocess(self, inputs: np.ndarray, outputs: np.ndarray):
@@ -315,14 +302,13 @@ class DefaultDataLoader(DataLoader):
         Returns:
             ndarray, ndarray: images NxHxWx(...)x1, masks NxHxWx(...)x1
         """
-        if self._singlefile and not hasattr(self, '_f'):
-            self._f = h5py.File(self._singlefile_fp, "r")
         batch_size = self._batch_size
         start = idx * batch_size
         stop = min((idx + 1) * batch_size, self._num_elements())
 
         inputs, outputs = self._load_batch(self._idxs[start:stop])
         inputs_preprocessed, outputs = self._preprocess(inputs, outputs)
+
         if self._is_test:
             return inputs_preprocessed, outputs, inputs
         else:
@@ -424,11 +410,11 @@ class PatchDataLoader(DefaultDataLoader):
         shuffle: bool = True,
         drop_last: bool = False,
         batch_size: int = 1,
-        singlefile: bool = False
+        use_singlefile: bool = False
     ):
         # Create patch elements from dataset dict.
         # TODO: change pad/patching based on test/train
-        self._singlefile = singlefile
+        self._use_singlefile = use_singlefile
         expected_img_dim = len(dataset_dicts[0]["image_size"])
         img_dim = len(cfg.IMG_SIZE)
         self._add_dim = False
@@ -462,11 +448,16 @@ class PatchDataLoader(DefaultDataLoader):
                 dd_patched.append(dataset_dict)
 
         super().__init__(
-            cfg, dd_patched, is_test, shuffle, drop_last, batch_size, singlefile
+            cfg, dd_patched, is_test, shuffle, drop_last, batch_size
         )
 
         self._preload_data = cfg.PRELOAD_DATA
         self._cached_data = None
+        self._f = None
+
+        if self._use_singlefile:
+            self._singlefile_fp = dataset_dicts[0]["singlefile_path"]
+
         if self._preload_data:
             if threading.current_thread() is not threading.main_thread():
                 raise ValueError(
@@ -476,6 +467,32 @@ class PatchDataLoader(DefaultDataLoader):
             self._cached_data = self._load_all_data(
                 dataset_dicts, cfg.NUM_WORKERS
             )
+
+    def __del__(self):
+        if self._f is not None:
+            self._f.close()
+
+    def __getitem__(self, idx):
+        """
+        Args:
+            idx: Batch index.
+
+        Returns:
+            ndarray, ndarray: images NxHxWx(...)x1, masks NxHxWx(...)x1
+        """
+        if self._use_singlefile and self._f is None:
+            self._f = h5py.File(self._singlefile_fp, "r")
+        batch_size = self._batch_size
+        start = idx * batch_size
+        stop = min((idx + 1) * batch_size, self._num_elements())
+
+        inputs, outputs = self._load_batch(self._idxs[start:stop])
+        inputs_preprocessed, outputs = self._preprocess(inputs, outputs)
+
+        if self._is_test:
+            return inputs_preprocessed, outputs, inputs
+        else:
+            return inputs_preprocessed, outputs
 
     def _load_all_data(self, dataset_dicts, num_workers: int = 1) -> Dict:
         """
@@ -489,6 +506,7 @@ class PatchDataLoader(DefaultDataLoader):
             if set(np.unique(mask)) == {0, 1}:
                 mask = mask.astype(np.bool)
             return {"image": image, "mask": mask}
+
         cache = [_load(dd) for dd in tqdm(dataset_dicts)]
         cache = {
             (dd["file_name"], dd["sem_seg_file"]): x
@@ -503,27 +521,25 @@ class PatchDataLoader(DefaultDataLoader):
 
         mask = None
 
-        is_single_file = image_file == sem_seg_file
-        seg_key = "seg" if is_single_file else "data"
-        img_key = "volume" if is_single_file else "data"
+        is_img_seg_file_same = image_file == sem_seg_file
+        seg_key = "seg" if is_img_seg_file_same else "data"
+        img_key = "volume" if is_img_seg_file_same else "data"
 
-        # Load data from one h5 file if self._singlefile
-        if not self._singlefile:
-            with h5py.File(image_file, "r") as f:
-                image = f[img_key][patch]  # HxWxDx...
-                if sem_seg_file and is_single_file:
-                    mask = f[seg_key][patch]  # HxWxDx...xC
-                else:
-                   with h5py.File(sem_seg_file, "r") as f:
-                       mask = f[seg_key][:]
-        else:
-            image_name = os.path.splitext(os.path.basename(image_file))[0]
-            image_o = self._f[image_name]
-            image = image_o[img_key][patch]
-            if sem_seg_file and is_single_file:
-                mask = image_o[seg_key][patch]
+        # Load data from one h5 file if self._use_singlefile
+        if not self._use_singlefile:
+            f = h5py.File(image_file, "r")
+            image = f[img_key][patch]  # HxWxDx...
+            if sem_seg_file and is_img_seg_file_same:
+                mask = f[seg_key][patch]  # HxWxDx...xC
             else:
-                mask = image_o[seg_key][:]
+                s = h5py.File(sem_seg_file, "r") 
+                mask = s[seg_key][patch]
+                s.close()
+            f.close()
+        else:
+            image = self._f[image_file][img_key][patch]
+            if sem_seg_file:
+                mask = self._f[image_file][seg_key][patch]
 
         if mask is not None:
             cat_idxs = self._category_idxs

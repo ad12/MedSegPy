@@ -1,3 +1,12 @@
+"""Benchmark dataloading: 
+    - single vs. multiple file loading time
+    - 2D vs. 3D loading time
+    - single vs. multiple file training time across
+        - batch size
+        - patch size
+        - gradient acc steps
+@author: Swathi Iyer, swathii@stanford.edu
+"""
 import os
 import time
 import logging
@@ -20,10 +29,7 @@ logger.setLevel(logging.INFO)
 sh = logging.StreamHandler()
 sh.setLevel(logging.INFO)
 logger.addHandler(sh)
-os.environ["CUDA_VISIBLE_DEVICES"] = "3" # run on gpu1
-
-
-logger.info("start test")
+os.environ["CUDA_VISIBLE_DEVICES"] = "2" # Specify gpu here
 
 cfg2d = UNetConfig()
 cfg2d.TRAIN_DATASET = "oai_2d_train"
@@ -35,9 +41,9 @@ cfg2d.IMG_SIZE = (384, 384, 1)
 
 cfg3d = UNet3DConfig()
 cfg3d.TAG = "PatchDataLoader"
-cfg3d.TRAIN_DATASET = "oai_3d_whitened_train_sf"
-cfg3d.VAL_DATASET = "oai_3d_whitened_val_sf"
-cfg3d.TEST_DATASET = "oai_3d_whitened_test_sf"
+cfg3d.TRAIN_DATASET = "oai_3d_sf_whitened_train"
+cfg3d.VAL_DATASET = "oai_3d_sf_whitened_val"
+cfg3d.TEST_DATASET = "oai_3d_sf_whitened_test"
 cfg3d.CATEGORIES = (0, (1, 2), 3, (4, 5))
 cfg3d.IMG_SIZE = (384, 384, 4, 1)
 
@@ -50,9 +56,10 @@ def test_loading():
         is_test=False,
         shuffle=True,
         drop_last=True,
-        singlefile=True
+        use_singlefile=True
     )
 
+    cfg3d.TRAIN_DATASET = "oai_3d_whitened_train"
     original_dataloader = build_loader(
         cfg3d,
         cfg3d.TRAIN_DATASET,
@@ -60,31 +67,31 @@ def test_loading():
         is_test=False,
         shuffle=True,
         drop_last=True,
-        singlefile=False
+        use_singlefile=False
     )
-
+     
     logger.info("Test Original...")
     average = 0
-    for i in range(30):
+    for i in range(5):
         start_time = time.perf_counter()
         img, seg = original_dataloader[i]
         time_elapsed = time.perf_counter() - start_time
         logger.info("load time: {}".format(time_elapsed))
         average += time_elapsed
     
-    average /= 30
+    average /= 5
     logger.info("Original average loading time: {}".format(average))
-
+    
     logger.info("Test Singlefile...")
     average = 0
-    for i in range(30):
+    for i in range(5):
         start_time = time.perf_counter()
         img, seg = singlefile_dataloader[i]
         time_elapsed = time.perf_counter() - start_time
         logger.info("load time: {}".format(time_elapsed))
         average += time_elapsed
 
-    average /= 30
+    average /= 5
     logger.info("Singlefile average loading time: {}".format(average))
 
 
@@ -105,7 +112,7 @@ def test_2d_v_3d():
         is_test=False,
         shuffle=True,
         drop_last=True,
-        singlefile=True
+        use_singlefile=True
     )
 
     logger.info("Test 2D Average Loading Time...")
@@ -152,7 +159,7 @@ def test_batchsize():
             is_test=False,
             shuffle=True,
             drop_last=True,
-            singlefile=True
+            use_singlefile=True
         )
 
         average = 0
@@ -201,7 +208,7 @@ def test_training_filetype():
             is_test=False,
             shuffle=True,
             drop_last=True,
-            singlefile=True
+            use_singlefile=True
         )
         
         start = time.perf_counter()
@@ -237,7 +244,7 @@ def test_training_filetype():
             is_test=False,
             shuffle=True,
             drop_last=True,
-            singlefile=False
+            use_singlefile=False
         )
         
         start = time.perf_counter()
@@ -255,7 +262,7 @@ def test_training_filetype():
      
 
 logger.info("Start DataLoader Tests...")
-#test_loading()
-#test_2d_v_3d()
-#test_batchsize()
+test_loading()
+test_2d_v_3d()
+test_batchsize()
 test_training_filetype()

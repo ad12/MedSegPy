@@ -2,6 +2,7 @@
 import logging
 import os
 import re
+import h5py
 
 from medsegpy.data.catalog import DatasetCatalog, MetadataCatalog
 from medsegpy.utils.cluster import Cluster, CLUSTER
@@ -19,20 +20,18 @@ if CLUSTER in (Cluster.ROMA, Cluster.VIGATA):
         "oai_2d_whitened_train": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_2d/train",  # noqa
         "oai_2d_whitened_val": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_2d/valid",  # noqa
         "oai_2d_whitened_test": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_2d/test",  # noqa
-        "oai_3d_train": "/bmrNAS/people/arjun/data/oai_data/h5_files_3d_orig/train",
-        "oai_3d_val": "/bmrNAS/people/arjun/data/oai_data/h5_files_3d_orig/val",
-        "oai_3d_test": "/bmrNAS/people/arjun/data/oai_data/h5_files_3d_orig/test",
+        "oai_3d_train": "/bmrNAS/people/arjun/data/oai_data/h5_files_3d/train", # TODO: needs to be changed
+        "oai_3d_val": "/bmrNAS/people/arjun/data/oai_data/h5_files_3d/val", # TODO: needs to be changed
+        "oai_3d_test": "/bmrNAS/people/arjun/data/oai_data/h5_files_3d/test", # TODO: needs to be changed
         "oai_3d_whitened_train": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d/train",  # noqa
         "oai_3d_whitened_val": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d/val",  # noqa
         "oai_3d_whitened_test": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d/test",  # noqa
         "oai_3d_whitened_sep_train": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d_sep/train",  # noqa
         "oai_3d_whitened_sep_val": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d_sep/val",  # noqa
         "oai_3d_whitened_sep_test": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d_sep/test",  # noqa
-        "oai_3d_whitened_train_sf": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d_sf/train",  # noqa
-        "oai_3d_whitened_val_sf": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d_sf/val",  # noqa
-        "oai_3d_whitened_test_sf": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d_sf/test",  # noqa
-
-
+        "oai_3d_sf_whitened_train": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d_sf/train",  # noqa
+        "oai_3d_sf_whitened_val": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d_sf/val",  # noqa
+        "oai_3d_sf_whitened_test": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d_sf/test",  # noqa
     }
     _TEST_SET_METADATA_PIK = (
         "/bmrNAS/people/arjun/msk_seg_networks/oai_metadata/oai_data.dat"
@@ -126,6 +125,43 @@ def load_oai_3d_from_dir(scan_root, dataset_name=None):
                 "subject_id": pid,
                 "time_point": time_point,
                 "image_size": (384, 384, 160),
+
+            }
+        )
+
+    num_scans = len(dataset_dicts)
+    num_subjects = len({d["subject_id"] for d in dataset_dicts})
+    if dataset_name:
+        logger.info("Loaded {} from {}".format(dataset_name, scan_root))
+    logger.info(
+        "Loaded {} scans from {} subjects".format(num_scans, num_subjects)
+    )
+
+    return dataset_dicts
+
+
+def load_oai_3d_sf_from_dir(scan_root, dataset_name=None):
+    # sample scan name: "train.h5"
+    FNAME_REGEX = "([\d]+)_V([\d]+)"
+    files = sorted(os.listdir(scan_root))
+    filepaths = [os.path.join(scan_root, f) for f in files]
+    f = h5py.File(filepaths[0], 'r')
+    keys = [key for key in f.keys()]
+    f.close()
+    dataset_dicts = []
+    for key in keys:
+        _, pid, time_point, _ = tuple(re.split(FNAME_REGEX, key))
+        pid = int(pid)
+        time_point = int(time_point)
+        dataset_dicts.append(
+            {
+                "file_name": key,
+                "sem_seg_file": key,
+                "scan_id": "{:07d}_V{:02d}".format(pid, time_point),
+                "subject_id": pid,
+                "time_point": time_point,
+                "image_size": (384, 384, 160),
+                "singlefile_path": filepaths[0]
             }
         )
 
@@ -142,7 +178,9 @@ def load_oai_3d_from_dir(scan_root, dataset_name=None):
 
 def register_oai(name, scan_root):
     load_func = (
-        load_oai_3d_from_dir
+        load_oai_3d_sf_from_dir
+        if name.startswith("oai_3d_sf")
+        else load_oai_3d_from_dir
         if name.startswith("oai_3d")
         else load_oai_2d_from_dir
     )
