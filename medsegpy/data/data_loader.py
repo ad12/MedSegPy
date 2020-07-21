@@ -246,7 +246,7 @@ class DefaultDataLoader(DataLoader):
         self._num_classes = cfg.get_num_classes()
         self._transform_gen = build_preprocessing(cfg)
         self._cached_data = None
- 
+
     def _load_input(self, dataset_dict):
         image_file = dataset_dict["file_name"]
         sem_seg_file = dataset_dict.get("sem_seg_file", None)
@@ -277,7 +277,7 @@ class DefaultDataLoader(DataLoader):
         TODO: run test to determine if casting inputs/outputs is required.
         """
         dataset_dicts = self._dataset_dicts
-        
+ 
         images = []
         masks = []
         for file_idx in idxs:
