@@ -1,3 +1,4 @@
+import os
 import logging
 import math
 import random
@@ -21,7 +22,10 @@ from .data_utils import add_background_labels, collect_mask, compute_patches
 from .transforms import apply_transform_gens, build_preprocessing
 
 logger = logging.getLogger(__name__)
-
+logger.setLevel(logging.INFO)
+sh = logging.StreamHandler()
+sh.setLevel(logging.INFO)
+logger.addHandler(sh)
 
 DATA_LOADER_REGISTRY = Registry("DATA_LOADER")
 DATA_LOADER_REGISTRY.__doc__ = """
@@ -406,9 +410,11 @@ class PatchDataLoader(DefaultDataLoader):
         shuffle: bool = True,
         drop_last: bool = False,
         batch_size: int = 1,
+        use_singlefile: bool = False
     ):
         # Create patch elements from dataset dict.
         # TODO: change pad/patching based on test/train
+        self._use_singlefile = use_singlefile
         expected_img_dim = len(dataset_dicts[0]["image_size"])
         img_dim = len(cfg.IMG_SIZE)
         self._add_dim = False
@@ -447,6 +453,11 @@ class PatchDataLoader(DefaultDataLoader):
 
         self._preload_data = cfg.PRELOAD_DATA
         self._cached_data = None
+        self._f = None
+
+        if self._use_singlefile:
+            self._singlefile_fp = dataset_dicts[0]["singlefile_path"]
+
         if self._preload_data:
             if threading.current_thread() is not threading.main_thread():
                 raise ValueError(
@@ -456,6 +467,32 @@ class PatchDataLoader(DefaultDataLoader):
             self._cached_data = self._load_all_data(
                 dataset_dicts, cfg.NUM_WORKERS
             )
+
+    def __del__(self):
+        if self._f is not None:
+            self._f.close()
+
+    def __getitem__(self, idx):
+        """
+        Args:
+            idx: Batch index.
+
+        Returns:
+            ndarray, ndarray: images NxHxWx(...)x1, masks NxHxWx(...)x1
+        """
+        if self._use_singlefile and self._f is None:
+            self._f = h5py.File(self._singlefile_fp, "r")
+        batch_size = self._batch_size
+        start = idx * batch_size
+        stop = min((idx + 1) * batch_size, self._num_elements())
+
+        inputs, outputs = self._load_batch(self._idxs[start:stop])
+        inputs_preprocessed, outputs = self._preprocess(inputs, outputs)
+
+        if self._is_test:
+            return inputs_preprocessed, outputs, inputs
+        else:
+            return inputs_preprocessed, outputs
 
     def _load_all_data(self, dataset_dicts, num_workers: int = 1) -> Dict:
         """
@@ -484,17 +521,25 @@ class PatchDataLoader(DefaultDataLoader):
 
         mask = None
 
-        is_single_file = image_file == sem_seg_file
-        seg_key = "seg" if is_single_file else "data"
-        img_key = "volume" if is_single_file else "data"
-        with h5py.File(image_file, "r") as f:
-            image = f[img_key][patch]  # HxWxDx...
-            if sem_seg_file and is_single_file:
-                mask = f[seg_key][patch]  # HxWxDx...xC
+        is_img_seg_file_same = image_file == sem_seg_file
+        seg_key = "seg" if is_img_seg_file_same else "data"
+        img_key = "volume" if is_img_seg_file_same else "data"
 
-        if sem_seg_file and not is_single_file:
-            with h5py.File(sem_seg_file, "r") as f:
-                mask = f[seg_key][:]
+        # Load data from one h5 file if self._use_singlefile
+        if not self._use_singlefile:
+            f = h5py.File(image_file, "r")
+            image = f[img_key][patch]  # HxWxDx...
+            if sem_seg_file and is_img_seg_file_same:
+                mask = f[seg_key][patch]  # HxWxDx...xC
+            else:
+                s = h5py.File(sem_seg_file, "r") 
+                mask = s[seg_key][patch]
+                s.close()
+            f.close()
+        else:
+            image = self._f[image_file][img_key][patch]
+            if sem_seg_file:
+                mask = self._f[image_file][seg_key][patch]
 
         if mask is not None:
             cat_idxs = self._category_idxs
