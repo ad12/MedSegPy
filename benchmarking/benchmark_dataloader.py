@@ -1,10 +1,16 @@
-"""Benchmark dataloading: 
+"""
+Script to benchmark dataloading: 
     - single vs. multiple file loading time
     - 2D vs. 3D loading time
     - single vs. multiple file training time across
         - batch size
         - patch size
         - gradient acc steps
+Usage:
+    Running the script normally will run all 
+    benchmarking tests. Comment out function 
+    calls as needed to run individually.
+
 @author: Swathi Iyer, swathii@stanford.edu
 """
 import os
