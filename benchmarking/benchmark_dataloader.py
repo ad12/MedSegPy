@@ -12,6 +12,7 @@ import time
 import logging
 import wandb as wb
 import tensorflow as tf
+from medsegpy.utils.logger import setup_logger
 from medsegpy.config import UNetConfig, UNet3DConfig
 from medsegpy.data import build_loader, DatasetCatalog, DefaultDataLoader, PatchDataLoader
 from medsegpy.modeling import get_model
@@ -22,13 +23,10 @@ from medsegpy.losses import (
     get_training_loss,
 )
 
-#wb.init(project="benchmark_dataloaders")
+setup_logger(name='medsegpy')
+logger = setup_logger(name=__name__)
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-sh = logging.StreamHandler()
-sh.setLevel(logging.INFO)
-logger.addHandler(sh)
+#wb.init(project="benchmark_dataloaders")
 os.environ["CUDA_VISIBLE_DEVICES"] = "2" # Specify gpu here
 
 cfg2d = UNetConfig()
@@ -69,6 +67,7 @@ def test_loading():
         drop_last=True,
         use_singlefile=False
     )
+    cfg3d.TRAIN_DATASET = "oai_3d_sf_whitened_train"
      
     logger.info("Test Original...")
     average = 0

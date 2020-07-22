@@ -26,12 +26,9 @@ if CLUSTER in (Cluster.ROMA, Cluster.VIGATA):
         "oai_3d_whitened_train": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d/train",  # noqa
         "oai_3d_whitened_val": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d/val",  # noqa
         "oai_3d_whitened_test": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d/test",  # noqa
-        "oai_3d_whitened_sep_train": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d_sep/train",  # noqa
-        "oai_3d_whitened_sep_val": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d_sep/val",  # noqa
-        "oai_3d_whitened_sep_test": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d_sep/test",  # noqa
-        "oai_3d_sf_whitened_train": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d_sf/train",  # noqa
-        "oai_3d_sf_whitened_val": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d_sf/val",  # noqa
-        "oai_3d_sf_whitened_test": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d_sf/test",  # noqa
+        "oai_3d_sf_whitened_train": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d/train.h5",  # noqa
+        "oai_3d_sf_whitened_val": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d/val.h5",  # noqa
+        "oai_3d_sf_whitened_test": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d/test.h5",  # noqa
     }
     _TEST_SET_METADATA_PIK = (
         "/bmrNAS/people/arjun/msk_seg_networks/oai_metadata/oai_data.dat"
@@ -125,7 +122,6 @@ def load_oai_3d_from_dir(scan_root, dataset_name=None):
                 "subject_id": pid,
                 "time_point": time_point,
                 "image_size": (384, 384, 160),
-
             }
         )
 
@@ -141,11 +137,13 @@ def load_oai_3d_from_dir(scan_root, dataset_name=None):
 
 
 def load_oai_3d_sf_from_dir(scan_root, dataset_name=None):
-    # sample scan name: "train.h5"
+    """
+    Expected file structure: 
+          keys=> image_files (e.g. '0000001_V00'); 
+          subkeys=> image type (e.g. ['seg', 'volume']); 
+    """
     FNAME_REGEX = "([\d]+)_V([\d]+)"
-    files = sorted(os.listdir(scan_root))
-    filepaths = [os.path.join(scan_root, f) for f in files]
-    f = h5py.File(filepaths[0], 'r')
+    f = h5py.File(scan_root, 'r')
     keys = [key for key in f.keys()]
     f.close()
     dataset_dicts = []
@@ -161,7 +159,7 @@ def load_oai_3d_sf_from_dir(scan_root, dataset_name=None):
                 "subject_id": pid,
                 "time_point": time_point,
                 "image_size": (384, 384, 160),
-                "singlefile_path": filepaths[0]
+                "singlefile_path": scan_root
             }
         )
 
@@ -177,13 +175,14 @@ def load_oai_3d_sf_from_dir(scan_root, dataset_name=None):
 
 
 def register_oai(name, scan_root):
-    load_func = (
-        load_oai_3d_sf_from_dir
-        if name.startswith("oai_3d_sf")
-        else load_oai_3d_from_dir
-        if name.startswith("oai_3d")
-        else load_oai_2d_from_dir
-    )
+    load_func = None
+    if name.startswith("oai_2d"):
+        load_func = load_oai_2d_from_dir
+    elif name.startswith("oai_3d_sf"):
+        load_func = load_oai_3d_sf_from_dir
+    else:
+        load_func = load_oai_3d_from_dir
+
     DatasetCatalog.register(name, lambda: load_func(scan_root, name))
 
     # 2. Optionally, add metadata about this dataset,

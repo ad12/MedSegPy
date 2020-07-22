@@ -277,7 +277,7 @@ class DefaultDataLoader(DataLoader):
         TODO: run test to determine if casting inputs/outputs is required.
         """
         dataset_dicts = self._dataset_dicts
- 
+
         images = []
         masks = []
         for file_idx in idxs:
