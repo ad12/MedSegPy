@@ -64,6 +64,16 @@ class Model(_Model):
             ValueError: In case the generator yields
                 data in an invalid format.
         """
+        # Issue #8: Remove this check when shuffle=True is supported.
+        if (
+            hasattr(generator, "shuffle")
+            and isinstance(generator.shuffle, bool)
+            and generator.shuffle
+        ):
+            raise ValueError(
+                "Shuffling in generator is not supported. Set `generator.shuffle=False`."
+            )
+
         self._make_predict_function()
 
         steps_done = 0
