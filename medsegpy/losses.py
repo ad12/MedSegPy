@@ -3,7 +3,9 @@ import logging
 import numpy as np
 import tensorflow as tf
 from keras import backend as K
+from keras.callbacks import Callback
 from keras.losses import binary_crossentropy
+import scipy.special as sps
 
 logger = logging.getLogger(__name__)
 
@@ -399,3 +401,97 @@ def generalised_wasserstein_dice_loss(y_true, y_predicted):
     WGDL = 1.0 - (2.0 * true_pos) / (2.0 * true_pos + all_error)
 
     return tf.cast(WGDL, dtype=tf.float32)
+
+
+class NaiveAdaRobLossComputer(Callback):
+    """Handles adaptive robust class loss computer. 
+
+    Use `on_batch_begin` and `on_batch_end` to do things before/after the training batch.
+    Note `on_batch_end` runs **before** validation when using `model.fit_generator`.
+    """
+    def __init__(
+        self, 
+        criterion, 
+        n_groups, 
+        group_counts, 
+        robust_step_size, 
+        stable=True,
+    ):
+        self.criterion = criterion
+        self.n_groups = n_groups
+        self.group_range = np.arange(self.n_groups, dtype=np.long)[..., np.newaxis]
+
+        self.robust_step_size = robust_step_size
+        logger.info(f'Using robust loss with inner step size {self.robust_step_size}')
+        self.stable = stable
+        self.group_counts = np.asarray(group_counts)
+
+        # The following quantities are maintained/updated throughout training
+        if self.stable:
+            logger.info("Using numerically stabilized DRO algorithm")
+            self.adv_probs_logits = np.zeros(self.n_groups)
+        else:  # for debugging purposes
+            logger.warn("Using original DRO algorithm")
+            self.adv_probs = np.ones(self.n_groups) / self.n_groups
+
+        self.training = None
+
+    def loss(self, y_true, y_pred):
+        # Get average classes losses (1D array - length C).
+        group_losses = self.criterion(y_true, y_pred, reduce=None)
+        szp = y_pred.shape if isinstance(y_pred, np.ndarray) else K.get_variable_shape(y_pred)
+        batch_size = szp[0]
+
+        # TODO: For losses where count matters, take this.
+        group_counts = np.ones(len(group_loss))
+
+        # group_dq_losses, group_counts = self.compute_group_avg(per_sample_dq_losses, group_idx)
+        # corrects = (torch.argmax(yhat, 1) == y).float()
+        # group_accs, group_counts = self.compute_group_avg(corrects, group_idx)
+
+        # Compute overall loss.
+        # The naive implementation does not do any sort of grouping.
+        robust_loss = self.compute_robust_loss(group_losses)
+
+        return robust_loss
+
+    def compute_robust_loss(self, group_loss):
+        assert self.training is not None, (
+            "`self.training` not initialized. Make sure this class is added as a callback"
+        )
+        if self.training:  # update adv_probs if in training mode
+            adjusted_loss = group_loss is isinstance(group_loss, np.ndarray) else K.eval(group_loss) 
+            logit_step = self.robust_step_size * adjusted_loss
+            if self.stable:
+                self.adv_probs_logits = self.adv_probs_logits + logit_step
+            else:
+                assert False, "This branch has not been tested"
+                self.adv_probs = self.adv_probs * torch.exp(logit_step)
+                self.adv_probs = self.adv_probs / self.adv_probs.sum()
+
+        if self.stable:
+            adv_probs = (
+                sps.softmax(self.adv_probs_logits) 
+                if isinstance(self.adv_probs_logits, np.ndarray) 
+                else K.softmax(self.adv_probs_logits, axis=-1)
+            )
+        else:
+            adv_probs = self.adv_probs
+
+        robust_loss = group_loss @ adv_probs
+        return robust_loss
+
+    def on_batch_begin(self, batch, logs=None):
+        # Hacky way to turn on training before training batch in case it is off.
+        self.training = True
+
+    def on_batch_end(self, batch, logs=None):
+        # Hacky way to turn off training when validation starts.
+        # `fit_generator` executes `on_batch_end` before starting validation
+        # This let's us turn off training mode during the validation period.
+        self.training = False
+
+    def __call__(self, y_true, y_pred):
+        return self.loss(y_true, y_pred)
+
+
