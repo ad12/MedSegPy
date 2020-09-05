@@ -467,7 +467,7 @@ class NaiveAdaRobLossComputer(Callback):
             logger.warning("Using original DRO algorithm")
             self.adv_probs = np.ones(self.n_groups) / self.n_groups
 
-        self.training = None
+        self.training = True
 
     def loss(self, y_true, y_pred):
         # Get average classes losses (1D array - length C).
@@ -492,14 +492,17 @@ class NaiveAdaRobLossComputer(Callback):
         assert self.training is not None, (
             "`self.training` not initialized. Make sure this class is added as a callback"
         )
+        import pdb; pdb.set_trace()
         if self.training:
             # update adv_probs if in training mode
-            adjusted_loss = (
-                group_loss
-                if isinstance(group_loss, np.ndarray)
-                else K.eval(group_loss)
-            )
+            # adjusted_loss = (
+            #     group_loss
+            #     if isinstance(group_loss, np.ndarray)
+            #     else K.eval(group_loss)
+            # )
+            adjusted_loss = group_loss
             logit_step = self.robust_step_size * adjusted_loss
+            tf.print(adjusted_loss)
             if self.stable:
                 self.adv_probs_logits = self.adv_probs_logits + logit_step
             else:
