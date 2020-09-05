@@ -152,7 +152,7 @@ def dice_median_loss(y_true, y_pred):
 
 
 def multi_class_dice_loss(
-    weights=None, remove_background: bool = False, **kwargs
+    weights=None, remove_background: bool = False, reduce="mean", use_numpy=False, **kwargs
 ):
     """Dice loss for multiple classes in softmax layer.
 
@@ -177,6 +177,9 @@ def multi_class_dice_loss(
         )
         loss = 1 - dice
 
+        if reduce == "class":
+            return loss
+
         if use_weights:
             loss = weights * loss
             loss = K.sum(loss) / K.sum(weights)
@@ -185,7 +188,35 @@ def multi_class_dice_loss(
 
         return loss
 
-    return d_loss
+    def d_loss_np(y_true, y_pred):
+        szp = y_pred.shape
+
+        y_true = np.reshape(y_true, (-1, szp[-1]))
+        y_pred = np.reshape(y_pred, (-1, szp[-1]))
+
+        ovlp = np.sum(y_true * y_pred, axis=0)
+
+        mu = K.epsilon()
+        dice = (2.0 * ovlp + mu) / (
+            np.sum(y_true, axis=0) + np.sum(y_pred, axis=0) + mu
+        )
+        loss = 1 - dice
+
+        if reduce == "class":
+            return loss
+
+        if use_weights:
+            loss = weights * loss
+            loss = np.sum(loss) / np.sum(weights)
+        else:
+            loss = np.mean(loss)
+
+        return loss
+
+    if use_numpy:
+        return d_loss_np
+    else:
+        return d_loss
 
 
 def avg_dice_loss(weights=None, remove_background: bool = False, **kwargs):
@@ -410,40 +441,42 @@ class NaiveAdaRobLossComputer(Callback):
     Note `on_batch_end` runs **before** validation when using `model.fit_generator`.
     """
     def __init__(
-        self, 
-        criterion, 
-        n_groups, 
-        group_counts, 
-        robust_step_size, 
+        self,
+        criterion,
+        n_groups,
+        robust_step_size,
         stable=True,
     ):
+        super().__init__()
         self.criterion = criterion
+
         self.n_groups = n_groups
         self.group_range = np.arange(self.n_groups, dtype=np.long)[..., np.newaxis]
 
         self.robust_step_size = robust_step_size
-        logger.info(f'Using robust loss with inner step size {self.robust_step_size}')
+        logger.info(
+            f"Using robust loss with inner step size {self.robust_step_size}"
+        )
         self.stable = stable
-        self.group_counts = np.asarray(group_counts)
 
         # The following quantities are maintained/updated throughout training
         if self.stable:
             logger.info("Using numerically stabilized DRO algorithm")
             self.adv_probs_logits = np.zeros(self.n_groups)
         else:  # for debugging purposes
-            logger.warn("Using original DRO algorithm")
+            logger.warning("Using original DRO algorithm")
             self.adv_probs = np.ones(self.n_groups) / self.n_groups
 
         self.training = None
 
     def loss(self, y_true, y_pred):
         # Get average classes losses (1D array - length C).
-        group_losses = self.criterion(y_true, y_pred, reduce=None)
+        group_losses = self.criterion(y_true, y_pred)
         szp = y_pred.shape if isinstance(y_pred, np.ndarray) else K.get_variable_shape(y_pred)
         batch_size = szp[0]
 
         # TODO: For losses where count matters, take this.
-        group_counts = np.ones(len(group_loss))
+        # group_counts = np.ones(len(group_losses))
 
         # group_dq_losses, group_counts = self.compute_group_avg(per_sample_dq_losses, group_idx)
         # corrects = (torch.argmax(yhat, 1) == y).float()
@@ -459,8 +492,13 @@ class NaiveAdaRobLossComputer(Callback):
         assert self.training is not None, (
             "`self.training` not initialized. Make sure this class is added as a callback"
         )
-        if self.training:  # update adv_probs if in training mode
-            adjusted_loss = group_loss is isinstance(group_loss, np.ndarray) else K.eval(group_loss) 
+        if self.training:
+            # update adv_probs if in training mode
+            adjusted_loss = (
+                group_loss
+                if isinstance(group_loss, np.ndarray)
+                else K.eval(group_loss)
+            )
             logit_step = self.robust_step_size * adjusted_loss
             if self.stable:
                 self.adv_probs_logits = self.adv_probs_logits + logit_step
@@ -478,7 +516,10 @@ class NaiveAdaRobLossComputer(Callback):
         else:
             adv_probs = self.adv_probs
 
-        robust_loss = group_loss @ adv_probs
+        if isinstance(group_loss, np.ndarray):
+            robust_loss = group_loss @ adv_probs
+        else:
+            robust_loss = K.sum(group_loss * adv_probs)
         return robust_loss
 
     def on_batch_begin(self, batch, logs=None):
