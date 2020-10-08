@@ -60,9 +60,15 @@ class Config(object):
     # Model name specific to config. Cannot be changed.
     MODEL_NAME = ""
 
+    # Description of the config.
+    DESCRIPTION = ""
+
     # Loss function in form (id, output_mode)
     LOSS = DICE_LOSS
     CLASS_WEIGHTS = None
+    # Class name for robust loss computation
+    ROBUST_LOSS_NAME = ""
+    ROBUST_LOSS_STEP_SIZE = 1e-1
 
     # PIDS to include, None = all pids
     PIDS = None
@@ -540,6 +546,8 @@ class Config(object):
                 "AUGMENT_DATA",
                 "LOSS",
                 "CLASS_WEIGHTS",
+                "ROBUST_LOSS_NAME" if self.ROBUST_LOSS_NAME else ""
+                "ROBUST_LOSS_STEP_SIZE" if self.ROBUST_LOSS_NAME else ""
                 "",
                 "USE_CROSS_VALIDATION",
                 "CV_K" if self.USE_CROSS_VALIDATION else "",

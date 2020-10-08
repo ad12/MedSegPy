@@ -1,8 +1,20 @@
 import logging
+from copy import deepcopy
+from typing import Optional
 
 from keras import callbacks as kc
 
-__all__ = ["lr_callback", "LossHistory"]
+from medsegpy.utils import env
+
+try:
+    import wandb
+    _WANDB_AVAILABLE = True
+except ImportError:  # pragma: no-cover
+    wandb = None
+    _WANDB_AVAILABLE = False
+
+
+__all__ = ["lr_callback", "LossHistory", "WandBLogger"]
 
 logger = logging.getLogger(__name__)
 
@@ -46,3 +58,43 @@ class LossHistory(kc.Callback):
             ]
         )
         logger.info("Epoch {} - {}".format(epoch + 1, metrics))
+
+
+class WandBLogger(kc.Callback):
+    """A Keras callback to log to weights and biases.
+
+    Currently only supports logging scalars.
+    """
+    def __init__(
+        self,
+        period: int = 20,
+    ):
+        if not env.supports_wandb():
+            raise ValueError(
+                "Weights & Biases is not supported. "
+                "Install package via `pip install wandb`. "
+                "See documentation https://docs.wandb.com/ "
+            )
+        if not wandb.run:
+            raise ValueError("Run `wandb.init(...) to configure the W&B run.")
+        assert isinstance(period, int) and period > 0, (
+            "`period` must be int >0"
+        )
+
+        self._period = period
+
+    def on_train_begin(self, logs=None):
+        self._step = 0
+
+    def on_batch_end(self, batch_idx, logs=None):
+        self._step += 1
+        if not logs or self._step % self._period != 0:
+            return
+
+        wandb.log(logs, step=self._step)
+
+    def on_epoch_end(self, epoch, logs=None):
+        logs = deepcopy(logs)
+        logs["epoch"] = epoch
+        wandb.log(logs, step=self._step)
+

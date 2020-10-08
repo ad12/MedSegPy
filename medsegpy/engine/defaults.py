@@ -48,6 +48,12 @@ def default_argument_parser():
         "--debug", action="store_true", help="run in debug mode"
     )
 
+    # Add option to execute non-eagerly in tensorflow 2
+    if env.is_tf2():
+        parser.add_argument(
+            "--non-eagerly", action="store_true", help="run tensorflow non-eagerly"
+        )
+
     parser.add_argument(
         "opts",
         help="Modify config options using the command-line",

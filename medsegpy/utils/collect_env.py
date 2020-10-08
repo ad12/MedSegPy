@@ -9,6 +9,10 @@ from tabulate import tabulate
 
 
 def _pretty_print_keras_config(env_str):
+    # TODO (TF2.X)
+    if not hasattr(K, "_config"):
+        return "\n"
+
     cfg = K._config
 
     for k, v in cfg.items():

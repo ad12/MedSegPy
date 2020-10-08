@@ -1,6 +1,7 @@
 # Ignore project files
 **/.idea
 **/.DS_Store
+**/.vscode
 
 # Ignore cache
 **/__pycache__

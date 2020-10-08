@@ -1,4 +1,5 @@
 import logging
+import warnings
 
 import numpy as np
 import tensorflow as tf
@@ -6,6 +7,8 @@ from keras import backend as K
 from keras.callbacks import Callback
 from keras.losses import binary_crossentropy
 import scipy.special as sps
+
+from medsegpy.utils import env
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +45,42 @@ CMD_LINE_SUPPORTED_LOSSES = [
     "DICE_FOCAL_LOSS",
     "DICE_MEDIAN_LOSS",
 ]
+
+
+def build_loss(cfg):
+    loss = cfg.LOSS
+    num_classes = len(cfg.CATEGORIES)
+    robust_loss_cls = cfg.ROBUST_LOSS_NAME
+    robust_step_size = cfg.ROBUST_LOSS_STEP_SIZE
+
+    if robust_loss_cls:
+        reduction = "class"
+    else:
+        reduction = ""
+
+    if isinstance(loss, str):
+        try:
+            loss = get_training_loss_from_str(loss)
+        except (ValueError, AttributeError):
+            pass
+    loss = get_training_loss(
+        loss, 
+        weights=cfg.CLASS_WEIGHTS,
+        # Remove computation on the background class.
+        remove_background=cfg.INCLUDE_BACKGROUND,
+        reduce=reduction,
+    )
+
+    if not robust_loss_cls:
+        return loss
+    elif robust_loss_cls == "NaiveAdaRobLossComputer":
+        return NaiveAdaRobLossComputer(
+            criterion=loss, 
+            n_groups=num_classes,
+            robust_step_size=robust_step_size,
+        )
+    else:
+        raise ValueError(f"{robust_loss_cls} not supported")
 
 
 # TODO (arjundd): Add ability to exclude specific indices from loss function.
@@ -96,6 +135,14 @@ def get_training_loss(loss, **kwargs):
         raise ValueError("Loss type not supported")
 
 
+def _get_shape(x):
+    """Returns shape of Keras tensor."""
+    if env.is_tf2():
+        return K.int_shape(x)
+    else:
+        return K.get_variable_shape(x)
+
+
 def dice_focal_loss(y_true, y_pred):
     dsc = dice_loss(y_true, y_pred)
     fc = focal_loss(FOCAL_LOSS_GAMMA)(y_true, y_pred)
@@ -105,9 +152,13 @@ def dice_focal_loss(y_true, y_pred):
 
 # Dice function loss optimizer
 def dice_loss(y_true, y_pred):
-    szp = K.get_variable_shape(y_pred)
+    """Computes class-agnostic dice."""
+    szp = _get_shape(y_pred)
+
     img_len = np.product(szp[1:])
 
+    if env.is_tf2():
+        y_true = tf.dtypes.cast(y_true, y_pred.dtype)
     y_true = K.reshape(y_true, (-1, img_len))
     y_pred = K.reshape(y_pred, (-1, img_len))
 
@@ -164,8 +215,10 @@ def multi_class_dice_loss(
         use_weights = True
 
     def d_loss(y_true, y_pred):
-        szp = K.get_variable_shape(y_pred)
+        szp = _get_shape(y_pred)
 
+        if env.is_tf2():
+            y_true = tf.dtypes.cast(y_true, y_pred.dtype)
         y_true = K.reshape(y_true, (-1, szp[-1]))
         y_pred = K.reshape(y_pred, (-1, szp[-1]))
 
@@ -227,7 +280,7 @@ def avg_dice_loss(weights=None, remove_background: bool = False, **kwargs):
         use_weights = True
 
     def d_loss(y_true, y_pred):
-        szp = K.get_variable_shape(y_pred)
+        szp = _get_shape(y_pred)
         c_dim = szp[-1]  # class dimension
         img_size = np.prod(szp[1:-1])  # vectorized image size
 
@@ -307,7 +360,7 @@ def weighted_categorical_crossentropy_sigmoid(weights):
         # scale predictions so that the class probas of each sample sum to 1
         # y_pred /= K.sum(y_pred, axis=-1, keepdims=True)
         # clip to prevent NaN's and Inf's
-        szp = K.get_variable_shape(y_pred)
+        szp = _get_shape(y_pred)
         img_len = szp[1] * szp[2] * szp[3]
 
         y_true = K.reshape(y_true, (-1, img_len))
@@ -447,6 +500,12 @@ class NaiveAdaRobLossComputer(Callback):
         robust_step_size,
         stable=True,
     ):
+        # TF2 requires __name__ attribute which is not set by default.
+        self.__name__ = "NaiveAdaRobLossComputer"
+
+        if not env.is_tf2():
+            raise EnvironmentError(f"{self.__name__} only supported on tensorflow>=2.0")
+
         super().__init__()
         self.criterion = criterion
 
@@ -467,12 +526,15 @@ class NaiveAdaRobLossComputer(Callback):
             logger.warning("Using original DRO algorithm")
             self.adv_probs = np.ones(self.n_groups) / self.n_groups
 
-        self.training = True
+        self.training = None
 
     def loss(self, y_true, y_pred):
         # Get average classes losses (1D array - length C).
+        # if not tf.executing_eagerly():
+        #     raise RuntimeError(f"{self.__name__} does not support non-eager execution")
+
         group_losses = self.criterion(y_true, y_pred)
-        szp = y_pred.shape if isinstance(y_pred, np.ndarray) else K.get_variable_shape(y_pred)
+        szp = y_pred.shape if isinstance(y_pred, np.ndarray) else _get_shape(y_pred)
         batch_size = szp[0]
 
         # TODO: For losses where count matters, take this.
@@ -492,17 +554,16 @@ class NaiveAdaRobLossComputer(Callback):
         assert self.training is not None, (
             "`self.training` not initialized. Make sure this class is added as a callback"
         )
-        import pdb; pdb.set_trace()
         if self.training:
-            # update adv_probs if in training mode
-            # adjusted_loss = (
-            #     group_loss
-            #     if isinstance(group_loss, np.ndarray)
-            #     else K.eval(group_loss)
-            # )
-            adjusted_loss = group_loss
+            # Update weighting if in training mode
+            # This only works in eager mode.
+            # TODO: Find solution for non-eager mode to speed up large-scale training 
+            adjusted_loss = (
+                group_loss
+                if isinstance(group_loss, np.ndarray)
+                else group_loss.numpy()
+            )
             logit_step = self.robust_step_size * adjusted_loss
-            tf.print(adjusted_loss)
             if self.stable:
                 self.adv_probs_logits = self.adv_probs_logits + logit_step
             else:
@@ -534,6 +595,8 @@ class NaiveAdaRobLossComputer(Callback):
         # `fit_generator` executes `on_batch_end` before starting validation
         # This let's us turn off training mode during the validation period.
         self.training = False
+        weighting = sps.softmax(self.adv_probs_logits)
+        logs.update({f"{self.__name__}/class_{i}": weighting[i] for i in range(self.n_groups)})
 
     def __call__(self, y_true, y_pred):
         return self.loss(y_true, y_pred)

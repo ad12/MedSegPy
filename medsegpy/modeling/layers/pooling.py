@@ -9,7 +9,7 @@ https://github.com/ykamikawa/tf-keras-SegNet/tree/648ee1aa6870e8280a5f24ee193caa
 
 from keras import backend as K
 from keras.layers.convolutional import UpSampling2D
-from keras.layers.core import Layer
+from keras.layers import Layer
 from keras.layers.pooling import MaxPooling2D
 
 __all__ = ["MaxPoolingWithArgmax2D", "MaxUnpooling2D"]

@@ -1,6 +1,7 @@
 """Adopted from https://github.com/keras-team/keras/issues/3556#issuecomment-440638517"""  # noqa
 import keras.backend as K
-from keras.legacy import interfaces
+# TODO (TF2.X)
+# from keras.legacy import interfaces
 from keras.optimizers import Optimizer
 
 
@@ -32,8 +33,8 @@ class AdamAccumulate(Optimizer):
         self.amsgrad = amsgrad
         self.accum_iters = K.variable(accum_iters, K.dtype(self.iterations))
         self.accum_iters_float = K.cast(self.accum_iters, K.floatx())
-
-    @interfaces.legacy_get_updates_support
+# TODO (TF2.X)
+#     @interfaces.legacy_get_updates_support
     def get_updates(self, loss, params):
         grads = self.get_gradients(loss, params)
         self.updates = [K.update_add(self.iterations, 1)]

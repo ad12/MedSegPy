@@ -105,3 +105,18 @@ def setup_custom_environment(custom_module):
         custom_module
     )
     module.setup_environment()
+
+
+def supports_wandb():
+    return "wandb" in sys.modules and not is_debug()
+
+
+_TF_VERSION = None
+
+def is_tf2():
+    """Returns `True` if running tensorflow 2.X"""
+    global _TF_VERSION
+    if not _TF_VERSION:
+        import tensorflow as tf
+        _TF_VERSION = [int(x) for x in tf.__version__.split(".")[:2]]
+    return _TF_VERSION[0] == 2

@@ -17,6 +17,7 @@ from tqdm import tqdm
 
 from medsegpy.config import Config
 from medsegpy.modeling import Model
+from medsegpy.utils import env
 
 from .data_utils import add_background_labels, collect_mask, compute_patches
 from .transforms import apply_transform_gens, build_preprocessing
@@ -350,12 +351,23 @@ class DefaultDataLoader(DataLoader):
             self._dataset_dicts = scan_to_dict_mapping[scan_id]
 
             start = time.perf_counter()
-            x, y, preds = model.inference_generator(
-                self,
-                workers=workers,
-                use_multiprocessing=use_multiprocessing,
-                **kwargs
-            )
+            if not isinstance(model, Model):
+                if not env.is_tf2():
+                    raise ValueError("model must be a medsegpy.modeling.model.Model for TF1.0")
+                x, y, preds = Model.inference_generator_static(
+                    model,
+                    self,
+                    workers=workers,
+                    use_multiprocessing=use_multiprocessing,
+                    **kwargs
+                )
+            else:
+                x, y, preds = model.inference_generator(
+                    self,
+                    workers=workers,
+                    use_multiprocessing=use_multiprocessing,
+                    **kwargs
+                )
             time_elapsed = time.perf_counter() - start
 
             x, y, preds = self._restructure_data((x, y, preds))
