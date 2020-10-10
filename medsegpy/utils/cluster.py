@@ -29,6 +29,7 @@ class Cluster(Enum):
     ROMA = 1, ["roma"]
     VIGATA = 2, ["vigata"]
     NERO = 3, ["slurm-gpu-compute.*"]
+    SIENA = 4, ["siena"]
 
     def __new__(cls, value: int, patterns: List[str]):
         """

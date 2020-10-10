@@ -15,14 +15,12 @@ if env.is_tf2():
     from tensorflow.python.keras.engine import data_adapter
     from tensorflow.python.util import nest
     from tensorflow.python.keras.utils import tf_utils
-    from more_itertools import peekable
 else:
     concat = None
     callbacks_module = None
     data_adapter = None
     nest = None
     tf_utils = None
-    more_itertools = None
 
 __all__ = ["Model"]
 
@@ -291,16 +289,17 @@ class Model(_Model):
                     steps=data_handler.inferred_steps
                 )
 
-            predict_function = model.make_predict_function()
+            # predict_function = model.make_predict_function()
             model._predict_counter.assign(0)
             callbacks.on_predict_begin()
             for _, iterator in data_handler.enumerate_epochs():  # Single epoch.
-                iterator = peekable(iterator)
+                # iterator = peekable(iterator)
                 with data_handler.catch_stop_iteration():
                     for step in data_handler.steps():
                         callbacks.on_predict_batch_begin(step)
-                        batch_x, batch_y, batch_x_raw = _extract_inference_inputs(iterator.peek())
-                        tmp_batch_outputs = predict_function(iterator)
+                        batch_x, batch_y, batch_x_raw = _extract_inference_inputs(next(iterator))
+                        # tmp_batch_outputs = predict_function(iterator)
+                        tmp_batch_outputs = model.predict(batch_x)
                         if data_handler.should_sync:
                             context.async_wait()
                         batch_outputs = tmp_batch_outputs  # No error, now safe to assign.

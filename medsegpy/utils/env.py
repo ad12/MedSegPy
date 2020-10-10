@@ -4,6 +4,7 @@ import logging
 import os
 import sys
 from datetime import datetime
+from typing import Tuple
 
 __all__ = []
 
@@ -113,10 +114,15 @@ def supports_wandb():
 
 _TF_VERSION = None
 
-def is_tf2():
-    """Returns `True` if running tensorflow 2.X"""
+def tf_version() -> Tuple[int,...]:
     global _TF_VERSION
     if not _TF_VERSION:
         import tensorflow as tf
         _TF_VERSION = [int(x) for x in tf.__version__.split(".")[:2]]
+    return tuple(_TF_VERSION)
+
+
+def is_tf2():
+    """Returns `True` if running tensorflow 2.X"""
+    version = tf_version()
     return _TF_VERSION[0] == 2

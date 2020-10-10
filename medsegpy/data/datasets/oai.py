@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 _DATA_CATALOG = {}
 _TEST_SET_METADATA_PIK = ""
 
-if CLUSTER in (Cluster.ROMA, Cluster.VIGATA):
+if CLUSTER in (Cluster.ROMA, Cluster.VIGATA, Cluster.SIENA):
     _DATA_CATALOG = {
         "oai_2d_train": "/bmrNAS/people/arjun/data/oai_data/h5_files_2d/train",
         "oai_2d_val": "/bmrNAS/people/arjun/data/oai_data/h5_files_2d/valid",

@@ -8,6 +8,7 @@ import os
 import shutil
 
 import keras.backend as K
+import tensorflow as tf
 from fvcore.common.file_io import PathManager
 
 from medsegpy import glob_constants
@@ -143,3 +144,13 @@ def default_setup(cfg, args):
 
     # Set image format to be (N, dim1, dim2, dim3, channel).
     K.set_image_data_format("channels_last")
+
+    # Non-eager execution in tf2
+    if env.is_tf2() and args.non_eagerly:
+        if env.tf_version() >= (2, 3):
+            tf.config.run_functions_eagerly(False)
+            logger.info("Disabling eager execution...")
+        else:
+            logger.warning(
+                "Eager mode has not been disabled. May have to disable manually in the model"
+            )
