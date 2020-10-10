@@ -83,7 +83,8 @@ def main(args, trainer_cls: type = DefaultTrainer):
                 print(e)
         if model is None:
             model = trainer_cls.build_model(cfg)
-        model.run_eagerly = not args.non_eagerly
+        if env.is_tf2():
+            model.run_eagerly = not args.non_eagerly
 
         return trainer_cls.test(cfg, model)
 
