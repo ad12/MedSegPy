@@ -98,6 +98,7 @@ _USER_PATHS = {
         CLUSTER.ROMA: "/bmrNAS/people/arjun/results",
         CLUSTER.VIGATA: "/bmrNAS/people/arjun/results",
         CLUSTER.NERO: "/share/pi/bah/arjundd/results",
+        CLUSTER.SIENA: "/bmrNAS/people/arjun/results"
     },
     # New users add path preference below.
 }
