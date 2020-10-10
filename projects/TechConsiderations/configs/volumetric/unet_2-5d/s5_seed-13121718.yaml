@@ -1,0 +1,3 @@
+_BASE_: "./templates/s5.yaml"
+SEED: 13121718
+OUTPUT_DIR: "tcv3://volumetric/unet_2-5d/s5_seed-13121718"
