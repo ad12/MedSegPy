@@ -527,6 +527,8 @@ class NaiveAdaRobLossComputer(Callback):
             self.adv_probs = np.ones(self.n_groups) / self.n_groups
 
         self.training = None
+        self.prev_training_state = None
+        self._tmp = None  # Initialized in on_batch_begin (only used at train time)
 
     def loss(self, y_true, y_pred):
         # Get average classes losses (1D array - length C).
@@ -548,9 +550,18 @@ class NaiveAdaRobLossComputer(Callback):
         # The naive implementation does not do any sort of grouping.
         robust_loss = self.compute_robust_loss(group_losses)
 
+        # Store for logging purposes.
+        # Will be deleted after each batch.
+        if self._tmp is not None:
+            self._tmp["group_losses"] = group_losses.numpy()
+
         return robust_loss
 
     def compute_robust_loss(self, group_loss):
+        # Requires eager execution
+        if not tf.executing_eagerly():
+            raise ValueError(f"{self.__name__} requires eager execution")
+
         assert self.training is not None, (
             "`self.training` not initialized. Make sure this class is added as a callback"
         )
@@ -589,6 +600,7 @@ class NaiveAdaRobLossComputer(Callback):
     def on_batch_begin(self, batch, logs=None):
         # Hacky way to turn on training before training batch in case it is off.
         self.training = True
+        self._tmp = {}
 
     def on_batch_end(self, batch, logs=None):
         # Hacky way to turn off training when validation starts.
@@ -596,9 +608,20 @@ class NaiveAdaRobLossComputer(Callback):
         # This let's us turn off training mode during the validation period.
         self.training = False
         weighting = sps.softmax(self.adv_probs_logits)
-        logs.update({f"{self.__name__}/class_{i}": weighting[i] for i in range(self.n_groups)})
+        logs.update({f"{self.__name__}/weights/class:{i}": weighting[i] for i in range(self.n_groups)})
+        group_losses = self._tmp["group_losses"]
+        logs.update({f"{self.__name__}/loss/class:{i}": group_losses[i] for i in range(self.n_groups)})
+        self._tmp = {}
+
+    def on_test_begin(self, logs=None):
+        self.prev_training_state = self.training
+        self.training = False
+    
+    def on_test_end(self, logs=None):
+        assert self.prev_training_state is not None, (
+            "`self.prev_training_state` should be set in `on_test_begin`"
+        )
+        self.training = self.prev_training_state
 
     def __call__(self, y_true, y_pred):
         return self.loss(y_true, y_pred)
-
-
