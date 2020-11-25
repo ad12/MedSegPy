@@ -221,6 +221,7 @@ class UNet2D(ModelBuilder):
                 attn_out, attn_coeffs = self._multi_attention_module(
                     in_channels=num_filters[depth_cnt],
                     intermediate_channels=num_filters[depth_cnt],
+                    sub_sample_factor=self._get_pool_size(x_skip),
                 )([x_skip, gating_signal])
                 skip_connect = attn_out
 
