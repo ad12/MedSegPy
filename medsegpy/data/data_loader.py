@@ -526,7 +526,7 @@ class PatchDataLoader(DefaultDataLoader):
         }
         return cache
 
-    def _load_patch(self, dataset_dict, skip_patch: bool = False):
+    def _load_patch(self, dataset_dict, skip_patch: bool = False, img_key=None, seg_key=None):
         image_file = dataset_dict["file_name"]
         sem_seg_file = dataset_dict.get("sem_seg_file", None)
         patch = Ellipsis if skip_patch else dataset_dict["_patch"]
@@ -534,8 +534,10 @@ class PatchDataLoader(DefaultDataLoader):
         mask = None
 
         is_img_seg_file_same = image_file == sem_seg_file
-        seg_key = "seg" if is_img_seg_file_same else "data"
-        img_key = "volume" if is_img_seg_file_same else "data"
+        if seg_key is None:
+            seg_key = "seg" if is_img_seg_file_same else "data"
+        if img_key is None:
+            img_key = "volume" if is_img_seg_file_same else "data"
 
         # Load data from one h5 file if self._use_singlefile
         if not self._use_singlefile:
@@ -614,7 +616,11 @@ class PatchDataLoader(DefaultDataLoader):
 
         for idx, c in enumerate(coords):
             for vol_id in range(len(new_vols)):
-                new_vols[vol_id][c] = vols_patched[vol_id][idx]
+                # Hacky solution to handle extra axis dimension, if exists.
+                x = vols_patched[vol_id][idx]
+                if x.ndim == new_vols[vol_id][c].ndim - 1:
+                    x = x[..., np.newaxis, :]
+                new_vols[vol_id][c] = x
 
         return tuple(new_vols)
 
