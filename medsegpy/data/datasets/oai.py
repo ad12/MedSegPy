@@ -12,35 +12,24 @@ logger = logging.getLogger(__name__)
 _DATA_CATALOG = {}
 _TEST_SET_METADATA_PIK = ""
 
-if CLUSTER in (Cluster.ROMA, Cluster.VIGATA):
-    _DATA_CATALOG = {
-        "oai_2d_train": "/bmrNAS/people/arjun/data/oai_data/h5_files_2d/train",
-        "oai_2d_val": "/bmrNAS/people/arjun/data/oai_data/h5_files_2d/valid",
-        "oai_2d_test": "/bmrNAS/people/arjun/data/oai_data/h5_files_2d/test",
-        "oai_2d_whitened_train": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_2d/train",  # noqa
-        "oai_2d_whitened_val": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_2d/valid",  # noqa
-        "oai_2d_whitened_test": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_2d/test",  # noqa
-        "oai_3d_train": "/bmrNAS/people/arjun/data/oai_data/h5_files_3d/train", # TODO: needs to be changed
-        "oai_3d_val": "/bmrNAS/people/arjun/data/oai_data/h5_files_3d/val", # TODO: needs to be changed
-        "oai_3d_test": "/bmrNAS/people/arjun/data/oai_data/h5_files_3d/test", # TODO: needs to be changed
-        "oai_3d_whitened_train": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d/train",  # noqa
-        "oai_3d_whitened_val": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d/val",  # noqa
-        "oai_3d_whitened_test": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d/test",  # noqa
-        "oai_3d_sf_whitened_train": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d/train.h5",  # noqa
-        "oai_3d_sf_whitened_val": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d/val.h5",  # noqa
-        "oai_3d_sf_whitened_test": "/bmrNAS/people/arjun/data/oai_data/h5_files_whitened_3d/test.h5",  # noqa
-    }
-    _TEST_SET_METADATA_PIK = (
-        "/bmrNAS/people/arjun/msk_seg_networks/oai_metadata/oai_data.dat"
-    )
-elif CLUSTER == CLUSTER.NERO:
-    _DATA_CATALOG = {
-        "oai_2d_train": "/share/pi/bah/data/oai_data/h5_files_2d/train",
-        "oai_2d_val": "/share/pi/bah/data/oai_data/h5_files_2d/val",
-        "oai_2d_test": "/share/pi/bah/data/oai_data/h5_files_2d/test",
-    }
-else:
-    pass
+_DATA_CATALOG = {
+    "oai_2d_train": "oai_data/h5_files_2d/train",
+    "oai_2d_val": "oai_data/h5_files_2d/valid",
+    "oai_2d_test": "oai_data/h5_files_2d/test",
+    "oai_2d_whitened_train": "oai_data/h5_files_whitened_2d/train",
+    "oai_2d_whitened_val": "oai_data/h5_files_whitened_2d/valid",
+    "oai_2d_whitened_test": "oai_data/h5_files_whitened_2d/test",
+    "oai_3d_train": "oai_data/h5_files_3d/train",
+    "oai_3d_val": "oai_data/h5_files_3d/val",
+    "oai_3d_test": "oai_data/h5_files_3d/test",
+    "oai_3d_whitened_train": "oai_data/h5_files_whitened_3d/train",
+    "oai_3d_whitened_val": "oai_data/h5_files_whitened_3d/val",
+    "oai_3d_whitened_test": "oai_data/h5_files_whitened_3d/test",
+    "oai_3d_sf_whitened_train": "oai_data/h5_files_whitened_3d/train.h5",
+    "oai_3d_sf_whitened_val": "oai_data/h5_files_whitened_3d/val.h5",
+    "oai_3d_sf_whitened_test": "oai_data/h5_files_whitened_3d/test.h5",
+}
+
 
 OAI_CATEGORIES = [
     {
@@ -205,4 +194,4 @@ def register_oai(name, scan_root):
 
 def register_all_oai():
     for dataset_name, scan_root in _DATA_CATALOG.items():
-        register_oai(dataset_name, scan_root)
+        register_oai(dataset_name, os.path.join(CLUSTER.data_dir, scan_root))

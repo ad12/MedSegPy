@@ -6,7 +6,7 @@ from typing import Any
 import h5py
 from fvcore.common.file_io import PathHandler, PathManager
 
-from .cluster import CLUSTER
+from medsegpy.utils.cluster import CLUSTER
 
 
 def load_h5(file_path):
