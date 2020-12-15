@@ -6,7 +6,7 @@ from typing import Any
 import h5py
 from fvcore.common.file_io import PathHandler, PathManager
 
-from medsegpy.utils.cluster import CLUSTER
+from medsegpy.utils.cluster import Cluster
 
 
 def load_h5(file_path):
@@ -85,7 +85,7 @@ class GeneralPathHandler(PathHandler, ABC):
 
     def _get_local_path(self, path: str, **kwargs: Any):
         name = path[len(self.PREFIX) :]
-        return os.path.join(CLUSTER.save_dir, self._project_name(), name)
+        return os.path.join(Cluster.working_cluster().results_dir, self._project_name(), name)
 
     def _open(self, path, mode="r", **kwargs):
         return PathManager.open(self._get_local_path(path), mode, **kwargs)

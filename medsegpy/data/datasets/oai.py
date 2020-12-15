@@ -5,7 +5,7 @@ import re
 import h5py
 
 from medsegpy.data.catalog import DatasetCatalog, MetadataCatalog
-from medsegpy.utils.cluster import Cluster, CLUSTER
+from medsegpy.utils.cluster import Cluster
 
 logger = logging.getLogger(__name__)
 
@@ -194,4 +194,6 @@ def register_oai(name, scan_root):
 
 def register_all_oai():
     for dataset_name, scan_root in _DATA_CATALOG.items():
-        register_oai(dataset_name, os.path.join(CLUSTER.data_dir, scan_root))
+        if not os.path.isabs(scan_root):
+            scan_root = os.path.join(Cluster.working_cluster().data_dir, scan_root)
+        register_oai(dataset_name, scan_root)

@@ -43,7 +43,7 @@ class Cluster():
         Args:
             name (str): The name of the cluster. Name is case-sensitive.
             patterns (Sequence[str]): Regex pattern(s) for identifying cluster.
-                Cluster will be identified by 
+                Cluster will be identified by
                 `any(re.match(p, socket.gethostname()) for p in patterns)`.
             data_dir (str, optional): The data directory. Defaults to
                 `os.environ['MEDSEGPY_RESULTS']` or `./datasets`.
@@ -57,11 +57,11 @@ class Cluster():
         self.patterns = patterns
 
         if not data_dir:
-            data_dir = os.environ.get("MEDSEGPY_DATASETS", os.path.join(_REPO_DIR, "datasets"))
+            data_dir = os.environ.get("MEDSEGPY_DATASETS", "./datasets")
         self.data_dir = data_dir
 
         if not results_dir:
-            results_dir = os.environ.get("MEDSEGPY_RESULTS", os.path.join(_REPO_DIR, "results"))
+            results_dir = os.environ.get("MEDSEGPY_RESULTS", "./results")
         self.results_dir = results_dir
     
     def save(self):
@@ -148,6 +148,20 @@ class Cluster():
     def _config_dir():
         return os.path.join(settings_dir(), "clusters")
     
+    @staticmethod
+    def working_cluster() -> "Cluster":
+        return _CLUSTER
+    
+    @staticmethod
+    def set_working_cluster(cluster = None):
+        """Sets the working cluster.
+        Args:
+            cluster (`str` or `Cluster`): The cluster name or cluster.
+                If `None`, will reset cluster to _UNKNOWN, meaning default
+                data and results dirs will be used.
+        """
+        set_cluster(cluster)
+    
     def __repr__(self):
         return "Cluster({})".format(
             ", ".join("{}={}".format(k, v) for k, v in self.__dict__.items())
@@ -161,16 +175,16 @@ def set_cluster(cluster: Union[str, Cluster] = None):
             If `None`, will reset cluster to _UNKNOWN, meaning default
             data and results dirs will be used.
     """
-    global CLUSTER
     if cluster == None:
         cluster = _UNKNOWN
     elif isinstance(cluster, str):
         if cluster.lower() == _UNKNOWN.name.lower():
             cluster = _UNKNOWN
         else:
-            cluster = cluster.from_config(cluster)
-    
-    CLUSTER = cluster
+            cluster = Cluster.from_config(cluster)
+    global _CLUSTER
+    _CLUSTER = cluster
 
-_UNKNOWN = Cluster("UNKNOWN", [])  # Default unknown cluster
-CLUSTER = Cluster.cluster()  # Working cluster
+
+_UNKNOWN = Cluster("UNKNOWN", [])  # Unknown cluster
+_CLUSTER = Cluster.cluster()  # Working cluster

@@ -5,7 +5,7 @@ import unittest
 
 from fvcore.common.file_io import PathManager
 
-from medsegpy.utils.cluster import Cluster
+from medsegpy.utils.cluster import Cluster, _UNKNOWN
 
 
 class TestCluster(unittest.TestCase):
@@ -52,6 +52,15 @@ class TestCluster(unittest.TestCase):
             Cluster(name, [hostname]).save()
         all_clusters = Cluster.all_clusters()
         shutil.rmtree(self._settings_path)
+
+    def test_working_cluster(self):
+        cluster = Cluster.working_cluster()
+
+        Cluster.set_working_cluster(None)
+        assert Cluster.working_cluster() == _UNKNOWN, Cluster.working_cluster()
+
+        Cluster.set_working_cluster(cluster)
+        assert Cluster.working_cluster() == cluster, Cluster.working_cluster()
 
 
 if __name__ == "__main__":
