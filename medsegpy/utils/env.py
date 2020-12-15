@@ -7,6 +7,8 @@ from datetime import datetime
 
 __all__ = []
 
+_SETTINGS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.settings"))
+
 
 def generate_seed():
     """
@@ -105,3 +107,7 @@ def setup_custom_environment(custom_module):
         custom_module
     )
     module.setup_environment()
+
+
+def settings_dir():
+    return os.environ.get("MEDSEGPY_SETTINGS", _SETTINGS_DIR)

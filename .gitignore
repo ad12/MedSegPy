@@ -34,3 +34,6 @@
 
 #ignore cross validation files
 *.cv
+
+# settings files
+**/.settings
