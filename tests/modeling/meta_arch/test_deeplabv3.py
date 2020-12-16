@@ -1,8 +1,15 @@
 import unittest
 
 from medsegpy.config import DeeplabV3_2_5DConfig, DeeplabV3Config
-from medsegpy.modeling import get_model
 from medsegpy.modeling.meta_arch import build
+from medsegpy.utils import env
+
+if not env.is_tf2():
+    _TF2 = False
+    from medsegpy.modeling.build import get_model
+else:
+    _TF2 = True
+    get_model = None
 
 
 class TestDeeplabV3Plus(unittest.TestCase):
@@ -24,6 +31,7 @@ class TestDeeplabV3Plus(unittest.TestCase):
         """
         2D DeeplabV3+ should be same between builder and function construct.
         """
+        if _TF2: return
         cfg = DeeplabV3Config()
         cfg.CATEGORIES = [0]
         m1 = get_model(cfg)
@@ -35,6 +43,7 @@ class TestDeeplabV3Plus(unittest.TestCase):
         """
         2.5D DeeplabV3+ should be same between builder and function construct.
         """
+        if _TF2: return
         cfg1 = DeeplabV3_2_5DConfig()
         cfg1.IMG_SIZE = (288, 288, 3)
         cfg1.CATEGORIES = [0]

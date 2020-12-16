@@ -4,8 +4,15 @@ from keras import backend as K
 from keras.layers import Activation, Concatenate, Conv3D, Conv3DTranspose
 
 from medsegpy.config import UNet2_5DConfig, UNet3DConfig, UNetConfig
-from medsegpy.modeling import get_model
 from medsegpy.modeling.meta_arch import build
+from medsegpy.utils import env
+
+if not env.is_tf2():
+    _TF2 = False
+    from medsegpy.modeling.build import get_model
+else:
+    _TF2 = True
+    get_model = None
 
 
 class TestUNet2D(unittest.TestCase):
@@ -33,6 +40,7 @@ class TestUNet2D(unittest.TestCase):
 
     def test_same_unet2d(self):
         """2D U-Net should be same between builder and function construct."""
+        if _TF2: return
         cfg = UNetConfig()
         cfg.CATEGORIES = [0]
         m1 = get_model(cfg)
@@ -46,6 +54,7 @@ class TestUNet2D(unittest.TestCase):
         The builder takes in the 2D U-Net config and constructs a 2.5 config.
         This motivates deprecating UNet2_5DConfig.
         """
+        if _TF2: return
         cfg1 = UNet2_5DConfig()
         cfg1.IMG_SIZE = (288, 288, 3)
         cfg1.CATEGORIES = [0]
@@ -63,6 +72,7 @@ class TestUNet3D(unittest.TestCase):
 
     def test_same_unet_3d(self):
         """3D U-Net should be same between builder and function construct."""
+        if _TF2: return
         cfg = UNet3DConfig()
         cfg.CATEGORIES = [0]
         m1 = get_model(cfg)
