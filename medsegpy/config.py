@@ -213,15 +213,15 @@ class Config(object):
             )
         ]
 
-        filepath = os.path.join(self.OUTPUT_DIR, "config.ini")
+        filepath = os.path.join(self.OUTPUT_DIR, "config.yaml")
         config_vars = dict()
         for m_var in members:
             config_vars[m_var] = getattr(self, m_var)
 
         # Save config
-        config = configparser.ConfigParser(config_vars)
-        with PathManager.open(filepath, "w+") as configfile:
-            config.write(configfile)
+        # config = configparser.ConfigParser(config_vars)
+        with PathManager.open(filepath, "w") as configfile:
+            yaml.dump(config_vars, configfile)
 
         logger.info("Full config saved to {}".format(os.path.abspath(filepath)))
 
