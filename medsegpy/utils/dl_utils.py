@@ -200,3 +200,16 @@ class ModelMGPU(Model):
             return getattr(self._smodel, attrname)
 
         return super(ModelMGPU, self).__getattribute__(attrname)
+
+
+class _NoOpScope():
+    def __enter__(self): 
+        return self
+      
+    def __exit__(self, exc_type, exc_value, exc_traceback): 
+        pass
+
+
+class NoOpStrategy():
+    def scope(self):
+        return _NoOpScope()

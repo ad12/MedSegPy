@@ -17,15 +17,31 @@ from medsegpy.losses import dice_loss, get_training_loss, build_loss
 from medsegpy.modeling.meta_arch import build_model
 from medsegpy.utils import dl_utils, env, io_utils
 
+try:
+    _SUPPORTS_DISTRIBUTED = True
+    from tensorflow.distribute import MirroredStrategy
+except ModuleNotFoundError:
+    _SUPPORTS_DISTRIBUTED = False
+    MirroredStrategy = None
+
 logger = logging.getLogger(__name__)
 
 
 class DefaultTrainer(object):
     """Default trainer for medical semantic segmentation."""
 
-    def __init__(self, cfg: config.Config, run_eagerly=None):
+    def __init__(self, cfg: config.Config, run_eagerly=None, strategy=None):
+        """
+        Args:
+            cfg (Config): An experiment config.
+            run_eagerly (bool, optional): If `True`, runs eagerly. Only available in tensorflow>=2.0.
+            strategy (tf.distribute.Strategy, optional): The strategy to use for training. Only available
+                if `tf.distribute` package is available (tensorflow>=1.14).
+        """
         self._cfg = cfg
         self._loss_history = None
+        self._default_strategy = tf.distribute.get_strategy() if _SUPPORTS_DISTRIBUTED else dl_utils.NoOpStrategy()
+        num_gpus = dl_utils.num_gpus()
 
         if not env.is_tf2() and run_eagerly is not None:
             warnings.warn(
@@ -35,7 +51,18 @@ class DefaultTrainer(object):
             run_eagerly = None
         self._run_eagerly= run_eagerly
 
-        model = self.build_model(cfg)
+        if strategy is None:
+            strategy = self._default_strategy
+            if _SUPPORTS_DISTRIBUTED and num_gpus > 1:
+                logger.info("Running multi gpu model")
+                strategy = MirroredStrategy()
+        self.strategy = strategy
+
+        with self.strategy.scope():
+            model = self.build_model(cfg)
+            if cfg.INIT_WEIGHTS:
+                self._init_model(model)
+
         plot_model(
             model,
             to_file=os.path.join(cfg.OUTPUT_DIR, "model.png"),
@@ -47,13 +74,9 @@ class DefaultTrainer(object):
         with open(model_json_save_path, "w") as json_file:
             json_file.write(model_json)
 
-        if cfg.INIT_WEIGHTS:
-            self._init_model(model)
-
-        # Replicate model on multiple gpus.
+        # Replicate model on multiple gpus when tensorflow.distribute module not available.
         # Note this does not solve issue of having too large of a model
-        num_gpus = dl_utils.num_gpus()
-        if num_gpus > 1:
+        if not _SUPPORTS_DISTRIBUTED and num_gpus > 1:
             logger.info("Running multi gpu model")
             model = dl_utils.ModelMGPU(model, gpus=num_gpus)
 
@@ -62,12 +85,24 @@ class DefaultTrainer(object):
 
     def train(self):
         """Train model specified by config.
+
+        Do not call this under a strategy scope. Instead, set `self.strategy`.
         """
         cfg = self._cfg
 
-        self._train_model()
+        with self.strategy.scope():
+            self._train_model()
 
         if cfg.TEST_DATASET:
+            # Specialized strategies are not currently supported for testing.
+            if _SUPPORTS_DISTRIBUTED and not isinstance(
+                self.strategy, (dl_utils.NoOpStrategy, type(self._default_strategy))
+            ):
+                logger.error(
+                    f"Strategy '{type(self.strategy).__name__}' not currently supported for testing. "
+                    f"Please run testing separately on a single gpu."
+                )
+                return {}
             return self.test(cfg, self._model)
         else:
             return {}
@@ -128,7 +163,14 @@ class DefaultTrainer(object):
         return callbacks
 
     def _train_model(self):
-        """Train model."""
+        """Train model.
+
+        If multi-gpu training and distributed training is supported (tensorflow>=1.15),
+        call this function with the appropriate strategy scope::
+
+            with self.strategy.scope():
+                self._train_model()
+        """
         cfg = self._cfg
         n_epochs = cfg.N_EPOCHS
         loss = cfg.LOSS
