@@ -10,6 +10,7 @@ from collections import defaultdict
 from typing import Dict, List, Sequence
 
 import h5py
+import keras.backend as K
 import numpy as np
 from fvcore.common.registry import Registry
 from keras import utils as k_utils
@@ -288,7 +289,10 @@ class DefaultDataLoader(DataLoader):
             images.append(image)
             masks.append(mask)
 
-        return np.stack(images, axis=0), np.stack(masks, axis=0)
+        return (
+            np.stack(images, axis=0).astype(K.floatx()),
+            np.stack(masks, axis=0).astype(K.floatx()),
+        )
 
     def _preprocess(self, inputs: np.ndarray, outputs: np.ndarray):
         img, transforms = apply_transform_gens(self._transform_gen, inputs)
