@@ -5,6 +5,7 @@
 
 # Ignore cache
 **/__pycache__
+**/.pytest_cache
 
 # Ignore egg files
 **/*.egg-info
