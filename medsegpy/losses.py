@@ -137,7 +137,7 @@ def get_training_loss(loss, **kwargs):
 
 def _get_shape(x):
     """Returns shape of Keras tensor."""
-    if env.is_tf2():
+    if hasattr(K, "int_shape"):
         return K.int_shape(x)
     else:
         return K.get_variable_shape(x)
