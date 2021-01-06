@@ -318,14 +318,22 @@ class Model(_Model):
                         callbacks.on_predict_batch_end(end_step, {'outputs': batch_outputs})
                 callbacks.on_predict_end()
 
-            all_xs = nest.map_structure_up_to(batch_x, concat, xs)
-            all_ys = nest.map_structure_up_to(batch_y, concat, ys)
-            all_outputs = nest.map_structure_up_to(batch_outputs, concat, outputs)
-            return (
-                tf_utils.to_numpy_or_python_type(all_xs),
-                tf_utils.to_numpy_or_python_type(all_ys),
-                tf_utils.to_numpy_or_python_type(all_outputs),
-            )
+            xs = [tf_utils.to_numpy_or_python_type(_x) for _x in xs]
+            ys = [tf_utils.to_numpy_or_python_type(_y) for _y in ys]
+            outputs = [tf_utils.to_numpy_or_python_type(_o) for _o in outputs]
+            all_xs = nest.map_structure_up_to(batch_x, np.concatenate, xs)
+            all_ys = nest.map_structure_up_to(batch_y, np.concatenate, ys)
+            all_outputs = nest.map_structure_up_to(batch_outputs, np.concatenate, outputs)
+            return all_xs, all_ys, all_outputs
+
+            # all_xs = nest.map_structure_up_to(batch_x, concat, xs)
+            # all_ys = nest.map_structure_up_to(batch_y, concat, ys)
+            # all_outputs = nest.map_structure_up_to(batch_outputs, concat, outputs)
+            # return (
+            #     tf_utils.to_numpy_or_python_type(all_xs),
+            #     tf_utils.to_numpy_or_python_type(all_ys),
+            #     tf_utils.to_numpy_or_python_type(all_outputs),
+            # )
 
 def _extract_inference_inputs(inputs):
     def check_type(x):
