@@ -458,6 +458,8 @@ class PatchDataLoader(DefaultDataLoader):
             patches = compute_patches(
                 dd["image_size"], self._patch_size, pad_size, stride
             )
+            if len(patches) == 0:
+                logger.warn(f"Dropping {dd['scan_id']} - no patches found.")
             for patch, pad in patches:
                 dataset_dict = dd.copy()
                 dataset_dict.update({"_patch": patch, "_pad": pad})
@@ -485,7 +487,7 @@ class PatchDataLoader(DefaultDataLoader):
             )
 
     def __del__(self):
-        if self._f is not None:
+        if hasattr(self, "_f") and self._f is not None:
             self._f.close()
 
     def __getitem__(self, idx):
