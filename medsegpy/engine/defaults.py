@@ -90,7 +90,9 @@ def default_setup(cfg, args):
             f"{cfg.OUTPUT_DIR} does not exist."
         )
 
-    if args.debug:
+    if args.eval_only and config_exists(cfg.OUTPUT_DIR):
+        pass
+    elif args.debug:
         os.environ["MEDSEGPY_RUN_MODE"] = "debug"
         cfg.OUTPUT_DIR = (
             os.path.join(cfg.OUTPUT_DIR, "debug")
@@ -115,7 +117,8 @@ def default_setup(cfg, args):
         cfg.SEED = env.generate_seed()
 
     # Set experiment name.
-    cfg.EXP_NAME = default_exp_name(cfg)
+    if not cfg.EXP_NAME:
+        cfg.EXP_NAME = default_exp_name(cfg)
 
     output_dir = cfg.OUTPUT_DIR
     PathManager.mkdirs(output_dir)
