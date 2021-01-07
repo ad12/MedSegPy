@@ -210,7 +210,7 @@ def multi_class_dice_loss(
     Each class is treated individually.
     """
     use_weights = False
-    if weights:
+    if weights is not None:
         weights = K.variable(weights)
         use_weights = True
 
@@ -274,7 +274,7 @@ def multi_class_dice_loss(
 
 def avg_dice_loss(weights=None, remove_background: bool = False, **kwargs):
     use_weights = False
-    if weights:
+    if weights is not None:
         weights = np.asarray(weights)[np.newaxis, ...]
         weights = K.variable(weights)
         use_weights = True

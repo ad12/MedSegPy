@@ -6,11 +6,14 @@ import scipy.special as sps
 
 from medsegpy.losses import NaiveAdaRobLossComputer
 from medsegpy.losses import multi_class_dice_loss
+from medsegpy.utils import env
 
 
 class TestNaiveAdaRobLossComputer(unittest.TestCase):
     def test_numpy(self):
         """Test to see if numpy works"""
+        if not env.is_tf2():
+            return
         loss = NaiveAdaRobLossComputer(
             multi_class_dice_loss(reduce="class", use_numpy=True),
             n_groups=4,
@@ -30,6 +33,8 @@ class TestNaiveAdaRobLossComputer(unittest.TestCase):
         always have high accuracy (1) and therefore a loss of (0). However, class C will be random.
         We should see over time that class C gets the highest weight.
         """
+        if not env.is_tf2():
+            return
         num_classes = 3
         loss = NaiveAdaRobLossComputer(
             multi_class_dice_loss(reduce="class", use_numpy=True),
@@ -48,6 +53,8 @@ class TestNaiveAdaRobLossComputer(unittest.TestCase):
 
     def test_keras(self):
         """Simple test to see if works with Keras tensors"""
+        if not env.is_tf2():
+            return
         num_classes = 3
         loss = NaiveAdaRobLossComputer(
             multi_class_dice_loss(reduce="class"),
