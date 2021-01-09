@@ -1,9 +1,16 @@
-from typing import Sequence, Union
+import inspect
+from typing import Callable, Sequence, Union
 
-import keras.backend as K
 import tensorflow as tf
 
 from medsegpy.utils import env
+
+try:
+    import tf.keras.activations as activations
+    import tf.keras.backend as K
+except ImportError:
+    import keras.activations as activations
+    import keras.backend as K
 
 
 def to_numpy(x):
@@ -84,6 +91,18 @@ def reduce_tensor(
     elif reduction in ("none", None):
         return x
     raise ValueError(f"Reduction `method={method}` unknown.")
+
+
+def get_activation(act: Union[str, Callable]):
+    if isinstance(act, Callable):
+        act_name = act.__name__
+        act_fn = act
+    else:
+        act_name = act
+        act_fn = activations.__dict__[act]
+    
+    args = inspect.signature(act_fn).parameters.keys()
+    return act_name, act_fn, args
 
 
 def _to_negative_index(axis, ndim):

@@ -1,16 +1,12 @@
 import logging
-import warnings
-from typing import Union
+from typing import Callable, Union
 
 import numpy as np
 import tensorflow as tf
 from keras import backend as K
-from keras.callbacks import Callback
-from keras.losses import binary_crossentropy
-import scipy.special as sps
 
 from medsegpy.utils import env
-from medsegpy.loss.utils import get_shape, reduce_tensor
+from medsegpy.loss.utils import get_activation, get_shape, reduce_tensor
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +15,7 @@ class DiceLoss():
     def __init__(
         self,
         weights=None,
+        activation: Union[str, Callable] = None,
         flatten: Union[str, bool] = False,
         remove_background: bool = False,
         reduction: str = "mean",
@@ -28,6 +25,10 @@ class DiceLoss():
         """
         Args:
             weights (array-like, optional): Class weighting to use.
+            activation (bool, optional): Activation function to apply.
+                If `str`, it should be searchable in `tf.keras.activations` (tf>=2.0)
+                or `keras.activations` module. If callable, signature should match that
+                of existing activation functions.
             flatten (`bool` or `str`, optional): Dimensions to collapse
                 into the spatial dimension prior to dice computation.
                 One of `True` | `"batch"` | `"channel"`.
@@ -46,6 +47,15 @@ class DiceLoss():
         self.remove_background = remove_background
         self.eps = K.epsilon() if eps is None else eps
 
+        if activation not in ("none", None):
+            self.activation, self._act_fn, act_args = get_activation(activation)
+        else:
+            self.activation, self._act_fn, act_args = "none", None, ()
+        self._act_kwargs = {}
+        if "axis" in act_args:
+            # Activation computed over channel dimension
+            self._act_kwargs["axis"] = -1
+
         assert isinstance(flatten, bool) or flatten in ("batch", "channel")
         if weights is not None and flatten == "channel":
             raise ValueError(
@@ -58,6 +68,9 @@ class DiceLoss():
         self.reduction_axis = reduction_axis
     
     def __call__(self, y_true, y_pred):
+        if self._act_fn is not None:
+            y_pred = self._act_fn(y_pred, **self._act_kwargs)
+
         if self.remove_background:
             y_true, y_pred = y_true[..., 1:], y_pred[..., 1:]
         if env.is_tf2():

@@ -1,12 +1,16 @@
 import unittest
 
-import keras.backend as K
 import numpy as np
 
 from medsegpy.loss.classification import DiceLoss
 from medsegpy.loss.utils import to_numpy
 from medsegpy.losses import dice_loss, avg_dice_loss, multi_class_dice_loss
 from medsegpy.utils import env
+
+try:
+    import tf.keras.backend as K
+except ImportError:
+    import keras.backend as K
 
 GT = np.asarray([
     [[0,1,1,0,0],[1,0,0,0,0],[0,0,0,1,1]],
@@ -92,6 +96,27 @@ class TestDiceLoss(unittest.TestCase):
         val = to_numpy(loss(K.constant(gt), K.constant(pred)))
         assert np.allclose(val[2], expected[2])
     
+    def test_activation(self):
+        gt = GT
+        pred = PRED
+        eps = EPS
+
+        dim = 1
+        pred_sig = 1 / (1 + np.exp(-pred)) 
+        expected = 1 - (2 * (np.sum(gt * pred_sig, axis=dim) + eps) / (np.sum(gt, axis=dim) + np.sum(pred_sig, axis=dim) + eps))
+        loss = DiceLoss(activation="sigmoid", reduction=None, eps=eps)
+        val = to_numpy(loss(K.constant(gt), K.constant(pred)))
+        assert val.shape == (3, 5), val.shape
+        assert np.allclose(val, expected)
+
+        dim = 1
+        pred_soft = np.exp(pred) / np.sum(np.exp(pred), axis=-1, keepdims=True)
+        expected = 1 - (2 * (np.sum(gt * pred_soft, axis=dim) + eps) / (np.sum(gt, axis=dim) + np.sum(pred_soft, axis=dim) + eps))
+        loss = DiceLoss(activation="softmax", reduction=None, eps=eps)
+        val = to_numpy(loss(K.constant(gt), K.constant(pred)))
+        assert val.shape == (3, 5), val.shape
+        assert np.allclose(val, expected)
+
     def test_reproducible(self):
         """
         Select loss functions in `medsegpy.losses` can be represented

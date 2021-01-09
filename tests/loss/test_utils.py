@@ -3,7 +3,12 @@ import unittest
 import numpy as np
 import keras.backend as K
 
-from medsegpy.loss.utils import get_shape, reduce_tensor, to_numpy
+from medsegpy.loss.utils import get_activation, get_shape, reduce_tensor, to_numpy
+
+try:
+    import tf.keras.activations as activations
+except ImportError:
+    import keras.activations as activations
 
 X = np.asarray([
     [1,2,3,4,5],
@@ -64,10 +69,29 @@ class TestReduceTensor(unittest.TestCase):
         val = to_numpy(reduce_tensor(x, weights=weights, reduction="none"))
         assert np.allclose(val, w * X)
 
-        
 
+class TestGetActivation(unittest.TestCase):
+    def test_str(self):
+        name, fn, args = get_activation("sigmoid")
+        assert name == "sigmoid"
+        assert fn == activations.sigmoid
+        assert "axis" not in args
 
+        name, fn, args = get_activation("softmax")
+        assert name == "softmax"
+        assert fn == activations.softmax
+        assert "axis" in args
+    
+    def test_callable(self):
+        name, fn, args = get_activation(activations.sigmoid)
+        assert name == "sigmoid"
+        assert fn == activations.sigmoid
+        assert "axis" not in args
 
+        name, fn, args = get_activation(activations.softmax)
+        assert name == "softmax"
+        assert fn == activations.softmax
+        assert "axis" in args
 
 
 if __name__ == "__main__":
