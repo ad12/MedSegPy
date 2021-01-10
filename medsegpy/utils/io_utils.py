@@ -140,6 +140,13 @@ class GeneralPathHandler(PathHandler, ABC):
         return self.PREFIX[:-3]
 
 
+class GeneralResultsPathHandler(GeneralPathHandler):
+    PREFIX = "results://"
+
+    def _project_name(self):
+        return ""
+
+
 class TechConsiderationsHandler(GeneralPathHandler):
     PREFIX = "tcv3://"
 
@@ -147,4 +154,5 @@ class TechConsiderationsHandler(GeneralPathHandler):
         return "tech-considerations"
 
 
+PathManager.register_handler(GeneralResultsPathHandler())
 PathManager.register_handler(TechConsiderationsHandler())

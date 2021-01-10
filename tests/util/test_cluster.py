@@ -58,6 +58,16 @@ class TestCluster(unittest.TestCase):
 
         Cluster.set_working_cluster(None)
         assert Cluster.working_cluster() == _UNKNOWN, Cluster.working_cluster()
+        assert Cluster.working_cluster().data_dir == "./datasets"
+        assert Cluster.working_cluster().results_dir == "./results"
+
+        orig_env = dict(os.environ)
+        os.environ["MEDSEGPY_DATASETS"] = "/path/to/datasets"
+        assert Cluster.working_cluster().data_dir == "/path/to/datasets"
+        os.environ["MEDSEGPY_RESULTS"] = "/path/to/results"
+        assert Cluster.working_cluster().results_dir == "/path/to/results"
+        os.environ.clear()
+        os.environ.update(orig_env)
 
         Cluster.set_working_cluster(cluster)
         assert Cluster.working_cluster() == cluster, Cluster.working_cluster()
