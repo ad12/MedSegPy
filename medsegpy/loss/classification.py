@@ -3,10 +3,14 @@ from typing import Callable, Union
 
 import numpy as np
 import tensorflow as tf
-from keras import backend as K
 
 from medsegpy.utils import env
 from medsegpy.loss.utils import get_activation, get_shape, reduce_tensor
+
+try:
+    import tf.keras.backend as K
+except ImportError:
+    import keras.backend as K
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +19,7 @@ class DiceLoss():
     def __init__(
         self,
         weights=None,
-        activation: Union[str, Callable] = None,
+        activation: str = None,
         flatten: Union[str, bool] = False,
         remove_background: bool = False,
         reduction: str = "mean",
@@ -26,9 +30,8 @@ class DiceLoss():
         Args:
             weights (array-like, optional): Class weighting to use.
             activation (bool, optional): Activation function to apply.
-                If `str`, it should be searchable in `tf.keras.activations` (tf>=2.0)
-                or `keras.activations` module. If callable, signature should match that
-                of existing activation functions.
+                One of `"sigmoid"` | `"softmax"` | `"none"`. If "none",
+                no activation will be applied to input.
             flatten (`bool` or `str`, optional): Dimensions to collapse
                 into the spatial dimension prior to dice computation.
                 One of `True` | `"batch"` | `"channel"`.
