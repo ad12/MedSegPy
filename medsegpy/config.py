@@ -60,7 +60,8 @@ class Config(object):
     # Model name specific to config. Cannot be changed.
     MODEL_NAME = ""
 
-    # Description of the config.
+    # Experiment name and description of the config.
+    EXP_NAME = ""
     DESCRIPTION = ""
 
     # Loss function in form (id, output_mode)

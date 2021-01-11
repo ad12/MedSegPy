@@ -42,8 +42,7 @@ def setup(args):
 
     # TODO: Add suppport for resume.
     if env.supports_wandb():
-        # TODO: Add field for experiment name.
-        exp_name = ""
+        exp_name = cfg.EXP_NAME
         if not exp_name:
             warnings.warn("EXP_NAME not specified. Defaulting to basename...")
             exp_name = os.path.basename(cfg.OUTPUT_DIR)
