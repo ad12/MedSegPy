@@ -63,15 +63,22 @@ class WandBLogger(kc.Callback):
     Currently only supports logging scalars.
     """
 
-    def __init__(self, period: int = 20):
+    def __init__(self, period: int = 20, **kwargs):
+        """
+        Args:
+            period (int, optional): Logging period.
+            **kwargs: Options to pass to wandb.init()
+        """
         if not env.supports_wandb():
             raise ValueError(
                 "Weights & Biases is not supported. "
                 "Install package via `pip install wandb`. "
                 "See documentation https://docs.wandb.com/ "
             )
-        if not wandb.run:
-            raise ValueError("Run `wandb.init(...) to configure the W&B run.")
+        if not wandb.run and not kwargs:
+            raise ValueError("Run `wandb.init(...)` to configure the W&B run or pass keyword arguments.")
+        wandb.init(**kwargs)
+            
         assert isinstance(period, int) and period > 0, "`period` must be int >0"
 
         self._period = period
