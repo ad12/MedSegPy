@@ -31,7 +31,8 @@ class TestDeeplabV3Plus(unittest.TestCase):
         """
         2D DeeplabV3+ should be same between builder and function construct.
         """
-        if _TF2: return
+        if _TF2:
+            return
         cfg = DeeplabV3Config()
         cfg.CATEGORIES = [0]
         m1 = get_model(cfg)
@@ -43,7 +44,8 @@ class TestDeeplabV3Plus(unittest.TestCase):
         """
         2.5D DeeplabV3+ should be same between builder and function construct.
         """
-        if _TF2: return
+        if _TF2:
+            return
         cfg1 = DeeplabV3_2_5DConfig()
         cfg1.IMG_SIZE = (288, 288, 3)
         cfg1.CATEGORIES = [0]

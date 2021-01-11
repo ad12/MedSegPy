@@ -68,9 +68,7 @@ def register_oai_mini(name, scan_root):
         category_abbreviations=[x["abbrev"] for x in OAI_CATEGORIES],
         categories=[x["name"] for x in OAI_CATEGORIES],
         category_colors=[x["color"] for x in OAI_CATEGORIES],
-        category_id_to_contiguous_id={
-            x["id"]: idx for idx, x in enumerate(OAI_CATEGORIES)
-        },
+        category_id_to_contiguous_id={x["id"]: idx for idx, x in enumerate(OAI_CATEGORIES)},
         evaluator_type="SemSegEvaluator",
     )
 

@@ -14,9 +14,9 @@ __all__ = ["RandomCrop", "TransformGen", "apply_transform_gens"]
 
 
 def check_dtype(img: np.ndarray):
-    assert isinstance(
-        img, np.ndarray
-    ), "[TransformGen] Needs an numpy array, but got a {}!".format(type(img))
+    assert isinstance(img, np.ndarray), "[TransformGen] Needs an numpy array, but got a {}!".format(
+        type(img)
+    )
     assert not isinstance(img.dtype, np.integer) or img.dtype == np.uint8, (
         "[TransformGen] Got image of type {}, "
         "use uint8 or floating points instead!".format(img.dtype)
@@ -70,8 +70,7 @@ class TransformGen(metaclass=ABCMeta):
             argstr = []
             for name, param in sig.parameters.items():
                 assert (
-                    param.kind != param.VAR_POSITIONAL
-                    and param.kind != param.VAR_KEYWORD
+                    param.kind != param.VAR_POSITIONAL and param.kind != param.VAR_KEYWORD
                 ), "The default __repr__ doesn't support *args or **kwargs"
                 assert hasattr(self, name), (
                     "Attribute {} not found! "
@@ -91,8 +90,7 @@ class TransformGen(metaclass=ABCMeta):
 
 
 class RandomCrop(TransformGen):
-    """Randomly crop a subimage out of an image.
-    """
+    """Randomly crop a subimage out of an image."""
 
     def __init__(self, crop_type: str, crop_size: Tuple[float]):
         """
@@ -137,18 +135,12 @@ class RandomCrop(TransformGen):
         """
         if self.crop_type == "relative":
             crop_size = self.crop_size
-            return tuple(
-                int(dim * crop_dim + 0.5)
-                for dim, crop_dim in zip(image_size, crop_size)
-            )
+            return tuple(int(dim * crop_dim + 0.5) for dim, crop_dim in zip(image_size, crop_size))
         elif self.crop_type == "relative_range":
             crop_size = np.asarray(self.crop_size, dtype=np.float32)
             cdim = len(len(crop_size))
             crop_size = crop_size + np.random.rand(cdim) * (1 - crop_size)
-            return tuple(
-                int(dim * crop_dim + 0.5)
-                for dim, crop_dim in zip(image_size, crop_size)
-            )
+            return tuple(int(dim * crop_dim + 0.5) for dim, crop_dim in zip(image_size, crop_size))
         elif self.crop_type == "absolute":
             return self.crop_size
         else:
@@ -183,10 +175,9 @@ def apply_transform_gens(
     tfms = []
     for g in transform_gens:
         tfm = g.get_transform(img) if isinstance(g, TransformGen) else g
-        assert isinstance(tfm, MedTransform), (
-            "TransformGen {} must return an instance of Transform! "
-            "Got {} instead".format(g, tfm)
-        )
+        assert isinstance(
+            tfm, MedTransform
+        ), "TransformGen {} must return an instance of Transform! " "Got {} instead".format(g, tfm)
         img = tfm.apply_image(img)
         tfms.append(tfm)
     return img, TransformList(tfms)

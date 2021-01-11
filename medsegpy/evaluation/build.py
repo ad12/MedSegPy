@@ -18,10 +18,7 @@ The call should return a :class:`DatasetEvaluator` object.
 
 
 def build_evaluator(
-    dataset_name: str,
-    cfg: Config,
-    output_folder: str = None,
-    save_raw_data: bool = False,
+    dataset_name: str, cfg: Config, output_folder: str = None, save_raw_data: bool = False
 ):
     name = MetadataCatalog.get(dataset_name).evaluator_type
     if isinstance(name, str):
@@ -31,8 +28,6 @@ def build_evaluator(
     evaluators = []
     for n in name:
         evaluator_cls = EVALUATOR_REGISTRY.get(n)
-        evaluators.append(
-            evaluator_cls(dataset_name, cfg, output_folder, save_raw_data)
-        )
+        evaluators.append(evaluator_cls(dataset_name, cfg, output_folder, save_raw_data))
 
     return evaluators

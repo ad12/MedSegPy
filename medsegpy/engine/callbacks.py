@@ -1,6 +1,5 @@
 import logging
 from copy import deepcopy
-from typing import Optional
 
 from keras import callbacks as kc
 
@@ -8,6 +7,7 @@ from medsegpy.utils import env
 
 try:
     import wandb
+
     _WANDB_AVAILABLE = True
 except ImportError:  # pragma: no-cover
     wandb = None
@@ -36,8 +36,7 @@ def lr_callback(optimizer):
 
 
 class LossHistory(kc.Callback):
-    """A Keras callback to log training history
-    """
+    """A Keras callback to log training history"""
 
     def on_train_begin(self, logs=None):
         self.val_losses = []
@@ -51,9 +50,7 @@ class LossHistory(kc.Callback):
 
         metrics = " - ".join(
             [
-                "{}: {:0.4f}".format(k, v)
-                if v >= 1e-3
-                else "{}: {:0.4e}".format(k, v)
+                "{}: {:0.4f}".format(k, v) if v >= 1e-3 else "{}: {:0.4e}".format(k, v)
                 for k, v in logs.items()
             ]
         )
@@ -65,10 +62,8 @@ class WandBLogger(kc.Callback):
 
     Currently only supports logging scalars.
     """
-    def __init__(
-        self,
-        period: int = 20,
-    ):
+
+    def __init__(self, period: int = 20):
         if not env.supports_wandb():
             raise ValueError(
                 "Weights & Biases is not supported. "
@@ -77,9 +72,7 @@ class WandBLogger(kc.Callback):
             )
         if not wandb.run:
             raise ValueError("Run `wandb.init(...) to configure the W&B run.")
-        assert isinstance(period, int) and period > 0, (
-            "`period` must be int >0"
-        )
+        assert isinstance(period, int) and period > 0, "`period` must be int >0"
 
         self._period = period
 
@@ -97,4 +90,3 @@ class WandBLogger(kc.Callback):
         logs = deepcopy(logs)
         logs["epoch"] = epoch
         wandb.log(logs, step=self._step)
-

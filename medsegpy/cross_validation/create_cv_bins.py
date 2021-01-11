@@ -11,9 +11,7 @@ from .cv_util import DATASET_NAME, CrossValidationFileGenerator
 DATA_PATHS = [defaults.TRAIN_PATH, defaults.VALID_PATH, defaults.TEST_PATH]
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Generate bins for k-fold cross-validation"
-    )
+    parser = argparse.ArgumentParser(description="Generate bins for k-fold cross-validation")
 
     parser.add_argument(
         "-k",
@@ -25,11 +23,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--filepaths",
-        metavar="F",
-        nargs="?",
-        default=DATA_PATHS,
-        help="Filepaths to data",
+        "--filepaths", metavar="F", nargs="?", default=DATA_PATHS, help="Filepaths to data"
     )
 
     parser.add_argument(
@@ -55,6 +49,4 @@ if __name__ == "__main__":
     tag = args.tag
     overwrite = args.overwrite
 
-    cv_generator = CrossValidationFileGenerator(
-        k_bins, filepaths, tag, overwrite=overwrite
-    )
+    cv_generator = CrossValidationFileGenerator(k_bins, filepaths, tag, overwrite=overwrite)

@@ -22,7 +22,7 @@ def to_numpy(x):
 
     Args:
         x (Tensor): The tensor.
-    
+
     Returns:
         ndarray: The numpy array.
     """
@@ -39,12 +39,7 @@ def get_shape(x):
         return K.get_variable_shape(x)
 
 
-def reduce_tensor(
-    x,
-    reduction="mean",
-    axis=None,
-    weights=None,
-):
+def reduce_tensor(x, reduction="mean", axis=None, weights=None):
     """Reduce tensor along axis.
 
     If specified, the `weights` tensor will be broadcast when multipied with `x`.
@@ -60,10 +55,10 @@ def reduce_tensor(
             * `"sum"`: The weighted output will be summed
         axis (int(s), optional): The axis to apply reduction to.
         weights (Tensor, optional): A weights tensor broadcastable to shape of x.
-    
+
     Returns:
         Tensor: Reduced tensor.
-    
+
     Raises:
         ValueError: If `reduction` not one of `"none"` | `"mean"` | `"sum"`.
     """
@@ -78,7 +73,11 @@ def reduce_tensor(
         else:
             axis = _to_negative_index(axis)
         weights_shape = get_shape(weights)
-        valid_dims = tuple(dim for dim in axis if abs(dim) <= len(weights_shape) and weights_shape[dim] not in (1, None))
+        valid_dims = tuple(
+            dim
+            for dim in axis
+            if abs(dim) <= len(weights_shape) and weights_shape[dim] not in (1, None)
+        )
         broadcast_dims = tuple(dim for dim in axis if dim not in valid_dims)
         reduced = K.sum(x, axis=valid_dims, keepdims=True) / K.sum(weights, axis=valid_dims)
         if broadcast_dims:
@@ -90,7 +89,7 @@ def reduce_tensor(
         return K.sum(x, axis=axis)
     elif reduction in ("none", None):
         return x
-    raise ValueError(f"Reduction `method={method}` unknown.")
+    raise ValueError(f"Reduction '{reduction}' unknown.")
 
 
 def get_activation(act: Union[str, Callable]):
@@ -100,7 +99,7 @@ def get_activation(act: Union[str, Callable]):
     else:
         act_name = act
         act_fn = activations.__dict__[act]
-    
+
     args = inspect.signature(act_fn).parameters.keys()
     return act_name, act_fn, args
 
@@ -109,10 +108,7 @@ def _to_negative_index(axis, ndim):
     """Convert positive axes to their negative counterparts."""
     if not isinstance(axis, Sequence):
         axis = (axis,)
-    axis = tuple(set(
-        dim if dim < 0 else -ndim + dim for dim in axis
-    ))
+    axis = tuple(set(dim if dim < 0 else -ndim + dim for dim in axis))
     if len(axis) == 1:
         axis = axis[0]
     return axis
-    

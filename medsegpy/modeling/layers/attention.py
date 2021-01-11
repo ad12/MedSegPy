@@ -15,15 +15,7 @@ from typing import Dict, Sequence, Union
 import numpy as np
 from keras import backend as K
 from keras.layers import BatchNormalization as BN
-from keras.layers import (
-    Concatenate,
-    Conv2D,
-    Conv3D,
-    Layer,
-    Multiply,
-    UpSampling2D,
-    UpSampling3D,
-)
+from keras.layers import Concatenate, Conv2D, Conv3D, Layer, Multiply, UpSampling2D, UpSampling3D
 
 
 class _CreateGatingSignalNDim(Layer):
@@ -76,12 +68,9 @@ class _CreateGatingSignalNDim(Layer):
         else:
             raise ValueError("Only 2D and 3D are supported")
 
-        if isinstance(self.kernel_size, tuple) or isinstance(
-            self.kernel_size, list
-        ):
+        if isinstance(self.kernel_size, tuple) or isinstance(self.kernel_size, list):
             assert len(self.kernel_size) == self.dimension, (
-                "If list/tuple, kernel_size must have length %d"
-                % self.dimension
+                "If list/tuple, kernel_size must have length %d" % self.dimension
             )
 
         self.conv = conv_type(
@@ -238,12 +227,9 @@ class _GridAttentionModuleND(Layer):
         else:
             raise ValueError("Only 2D and 3D are supported")
 
-        if isinstance(self.sub_sample_factor, tuple) or isinstance(
-            self.sub_sample_factor, list
-        ):
+        if isinstance(self.sub_sample_factor, tuple) or isinstance(self.sub_sample_factor, list):
             assert len(self.sub_sample_factor) == self.dimension, (
-                "If list/tuple, sub_sample_factor must have length %d"
-                % self.dimension
+                "If list/tuple, sub_sample_factor must have length %d" % self.dimension
             )
 
         self.theta_x = self.conv_type(
@@ -255,19 +241,13 @@ class _GridAttentionModuleND(Layer):
         )
 
         self.theta_gating = self.conv_type(
-            self.intermediate_channels,
-            kernel_size=1,
-            kernel_initializer=self.kernel_initializer,
+            self.intermediate_channels, kernel_size=1, kernel_initializer=self.kernel_initializer
         )
 
-        self.psi = self.conv_type(
-            1, kernel_size=1, kernel_initializer=self.kernel_initializer
-        )
+        self.psi = self.conv_type(1, kernel_size=1, kernel_initializer=self.kernel_initializer)
 
         self.output_conv = self.conv_type(
-            self.in_channels,
-            kernel_size=1,
-            kernel_initializer=self.kernel_initializer,
+            self.in_channels, kernel_size=1, kernel_initializer=self.kernel_initializer
         )
 
         self.output_bn = BN(axis=-1, momentum=0.95, epsilon=0.001)
@@ -283,9 +263,7 @@ class _GridAttentionModuleND(Layer):
         # Build theta_gating
         self.theta_gating.build(gating_signal_shape)
         self._trainable_weights += self.theta_gating.trainable_weights
-        theta_gating_output_shape = self.theta_gating.compute_output_shape(
-            gating_signal_shape
-        )
+        theta_gating_output_shape = self.theta_gating.compute_output_shape(gating_signal_shape)
 
         # Build upsample_gating
         up_ratio_gating = np.floor_divide(
@@ -307,17 +285,11 @@ class _GridAttentionModuleND(Layer):
         psi_output_shape = self.psi.compute_output_shape(theta_x_output_shape)
 
         # Build upsample_attn_coeff
-        up_ratio_attn_coeff = np.floor_divide(
-            x_shape[1:-1], psi_output_shape[1:-1]
-        )
-        self.upsample_attn_coeff = self.upsample_type(
-            size=tuple(up_ratio_attn_coeff)
-        )
+        up_ratio_attn_coeff = np.floor_divide(x_shape[1:-1], psi_output_shape[1:-1])
+        self.upsample_attn_coeff = self.upsample_type(size=tuple(up_ratio_attn_coeff))
         self.upsample_attn_coeff.build(psi_output_shape)
         self._trainable_weights += self.upsample_attn_coeff.trainable_weights
-        up_coeff_output_shape = self.upsample_attn_coeff.compute_output_shape(
-            psi_output_shape
-        )
+        up_coeff_output_shape = self.upsample_attn_coeff.compute_output_shape(psi_output_shape)
         assert (
             up_coeff_output_shape[1:-1] == x_shape[1:-1]
         ), "Cannot upsample output of psi to match size of input feature map (x)"
@@ -325,9 +297,7 @@ class _GridAttentionModuleND(Layer):
         # Build output_conv
         self.output_conv.build(x_shape)
         self._trainable_weights += self.output_conv.trainable_weights
-        output_conv_output_shape = self.output_conv.compute_output_shape(
-            x_shape
-        )
+        output_conv_output_shape = self.output_conv.compute_output_shape(x_shape)
 
         # Build output_bn
         self.output_bn.build(output_conv_output_shape)
@@ -354,12 +324,7 @@ class _GridAttentionModuleND(Layer):
         # feature map
         up_sampled_attn_coeff = self.upsample_attn_coeff(sigmoid_psi)
         attn_weighted_output = Multiply()(
-            [
-                K.repeat_elements(
-                    up_sampled_attn_coeff, rep=x_size[-1], axis=-1
-                ),
-                x,
-            ]
+            [K.repeat_elements(up_sampled_attn_coeff, rep=x_size[-1], axis=-1), x]
         )
         output = self.output_conv(attn_weighted_output)
         output = self.output_bn(output)
@@ -369,22 +334,14 @@ class _GridAttentionModuleND(Layer):
     def compute_output_shape(self, input_shape):
         x_shape, gating_signal_shape = input_shape
 
-        theta_gating_output_shape = self.theta_gating.compute_output_shape(
-            gating_signal_shape
-        )
+        theta_gating_output_shape = self.theta_gating.compute_output_shape(gating_signal_shape)
         up_gating_output_shape = self.upsample_gating.compute_output_shape(
             theta_gating_output_shape
         )
         psi_output_shape = self.psi.compute_output_shape(up_gating_output_shape)
-        up_attn_output_shape = self.upsample_attn_coeff.compute_output_shape(
-            psi_output_shape
-        )
-        output_conv_output_shape = self.output_conv.compute_output_shape(
-            x_shape
-        )
-        output_bn_output_shape = self.output_bn.compute_output_shape(
-            output_conv_output_shape
-        )
+        up_attn_output_shape = self.upsample_attn_coeff.compute_output_shape(psi_output_shape)
+        output_conv_output_shape = self.output_conv.compute_output_shape(x_shape)
+        output_bn_output_shape = self.output_bn.compute_output_shape(output_conv_output_shape)
 
         return [output_bn_output_shape, up_attn_output_shape]
 
@@ -521,17 +478,13 @@ class _MultiAttentionModuleND(Layer):
         self._trainable_weights = self.attn_gate_1.trainable_weights
         self.attn_gate_2.build(input_shape)
         self._trainable_weights += self.attn_gate_2.trainable_weights
-        output_attn_shape, _ = self.attn_gate_2.compute_output_shape(
-            input_shape
-        )
+        output_attn_shape, _ = self.attn_gate_2.compute_output_shape(input_shape)
 
         concatenate_gate_shape = list(output_attn_shape)
         concatenate_gate_shape[-1] *= 2
         self.combine_gates_conv.build(concatenate_gate_shape)
         self._trainable_weights += self.combine_gates_conv.trainable_weights
-        conv_output_shape = self.combine_gates_conv.compute_output_shape(
-            concatenate_gate_shape
-        )
+        conv_output_shape = self.combine_gates_conv.compute_output_shape(concatenate_gate_shape)
         self.combine_gates_bn.build(conv_output_shape)
         self._trainable_weights += self.combine_gates_bn.trainable_weights
         super(_MultiAttentionModuleND, self).build(input_shape)
@@ -548,19 +501,13 @@ class _MultiAttentionModuleND(Layer):
         return [output, total_attn_coeffs]
 
     def compute_output_shape(self, input_shape):
-        output_attn_shape, coeff_shape = self.attn_gate_2.compute_output_shape(
-            input_shape
-        )
+        output_attn_shape, coeff_shape = self.attn_gate_2.compute_output_shape(input_shape)
         concatenate_gate_shape = list(output_attn_shape)
         concatenate_coeff_shape = list(coeff_shape)
         concatenate_gate_shape[-1] *= 2
         concatenate_coeff_shape[-1] *= 2
-        conv_output_shape = self.combine_gates_conv.compute_output_shape(
-            concatenate_gate_shape
-        )
-        bn_output_shape = self.combine_gates_bn.compute_output_shape(
-            conv_output_shape
-        )
+        conv_output_shape = self.combine_gates_conv.compute_output_shape(concatenate_gate_shape)
+        bn_output_shape = self.combine_gates_bn.compute_output_shape(conv_output_shape)
         return [bn_output_shape, concatenate_coeff_shape]
 
     def get_config(self):
@@ -682,9 +629,7 @@ class _DeepSupervisionND(Layer):
             raise ValueError("Only 2D and 3D are supported")
 
         self.conv = self.conv_type(
-            self.out_channels,
-            kernel_size=1,
-            kernel_initializer=self.kernel_initializer,
+            self.out_channels, kernel_size=1, kernel_initializer=self.kernel_initializer
         )
 
     def build(self, input_shape):
@@ -702,9 +647,7 @@ class _DeepSupervisionND(Layer):
 
     def compute_output_shape(self, input_shape):
         conv_output_shape = self.conv.compute_output_shape(input_shape)
-        upsample_output_shape = self.upsample.compute_output_shape(
-            conv_output_shape
-        )
+        upsample_output_shape = self.upsample.compute_output_shape(conv_output_shape)
         return upsample_output_shape
 
     def get_config(self):

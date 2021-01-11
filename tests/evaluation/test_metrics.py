@@ -26,15 +26,7 @@ import unittest
 import numpy as np
 from medpy.metric import assd, dc, precision, recall
 
-from medsegpy.evaluation.metrics import (
-    ASSD,
-    CV,
-    DSC,
-    VOE,
-    Metric,
-    Precision,
-    Recall,
-)
+from medsegpy.evaluation.metrics import ASSD, CV, DSC, VOE, Metric, Precision, Recall
 
 _SHAPE = (300, 300, 40)
 _NUM_CLASSES = 4
@@ -87,10 +79,7 @@ def _is_consistent_medpy(metric: Metric, func, supports_multiclass: bool):
         )
 
     base_vals = np.asarray(
-        [
-            func(result=y_pred[..., c], reference=y_true[..., c])
-            for c in range(num_classes)
-        ]
+        [func(result=y_pred[..., c], reference=y_true[..., c]) for c in range(num_classes)]
     )
 
     assert np.allclose(base_vals, metrics_vals)
@@ -117,9 +106,7 @@ def _test_multiclass(metric: Metric):
 
     idx = arg_names.index("category_dim") - len(arg_names)
     defaults = inspect.getfullargspec(metric).defaults
-    assert (
-        defaults[idx] is None
-    ), "Default value for 'category_dim' should be `None`."
+    assert defaults[idx] is None, "Default value for 'category_dim' should be `None`."
 
     # Standard category_dim=-1
     shape = (100, 100, 100, 4)
@@ -130,12 +117,8 @@ def _test_multiclass(metric: Metric):
 
     args = {"y_pred": y_pred, "y_true": y_true}
     metrics_vals = metric(category_dim=category_dim, **args)
-    base_vals = np.asarray(
-        [metric(y_pred[..., c], y_true[..., c]) for c in range(num_classes)]
-    )
-    assert np.allclose(base_vals, metrics_vals), "category_dim={}".format(
-        category_dim
-    )
+    base_vals = np.asarray([metric(y_pred[..., c], y_true[..., c]) for c in range(num_classes)])
+    assert np.allclose(base_vals, metrics_vals), "category_dim={}".format(category_dim)
 
     # Standard category_dim=1
     shape = (100, 6, 100, 100)
@@ -147,14 +130,9 @@ def _test_multiclass(metric: Metric):
     args = {"y_pred": y_pred, "y_true": y_true}
     metrics_vals = metric(category_dim=category_dim, **args)
     base_vals = np.asarray(
-        [
-            metric(y_pred[:, c, ...], y_true[:, c, ...])
-            for c in range(num_classes)
-        ]
+        [metric(y_pred[:, c, ...], y_true[:, c, ...]) for c in range(num_classes)]
     )
-    assert np.allclose(base_vals, metrics_vals), "category_dim={}".format(
-        category_dim
-    )
+    assert np.allclose(base_vals, metrics_vals), "category_dim={}".format(category_dim)
 
 
 class TestDSC(unittest.TestCase):
@@ -194,9 +172,7 @@ class TestCV(unittest.TestCase):
         y_true = np.squeeze(reference)
         y_pred = np.squeeze(result)
 
-        cv = np.std([np.sum(y_true), np.sum(y_pred)]) / np.mean(
-            [np.sum(y_true), np.sum(y_pred)]
-        )
+        cv = np.std([np.sum(y_true), np.sum(y_pred)]) / np.mean([np.sum(y_true), np.sum(y_pred)])
         return cv
 
     def test_consistency(self):

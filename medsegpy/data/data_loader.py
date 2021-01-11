@@ -1,4 +1,3 @@
-import os
 import logging
 import math
 import random
@@ -40,20 +39,13 @@ The registered object will be called with
 The call should return a :class:`DataLoader` object.
 """
 
-_LEGACY_DATA_LOADER_MAP = {
-    ("oai_aug", "oai", "oai_2d", "oai_aug_2d"): "DefaultDataLoader"
-}
+_LEGACY_DATA_LOADER_MAP = {("oai_aug", "oai", "oai_2d", "oai_aug_2d"): "DefaultDataLoader"}
 
-LEGACY_DATA_LOADER_NAMES = {
-    x: v for k, v in _LEGACY_DATA_LOADER_MAP.items() for x in k
-}
+LEGACY_DATA_LOADER_NAMES = {x: v for k, v in _LEGACY_DATA_LOADER_MAP.items() for x in k}
 
 
-def build_data_loader(
-    cfg: Config, dataset_dicts: List[Dict], **kwargs
-) -> "DataLoader":
-    """Get data loader based on config `TAG` or name, value.
-    """
+def build_data_loader(cfg: Config, dataset_dicts: List[Dict], **kwargs) -> "DataLoader":
+    """Get data loader based on config `TAG` or name, value."""
     name = cfg.TAG
     try:
         data_loader_cls = DATA_LOADER_REGISTRY.get(name)
@@ -62,11 +54,7 @@ def build_data_loader(
         if name in LEGACY_DATA_LOADER_NAMES:
             name = LEGACY_DATA_LOADER_NAMES[name]
             if prev_name != name:
-                warnings.warn(
-                    "TAG {} is deprecated. Use {} instead".format(
-                        prev_name, name
-                    )
-                )
+                warnings.warn("TAG {} is deprecated. Use {} instead".format(prev_name, name))
 
         data_loader_cls = DATA_LOADER_REGISTRY.get(name)
 
@@ -240,9 +228,7 @@ class DefaultDataLoader(DataLoader):
         drop_last: bool = False,
         batch_size: int = 1,
     ):
-        super().__init__(
-            cfg, dataset_dicts, is_test, shuffle, drop_last, batch_size
-        )
+        super().__init__(cfg, dataset_dicts, is_test, shuffle, drop_last, batch_size)
 
         self._include_background = cfg.INCLUDE_BACKGROUND
         self._num_classes = cfg.get_num_classes()
@@ -359,18 +345,11 @@ class DefaultDataLoader(DataLoader):
                 if not env.is_tf2():
                     raise ValueError("model must be a medsegpy.modeling.model.Model for TF1.0")
                 x, y, preds = Model.inference_generator_static(
-                    model,
-                    self,
-                    workers=workers,
-                    use_multiprocessing=use_multiprocessing,
-                    **kwargs
+                    model, self, workers=workers, use_multiprocessing=use_multiprocessing, **kwargs
                 )
             else:
                 x, y, preds = model.inference_generator(
-                    self,
-                    workers=workers,
-                    use_multiprocessing=use_multiprocessing,
-                    **kwargs
+                    self, workers=workers, use_multiprocessing=use_multiprocessing, **kwargs
                 )
             time_elapsed = time.perf_counter() - start
 
@@ -384,25 +363,14 @@ class DefaultDataLoader(DataLoader):
             }
             input.update(scan_params)
 
-            output = {
-                "y_pred": preds,
-                "y_true": y,
-                "time_elapsed": time_elapsed,
-            }
+            output = {"y_pred": preds, "y_true": y, "time_elapsed": time_elapsed}
 
             yield input, output
 
         self._dataset_dicts = dataset_dicts
 
 
-_SUPPORTED_PADDING_MODES = (
-    "constant",
-    "edge",
-    "reflect",
-    "symmetric",
-    "warp",
-    "empty",
-)
+_SUPPORTED_PADDING_MODES = ("constant", "edge", "reflect", "symmetric", "warp", "empty")
 
 
 @DATA_LOADER_REGISTRY.register()
@@ -426,7 +394,7 @@ class PatchDataLoader(DefaultDataLoader):
         shuffle: bool = True,
         drop_last: bool = False,
         batch_size: int = 1,
-        use_singlefile: bool = False
+        use_singlefile: bool = False,
     ):
         # Create patch elements from dataset dict.
         # TODO: change pad/patching based on test/train
@@ -447,17 +415,13 @@ class PatchDataLoader(DefaultDataLoader):
         self._patch_size = patch_size
         self._pad_mode = cfg.IMG_PAD_MODE
         if self._pad_mode not in _SUPPORTED_PADDING_MODES:
-            raise ValueError(
-                "pad mode {} not supported".format(cfg.IMG_PAD_MODE)
-            )
+            raise ValueError("pad mode {} not supported".format(cfg.IMG_PAD_MODE))
         pad_size = cfg.IMG_PAD_SIZE if cfg.IMG_PAD_SIZE else None
         stride = cfg.IMG_STRIDE if cfg.IMG_STRIDE else (1,) * len(patch_size)
 
         dd_patched = []
         for dd in dataset_dicts:
-            patches = compute_patches(
-                dd["image_size"], self._patch_size, pad_size, stride
-            )
+            patches = compute_patches(dd["image_size"], self._patch_size, pad_size, stride)
             if len(patches) == 0:
                 logger.warn(f"Dropping {dd['scan_id']} - no patches found.")
             for patch, pad in patches:
@@ -465,9 +429,7 @@ class PatchDataLoader(DefaultDataLoader):
                 dataset_dict.update({"_patch": patch, "_pad": pad})
                 dd_patched.append(dataset_dict)
 
-        super().__init__(
-            cfg, dd_patched, is_test, shuffle, drop_last, batch_size
-        )
+        super().__init__(cfg, dd_patched, is_test, shuffle, drop_last, batch_size)
 
         self._preload_data = cfg.PRELOAD_DATA
         self._cached_data = None
@@ -478,13 +440,9 @@ class PatchDataLoader(DefaultDataLoader):
 
         if self._preload_data:
             if threading.current_thread() is not threading.main_thread():
-                raise ValueError(
-                    "Data pre-loading can only be done on the main thread."
-                )
+                raise ValueError("Data pre-loading can only be done on the main thread.")
             logger.info("Pre-loading data...")
-            self._cached_data = self._load_all_data(
-                dataset_dicts, cfg.NUM_WORKERS
-            )
+            self._cached_data = self._load_all_data(dataset_dicts, cfg.NUM_WORKERS)
 
     def __del__(self):
         if hasattr(self, "_f") and self._f is not None:
@@ -526,10 +484,7 @@ class PatchDataLoader(DefaultDataLoader):
             return {"image": image, "mask": mask}
 
         cache = [_load(dd) for dd in tqdm(dataset_dicts)]
-        cache = {
-            (dd["file_name"], dd["sem_seg_file"]): x
-            for dd, x in zip(dataset_dicts, cache)
-        }
+        cache = {(dd["file_name"], dd["sem_seg_file"]): x for dd, x in zip(dataset_dicts, cache)}
         return cache
 
     def _load_patch(self, dataset_dict, skip_patch: bool = False, img_key=None, seg_key=None):
@@ -552,7 +507,7 @@ class PatchDataLoader(DefaultDataLoader):
             if sem_seg_file and is_img_seg_file_same:
                 mask = f[seg_key][patch]  # HxWxDx...xC
             else:
-                s = h5py.File(sem_seg_file, "r") 
+                s = h5py.File(sem_seg_file, "r")
                 mask = s[seg_key][patch]
                 s.close()
             f.close()
@@ -611,9 +566,7 @@ class PatchDataLoader(DefaultDataLoader):
         coords = [dd["_patch"] for dd in self._dataset_dicts]
 
         num_patches = vols_patched[0].shape[0]
-        assert len(coords) == num_patches, "{} patches, {} coords".format(
-            num_patches, len(coords)
-        )
+        assert len(coords) == num_patches, "{} patches, {} coords".format(num_patches, len(coords))
         # num_vols = len(vols_patched)
         # TODO: fix in case that v.shape[-1] is not actually a channel dimension
         new_vols = [
@@ -659,9 +612,7 @@ class N5dDataLoader(PatchDataLoader):
         if cfg.IMG_SIZE[-1] % 2 != 1:
             raise ValueError("channel dimension must be odd")
 
-        super().__init__(
-            cfg, dataset_dicts, is_test, shuffle, drop_last, batch_size
-        )
+        super().__init__(cfg, dataset_dicts, is_test, shuffle, drop_last, batch_size)
 
     def _load_input(self, dataset_dict):
         image, mask = super()._load_input(dataset_dict)
@@ -704,23 +655,18 @@ class S25dDataLoader(DefaultDataLoader):
         # slice.
         # TODO: remove copying dictionaries if runtime speed issues found
         mapping = defaultdict(list)
-        sorted_dataset_dicts = sorted(
-            dataset_dicts, key=lambda d: (d["scan_id"], d["slice_id"])
-        )
+        sorted_dataset_dicts = sorted(dataset_dicts, key=lambda d: (d["scan_id"], d["slice_id"]))
         for dd in sorted_dataset_dicts:
             mapping[dd["scan_id"]].append(dd)
         for scan_id, dds in mapping.items():
             slice_order = [dd["slice_id"] for dd in dds]
-            assert sorted(slice_order) == slice_order, (
-                "Error in sorting dataset dictionaries "
-                "for scan {} by slice id".format(scan_id)
-            )
+            assert (
+                sorted(slice_order) == slice_order
+            ), "Error in sorting dataset dictionaries " "for scan {} by slice id".format(scan_id)
 
         self._scan_to_dicts = mapping
 
-        super().__init__(
-            cfg, dataset_dicts, is_test, shuffle, drop_last, batch_size
-        )
+        super().__init__(cfg, dataset_dicts, is_test, shuffle, drop_last, batch_size)
 
     def _load_input(self, dataset_dict):
         """Find dataset dicts corresponding to flanking/neighboring slices and

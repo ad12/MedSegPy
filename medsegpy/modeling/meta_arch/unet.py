@@ -120,13 +120,7 @@ def build_decoder_block(
 
     if len(num_filters) > 1:
         x = build_encoder_block(
-            x,
-            num_filters[1:],
-            kernel_size,
-            num_conv,
-            activation,
-            kernel_initializer,
-            dropout,
+            x, num_filters[1:], kernel_size, num_conv, activation, kernel_initializer, dropout
         )
     return x
 
@@ -149,16 +143,12 @@ class UNet2D(ModelBuilder):
     def build_model(self, input_tensor=None) -> Model:
         cfg = self._cfg
         seed = cfg.SEED
-        input_size = cfg.IMG_SIZE
         depth = cfg.DEPTH
         kernel_size = self.kernel_size
         self.use_attention = cfg.USE_ATTENTION
         self.use_deep_supervision = cfg.USE_DEEP_SUPERVISION
 
-        kernel_initializer = {
-            "class_name": cfg.KERNEL_INITIALIZER,
-            "config": {"seed": seed},
-        }
+        kernel_initializer = {"class_name": cfg.KERNEL_INITIALIZER, "config": {"seed": seed}}
         output_mode = cfg.LOSS[1]
         assert output_mode in ["sigmoid", "softmax"]
         num_classes = cfg.get_num_classes()
@@ -197,15 +187,11 @@ class UNet2D(ModelBuilder):
                 pool_size = self._get_pool_size(x)
                 pool_sizes.append(pool_size)
                 if depth_cnt < depth - 2:
-                    scale_factors[depth_cnt + 1] = (
-                        scale_factors[depth_cnt] * pool_size
-                    )
+                    scale_factors[depth_cnt + 1] = scale_factors[depth_cnt] * pool_size
                 x = self._pooler_type(pool_size=pool_size)(x)
 
         # Decoder.
-        for i, (x_skip, unpool_size) in enumerate(
-            zip(x_skips[::-1], pool_sizes[::-1])
-        ):
+        for i, (x_skip, unpool_size) in enumerate(zip(x_skips[::-1], pool_sizes[::-1])):
             depth_cnt = depth - i - 2
             skip_connect = x_skip
             # The first skip connection is not passed through
@@ -241,8 +227,7 @@ class UNet2D(ModelBuilder):
                 # Determine scale factor for deep supervision
                 deep_supervision_outputs.append(
                     self._deep_supervision(
-                        out_channels=num_classes,
-                        scale_factor=tuple(scale_factors[depth_cnt]),
+                        out_channels=num_classes, scale_factor=tuple(scale_factors[depth_cnt])
                     )(x)
                 )
 
@@ -275,10 +260,7 @@ class UNet2D(ModelBuilder):
         return Input(input_size)
 
     def _get_pool_size(self, x: tf.Tensor):
-        return [
-            2 if d % 2 == 0 or d % 3 != 0 else 3
-            for d in x.shape.as_list()[1:-1]
-        ]
+        return [2 if d % 2 == 0 or d % 3 != 0 else 3 for d in x.shape.as_list()[1:-1]]
 
 
 @META_ARCH_REGISTRY.register()

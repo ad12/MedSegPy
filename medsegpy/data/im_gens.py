@@ -66,15 +66,10 @@ class Generator(ABC):
     SUPPORTED_TAGS = [""]
 
     def __init__(self, cfg: Config):
-        warnings.warn(
-            "Generator is deprecated, use DataLoader instead",
-            DeprecationWarning,
-        )
+        warnings.warn("Generator is deprecated, use DataLoader instead", DeprecationWarning)
 
         if cfg.TAG not in self.SUPPORTED_TAGS:
-            raise ValueError(
-                "Tag mismatch: config must have tag in %s" % self.SUPPORTED_TAGS
-            )
+            raise ValueError("Tag mismatch: config must have tag in %s" % self.SUPPORTED_TAGS)
         self.config = cfg
         self.fname_parser = OAISliceWise()
 
@@ -106,9 +101,7 @@ class Generator(ABC):
         """
         accepted_states = [GeneratorState.TRAINING, GeneratorState.VALIDATION]
         if state not in accepted_states:
-            raise ValueError(
-                "Generator must be either {}".format(accepted_states)
-            )
+            raise ValueError("Generator must be either {}".format(accepted_states))
 
     @abstractmethod
     def img_generator_test(self, model=None):
@@ -126,8 +119,7 @@ class Generator(ABC):
 
     @abstractmethod
     def summary(self):
-        """Log summary based on `self.cfg.STATE`.
-        """
+        """Log summary based on `self.cfg.STATE`."""
         pass
 
     @abstractmethod
@@ -312,14 +304,7 @@ class OAIGenerator(Generator):
     for more information.
     """
 
-    SUPPORTED_TAGS = [
-        "oai_aug",
-        "oai",
-        "oai_2d",
-        "oai_aug_2d",
-        "oai_2.5d",
-        "oai_aug_2.5d",
-    ]
+    SUPPORTED_TAGS = ["oai_aug", "oai", "oai_2d", "oai_aug_2d", "oai_2.5d", "oai_aug_2.5d"]
     __EXPECTED_IMG_SIZE_DIMS__ = 3
 
     def img_generator(self, state: GeneratorState):
@@ -334,9 +319,7 @@ class OAIGenerator(Generator):
         base_info = self._img_generator_base_info(state)
         batch_size = base_info["batch_size"]
         shuffle_epoch = base_info["shuffle_epoch"]
-        files, batches_per_epoch, max_slice_num = self._calc_generator_info(
-            state
-        )
+        files, batches_per_epoch, max_slice_num = self._calc_generator_info(state)
 
         total_classes = config.get_num_classes()
         mask_size = img_size[:-1] + (total_classes,)
@@ -366,13 +349,13 @@ class OAIGenerator(Generator):
                         include_background=include_background,
                     )
 
-                    assert im.shape == img_size, (
-                        "Input shape mismatch. Expected %s, got %s"
-                        % (img_size, im.shape)
+                    assert im.shape == img_size, "Input shape mismatch. Expected %s, got %s" % (
+                        img_size,
+                        im.shape,
                     )
-                    assert seg.shape == mask_size, (
-                        "Ouput shape mismatch. Expected %s, got %s"
-                        % (mask_size, seg.shape)
+                    assert seg.shape == mask_size, "Ouput shape mismatch. Expected %s, got %s" % (
+                        mask_size,
+                        seg.shape,
                     )
 
                     x[file_cnt, ...] = im
@@ -391,16 +374,12 @@ class OAIGenerator(Generator):
         batch_size = base_info["batch_size"]
 
         if len(img_size) != self.__EXPECTED_IMG_SIZE_DIMS__:
-            raise ValueError(
-                "Image size must be %dD" % self.__EXPECTED_IMG_SIZE_DIMS__
-            )
+            raise ValueError("Image size must be %dD" % self.__EXPECTED_IMG_SIZE_DIMS__)
 
         total_classes = config.get_num_classes()
         mask_size = img_size[:-1] + (total_classes,)
 
-        files, batches_per_epoch, _ = self._calc_generator_info(
-            GeneratorState.TESTING
-        )
+        files, batches_per_epoch, _ = self._calc_generator_info(GeneratorState.TESTING)
         files = self.sort_files(files)
         scan_id_to_files = self._map_files_to_scan_id(files)
         scan_ids = sorted(scan_id_to_files.keys())
@@ -416,9 +395,7 @@ class OAIGenerator(Generator):
                 filepath = scan_id_files[fcount]
 
                 # Make sure that this pid is actually in the filename
-                assert (
-                    scan_id in filepath
-                ), "scan_id missing: id %s not in %s" % (scan_id, filepath)
+                assert scan_id in filepath, "scan_id missing: id %s not in %s" % (scan_id, filepath)
 
                 im, seg_total = self._load_input_helper(
                     filepath=filepath,
@@ -479,12 +456,7 @@ class OAIGenerator(Generator):
         return scan_id_files
 
     def _load_input_helper(
-        self,
-        filepath,
-        tissues,
-        num_neighboring_slices,
-        max_slice_num,
-        include_background,
+        self, filepath, tissues, num_neighboring_slices, max_slice_num, include_background
     ):
         """
 
@@ -501,14 +473,10 @@ class OAIGenerator(Generator):
 
         if num_neighboring_slices:
             im, seg = self._load_neighboring_slices(
-                num_slices=num_neighboring_slices,
-                filepath=filepath,
-                max_slice=max_slice_num,
+                num_slices=num_neighboring_slices, filepath=filepath, max_slice=max_slice_num
             )
         else:
-            im, seg = self._load_inputs(
-                os.path.dirname(filepath), os.path.basename(filepath)
-            )
+            im, seg = self._load_inputs(os.path.dirname(filepath), os.path.basename(filepath))
 
         # support multi class
         if len(tissues) > 1:
@@ -549,21 +517,14 @@ class OAIGenerator(Generator):
         :param filepath:
         :return:
         """
-        data_path, filename = (
-            os.path.dirname(filepath),
-            os.path.basename(filepath),
-        )
+        data_path, filename = (os.path.dirname(filepath), os.path.basename(filepath))
 
         d_slice = num_slices // 2
         filename_split = filename.split("_")
         central_slice_no = int(filename_split[-1])
 
         slice_nos = np.asarray(
-            list(
-                range(
-                    central_slice_no - d_slice, central_slice_no + d_slice + 1
-                )
-            )
+            list(range(central_slice_no - d_slice, central_slice_no + d_slice + 1))
         )
         slice_nos[slice_nos < 1] = 1
         slice_nos[slice_nos > max_slice] = max_slice
@@ -629,9 +590,7 @@ class OAIGenerator(Generator):
             elif data_path_or_files.endswith(".txt"):
                 filepaths = self._parse_txt_file(data_path_or_files)
             else:
-                raise ValueError(
-                    "Unknown file to parse {}".format(data_path_or_files)
-                )
+                raise ValueError("Unknown file to parse {}".format(data_path_or_files))
         elif type(data_path_or_files) is list:
             filepaths = data_path_or_files
         else:
@@ -648,9 +607,7 @@ class OAIGenerator(Generator):
 
         filepaths = self._parse_filepaths(data_path_or_files)
 
-        unique_filepaths = (
-            {}
-        )  # use dict to avoid having to reconstruct set every time
+        unique_filepaths = {}  # use dict to avoid having to reconstruct set every time
 
         # track the largest slice number that we see
         # assume it is the same for all scans
@@ -703,25 +660,14 @@ class OAIGenerator(Generator):
 
             logger.info(
                 "INFO: Train size: %d slices (%d subjects), batch size: %d"
-                % (
-                    len(train_files),
-                    num_train_subjects,
-                    self.config.TRAIN_BATCH_SIZE,
-                )
+                % (len(train_files), num_train_subjects, self.config.TRAIN_BATCH_SIZE)
             )
             logger.info(
                 "INFO: Valid size: %d slices (%d subjects), batch size: %d"
-                % (
-                    len(valid_files),
-                    num_valid_subjects,
-                    self.config.VALID_BATCH_SIZE,
-                )
+                % (len(valid_files), num_valid_subjects, self.config.VALID_BATCH_SIZE)
             )
             logger.info("INFO: Image size: %s" % (self.config.IMG_SIZE,))
-            logger.info(
-                "INFO: Image types included in training: %s"
-                % (self.config.FILE_TYPES,)
-            )
+            logger.info("INFO: Image types included in training: %s" % (self.config.FILE_TYPES,))
         else:  # config in Testing state
             test_files, test_batches_per_epoch, _ = self._calc_generator_info(
                 GeneratorState.TESTING
@@ -762,12 +708,8 @@ class OAIGenerator(Generator):
         return info_dict
 
     def num_steps(self):
-        _, train_batches_per_epoch, _ = self._calc_generator_info(
-            GeneratorState.TRAINING
-        )
-        _, valid_batches_per_epoch, _ = self._calc_generator_info(
-            GeneratorState.VALIDATION
-        )
+        _, train_batches_per_epoch, _ = self._calc_generator_info(GeneratorState.TRAINING)
+        _, valid_batches_per_epoch, _ = self._calc_generator_info(GeneratorState.VALIDATION)
 
         return train_batches_per_epoch, valid_batches_per_epoch
 
@@ -777,17 +719,14 @@ class OAIGenerator(Generator):
 
 
 class OAI3DGenerator(OAIGenerator):
-    """Generator for training 3D networks where data is stored as 2D slices.
-    """
+    """Generator for training 3D networks where data is stored as 2D slices."""
 
     SUPPORTED_TAGS = ["oai_3d"]
     __EXPECTED_IMG_SIZE_DIMS__ = 4
 
     def __init__(self, config: Config):
         if config.TAG == "oai_3d_block-train_full-test":
-            assert config.testing, (
-                "Config must be in testing state to use tag %s" % config.TAG
-            )
+            assert config.testing, "Config must be in testing state to use tag %s" % config.TAG
 
         super().__init__(config)
 
@@ -825,12 +764,7 @@ class OAI3DGenerator(OAIGenerator):
         }
 
         # slices are 1-indexed
-        slices = list(
-            range(
-                volume_index * num_slices + 1,
-                (volume_index + 1) * num_slices + 1,
-            )
-        )
+        slices = list(range(volume_index * num_slices + 1, (volume_index + 1) * num_slices + 1))
         slice_fnames = []
         for s in slices:
             base_info["slice"] = s
@@ -839,12 +773,7 @@ class OAI3DGenerator(OAIGenerator):
         return slice_fnames
 
     def _load_input_helper(
-        self,
-        filepath,
-        tissues,
-        num_neighboring_slices,
-        max_slice_num,
-        include_background,
+        self, filepath, tissues, num_neighboring_slices, max_slice_num, include_background
     ):
         # check that fname contains a dirpath
         assert os.path.dirname(filepath) != ""
@@ -859,9 +788,7 @@ class OAI3DGenerator(OAIGenerator):
             seg_tissues = self._compress_multi_class_mask(seg, tissues)
         else:
             seg_tissues = seg[..., 0, tissues]
-            if isinstance(
-                tissues[0], list
-            ):  # if tissues are supposed to be summed
+            if isinstance(tissues[0], list):  # if tissues are supposed to be summed
                 # (like tibial cartilage and meniscus)
                 seg_tissues = np.sum(seg_tissues, axis=-1)
         seg_total = seg_tissues
@@ -896,10 +823,7 @@ class OAI3DGenerator(OAIGenerator):
         :return: tuple of 2 3d numpy array corresponding to 3d input volume and
             3d segmentation volume (im_vol, seg_vol)
         """
-        data_path, filename = (
-            os.path.dirname(filepath),
-            os.path.basename(filepath),
-        )
+        data_path, filename = (os.path.dirname(filepath), os.path.basename(filepath))
         corresponding_files = self.__get_corresponding_files__(filename)
 
         ims = []
@@ -916,9 +840,9 @@ class OAI3DGenerator(OAIGenerator):
         seg_vol = np.transpose(np.squeeze(seg_vol), [0, 1, 3, 2])
         seg_vol = seg_vol[..., np.newaxis]
 
-        assert im_vol.shape == self.config.IMG_SIZE, (
-            "Loaded volume of size %s. Expected %s"
-            % (im_vol.shape, self.config.IMG_SIZE)
+        assert im_vol.shape == self.config.IMG_SIZE, "Loaded volume of size %s. Expected %s" % (
+            im_vol.shape,
+            self.config.IMG_SIZE,
         )
 
         return im_vol, seg_vol
@@ -932,9 +856,7 @@ class OAI3DGenerator(OAIGenerator):
 
         filepaths = self._parse_filepaths(data_path_or_files)
 
-        unique_filepaths = (
-            {}
-        )  # use dict to avoid having to reconstruct set every time
+        unique_filepaths = {}  # use dict to avoid having to reconstruct set every time
 
         # track the largest slice number that we see
         # assume it is the same for all scans
@@ -963,9 +885,7 @@ class OAI3DGenerator(OAIGenerator):
         # of the same volume.
         # We only include file corresponding to slice 1, because other files
         # are accounted for by default
-        slices_to_include = range(
-            min_slice_id, max_slice_id + 1, self.config.IMG_SIZE[2]
-        )
+        slices_to_include = range(min_slice_id, max_slice_id + 1, self.config.IMG_SIZE[2])
         files_refined = []
         for filepath in files:
             fname = os.path.basename(filepath)
@@ -987,10 +907,7 @@ class OAI3DGenerator(OAIGenerator):
         add_file = super()._add_file(file, unique_filenames, pids, augment_data)
 
         # If only subset of slices should be selected, then return
-        if (
-            hasattr(self.config, "SLICE_SUBSET")
-            and self.config.SLICE_SUBSET is not None
-        ):
+        if hasattr(self.config, "SLICE_SUBSET") and self.config.SLICE_SUBSET is not None:
             file_info = self.fname_parser.get_file_info(file)
             add_file &= file_info["slice"] in range(
                 self.config.SLICE_SUBSET[0], self.config.SLICE_SUBSET[1] + 1
@@ -1000,32 +917,21 @@ class OAI3DGenerator(OAIGenerator):
 
 
 class OAI3DGeneratorFullVolume(OAI3DGenerator):
-    SUPPORTED_TAGS = [
-        "oai_3d_block-train_full-vol-test",
-        "full-vol-test",
-        "oai_3d_full-vol-test",
-    ]
+    SUPPORTED_TAGS = ["oai_3d_block-train_full-vol-test", "full-vol-test", "oai_3d_full-vol-test"]
 
     def __init__(self, config: Config):
         if not config.testing:
-            raise ValueError(
-                "%s only available for testing 3D volumes"
-                % self.__class__.__name__
-            )
+            raise ValueError("%s only available for testing 3D volumes" % self.__class__.__name__)
 
         super().__init__(config)
 
         # update image size for config to be total volume
         img_size = self.__get_img_dims__(GeneratorState.TESTING)
-        assert (
-            len(img_size) == 3
-        ), "Loaded image size must be a tuple of 3 integers (y, x, #slices)"
+        assert len(img_size) == 3, "Loaded image size must be a tuple of 3 integers (y, x, #slices)"
         self.config.IMG_SIZE = img_size + self.config.IMG_SIZE[3:]
 
     def _img_generator_base_info(self, state: GeneratorState):
-        assert (
-            state == GeneratorState.TESTING
-        ), "Only testing state is supported for this generator"
+        assert state == GeneratorState.TESTING, "Only testing state is supported for this generator"
         return super()._img_generator_base_info(state)
 
     def __get_img_dims__(self, state: GeneratorState):
@@ -1043,9 +949,7 @@ class OAI3DGeneratorFullVolume(OAI3DGenerator):
         else:
             raise ValueError("data_path_or_files must be type str or list")
 
-        unique_filepaths = (
-            {}
-        )  # use dict to avoid having to reconstruct set every time
+        unique_filepaths = {}  # use dict to avoid having to reconstruct set every time
 
         # track the largest slice number that we see
         # assume it is the same for all scans
@@ -1067,18 +971,14 @@ class OAI3DGeneratorFullVolume(OAI3DGenerator):
 
         # load 1 file to get inplane resolution
         filepath = list(unique_filepaths.keys())[0]
-        im_vol, _ = self._load_inputs(
-            os.path.dirname(filepath), os.path.basename(filepath)
-        )
+        im_vol, _ = self._load_inputs(os.path.dirname(filepath), os.path.basename(filepath))
         return im_vol.shape[:2] + (num_slices,)
 
     def _reformat_testing_scans(self, vols):
         vols_updated = []
         for v in vols:
             assert (
-                v.ndim == 5
-                and v.shape[0] == 1
-                and v.shape[1:] == self.config.IMG_SIZE
+                v.ndim == 5 and v.shape[0] == 1 and v.shape[1:] == self.config.IMG_SIZE
             ), "img dims must be %s" % str((1,) + self.config.IMG_SIZE)
             v_updated = np.squeeze(v, axis=0)
             v_updated = np.transpose(v_updated, [2, 0, 1, 3])
@@ -1086,14 +986,11 @@ class OAI3DGeneratorFullVolume(OAI3DGenerator):
         return tuple(vols_updated)
 
     def num_steps(self):
-        raise ValueError(
-            "This method is not supported for a testing-only generator"
-        )
+        raise ValueError("This method is not supported for a testing-only generator")
 
 
 class OAI3DBlockGenerator(OAI3DGenerator):
-    """Generator for structuring 2D data into 3D blocks.
-    """
+    """Generator for structuring 2D data into 3D blocks."""
 
     SUPPORTED_TAGS = ["oai_3d_block"]
 
@@ -1136,9 +1033,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
             for fp in filepaths:
                 loaded_data_list.append(self.process_filepath(fp))
         # sort list first by volume_id, then by slice_num
-        loaded_data_list = sorted(
-            loaded_data_list, key=(lambda x: (x[0], x[1]))
-        )
+        loaded_data_list = sorted(loaded_data_list, key=(lambda x: (x[0], x[1])))
 
         scans_data = dict()
         for volume_id, _, im, seg in loaded_data_list:
@@ -1206,9 +1101,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         return im_volume, seg_volume
 
     def blockify_volume(self, im_volume: np.ndarray, seg_volume: np.ndarray):
-        assert (
-            im_volume.ndim == 3
-        ), "Dimension mismatch. im_volume must be 3D (y, x, z)."
+        assert im_volume.ndim == 3, "Dimension mismatch. im_volume must be 3D (y, x, z)."
         assert (
             seg_volume.ndim == 4
         ), "Dimension mismatch. seg_volume must be 4D (y, x, z, #classes)."
@@ -1217,10 +1110,9 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         expected_block_size = (yb, xb, zb)
 
         # verify that the sizes of im_volume and seg_volume are as expected
-        assert im_volume.shape == seg_volume.shape[:-1], (
-            "Input volume of size %s. Masks of size %s"
-            % (im_volume.shape, seg_volume.shape)
-        )
+        assert (
+            im_volume.shape == seg_volume.shape[:-1]
+        ), "Input volume of size %s. Masks of size %s" % (im_volume.shape, seg_volume.shape)
         self.__validate_img_size__(im_volume.shape)
 
         expected_num_blocks = self.__calc_num_blocks__(im_volume.shape)
@@ -1230,18 +1122,20 @@ class OAI3DBlockGenerator(OAI3DGenerator):
                 for x in range(0, im_volume.shape[0], xb):
                     im = im_volume[y : y + yb, x : x + xb, z : z + zb]
                     seg = seg_volume[y : y + yb, x : x + xb, z : z + zb, :]
-                    assert im.shape[:3] == seg.shape[:3], (
-                        "Block shape mismatch. im_block %s, seg_block %s"
-                        % (im.shape, seg.shape)
-                    )
-                    assert im.shape[:3] == expected_block_size, (
-                        "Block shape error. Expected %s, but got %s"
-                        % (expected_block_size, im.shape)
+                    assert (
+                        im.shape[:3] == seg.shape[:3]
+                    ), "Block shape mismatch. im_block %s, seg_block %s" % (im.shape, seg.shape)
+                    assert (
+                        im.shape[:3] == expected_block_size
+                    ), "Block shape error. Expected %s, but got %s" % (
+                        expected_block_size,
+                        im.shape,
                     )
                     blocks.append((im, seg))
-        assert (
-            len(blocks) == expected_num_blocks
-        ), "Expected %d blocks, got %d" % (expected_num_blocks, len(blocks))
+        assert len(blocks) == expected_num_blocks, "Expected %d blocks, got %d" % (
+            expected_num_blocks,
+            len(blocks),
+        )
 
         return blocks
 
@@ -1262,9 +1156,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         scan_to_blocks = dict()
         for scan_id in ordered_keys:
             im_volume, seg_volume = scan_volumes[scan_id]
-            scan_to_blocks[scan_id] = self.blockify_volume(
-                im_volume, seg_volume
-            )
+            scan_to_blocks[scan_id] = self.blockify_volume(im_volume, seg_volume)
 
         return scan_to_blocks
 
@@ -1278,19 +1170,14 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         num_blocks = 1
         for dim in range(3):
             assert total_volume_shape[dim] % self.config.IMG_SIZE[dim] == 0, (
-                "Verify volumes prior to calling this function "
-                "using `__validate_img_size__`"
+                "Verify volumes prior to calling this function " "using `__validate_img_size__`"
             )
             num_blocks *= total_volume_shape[dim] // self.config.IMG_SIZE[dim]
-        assert int(num_blocks) == num_blocks, (
-            "Num_blocks is %0.2f, must be an integer" % num_blocks
-        )
+        assert int(num_blocks) == num_blocks, "Num_blocks is %0.2f, must be an integer" % num_blocks
 
         return int(num_blocks)
 
-    def _calc_generator_info(
-        self, state: GeneratorState
-    ) -> Tuple[dict, int, dict]:
+    def _calc_generator_info(self, state: GeneratorState) -> Tuple[dict, int, dict]:
         base_info = self._img_generator_base_info(state)
         data_path_or_files = base_info["data_path_or_files"]
         batch_size = base_info["batch_size"]
@@ -1299,9 +1186,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
 
         filepaths = self._parse_filepaths(data_path_or_files)
 
-        unique_filepaths = (
-            {}
-        )  # use dict to avoid having to reconstruct set every time
+        unique_filepaths = {}  # use dict to avoid having to reconstruct set every time
 
         # track the largest slice number that we see - assume it is the same
         # for all scans
@@ -1364,9 +1249,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         tissues = config.CATEGORIES
         include_background = config.INCLUDE_BACKGROUND
 
-        scan_to_blocks, batches_per_epoch, scan_to_im_size = self.cached_data(
-            state
-        )
+        scan_to_blocks, batches_per_epoch, scan_to_im_size = self.cached_data(state)
 
         total_classes = config.get_num_classes()
         mask_size = img_size[:-1] + (total_classes,)
@@ -1385,16 +1268,14 @@ class OAI3DBlockGenerator(OAI3DGenerator):
                 if im.ndim == 3:
                     im = im[..., np.newaxis]
 
-                seg = self.__format_seg_helper__(
-                    seg, tissues, include_background
+                seg = self.__format_seg_helper__(seg, tissues, include_background)
+                assert im.shape == img_size, "Input shape mismatch. Expected %s, got %s" % (
+                    img_size,
+                    im.shape,
                 )
-                assert im.shape == img_size, (
-                    "Input shape mismatch. Expected %s, got %s"
-                    % (img_size, im.shape)
-                )
-                assert seg.shape == mask_size, (
-                    "Ouput shape mismatch. Expected %s, got %s"
-                    % (mask_size, seg.shape)
+                assert seg.shape == mask_size, "Ouput shape mismatch. Expected %s, got %s" % (
+                    mask_size,
+                    seg.shape,
                 )
 
                 x[block_cnt, ...] = im
@@ -1402,12 +1283,8 @@ class OAI3DBlockGenerator(OAI3DGenerator):
 
             # reshape into original volume shape
             recon_vol = None
-            ytrue_blocks = [
-                (np.squeeze(x[b, ...]), y[b, ...]) for b in range(num_blocks)
-            ]
-            im_vol, ytrue_vol = self.unify_blocks(
-                ytrue_blocks, scan_to_im_size[vol_id]
-            )
+            ytrue_blocks = [(np.squeeze(x[b, ...]), y[b, ...]) for b in range(num_blocks)]
+            im_vol, ytrue_vol = self.unify_blocks(ytrue_blocks, scan_to_im_size[vol_id])
 
             # reshape to expected output shape
             im_vol = np.transpose(im_vol, [2, 0, 1])
@@ -1418,13 +1295,8 @@ class OAI3DBlockGenerator(OAI3DGenerator):
                 start_time = time.time()
                 recon = model.predict(x, batch_size=batch_size)
                 time_elapsed = time.time() - start_time
-                ypred_blocks = [
-                    (np.squeeze(x[b, ...]), recon[b, ...])
-                    for b in range(num_blocks)
-                ]
-                _, recon_vol = self.unify_blocks(
-                    ypred_blocks, scan_to_im_size[vol_id]
-                )
+                ypred_blocks = [(np.squeeze(x[b, ...]), recon[b, ...]) for b in range(num_blocks)]
+                _, recon_vol = self.unify_blocks(ypred_blocks, scan_to_im_size[vol_id])
                 recon_vol = np.transpose(recon_vol, [2, 0, 1, 3])
 
             yield (im_vol, ytrue_vol, recon_vol, vol_id, time_elapsed)
@@ -1475,16 +1347,14 @@ class OAI3DBlockGenerator(OAI3DGenerator):
                     if im.ndim == 3:
                         im = im[..., np.newaxis]
 
-                    seg = self.__format_seg_helper__(
-                        seg, tissues, include_background
+                    seg = self.__format_seg_helper__(seg, tissues, include_background)
+                    assert im.shape == img_size, "Input shape mismatch. Expected %s, got %s" % (
+                        img_size,
+                        im.shape,
                     )
-                    assert im.shape == img_size, (
-                        "Input shape mismatch. Expected %s, got %s"
-                        % (img_size, im.shape)
-                    )
-                    assert seg.shape == mask_size, (
-                        "Ouput shape mismatch. Expected %s, got %s"
-                        % (mask_size, seg.shape)
+                    assert seg.shape == mask_size, "Ouput shape mismatch. Expected %s, got %s" % (
+                        mask_size,
+                        seg.shape,
                     )
 
                     x[block_cnt, ...] = im
@@ -1530,10 +1400,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
             self.__state_summary(GeneratorState.VALIDATION)
 
             logger.info("INFO: Image size: %s" % (self.config.IMG_SIZE,))
-            logger.info(
-                "INFO: Image types included in training: %s"
-                % (self.config.FILE_TYPES,)
-            )
+            logger.info("INFO: Image types included in training: %s" % (self.config.FILE_TYPES,))
         else:  # config in Testing state
             self.__state_summary(GeneratorState.TESTING)
             if not config.USE_CROSS_VALIDATION:
@@ -1545,10 +1412,7 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         num_volumes = len(volume_ids)
         num_blocks = self.__get_num_blocks__(scan_to_blocks)
 
-        pids = [
-            self.fname_parser.get_pid_from_volume_id(vol_id)
-            for vol_id in volume_ids
-        ]
+        pids = [self.fname_parser.get_pid_from_volume_id(vol_id) for vol_id in volume_ids]
         num_pids = len(pids)
 
         base_info = self._img_generator_base_info(state)
@@ -1561,12 +1425,8 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         )
 
     def num_steps(self):
-        _, train_batches_per_epoch, _ = self.cached_data(
-            GeneratorState.TRAINING
-        )
-        _, valid_batches_per_epoch, _ = self.cached_data(
-            GeneratorState.VALIDATION
-        )
+        _, train_batches_per_epoch, _ = self.cached_data(GeneratorState.TRAINING)
+        _, valid_batches_per_epoch, _ = self.cached_data(GeneratorState.VALIDATION)
 
         return train_batches_per_epoch, valid_batches_per_epoch
 
@@ -1587,9 +1447,7 @@ class CTGenerator(OAIGenerator):
 
     def __init__(self, config: Config, windows=None):
         if windows and config.num_neighboring_slices() != len(windows):
-            raise ValueError(
-                "Expected {} windows".format(config.num_neighboring_slices())
-            )
+            raise ValueError("Expected {} windows".format(config.num_neighboring_slices()))
         self.windows = windows
         super().__init__(config)
 
@@ -1631,10 +1489,7 @@ class CTGenerator(OAIGenerator):
 
         Overloads traditional 2.5D networks that look at neighboring slices.
         """
-        data_path, filename = (
-            os.path.dirname(filepath),
-            os.path.basename(filepath),
-        )
+        data_path, filename = (os.path.dirname(filepath), os.path.basename(filepath))
         im, seg = self._load_inputs_basic(data_path, filename)
         h, w = im.shape[:2]
 
@@ -1657,13 +1512,9 @@ class CTGenerator(OAIGenerator):
         batch_size = base_info["batch_size"]
 
         if len(img_size) != self.__EXPECTED_IMG_SIZE_DIMS__:
-            raise ValueError(
-                "Image size must be {}D".format(self.__EXPECTED_IMG_SIZE_DIMS__)
-            )
+            raise ValueError("Image size must be {}D".format(self.__EXPECTED_IMG_SIZE_DIMS__))
 
-        files, batches_per_epoch, _ = self._calc_generator_info(
-            GeneratorState.TESTING
-        )
+        files, batches_per_epoch, _ = self._calc_generator_info(GeneratorState.TESTING)
         files = self.sort_files(files)
         scan_id_to_files = self._map_files_to_scan_id(files)
         scan_ids = sorted(scan_id_to_files.keys())

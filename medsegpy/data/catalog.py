@@ -44,12 +44,10 @@ class DatasetCatalog(object):
             func (callable): a callable which takes no arguments and returns a
                 list of dicts.
         """
-        assert callable(
-            func
-        ), "You must register a function with `DatasetCatalog.register`!"
-        assert (
-            name not in DatasetCatalog._REGISTERED
-        ), "Dataset '{}' is already registered!".format(name)
+        assert callable(func), "You must register a function with `DatasetCatalog.register`!"
+        assert name not in DatasetCatalog._REGISTERED, "Dataset '{}' is already registered!".format(
+            name
+        )
         DatasetCatalog._REGISTERED[name] = func
 
     @staticmethod
@@ -121,27 +119,21 @@ class Metadata(types.SimpleNamespace):
         if key in self._RENAMED:
             log_first_n(
                 logging.WARNING,
-                "Metadata '{}' was renamed to '{}'!".format(
-                    key, self._RENAMED[key]
-                ),
+                "Metadata '{}' was renamed to '{}'!".format(key, self._RENAMED[key]),
                 n=10,
             )
             return getattr(self, self._RENAMED[key])
 
         raise AttributeError(
             "Attribute '{}' does not exist in the metadata of '{}'. "
-            "Available keys are {}.".format(
-                key, self.name, str(self.__dict__.keys())
-            )
+            "Available keys are {}.".format(key, self.name, str(self.__dict__.keys()))
         )
 
     def __setattr__(self, key, val):
         if key in self._RENAMED:
             log_first_n(
                 logging.WARNING,
-                "Metadata '{}' was renamed to '{}'!".format(
-                    key, self._RENAMED[key]
-                ),
+                "Metadata '{}' was renamed to '{}'!".format(key, self._RENAMED[key]),
                 n=10,
             )
             setattr(self, self._RENAMED[key], val)
@@ -151,9 +143,7 @@ class Metadata(types.SimpleNamespace):
             oldval = getattr(self, key)
             assert oldval == val, (
                 "Attribute '{}' in the metadata of '{}' cannot be set "
-                "to a different value!\n{} != {}".format(
-                    key, self.name, oldval, val
-                )
+                "to a different value!\n{} != {}".format(key, self.name, oldval, val)
             )
         except AttributeError:
             super().__setattr__(key, val)
@@ -225,8 +215,7 @@ class MetadataCatalog:
         This method will be phased out in future versions.
         """
         catalog = {
-            m.get("scan_root", None): name
-            for name, m in MetadataCatalog._NAME_TO_META.items()
+            m.get("scan_root", None): name for name, m in MetadataCatalog._NAME_TO_META.items()
         }
         catalog.pop(None)
         return catalog[path]

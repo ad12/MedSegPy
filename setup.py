@@ -9,19 +9,15 @@ import keras
 import tensorflow as tf
 
 tf_ver = [int(x) for x in tf.__version__.split(".")[:2]]
-#assert [1, 8] <= tf_ver < [2, 0], "Requires TensorFlow >=1.8,<2.0"
+# assert [1, 8] <= tf_ver < [2, 0], "Requires TensorFlow >=1.8,<2.0"
 keras_ver = [int(x) for x in keras.__version__.split(".")[:3]]
-#assert [2, 1, 6] <= keras_ver < [2, 2, 0], "Requires Keras >=2.1.6, <2.2.0"
+# assert [2, 1, 6] <= keras_ver < [2, 2, 0], "Requires Keras >=2.1.6, <2.2.0"
 
 
 def get_version():
-    init_py_path = path.join(
-        path.abspath(path.dirname(__file__)), "medsegpy", "__init__.py"
-    )
+    init_py_path = path.join(path.abspath(path.dirname(__file__)), "medsegpy", "__init__.py")
     init_py = open(init_py_path, "r").readlines()
-    version_line = [l.strip() for l in init_py if l.startswith("__version__")][
-        0
-    ]
+    version_line = [l.strip() for l in init_py if l.startswith("__version__")][0]
     version = version_line.split("=")[-1].strip().strip("'\"")
 
     # The following is used to build release packages.
@@ -60,12 +56,10 @@ def get_required_packages():
         "simpleitk",
         "configparser",
         "resnet",
-        "more-itertools"
+        "more-itertools",
     ]
     if tf_ver >= [2, 0]:
-        default.extend([
-            "more-itertools",
-        ])
+        default.extend(["more-itertools"])
     return default
 
 
@@ -74,19 +68,12 @@ setup(
     version=get_version(),
     author="Arjun Desai",
     url="https://github.com/ad12/MedSegPy",
-    description="MedSegPy is a framework for research on medical image "
-    "segmentation.",
+    description="MedSegPy is a framework for research on medical image " "segmentation.",
     packages=find_packages(exclude=("configs", "tests")),
     python_requires=">=3.6",
     install_requires=get_required_packages(),
     extras_require={
         "all": ["shapely", "psutil"],
-        "dev": [
-            "flake8",
-            "isort",
-            "black==19.3b0",
-            "flake8-bugbear",
-            "flake8-comprehensions",
-        ],
+        "dev": ["flake8", "isort", "black==19.3b0", "flake8-bugbear", "flake8-comprehensions"],
     },
 )

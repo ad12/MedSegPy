@@ -107,16 +107,13 @@ class MedTransform(ABC):
             transform = HFlipTransform(...)
             transform.apply_voxel(voxel_data)  # func will be called
         """
-        assert callable(func), (
-            "You can only register a callable to a MedTransform. "
-            "Got {} instead.".format(func)
-        )
+        assert callable(
+            func
+        ), "You can only register a callable to a MedTransform. " "Got {} instead.".format(func)
         argspec = inspect.getfullargspec(func)
         assert len(argspec.args) == 2, (
             "You can only register a function that takes two positional "
-            "arguments to a Transform! Got a function with spec {}".format(
-                str(argspec)
-            )
+            "arguments to a Transform! Got a function with spec {}".format(str(argspec))
         )
         setattr(cls, "apply_" + data_type, func)
 
@@ -162,9 +159,7 @@ class TransformList:
         """
         if name.startswith("apply_"):
             return lambda x: self._apply(x, name)
-        raise AttributeError(
-            "TransformList object has no attribute {}".format(name)
-        )
+        raise AttributeError("TransformList object has no attribute {}".format(name))
 
     def __add__(self, other: "TransformList") -> "TransformList":
         """
@@ -173,9 +168,7 @@ class TransformList:
         Returns:
             TransformList: list of transforms.
         """
-        others = (
-            other.transforms if isinstance(other, TransformList) else [other]
-        )
+        others = other.transforms if isinstance(other, TransformList) else [other]
         return TransformList(self.transforms + others)
 
     def __iadd__(self, other: "TransformList") -> "TransformList":
@@ -185,9 +178,7 @@ class TransformList:
         Returns:
             TransformList: list of transforms.
         """
-        others = (
-            other.transforms if isinstance(other, TransformList) else [other]
-        )
+        others = other.transforms if isinstance(other, TransformList) else [other]
         self.transforms.extend(others)
         return self
 
@@ -198,9 +189,7 @@ class TransformList:
         Returns:
             TransformList: list of transforms.
         """
-        others = (
-            other.transforms if isinstance(other, TransformList) else [other]
-        )
+        others = other.transforms if isinstance(other, TransformList) else [other]
         return TransformList(others + self.transforms)
 
     def __len__(self) -> int:
@@ -294,8 +283,8 @@ class Windowing(MedTransform):
         """
         imgs = []
         bounds = self.bounds
-        for l, u in bounds:
-            imgs.append(np.clip(img, a_min=l, a_max=u))
+        for lower, upper in bounds:
+            imgs.append(np.clip(img, a_min=lower, a_max=upper))
 
         if len(imgs) == 1:
             return imgs[0]

@@ -20,11 +20,7 @@ def generate_seed():
     Args:
         seed (int): if None, will use a strong random seed.
     """
-    seed = (
-        os.getpid()
-        + int(datetime.now().strftime("%S%f"))
-        + int.from_bytes(os.urandom(2), "big")
-    )
+    seed = os.getpid() + int(datetime.now().strftime("%S%f")) + int.from_bytes(os.urandom(2), "big")
     logger = logging.getLogger(__name__)
     logger.info("Using a generated random seed {}".format(seed))
     return seed
@@ -98,14 +94,10 @@ def setup_custom_environment(custom_module):
         module = _import_file("medsegpy.utils.env.custom_module", custom_module)
     else:
         module = importlib.import_module(custom_module)
-    assert hasattr(module, "setup_environment") and callable(
-        module.setup_environment
-    ), (
+    assert hasattr(module, "setup_environment") and callable(module.setup_environment), (
         "Custom environment module defined in {} does not have the "
         "required callable attribute 'setup_environment'."
-    ).format(
-        custom_module
-    )
+    ).format(custom_module)
     module.setup_environment()
 
 
@@ -113,10 +105,11 @@ def supports_wandb():
     return "wandb" in sys.modules and not is_debug()
 
 
-def tf_version() -> Tuple[int,...]:
+def tf_version() -> Tuple[int, ...]:
     global _TF_VERSION
     if not _TF_VERSION:
         import tensorflow as tf
+
         _TF_VERSION = [int(x) for x in tf.__version__.split(".")[:2]]
     return tuple(_TF_VERSION)
 
@@ -124,7 +117,7 @@ def tf_version() -> Tuple[int,...]:
 def is_tf2():
     """Returns `True` if running tensorflow 2.X"""
     version = tf_version()
-    return _TF_VERSION[0] == 2
+    return version[0] == 2
 
 
 def settings_dir():

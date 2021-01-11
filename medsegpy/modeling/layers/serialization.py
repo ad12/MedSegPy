@@ -1,7 +1,6 @@
 """Overload Keras deserialization for default with custom layers and model names."""
 from keras.layers import deserialize as _deserialize
 
-
 from medsegpy.utils import env
 
 from .pooling import MaxPoolingWithArgmax2D, MaxUnpooling2D

@@ -34,6 +34,7 @@ class Model(_Model):
 
     All models implemented in medsegpy should use this class as the base class.
     """
+
     def inference_generator(
         self,
         generator,
@@ -102,8 +103,7 @@ class Model(_Model):
             and generator.shuffle
         ):
             raise ValueError(
-                "Shuffling in generator is not supported. "
-                "Set `generator.shuffle=False`."
+                "Shuffling in generator is not supported. " "Set `generator.shuffle=False`."
             )
 
         if env.is_tf2():
@@ -126,7 +126,6 @@ class Model(_Model):
                 use_multiprocessing=use_multiprocessing,
                 verbose=verbose,
             )
-
 
     def _inference_generator_tf1(
         self,
@@ -170,14 +169,10 @@ class Model(_Model):
         try:
             if workers > 0:
                 if is_sequence:
-                    enqueuer = OrderedEnqueuer(
-                        generator, use_multiprocessing=use_multiprocessing
-                    )
+                    enqueuer = OrderedEnqueuer(generator, use_multiprocessing=use_multiprocessing)
                 else:
                     enqueuer = GeneratorEnqueuer(
-                        generator,
-                        use_multiprocessing=use_multiprocessing,
-                        wait_time=wait_time,
+                        generator, use_multiprocessing=use_multiprocessing, wait_time=wait_time
                     )
                 enqueuer.start(workers=workers, max_queue_size=max_queue_size)
                 output_generator = enqueuer.get()
@@ -256,7 +251,7 @@ class Model(_Model):
         callbacks=None,
         max_queue_size=10,
         workers=1,
-        use_multiprocessing=False
+        use_multiprocessing=False,
     ):
         """Inference generator for TensorFlow 2."""
         outputs = []
@@ -274,7 +269,7 @@ class Model(_Model):
                 workers=workers,
                 use_multiprocessing=use_multiprocessing,
                 model=model,
-                steps_per_execution=model._steps_per_execution
+                steps_per_execution=model._steps_per_execution,
             )
 
             # Container that configures and calls `tf.keras.Callback`s.
@@ -286,7 +281,7 @@ class Model(_Model):
                     model=model,
                     verbose=verbose,
                     epochs=1,
-                    steps=data_handler.inferred_steps
+                    steps=data_handler.inferred_steps,
                 )
 
             # predict_function = model.make_predict_function()
@@ -303,19 +298,18 @@ class Model(_Model):
                         if data_handler.should_sync:
                             context.async_wait()
                         batch_outputs = tmp_batch_outputs  # No error, now safe to assign.
-                        
+
                         if batch_x_raw is not None:
                             batch_x = batch_x_raw
-                        for batch, running in zip([batch_x, batch_y, batch_outputs], [xs, ys, outputs]):
+                        for batch, running in zip(
+                            [batch_x, batch_y, batch_outputs], [xs, ys, outputs]
+                        ):
                             nest.map_structure_up_to(
-                                batch,
-                                lambda x, batch_x: x.append(batch_x),
-                                running, 
-                                batch,
+                                batch, lambda x, batch_x: x.append(batch_x), running, batch
                             )
 
                         end_step = step + data_handler.step_increment
-                        callbacks.on_predict_batch_end(end_step, {'outputs': batch_outputs})
+                        callbacks.on_predict_batch_end(end_step, {"outputs": batch_outputs})
                 callbacks.on_predict_end()
 
             xs = [tf_utils.to_numpy_or_python_type(_x) for _x in xs]
@@ -334,6 +328,7 @@ class Model(_Model):
             #     tf_utils.to_numpy_or_python_type(all_ys),
             #     tf_utils.to_numpy_or_python_type(all_outputs),
             # )
+
 
 def _extract_inference_inputs(inputs):
     def check_type(x):

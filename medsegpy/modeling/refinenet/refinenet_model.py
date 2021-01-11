@@ -1,14 +1,13 @@
 from keras.models import Model
 from keras.utils import plot_model
-#from resnet import ResNet50
 
 from medsegpy.modeling.refinenet.refine_module import refine_module
 
+# from resnet import ResNet50
+
+
 RESNET_INFO = {
-    "resnet50": {
-        "layers": [0, 3, 36, 78, 140, -2],
-        "num_filters": [32, 64, 256, 512, 1024, 2048],
-    }
+    "resnet50": {"layers": [0, 3, 36, 78, 140, -2], "num_filters": [32, 64, 256, 512, 1024, 2048]}
 }
 
 
@@ -18,11 +17,9 @@ def refinenet_model(input_shape=None, backbone="resnet50"):
     downsampling_layers = info["layers"]
     num_filters = info["num_filters"]
 
-    m = ResNet50(include_top=False, weights=None, input_shape=input_shape)
+    m = ResNet50(include_top=False, weights=None, input_shape=input_shape)  # noqa
     # chop off final ave pooling layer
-    m = Model(
-        inputs=m.inputs, outputs=m.layers[downsampling_layers[-1] - 1].output
-    )
+    m = Model(inputs=m.inputs, outputs=m.layers[downsampling_layers[-1] - 1].output)
 
     # Add refinenet modules
     assert len(downsampling_layers) == len(num_filters)

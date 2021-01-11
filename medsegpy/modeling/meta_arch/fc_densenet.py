@@ -92,10 +92,7 @@ def build_fc_dense_block(
         if activation:
             x = Activation(activation)(x)
         x = conv_type(
-            filters[i],
-            kernel_size,
-            padding="same",
-            kernel_initializer=kernel_initializer,
+            filters[i], kernel_size, padding="same", kernel_initializer=kernel_initializer
         )(x)
         if dropout != 0:
             x = Dropout(rate=dropout)(x)
@@ -125,18 +122,12 @@ class FCDenseNet(ModelBuilder):
             self._conv_transpose_type = Conv3DTranspose
             self._dim = 3
         else:
-            raise ValueError(
-                "Image size {} not supported. "
-                "Must be 2D (HxWxC) or 3D (HxWxDxC)"
-            )
+            raise ValueError("Image size {} not supported. " "Must be 2D (HxWxC) or 3D (HxWxDxC)")
 
         self.kernel_size = (3, 3)
 
     def _get_enc_dec_counts(
-        self,
-        counts: Union[Sequence[int], Sequence[Sequence[int]]],
-        depth: int,
-        cfg_field: str,
+        self, counts: Union[Sequence[int], Sequence[Sequence[int]]], depth: int, cfg_field: str
     ):
         """Returns the count for the encoder and decoder.
 
@@ -154,9 +145,7 @@ class FCDenseNet(ModelBuilder):
         else:
             raise ValueError(
                 "len(cfg.{}) should be 1, cfg.DEPTH, or 2*cfg.DEPTH-1. "
-                "cfg.DEPTH={}, len(cfg.NUM_FILTERS)={}".format(
-                    cfg_field, depth, len(counts)
-                )
+                "cfg.DEPTH={}, len(cfg.NUM_FILTERS)={}".format(cfg_field, depth, len(counts))
             )
         return num_enc_counts, num_dec_counts
 
@@ -171,13 +160,8 @@ class FCDenseNet(ModelBuilder):
         enc_num_filters, dec_num_filters = self._get_enc_dec_counts(
             num_filters, depth, "NUM_FILTERS"
         )
-        enc_num_layers, dec_num_layers = self._get_enc_dec_counts(
-            num_layers, depth, "NUM_LAYERS"
-        )
-        kernel_initializer = {
-            "class_name": cfg.KERNEL_INITIALIZER,
-            "config": {"seed": seed},
-        }
+        enc_num_layers, dec_num_layers = self._get_enc_dec_counts(num_layers, depth, "NUM_LAYERS")
+        kernel_initializer = {"class_name": cfg.KERNEL_INITIALIZER, "config": {"seed": seed}}
         output_mode = cfg.LOSS[1]
         assert output_mode in ["sigmoid", "softmax"]
         num_classes = cfg.get_num_classes()
@@ -313,17 +297,12 @@ class FCDenseNet(ModelBuilder):
         return model
 
     def _get_pool_size(self, x: tf.Tensor):
-        return [
-            2 if d % 2 == 0 or d % 3 != 0 else 3
-            for d in x.shape.as_list()[1:-1]
-        ]
+        return [2 if d % 2 == 0 or d % 3 != 0 else 3 for d in x.shape.as_list()[1:-1]]
 
     def _build_input(self, input_size):
         if len(input_size) == 2:
             input_size = input_size + (1,)
         elif len(input_size) > 4:
-            raise ValueError(
-                "Input size must be 2D (HxW or HxWxC) or 3D (HxWxDxC)"
-            )
+            raise ValueError("Input size must be 2D (HxW or HxWxC) or 3D (HxWxDxC)")
 
         return Input(input_size)

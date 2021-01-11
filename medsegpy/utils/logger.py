@@ -26,10 +26,7 @@ class _ColorfulFormatter(logging.Formatter):
         log = super(_ColorfulFormatter, self).formatMessage(record)
         if record.levelno == logging.WARNING:
             prefix = colored("WARNING", "red", attrs=["blink"])
-        elif (
-            record.levelno == logging.ERROR
-            or record.levelno == logging.CRITICAL
-        ):
+        elif record.levelno == logging.ERROR or record.levelno == logging.CRITICAL:
             prefix = colored("ERROR", "red", attrs=["blink", "underline"])
         else:
             return log
@@ -37,14 +34,7 @@ class _ColorfulFormatter(logging.Formatter):
 
 
 @functools.lru_cache()  # so that calling setup_logger multiple times won't add many handlers  # noqa
-def setup_logger(
-    output=None,
-    distributed_rank=0,
-    *,
-    color=True,
-    name="medsegpy",
-    abbrev_name=None
-):
+def setup_logger(output=None, distributed_rank=0, *, color=True, name="medsegpy", abbrev_name=None):
     """
     Initialize the detectron2 logger and set its verbosity level to "INFO".
 
@@ -68,8 +58,7 @@ def setup_logger(
         abbrev_name = name
 
     plain_formatter = logging.Formatter(
-        "[%(asctime)s] %(name)s %(levelname)s: %(message)s",
-        datefmt="%m/%d %H:%M:%S",
+        "[%(asctime)s] %(name)s %(levelname)s: %(message)s", datefmt="%m/%d %H:%M:%S"
     )
     # stdout logging: master only
     if distributed_rank == 0:

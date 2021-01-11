@@ -2,6 +2,7 @@
 import logging
 import os
 import re
+
 import h5py
 
 from medsegpy.data.catalog import DatasetCatalog, MetadataCatalog
@@ -32,24 +33,9 @@ _DATA_CATALOG = {
 
 
 OAI_CATEGORIES = [
-    {
-        "color": [220, 20, 60],
-        "id": 0,
-        "name": "femoral cartilage",
-        "abbrev": "fc",
-    },
-    {
-        "color": [119, 11, 32],
-        "id": (1, 2),
-        "name": "tibial cartilage",
-        "abbrev": "tc",
-    },
-    {
-        "color": [0, 0, 142],
-        "id": 3,
-        "name": "patellar cartilage",
-        "abbrev": "pc",
-    },
+    {"color": [220, 20, 60], "id": 0, "name": "femoral cartilage", "abbrev": "fc"},
+    {"color": [119, 11, 32], "id": (1, 2), "name": "tibial cartilage", "abbrev": "tc"},
+    {"color": [0, 0, 142], "id": 3, "name": "patellar cartilage", "abbrev": "pc"},
     {"color": [0, 0, 230], "id": (4, 5), "name": "meniscus", "abbrev": "men"},
 ]
 
@@ -118,21 +104,19 @@ def load_oai_3d_from_dir(scan_root, dataset_name=None):
     num_subjects = len({d["subject_id"] for d in dataset_dicts})
     if dataset_name:
         logger.info("Loaded {} from {}".format(dataset_name, scan_root))
-    logger.info(
-        "Loaded {} scans from {} subjects".format(num_scans, num_subjects)
-    )
+    logger.info("Loaded {} scans from {} subjects".format(num_scans, num_subjects))
 
     return dataset_dicts
 
 
 def load_oai_3d_sf_from_dir(scan_root, dataset_name=None):
     """
-    Expected file structure: 
-          keys=> image_files (e.g. '0000001_V00'); 
-          subkeys=> image type (e.g. ['seg', 'volume']); 
+    Expected file structure:
+          keys=> image_files (e.g. '0000001_V00');
+          subkeys=> image type (e.g. ['seg', 'volume']);
     """
     FNAME_REGEX = "([\d]+)_V([\d]+)"
-    f = h5py.File(scan_root, 'r')
+    f = h5py.File(scan_root, "r")
     keys = [key for key in f.keys()]
     f.close()
     dataset_dicts = []
@@ -148,7 +132,7 @@ def load_oai_3d_sf_from_dir(scan_root, dataset_name=None):
                 "subject_id": pid,
                 "time_point": time_point,
                 "image_size": (384, 384, 160),
-                "singlefile_path": scan_root
+                "singlefile_path": scan_root,
             }
         )
 
@@ -156,9 +140,7 @@ def load_oai_3d_sf_from_dir(scan_root, dataset_name=None):
     num_subjects = len({d["subject_id"] for d in dataset_dicts})
     if dataset_name:
         logger.info("Loaded {} from {}".format(dataset_name, scan_root))
-    logger.info(
-        "Loaded {} scans from {} subjects".format(num_scans, num_subjects)
-    )
+    logger.info("Loaded {} scans from {} subjects".format(num_scans, num_subjects))
 
     return dataset_dicts
 
@@ -185,9 +167,7 @@ def register_oai(name, scan_root):
         category_abbreviations=[x["abbrev"] for x in OAI_CATEGORIES],
         categories=[x["name"] for x in OAI_CATEGORIES],
         category_colors=[x["color"] for x in OAI_CATEGORIES],
-        category_id_to_contiguous_id={
-            x["id"]: idx for idx, x in enumerate(OAI_CATEGORIES)
-        },
+        category_id_to_contiguous_id={x["id"]: idx for idx, x in enumerate(OAI_CATEGORIES)},
         evaluator_type="SemSegEvaluator",
     )
 

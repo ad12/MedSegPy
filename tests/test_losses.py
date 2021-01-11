@@ -4,8 +4,7 @@ import keras.backend as K
 import numpy as np
 import scipy.special as sps
 
-from medsegpy.losses import NaiveAdaRobLossComputer
-from medsegpy.losses import multi_class_dice_loss
+from medsegpy.losses import NaiveAdaRobLossComputer, multi_class_dice_loss
 from medsegpy.utils import env
 
 
@@ -15,16 +14,14 @@ class TestNaiveAdaRobLossComputer(unittest.TestCase):
         if not env.is_tf2():
             return
         loss = NaiveAdaRobLossComputer(
-            multi_class_dice_loss(reduce="class", use_numpy=True),
-            n_groups=4,
-            robust_step_size=0.01
+            multi_class_dice_loss(reduce="class", use_numpy=True), n_groups=4, robust_step_size=0.01
         )
         loss.training = True
 
         gt = np.random.rand(1, 5, 4) > 0
         pred = np.random.rand(1, 5, 4)
 
-        val = loss(gt, pred)
+        _ = loss(gt, pred)
 
     def test_over_time(self):
         """Test that the weightage of the classes change over time.
@@ -39,7 +36,7 @@ class TestNaiveAdaRobLossComputer(unittest.TestCase):
         loss = NaiveAdaRobLossComputer(
             multi_class_dice_loss(reduce="class", use_numpy=True),
             n_groups=num_classes,
-            robust_step_size=0.01
+            robust_step_size=0.01,
         )
         loss.training = True
 
@@ -49,7 +46,7 @@ class TestNaiveAdaRobLossComputer(unittest.TestCase):
             _ = loss(gt, pred)
 
         weights = sps.softmax(loss.adv_probs_logits, axis=-1)
-        assert all(weights[-1] > weights[i] for i in range(num_classes-1))
+        assert all(weights[-1] > weights[i] for i in range(num_classes - 1))
 
     def test_keras(self):
         """Simple test to see if works with Keras tensors"""
@@ -57,9 +54,7 @@ class TestNaiveAdaRobLossComputer(unittest.TestCase):
             return
         num_classes = 3
         loss = NaiveAdaRobLossComputer(
-            multi_class_dice_loss(reduce="class"),
-            n_groups=num_classes,
-            robust_step_size=0.01
+            multi_class_dice_loss(reduce="class"), n_groups=num_classes, robust_step_size=0.01
         )
         loss.training = True
 

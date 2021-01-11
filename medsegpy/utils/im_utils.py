@@ -7,16 +7,9 @@ import seaborn as sns
 
 
 class MultiClassOverlay(object):
-    """Class to simplify overlaying images and labels.
-    """
+    """Class to simplify overlaying images and labels."""
 
-    def __init__(
-        self,
-        num_classes: int,
-        color_palette=None,
-        background_label=0,
-        opacity=0.7,
-    ):
+    def __init__(self, num_classes: int, color_palette=None, background_label=0, opacity=0.7):
         """
         Args:
             num_classes (int): Number of classes
@@ -28,13 +21,9 @@ class MultiClassOverlay(object):
         """
         if not color_palette:
             color_palette = sns.color_palette("bright")
-        effective_num_classes = (
-            num_classes - 1 if background_label is not None else num_classes
-        )
+        effective_num_classes = num_classes - 1 if background_label is not None else num_classes
         if len(color_palette) < effective_num_classes:
-            raise ValueError(
-                "Must provide at least %d colors" % effective_num_classes
-            )
+            raise ValueError("Must provide at least %d colors" % effective_num_classes)
 
         if opacity < 0 or opacity > 1:
             raise ValueError("opacity must be between 0-1")
@@ -67,8 +56,7 @@ class MultiClassOverlay(object):
             x_im = volume[..., z]
             label_overlay = labels_colored[..., z, :]
 
-            slice_name = "%03d.png" % (z + 1)
-
+            # slice_name = "%03d.png" % (z + 1)
             # filepath = os.path.join(dirpath, slice_name)
             filepath = None
             self._im_overlay(x_im, label_overlay, filepath)
@@ -100,25 +88,29 @@ class MultiClassOverlayNew(object):
     """
     Class to simplify overlaying images and labels.
     """
-    def __init__(self, num_classes,
-                 color_palette=sns.color_palette('bright'),
-                 background_label=0,
-                 opacity=0.7):
+
+    def __init__(
+        self,
+        num_classes,
+        color_palette=sns.color_palette("bright"),
+        background_label=0,
+        opacity=0.7,
+    ):
         """
-        Constructor
-        :param num_classes: Number of classes
-        Optional:
-        :param color_palette: list of RGB tuples to use for color. Default seaborn.color_palette('pastel').
-        :param background_label: Label to exclude for background. Default: 0.
+        Args:
+            num_classes: Number of classes.
+            color_palette: list of RGB tuples to use for color.
+                Default seaborn.color_palette('pastel').
+            background_label: Label to exclude for background. Default: 0.
                                  To include background, set to None.
-        :param opacity: How transparent overlay should be (0-1). Default: 0.7
+            opacity: How transparent overlay should be (0-1). Default: 0.7
         """
-        effective_num_classes = num_classes-1 if background_label is not None else num_classes
+        effective_num_classes = num_classes - 1 if background_label is not None else num_classes
         if len(color_palette) < effective_num_classes:
-            raise ValueError('Must provide at least %d colors' % effective_num_classes)
+            raise ValueError("Must provide at least %d colors" % effective_num_classes)
 
         if opacity < 0 or opacity > 1:
-            raise ValueError('opacity must be between 0-1')
+            raise ValueError("opacity must be between 0-1")
 
         self.num_classes = num_classes
         self.background_label = background_label
@@ -152,14 +144,16 @@ class MultiClassOverlayNew(object):
         labels = self.__logits_to_labels(logits)
         labels_colored = self.__apply_colormap(labels)
 
-        vol_rgb = np.zeros(volume.shape + (3, ))
+        os.makedirs(dirpath, exist_ok=True)
+
+        vol_rgb = np.zeros(volume.shape + (3,))
         for z in range(volume.shape[-1]):
             x_im = volume[..., z]
             label_overlay = labels_colored[..., z, :]
 
-            slice_name = '%03d.png' % (z+1)
+            slice_name = "%03d.png" % (z + 1)
 
-            filepath = os.path.join(check_and_create_dir(dirpath), slice_name) if dirpath is not None else None
+            filepath = os.path.join(dirpath, slice_name) if dirpath is not None else None
             im_rgb = self.__im_overlay(x_im, label_overlay, filepath)
             vol_rgb[..., z, :] = im_rgb
 
@@ -169,7 +163,7 @@ class MultiClassOverlayNew(object):
         assert logits.ndim == 4, "Logits must be 4D binary array with shape [Y, X, Z, classes]"
         logits = np.array(logits)
         for i in range(0, logits.shape[-1]):
-            logits[..., i] *= (i+1)
+            logits[..., i] *= i + 1
         return np.max(logits, axis=-1)
 
     def __apply_colormap(self, labels: np.ndarray):
@@ -184,7 +178,7 @@ class MultiClassOverlayNew(object):
 
             labels_colored[labels == c, :] = colormap[c]
 
-        return (labels_colored*255).astype(np.uint8)
+        return (labels_colored * 255).astype(np.uint8)
 
     def __im_overlay(self, x, c_label, filepath=None):
         x_o = scale_img(np.squeeze(x))
@@ -232,16 +226,12 @@ def write_sep_im_overlay(dir_path, xs, y_true, y_pred):
     for i in range(num_slices):
         x = scale_img(np.squeeze(xs[i, ...]))
         x = np.stack([x, x, x], axis=-1).astype(np.uint8)
-        im_correct, im_error = generate_sep_ovlp_image(
-            y_true[i, ...], y_pred[i, ...]
-        )
+        im_correct, im_error = generate_sep_ovlp_image(y_true[i, ...], y_pred[i, ...])
 
         slice_name = "%03d.png" % i
 
         overlap_img_correct = cv2.addWeighted(x, 1, im_correct, 1.0, 0)
-        cv2.imwrite(
-            os.path.join(correct_dir_path, slice_name), overlap_img_correct
-        )
+        cv2.imwrite(os.path.join(correct_dir_path, slice_name), overlap_img_correct)
 
         overlap_img_error = cv2.addWeighted(x, 1, im_error, 1.0, 0)
         cv2.imwrite(os.path.join(error_dir_path, slice_name), overlap_img_error)
@@ -266,14 +256,9 @@ def generate_sep_ovlp_image(y_true, y_pred):
 
     # BGR format
     img_corr = (
-        np.stack([np.zeros(TP.shape), TP, np.zeros(TP.shape)], axis=-1).astype(
-            np.uint8
-        )
-        * 255
+        np.stack([np.zeros(TP.shape), TP, np.zeros(TP.shape)], axis=-1).astype(np.uint8) * 255
     )
-    img_err = (
-        np.stack([FP, np.zeros(TP.shape), FN], axis=-1).astype(np.uint8) * 255
-    )
+    img_err = np.stack([FP, np.zeros(TP.shape), FN], axis=-1).astype(np.uint8) * 255
 
     return (img_corr, img_err)
 

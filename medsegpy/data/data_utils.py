@@ -5,9 +5,7 @@ from typing import Sequence, Union
 import numpy as np
 
 
-def collect_mask(
-    mask: np.ndarray, index: Sequence[Union[int, Sequence[int], int]]
-):
+def collect_mask(mask: np.ndarray, index: Sequence[Union[int, Sequence[int], int]]):
     """Collect masks by index.
 
     Collated indices will be summed. For example, `index=(1,(3,4))` will return
@@ -102,25 +100,19 @@ def compute_patches(
         pad_size = [pad_size] * len(img_size)
     else:
         if len(pad_size) != len(img_size):
-            raise ValueError(
-                "pad_size sequence must have same length as img_size"
-            )
+            raise ValueError("pad_size sequence must have same length as img_size")
         pad_size = [
-            patch_size[i] - img_size[i]
-            if p is None and img_size[i] < patch_size[i] else p
+            patch_size[i] - img_size[i] if p is None and img_size[i] < patch_size[i] else p
             for i, p in enumerate(pad_size)
         ]
         pad_size = [p if isinstance(p, int) else 0 for p in pad_size]
 
     is_pad_lt_patch = all(
-        (p == 0) or (P is None and p == 0) or p < P
-        for p, P in zip(pad_size, patch_size)
+        (p == 0) or (P is None and p == 0) or p < P for p, P in zip(pad_size, patch_size)
     )
     if not is_pad_lt_patch:
         raise ValueError(
-            "Padding {} must be less than patch {} in all dims".format(
-                pad_size, patch_size
-            )
+            "Padding {} must be less than patch {} in all dims".format(pad_size, patch_size)
         )
 
     if strides is None:
@@ -132,15 +124,11 @@ def compute_patches(
         warnings.warn(
             "Found stride dimension ({}) larger than "
             "patch dimension ({}). "
-            "Data along this dimension will be skipped over.".format(
-                strides, patch_size
-            )
+            "Data along this dimension will be skipped over.".format(strides, patch_size)
         )
 
     start_idxs = [
-        list(range(-px, Dx + px - Px + 1, stride))
-        if Px is not None and Px != -1
-        else [None]
+        list(range(-px, Dx + px - Px + 1, stride)) if Px is not None and Px != -1 else [None]
         for Dx, Px, px, stride in zip(img_size, patch_size, pad_size, strides)
     ]
     start_idxs = list(itertools.product(*start_idxs))
@@ -151,14 +139,9 @@ def compute_patches(
         ]
         for start in start_idxs
     ]
-    assert len(start_idxs) == len(stop_idxs), (
-        "start and stop indices should be 1-to-1",
-    )
+    assert len(start_idxs) == len(stop_idxs), ("start and stop indices should be 1-to-1",)
 
-    blocks = [
-        [(s, e) for s, e in zip(start, stop)]
-        for start, stop in zip(start_idxs, stop_idxs)
-    ]
+    blocks = [[(s, e) for s, e in zip(start, stop)] for start, stop in zip(start_idxs, stop_idxs)]
 
     patches = []
     padding = []

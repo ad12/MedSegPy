@@ -4,14 +4,7 @@ import numpy as np
 from keras.initializers import glorot_uniform, he_normal
 from keras.layers import Activation
 from keras.layers import BatchNormalization as BN
-from keras.layers import (
-    Conv3D,
-    Deconvolution3D,
-    Dropout,
-    Input,
-    MaxPooling3D,
-    concatenate,
-)
+from keras.layers import Conv3D, Deconvolution3D, Dropout, Input, MaxPooling3D, concatenate
 from keras.models import Model
 from keras.utils import plot_model
 
@@ -30,20 +23,13 @@ def unet_3d_model(
     in_plane_pool_size=(2, 2),
     seed=None,
 ):
-    warnings.warn(
-        "unet_3d_model is deprecated. Use UNet3D.build_model()",
-        DeprecationWarning,
-    )
+    warnings.warn("unet_3d_model is deprecated. Use UNet3D.build_model()", DeprecationWarning)
     # input size is a tuple of the size of the image
     # assuming channel last
     # input_size = (dim1, dim2, dim3, ch)
     # unet begins
-    if input_tensor is None and (
-        type(input_size) is not tuple or len(input_size) != 4
-    ):
-        raise ValueError(
-            "input_size must be a tuple of size (height, width, slices, 1)"
-        )
+    if input_tensor is None and (type(input_size) is not tuple or len(input_size) != 4):
+        raise ValueError("input_size must be a tuple of size (height, width, slices, 1)")
 
     if num_filters is None:
         nfeatures = [2 ** feat * 32 for feat in np.arange(depth)]
@@ -153,10 +139,7 @@ def unet_3d_model(
 
     # combine features
     recon = Conv3D(
-        num_classes,
-        (1, 1, 1),
-        padding="valid",
-        kernel_initializer=glorot_uniform(seed=seed),
+        num_classes, (1, 1, 1), padding="valid", kernel_initializer=glorot_uniform(seed=seed)
     )(conv)
     recon = Activation(activation)(recon)
 

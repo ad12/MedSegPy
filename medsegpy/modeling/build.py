@@ -4,11 +4,6 @@ THIS FILE IS DEPRECATED. DO NOT ADD ANY NEW MODELS HERE.
 import logging
 import warnings
 
-warnings.warn(
-    "Module medsegpy.modeling.build is deprecated. Use medsegpy.modeling.meta_arch.build.",
-    DeprecationWarning
-)
-
 from keras.initializers import glorot_uniform
 from keras.layers import Conv2D, Input
 
@@ -33,6 +28,12 @@ from .unet_2d.anisotropic_unet_model import anisotropic_unet_2d
 from .unet_2d.residual_unet_model import residual_unet_2d
 from .unet_2d.unet_model import unet_2d_model, unet_2d_model_v2
 from .unet_3d_model import unet_3d_model
+
+warnings.warn(
+    "Module medsegpy.modeling.build is deprecated. Use medsegpy.modeling.meta_arch.build.",
+    DeprecationWarning,
+)
+
 
 logger = logging.getLogger(__name__)
 
@@ -94,10 +95,7 @@ def anisotropic_unet(config):
     DEPTH = config.DEPTH
     NUM_FILTERS = config.NUM_FILTERS
     model = anisotropic_unet_2d(
-        input_size=input_shape,
-        depth=DEPTH,
-        num_filters=NUM_FILTERS,
-        kernel_size=config.KERNEL_SIZE,
+        input_size=input_shape, depth=DEPTH, num_filters=NUM_FILTERS, kernel_size=config.KERNEL_SIZE
     )
 
     # Add activation
@@ -148,12 +146,12 @@ def residual_unet(config):
 
 def unet_3d(config):
     """
-     Returns Unet3D model
-     :param config: a UNetConfig object
-     :return: a Keras model
+    Returns Unet3D model
+    :param config: a UNetConfig object
+    :return: a Keras model
 
-     :raises ValueError: if config not of type UNetConfig
-     """
+    :raises ValueError: if config not of type UNetConfig
+    """
     input_shape = config.IMG_SIZE
     activation = config.LOSS[1]
     num_classes = config.get_num_classes()
@@ -174,16 +172,13 @@ def unet_3d(config):
 
 def unet_2d(config):
     """
-     Returns Unet2D model
-     :param config: a UNetConfig object
-     :return: a Keras model
+    Returns Unet2D model
+    :param config: a UNetConfig object
+    :return: a Keras model
 
-     :raises ValueError: if config not of type UNetConfig
-     """
-    warnings.warn(
-        "unet_2d is deprecated. Use `meta_arch.build_model(...)`.",
-        DeprecationWarning,
-    )
+    :raises ValueError: if config not of type UNetConfig
+    """
+    warnings.warn("unet_2d is deprecated. Use `meta_arch.build_model(...)`.", DeprecationWarning)
     input_shape = config.IMG_SIZE
     activation = config.LOSS[1]
     num_classes = config.get_num_classes()
@@ -197,9 +192,7 @@ def unet_2d(config):
     else:
         DEPTH = config.DEPTH
         NUM_FILTERS = config.NUM_FILTERS
-        model = unet_2d_model_v2(
-            input_size=input_shape, depth=DEPTH, num_filters=NUM_FILTERS
-        )
+        model = unet_2d_model_v2(input_size=input_shape, depth=DEPTH, num_filters=NUM_FILTERS)
 
         # Add activation
         x = __add_activation_layer(
@@ -222,8 +215,7 @@ def deeplabv3_2d(config):
     :raises ValueError: if config not of type DeeplabV3Config
     """
     warnings.warn(
-        "deeplabv3_2d is deprecated. Use `meta_arch.build_model(...)`.",
-        DeprecationWarning,
+        "deeplabv3_2d is deprecated. Use `meta_arch.build_model(...)`.", DeprecationWarning
     )
 
     if type(config) is not DeeplabV3Config:
@@ -235,9 +227,7 @@ def deeplabv3_2d(config):
     activation = config.LOSS[1]
     dropout_rate = config.DROPOUT_RATE
     num_classes = config.get_num_classes()
-    m = DeeplabModel(
-        kernel_initializer=config.KERNEL_INITIALIZER, seed=config.SEED
-    )
+    m = DeeplabModel(kernel_initializer=config.KERNEL_INITIALIZER, seed=config.SEED)
     model = m.Deeplabv3(
         weights=None,
         input_shape=input_shape,
@@ -310,10 +300,7 @@ def unet_2_5d(config):
 
     :raises ValueError: if config not of type UNetMultiContrastConfig
     """
-    warnings.warn(
-        "unet_2_5d is deprecated. Use `meta_arch.build_model(...)`.",
-        DeprecationWarning,
-    )
+    warnings.warn("unet_2_5d is deprecated. Use `meta_arch.build_model(...)`.", DeprecationWarning)
     if type(config) is not UNet2_5DConfig:
         raise ValueError("config must be instance of UNet2_5DConfig")
 
@@ -352,14 +339,11 @@ def deeplabv3_2_5d(config):
     :raises ValueError: if config not of type UNetMultiContrastConfig
     """
     warnings.warn(
-        "deeplabv3_2_5d is deprecated. Use `meta_arch.build_model(...)`.",
-        DeprecationWarning,
+        "deeplabv3_2_5d is deprecated. Use `meta_arch.build_model(...)`.", DeprecationWarning
     )
     if type(config) is not DeeplabV3_2_5DConfig:
         raise ValueError("config must be instance of DeeplabV3_2_5DConfig")
-    logger.info(
-        "Initializing 2.5d deeplab: input size - " + str(config.IMG_SIZE)
-    )
+    logger.info("Initializing 2.5d deeplab: input size - " + str(config.IMG_SIZE))
 
     input_shape = config.IMG_SIZE
     OS = config.OS
@@ -367,9 +351,7 @@ def deeplabv3_2_5d(config):
     activation = config.LOSS[1]
     dropout_rate = config.DROPOUT_RATE
     num_classes = config.get_num_classes()
-    m = DeeplabModel(
-        kernel_initializer=config.KERNEL_INITIALIZER, seed=config.SEED
-    )
+    m = DeeplabModel(kernel_initializer=config.KERNEL_INITIALIZER, seed=config.SEED)
     model = m.Deeplabv3(
         weights=None,
         input_shape=input_shape,
@@ -392,9 +374,7 @@ def deeplabv3_2_5d(config):
     return model
 
 
-def __add_activation_layer(
-    output, num_classes, activation="sigmoid", seed=None
-):
+def __add_activation_layer(output, num_classes, activation="sigmoid", seed=None):
     """
     Return sigmoid activation layer
     :param: output: The output of the previous layer

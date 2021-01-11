@@ -40,7 +40,6 @@ from keras.layers import (
     Input,
     ZeroPadding2D,
 )
-from keras.models import Model
 from keras.utils.data_utils import get_file
 
 from medsegpy.modeling import initializer_utils as init_utils
@@ -50,14 +49,15 @@ from ..model import Model
 
 logger = logging.getLogger(__name__)
 
-WEIGHTS_PATH_X = "https://github.com/bonlime/keras-deeplab-v3-plus/releases/download/1.1/deeplabv3_xception_tf_dim_ordering_tf_kernels.h5"
-WEIGHTS_PATH_MOBILE = "https://github.com/bonlime/keras-deeplab-v3-plus/releases/download/1.1/deeplabv3_mobilenetv2_tf_dim_ordering_tf_kernels.h5"
+WEIGHTS_PATH_X = "https://github.com/bonlime/keras-deeplab-v3-plus/releases/download/1.1/deeplabv3_xception_tf_dim_ordering_tf_kernels.h5"  # noqa: E501
+WEIGHTS_PATH_MOBILE = "https://github.com/bonlime/keras-deeplab-v3-plus/releases/download/1.1/deeplabv3_mobilenetv2_tf_dim_ordering_tf_kernels.h5"  # noqa: E501
 
 
 class DeeplabModel:
     def __init__(self, kernel_initializer="", seed=None):
         warnings.warn(
-            "DeeplabModel is deprecated. Use `DeeplabV3Plus` instead.",
+            "DeeplabModel is deprecated and will be removed in v0.0.2. "
+            "Use `DeeplabV3Plus` instead.",
             DeprecationWarning,
         )
         self.kernel_initializer = kernel_initializer
@@ -74,17 +74,17 @@ class DeeplabModel:
         depth_activation=False,
         epsilon=1e-3,
     ):
-        """ SepConv with BN between depthwise & pointwise. Optionally add activation after BN
-            Implements right "same" padding for even kernel sizes
-            Args:
-                x: input tensor
-                filters: num of filters in pointwise convolution
-                prefix: prefix before name
-                stride: stride at depthwise conv
-                kernel_size: kernel size for depthwise convolution
-                rate: atrous rate for depthwise convolution
-                depth_activation: flag to use activation between depthwise & poinwise convs
-                epsilon: epsilon to use in BN layer
+        """SepConv with BN between depthwise & pointwise. Optionally add activation after BN
+        Implements right "same" padding for even kernel sizes
+        Args:
+            x: input tensor
+            filters: num of filters in pointwise convolution
+            prefix: prefix before name
+            stride: stride at depthwise conv
+            kernel_size: kernel size for depthwise convolution
+            rate: atrous rate for depthwise convolution
+            depth_activation: flag to use activation between depthwise & poinwise convs
+            epsilon: epsilon to use in BN layer
         """
         if stride == 1:
             depth_padding = "same"
@@ -104,14 +104,10 @@ class DeeplabModel:
             dilation_rate=(rate, rate),
             padding=depth_padding,
             use_bias=False,
-            kernel_initializer=init_utils.get_initializer(
-                self.kernel_initializer, self.seed
-            ),
+            kernel_initializer=init_utils.get_initializer(self.kernel_initializer, self.seed),
             name=prefix + "_depthwise",
         )(x)
-        x = BatchNormalization(name=prefix + "_depthwise_BN", epsilon=epsilon)(
-            x
-        )
+        x = BatchNormalization(name=prefix + "_depthwise_BN", epsilon=epsilon)(x)
         if depth_activation:
             x = Activation("relu")(x)
         x = Conv2D(
@@ -119,14 +115,10 @@ class DeeplabModel:
             (1, 1),
             padding="same",
             use_bias=False,
-            kernel_initializer=init_utils.get_initializer(
-                self.kernel_initializer, self.seed
-            ),
+            kernel_initializer=init_utils.get_initializer(self.kernel_initializer, self.seed),
             name=prefix + "_pointwise",
         )(x)
-        x = BatchNormalization(name=prefix + "_pointwise_BN", epsilon=epsilon)(
-            x
-        )
+        x = BatchNormalization(name=prefix + "_pointwise_BN", epsilon=epsilon)(x)
         if depth_activation:
             x = Activation("relu")(x)
 
@@ -134,14 +126,14 @@ class DeeplabModel:
 
     def _conv2d_same(self, x, filters, prefix, stride=1, kernel_size=3, rate=1):
         """Implements right 'same' padding for even kernel sizes
-            Without this there is a 1 pixel drift when stride = 2
-            Args:
-                x: input tensor
-                filters: num of filters in pointwise convolution
-                prefix: prefix before name
-                stride: stride at depthwise conv
-                kernel_size: kernel size for depthwise convolution
-                rate: atrous rate for depthwise convolution
+        Without this there is a 1 pixel drift when stride = 2
+        Args:
+            x: input tensor
+            filters: num of filters in pointwise convolution
+            prefix: prefix before name
+            stride: stride at depthwise conv
+            kernel_size: kernel size for depthwise convolution
+            rate: atrous rate for depthwise convolution
         """
         if stride == 1:
             return Conv2D(
@@ -151,9 +143,7 @@ class DeeplabModel:
                 padding="same",
                 use_bias=False,
                 dilation_rate=(rate, rate),
-                kernel_initializer=init_utils.get_initializer(
-                    self.kernel_initializer, self.seed
-                ),
+                kernel_initializer=init_utils.get_initializer(self.kernel_initializer, self.seed),
                 name=prefix,
             )(x)
         else:
@@ -169,9 +159,7 @@ class DeeplabModel:
                 padding="valid",
                 use_bias=False,
                 dilation_rate=(rate, rate),
-                kernel_initializer=init_utils.get_initializer(
-                    self.kernel_initializer, self.seed
-                ),
+                kernel_initializer=init_utils.get_initializer(self.kernel_initializer, self.seed),
                 name=prefix,
             )(x)
 
@@ -186,17 +174,17 @@ class DeeplabModel:
         depth_activation=False,
         return_skip=False,
     ):
-        """ Basic building block of modified Xception network
-            Args:
-                inputs: input tensor
-                depth_list: number of filters in each SepConv layer. len(depth_list) == 3
-                prefix: prefix before name
-                skip_connection_type: one of {'conv','sum','none'}
-                stride: stride at last depthwise conv
-                rate: atrous rate for depthwise convolution
-                depth_activation: flag to use activation between depthwise & pointwise convs
-                return_skip: flag to return additional tensor after 2 SepConvs for decoder
-                """
+        """Basic building block of modified Xception network
+        Args:
+            inputs: input tensor
+            depth_list: number of filters in each SepConv layer. len(depth_list) == 3
+            prefix: prefix before name
+            skip_connection_type: one of {'conv','sum','none'}
+            stride: stride at last depthwise conv
+            rate: atrous rate for depthwise convolution
+            depth_activation: flag to use activation between depthwise & pointwise convs
+            return_skip: flag to return additional tensor after 2 SepConvs for decoder
+        """
         residual = inputs
         for i in range(3):
             residual = self.SepConv_BN(
@@ -211,15 +199,9 @@ class DeeplabModel:
                 skip = residual
         if skip_connection_type == "conv":
             shortcut = self._conv2d_same(
-                inputs,
-                depth_list[-1],
-                prefix + "_shortcut",
-                kernel_size=1,
-                stride=stride,
+                inputs, depth_list[-1], prefix + "_shortcut", kernel_size=1, stride=stride
             )
-            shortcut = BatchNormalization(name=prefix + "_shortcut_BN")(
-                shortcut
-            )
+            shortcut = BatchNormalization(name=prefix + "_shortcut_BN")(shortcut)
             outputs = layers.add([residual, shortcut])
         elif skip_connection_type == "sum":
             outputs = layers.add([residual, inputs])
@@ -240,15 +222,7 @@ class DeeplabModel:
         return new_v
 
     def _inverted_res_block(
-        self,
-        inputs,
-        expansion,
-        stride,
-        alpha,
-        filters,
-        block_id,
-        skip_connection,
-        rate=1,
+        self, inputs, expansion, stride, alpha, filters, block_id, skip_connection, rate=1
     ):
         in_channels = inputs._keras_shape[-1]
         pointwise_conv_filters = int(filters * alpha)
@@ -264,14 +238,10 @@ class DeeplabModel:
                 padding="same",
                 use_bias=False,
                 activation=None,
-                kernel_initializer=init_utils.get_initializer(
-                    self.kernel_initializer, self.seed
-                ),
+                kernel_initializer=init_utils.get_initializer(self.kernel_initializer, self.seed),
                 name=prefix + "expand",
             )(x)
-            x = BatchNormalization(
-                epsilon=1e-3, momentum=0.999, name=prefix + "expand_BN"
-            )(x)
+            x = BatchNormalization(epsilon=1e-3, momentum=0.999, name=prefix + "expand_BN")(x)
             x = Activation(self.relu6, name=prefix + "expand_relu")(x)
         else:
             prefix = "expanded_conv_"
@@ -283,14 +253,10 @@ class DeeplabModel:
             use_bias=False,
             padding="same",
             dilation_rate=(rate, rate),
-            kernel_initializer=init_utils.get_initializer(
-                self.kernel_initializer, self.seed
-            ),
+            kernel_initializer=init_utils.get_initializer(self.kernel_initializer, self.seed),
             name=prefix + "depthwise",
         )(x)
-        x = BatchNormalization(
-            epsilon=1e-3, momentum=0.999, name=prefix + "depthwise_BN"
-        )(x)
+        x = BatchNormalization(epsilon=1e-3, momentum=0.999, name=prefix + "depthwise_BN")(x)
 
         x = Activation(self.relu6, name=prefix + "depthwise_relu")(x)
 
@@ -301,14 +267,10 @@ class DeeplabModel:
             padding="same",
             use_bias=False,
             activation=None,
-            kernel_initializer=init_utils.get_initializer(
-                self.kernel_initializer, self.seed
-            ),
+            kernel_initializer=init_utils.get_initializer(self.kernel_initializer, self.seed),
             name=prefix + "project",
         )(x)
-        x = BatchNormalization(
-            epsilon=1e-3, momentum=0.999, name=prefix + "project_BN"
-        )(x)
+        x = BatchNormalization(epsilon=1e-3, momentum=0.999, name=prefix + "project_BN")(x)
 
         if skip_connection:
             return Add(name=prefix + "add")([inputs, x])
@@ -331,7 +293,7 @@ class DeeplabModel:
         dil_rate_input=None,
         dropout_rate=0.1,
     ):
-        """ Instantiates the Deeplabv3+ architecture
+        """Instantiates the Deeplabv3+ architecture
 
         Optionally loads weights pre-trained
         on PASCAL VOC. This model is available for TensorFlow only,
@@ -379,14 +341,12 @@ class DeeplabModel:
 
         if K.backend() != "tensorflow":
             raise RuntimeError(
-                "The Deeplabv3+ model is only available with "
-                "the TensorFlow backend."
+                "The Deeplabv3+ model is only available with " "the TensorFlow backend."
             )
 
         if not (backbone in {"xception", "mobilenetv2"}):
             raise ValueError(
-                "The `backbone` argument should be either "
-                "`xception`  or `mobilenetv2` "
+                "The `backbone` argument should be either " "`xception`  or `mobilenetv2` "
             )
 
         if input_tensor is None:
@@ -423,16 +383,12 @@ class DeeplabModel:
                 name="entry_flow_conv1_1",
                 use_bias=False,
                 padding="same",
-                kernel_initializer=init_utils.get_initializer(
-                    self.kernel_initializer, self.seed
-                ),
+                kernel_initializer=init_utils.get_initializer(self.kernel_initializer, self.seed),
             )(img_input)
             x = BatchNormalization(name="entry_flow_conv1_1_BN")(x)
             x = Activation("relu")(x)
 
-            x = self._conv2d_same(
-                x, 64, "entry_flow_conv1_2", kernel_size=3, stride=1
-            )
+            x = self._conv2d_same(x, 64, "entry_flow_conv1_2", kernel_size=3, stride=1)
             x = BatchNormalization(name="entry_flow_conv1_2_BN")(x)
             x = Activation("relu")(x)
 
@@ -502,70 +458,30 @@ class DeeplabModel:
                 padding="same",
                 use_bias=False,
                 name="Conv",
-                kernel_initializer=init_utils.get_initializer(
-                    self.kernel_initializer, self.seed
-                ),
+                kernel_initializer=init_utils.get_initializer(self.kernel_initializer, self.seed),
             )(img_input)
-            x = BatchNormalization(
-                epsilon=1e-3, momentum=0.999, name="Conv_BN"
-            )(x)
+            x = BatchNormalization(epsilon=1e-3, momentum=0.999, name="Conv_BN")(x)
             x = Activation(self.relu6, name="Conv_Relu6")(x)
 
             x = self._inverted_res_block(
-                x,
-                filters=16,
-                alpha=alpha,
-                stride=1,
-                expansion=1,
-                block_id=0,
-                skip_connection=False,
+                x, filters=16, alpha=alpha, stride=1, expansion=1, block_id=0, skip_connection=False
             )
 
             x = self._inverted_res_block(
-                x,
-                filters=24,
-                alpha=alpha,
-                stride=2,
-                expansion=6,
-                block_id=1,
-                skip_connection=False,
+                x, filters=24, alpha=alpha, stride=2, expansion=6, block_id=1, skip_connection=False
             )
             x = self._inverted_res_block(
-                x,
-                filters=24,
-                alpha=alpha,
-                stride=1,
-                expansion=6,
-                block_id=2,
-                skip_connection=True,
+                x, filters=24, alpha=alpha, stride=1, expansion=6, block_id=2, skip_connection=True
             )
 
             x = self._inverted_res_block(
-                x,
-                filters=32,
-                alpha=alpha,
-                stride=2,
-                expansion=6,
-                block_id=3,
-                skip_connection=False,
+                x, filters=32, alpha=alpha, stride=2, expansion=6, block_id=3, skip_connection=False
             )
             x = self._inverted_res_block(
-                x,
-                filters=32,
-                alpha=alpha,
-                stride=1,
-                expansion=6,
-                block_id=4,
-                skip_connection=True,
+                x, filters=32, alpha=alpha, stride=1, expansion=6, block_id=4, skip_connection=True
             )
             x = self._inverted_res_block(
-                x,
-                filters=32,
-                alpha=alpha,
-                stride=1,
-                expansion=6,
-                block_id=5,
-                skip_connection=True,
+                x, filters=32, alpha=alpha, stride=1, expansion=6, block_id=5, skip_connection=True
             )
 
             # stride in block 6 changed from 2 -> 1, so we need to use rate = 2
@@ -689,28 +605,20 @@ class DeeplabModel:
         # Image Feature branch
         # out_shape = int(np.ceil(input_shape[0] / OS))
         b4 = AveragePooling2D(
-            pool_size=(
-                int(np.ceil(input_shape[0] / OS)),
-                int(np.ceil(input_shape[1] / OS)),
-            )
+            pool_size=(int(np.ceil(input_shape[0] / OS)), int(np.ceil(input_shape[1] / OS)))
         )(x)
         b4 = Conv2D(
             256,
             (1, 1),
             padding="same",
             use_bias=False,
-            kernel_initializer=init_utils.get_initializer(
-                self.kernel_initializer, self.seed
-            ),
+            kernel_initializer=init_utils.get_initializer(self.kernel_initializer, self.seed),
             name="image_pooling",
         )(b4)
         b4 = BatchNormalization(name="image_pooling_BN", epsilon=1e-5)(b4)
         b4 = Activation("relu")(b4)
         b4 = BilinearUpsampling(
-            (
-                int(np.ceil(input_shape[0] / OS)),
-                int(np.ceil(input_shape[1] / OS)),
-            )
+            (int(np.ceil(input_shape[0] / OS)), int(np.ceil(input_shape[1] / OS)))
         )(b4)
 
         # simple 1x1
@@ -719,9 +627,7 @@ class DeeplabModel:
             (1, 1),
             padding="same",
             use_bias=False,
-            kernel_initializer=init_utils.get_initializer(
-                self.kernel_initializer, self.seed
-            ),
+            kernel_initializer=init_utils.get_initializer(self.kernel_initializer, self.seed),
             name="aspp0",
         )(x)
         b0 = BatchNormalization(name="aspp0_BN", epsilon=1e-5)(b0)
@@ -731,30 +637,15 @@ class DeeplabModel:
         if backbone == "xception":
             # rate = 6 (12)
             b1 = self.SepConv_BN(
-                x,
-                256,
-                "aspp1",
-                rate=atrous_rates[0],
-                depth_activation=True,
-                epsilon=1e-5,
+                x, 256, "aspp1", rate=atrous_rates[0], depth_activation=True, epsilon=1e-5
             )
             # rate = 12 (24)
             b2 = self.SepConv_BN(
-                x,
-                256,
-                "aspp2",
-                rate=atrous_rates[1],
-                depth_activation=True,
-                epsilon=1e-5,
+                x, 256, "aspp2", rate=atrous_rates[1], depth_activation=True, epsilon=1e-5
             )
             # rate = 18 (36)
             b3 = self.SepConv_BN(
-                x,
-                256,
-                "aspp3",
-                rate=atrous_rates[2],
-                depth_activation=True,
-                epsilon=1e-5,
+                x, 256, "aspp3", rate=atrous_rates[2], depth_activation=True, epsilon=1e-5
             )
 
             # concatenate ASPP branches & project
@@ -767,9 +658,7 @@ class DeeplabModel:
             (1, 1),
             padding="same",
             use_bias=False,
-            kernel_initializer=init_utils.get_initializer(
-                self.kernel_initializer, self.seed
-            ),
+            kernel_initializer=init_utils.get_initializer(self.kernel_initializer, self.seed),
             name="concat_projection",
         )(x)
         x = BatchNormalization(name="concat_projection_BN", epsilon=1e-5)(x)
@@ -782,32 +671,21 @@ class DeeplabModel:
             # Feature projection
             # x4 (x2) block
             x = BilinearUpsampling(
-                output_size=(
-                    int(np.ceil(input_shape[0] / 4)),
-                    int(np.ceil(input_shape[1] / 4)),
-                )
+                output_size=(int(np.ceil(input_shape[0] / 4)), int(np.ceil(input_shape[1] / 4)))
             )(x)
             dec_skip1 = Conv2D(
                 48,
                 (1, 1),
                 padding="same",
                 use_bias=False,
-                kernel_initializer=init_utils.get_initializer(
-                    self.kernel_initializer, self.seed
-                ),
+                kernel_initializer=init_utils.get_initializer(self.kernel_initializer, self.seed),
                 name="feature_projection0",
             )(skip1)
-            dec_skip1 = BatchNormalization(
-                name="feature_projection0_BN", epsilon=1e-5
-            )(dec_skip1)
+            dec_skip1 = BatchNormalization(name="feature_projection0_BN", epsilon=1e-5)(dec_skip1)
             dec_skip1 = Activation("relu")(dec_skip1)
             x = Concatenate()([x, dec_skip1])
-            x = self.SepConv_BN(
-                x, 256, "decoder_conv0", depth_activation=True, epsilon=1e-5
-            )
-            x = self.SepConv_BN(
-                x, 256, "decoder_conv1", depth_activation=True, epsilon=1e-5
-            )
+            x = self.SepConv_BN(x, 256, "decoder_conv0", depth_activation=True, epsilon=1e-5)
+            x = self.SepConv_BN(x, 256, "decoder_conv1", depth_activation=True, epsilon=1e-5)
 
         # you can use it with arbitary number of classes
         if classes == 21:
@@ -819,9 +697,7 @@ class DeeplabModel:
             classes,
             (1, 1),
             padding="same",
-            kernel_initializer=init_utils.get_initializer(
-                self.kernel_initializer, self.seed
-            ),
+            kernel_initializer=init_utils.get_initializer(self.kernel_initializer, self.seed),
             name=last_layer_name,
         )(x)
         x = BilinearUpsampling(output_size=(input_shape[0], input_shape[1]))(x)

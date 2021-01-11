@@ -57,35 +57,21 @@ class TestComputePatches(unittest.TestCase):
         # Pad with all dimensions with padding 1.
         patches = compute_patches(image_size, patch_size, pad_size=1)
         expected_patches = itertools.product(
-            (slice(0, 4), slice(4, 9)),
-            (slice(0, 9), slice(9, 19)),
-            (slice(0, 14), slice(14, 29)),
+            (slice(0, 4), slice(4, 9)), (slice(0, 9), slice(9, 19)), (slice(0, 14), slice(14, 29))
         )
         assert all(patch in expected_patches for patch, _ in patches)
-        expected_pads = itertools.product(
-            ((1, 0), (0, 0)), ((1, 0), (0, 0)), ((1, 0), (0, 0))
-        )
-        expected_pads = tuple(
-            None if all(px == (0, 0) for px in p) else p for p in expected_pads
-        )
+        expected_pads = itertools.product(((1, 0), (0, 0)), ((1, 0), (0, 0)), ((1, 0), (0, 0)))
+        expected_pads = tuple(None if all(px == (0, 0) for px in p) else p for p in expected_pads)
         assert tuple(pad for _, pad in patches) == expected_pads
 
         # Pad only first dimension
-        patches = compute_patches(
-            image_size, patch_size, pad_size=(1, None, None)
-        )
+        patches = compute_patches(image_size, patch_size, pad_size=(1, None, None))
         expected_patches = itertools.product(
-            (slice(0, 4), slice(4, 9)),
-            (slice(0, 10), slice(10, 20)),
-            (slice(0, 15), slice(15, 30)),
+            (slice(0, 4), slice(4, 9)), (slice(0, 10), slice(10, 20)), (slice(0, 15), slice(15, 30))
         )
         assert all(patch in expected_patches for patch, _ in patches)
-        expected_pads = itertools.product(
-            ((1, 0), (0, 0)), ((0, 0), (0, 0)), ((0, 0), (0, 0))
-        )
-        expected_pads = tuple(
-            None if all(px == (0, 0) for px in p) else p for p in expected_pads
-        )
+        expected_pads = itertools.product(((1, 0), (0, 0)), ((0, 0), (0, 0)), ((0, 0), (0, 0)))
+        expected_pads = tuple(None if all(px == (0, 0) for px in p) else p for p in expected_pads)
         assert tuple(pad for _, pad in patches) == expected_pads
 
         # Pad such that dimensions have padding on both front and end
@@ -97,13 +83,9 @@ class TestComputePatches(unittest.TestCase):
         )
         assert all(patch in expected_patches for patch, _ in patches)
         expected_pads = itertools.product(
-            ((3, 0), (0, 0), (0, 2)),
-            ((5, 0), (0, 0), (0, 5)),
-            ((8, 0), (0, 0), (0, 7)),
+            ((3, 0), (0, 0), (0, 2)), ((5, 0), (0, 0), (0, 5)), ((8, 0), (0, 0), (0, 7))
         )
-        expected_pads = tuple(
-            None if all(px == (0, 0) for px in p) else p for p in expected_pads
-        )
+        expected_pads = tuple(None if all(px == (0, 0) for px in p) else p for p in expected_pads)
         assert tuple(pad for _, pad in patches) == expected_pads
 
     def test_stride(self):
@@ -121,9 +103,7 @@ class TestComputePatches(unittest.TestCase):
         assert all(pad is None for _, pad in patches)
 
         # Variable strides with padding.
-        patches = compute_patches(
-            image_size, patch_size, pad_size=(3, 5, 8), strides=(2, 4, 6)
-        )
+        patches = compute_patches(image_size, patch_size, pad_size=(3, 5, 8), strides=(2, 4, 6))
         expected_patches = list(
             itertools.product(
                 (
@@ -158,9 +138,7 @@ class TestComputePatches(unittest.TestCase):
             ((5, 0), (1, 0), (0, 0), (0, 0), (0, 1), (0, 5)),
             ((8, 0), (2, 0), (0, 0), (0, 0), (0, 1), (0, 7)),
         )
-        expected_pads = tuple(
-            None if all(px == (0, 0) for px in p) else p for p in expected_pads
-        )
+        expected_pads = tuple(None if all(px == (0, 0) for px in p) else p for p in expected_pads)
         assert tuple(pad for _, pad in patches) == expected_pads
 
 

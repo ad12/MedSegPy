@@ -13,7 +13,7 @@ from medsegpy import config, solver
 from medsegpy.data import build_loader, im_gens
 from medsegpy.engine.callbacks import LossHistory, WandBLogger, lr_callback
 from medsegpy.evaluation import build_evaluator, inference_on_dataset
-from medsegpy.losses import dice_loss, get_training_loss, build_loss
+from medsegpy.losses import build_loss, dice_loss
 from medsegpy.modeling.meta_arch import build_model
 from medsegpy.utils import dl_utils, env, io_utils
 
@@ -34,22 +34,22 @@ class DefaultTrainer(object):
         """
         Args:
             cfg (Config): An experiment config.
-            run_eagerly (bool, optional): If `True`, runs eagerly. Only available in tensorflow>=2.0.
-            strategy (tf.distribute.Strategy, optional): The strategy to use for training. Only available
-                if `tf.distribute` package is available (tensorflow>=1.14).
+            run_eagerly (bool, optional): If `True`, runs eagerly.
+                Only available in tensorflow>=2.0.
+            strategy (tf.distribute.Strategy, optional): The strategy to use for training.
+                Only available if `tf.distribute` package is available (tensorflow>=1.14).
         """
         self._cfg = cfg
         self._loss_history = None
-        self._default_strategy = tf.distribute.get_strategy() if _SUPPORTS_DISTRIBUTED else dl_utils.NoOpStrategy()
+        self._default_strategy = (
+            tf.distribute.get_strategy() if _SUPPORTS_DISTRIBUTED else dl_utils.NoOpStrategy()
+        )
         num_gpus = dl_utils.num_gpus()
 
         if not env.is_tf2() and run_eagerly is not None:
-            warnings.warn(
-                "`run_eagerly` can only be specified in Tensorflow >2.0. "
-                "Ignoring..."
-            )
+            warnings.warn("`run_eagerly` can only be specified in Tensorflow >2.0. " "Ignoring...")
             run_eagerly = None
-        self._run_eagerly= run_eagerly
+        self._run_eagerly = run_eagerly
 
         if strategy is None:
             strategy = self._default_strategy
@@ -63,11 +63,7 @@ class DefaultTrainer(object):
             if cfg.INIT_WEIGHTS:
                 self._init_model(model)
 
-        plot_model(
-            model,
-            to_file=os.path.join(cfg.OUTPUT_DIR, "model.png"),
-            show_shapes=True,
-        )
+        plot_model(model, to_file=os.path.join(cfg.OUTPUT_DIR, "model.png"), show_shapes=True)
         model.summary(line_length=120, print_fn=lambda x: logger.info(x))
         model_json = model.to_json()
         model_json_save_path = os.path.join(cfg.OUTPUT_DIR, "model.json")
@@ -99,7 +95,8 @@ class DefaultTrainer(object):
                 self.strategy, (dl_utils.NoOpStrategy, type(self._default_strategy))
             ):
                 logger.error(
-                    f"Strategy '{type(self.strategy).__name__}' not currently supported for testing. "
+                    f"Strategy '{type(self.strategy).__name__}' not currently "
+                    f"supported for testing. "
                     f"Please run testing separately on a single gpu."
                 )
                 return {}
@@ -141,18 +138,11 @@ class DefaultTrainer(object):
         callbacks.extend(
             [
                 kc.ModelCheckpoint(
-                    os.path.join(
-                        output_dir, "weights.{epoch:03d}-{val_loss:.4f}.h5"
-                    ),
+                    os.path.join(output_dir, "weights.{epoch:03d}-{val_loss:.4f}.h5"),
                     save_best_only=True,
                     save_weights_only=True,
                 ),
-                kc.TensorBoard(
-                    output_dir, 
-                    write_grads=False, 
-                    write_images=False,
-                    **tb_kwargs
-                ),
+                kc.TensorBoard(output_dir, write_grads=False, write_images=False, **tb_kwargs),
                 WandBLogger() if env.supports_wandb() else None,
                 kc.CSVLogger(os.path.join(output_dir, "metrics.log")),
                 self._loss_history,
@@ -173,8 +163,6 @@ class DefaultTrainer(object):
         """
         cfg = self._cfg
         n_epochs = cfg.N_EPOCHS
-        loss = cfg.LOSS
-        class_weights = cfg.CLASS_WEIGHTS
         num_workers = cfg.NUM_WORKERS
         output_dir = cfg.OUTPUT_DIR
 
@@ -190,11 +178,7 @@ class DefaultTrainer(object):
             callbacks.insert(0, loss_func)
             metrics.append(loss_func.criterion)
 
-        model.compile(
-            optimizer=optimizer,
-            loss=loss_func,
-            metrics=metrics,
-        )
+        model.compile(optimizer=optimizer, loss=loss_func, metrics=metrics)
         if env.is_tf2():
             run_eagerly = tf.executing_eagerly() if self._run_eagerly is None else self._run_eagerly
             model.run_eagerly = run_eagerly
@@ -254,13 +238,11 @@ class DefaultTrainer(object):
                     "We are working on backwards compatibility"
                 )
             from medsegpy.modeling import get_model
+
             return get_model(cfg)
 
-    def _build_data_loaders(
-        self, cfg
-    ) -> Tuple[im_gens.Generator, im_gens.Generator]:
-        """Builds train and val data loaders.
-        """
+    def _build_data_loaders(self, cfg) -> Tuple[im_gens.Generator, im_gens.Generator]:
+        """Builds train and val data loaders."""
         train_loader = build_loader(
             cfg,
             dataset_names=cfg.TRAIN_DATASET,

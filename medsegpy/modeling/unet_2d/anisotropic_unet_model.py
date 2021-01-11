@@ -4,14 +4,7 @@ import numpy as np
 from keras.engine.topology import get_source_inputs
 from keras.initializers import he_normal
 from keras.layers import BatchNormalization as BN
-from keras.layers import (
-    Concatenate,
-    Conv2D,
-    Conv2DTranspose,
-    Dropout,
-    Input,
-    MaxPooling2D,
-)
+from keras.layers import Concatenate, Conv2D, Conv2DTranspose, Dropout, Input, MaxPooling2D
 from keras.models import Model
 from keras.utils import plot_model
 
@@ -34,18 +27,15 @@ def anisotropic_unet_2d(
 
     :rtype: Keras model
 
-    :raise ValueError if input_size is not tuple or dimensions of input_size do not match (height, width, 1)
+    :raise ValueError if input_size is not tuple or dimensions of input_size do not match
+        (height, width, 1)
     """
     from medsegpy import glob_constants
 
     logger.info("Initializing unet with seed: %s" % str(glob_constants.SEED))
     SEED = glob_constants.SEED
-    if input_tensor is None and (
-        type(input_size) is not tuple or len(input_size) != 3
-    ):
-        raise ValueError(
-            "input_size must be a tuple of size (height, width, 1)"
-        )
+    if input_tensor is None and (type(input_size) is not tuple or len(input_size) != 3):
+        raise ValueError("input_size must be a tuple of size (height, width, 1)")
 
     if num_filters is None:
         nfeatures = [2 ** feat * 32 for feat in np.arange(depth)]
@@ -87,9 +77,7 @@ def anisotropic_unet_2d(
         if depth_cnt < depth - 1:
             x_shape = conv.shape.as_list()
             pool_size = (
-                pooling_size
-                if pooling_size
-                else __get_pooling_size__(x_shape, pooling_ratio)
+                pooling_size if pooling_size else __get_pooling_size__(x_shape, pooling_ratio)
             )
             unpooling_sizes.append(pool_size)
             pool = MaxPooling2D(pool_size=pool_size, padding="same")(conv)
@@ -132,7 +120,8 @@ def anisotropic_unet_2d(
 
     # combine features
     # this if statement is required for legacy purposes
-    # some weights were trained with a joint activation, which makes it difficult to load weights effectively
+    # some weights were trained with a joint activation,
+    # which makes it difficult to load weights effectively
     if output_mode is not None:
         recon = Conv2D(
             1,

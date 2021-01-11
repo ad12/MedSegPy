@@ -40,7 +40,7 @@ def setup(args):
 
     default_setup(cfg, args)
 
-        # TODO: Add suppport for resume.
+    # TODO: Add suppport for resume.
     if env.supports_wandb():
         # TODO: Add field for experiment name.
         exp_name = ""
@@ -76,9 +76,7 @@ def main(args, trainer_cls: type = DefaultTrainer):
             try:
                 with open(model_json_file) as f:
                     json_str = f.read()
-                model = model_from_json(
-                    json_str, custom_objects={"Model": Model}
-                )
+                model = model_from_json(json_str, custom_objects={"Model": Model})
             except Exception as e:
                 print(e)
         if model is None:

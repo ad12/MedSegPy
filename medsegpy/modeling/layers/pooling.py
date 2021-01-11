@@ -8,17 +8,15 @@ https://github.com/ykamikawa/tf-keras-SegNet/tree/648ee1aa6870e8280a5f24ee193caa
 """
 
 from keras import backend as K
-from keras.layers.convolutional import UpSampling2D
 from keras.layers import Layer
+from keras.layers.convolutional import UpSampling2D
 from keras.layers.pooling import MaxPooling2D
 
-__all__ = ["MaxPoolingWithArgmax2D", "MaxUnpooling2D"]
+__all__ = ["MaxPoolingWithArgmax2D", "MaxUnpooling2D", "MaxPooling2D", "UpSampling2D"]
 
 
 class MaxPoolingWithArgmax2D(Layer):
-    def __init__(
-        self, pool_size=(2, 2), strides=(2, 2), padding="same", **kwargs
-    ):
+    def __init__(self, pool_size=(2, 2), strides=(2, 2), padding="same", **kwargs):
         super(MaxPoolingWithArgmax2D, self).__init__(**kwargs)
         self.padding = padding
         self.pool_size = pool_size
@@ -46,8 +44,7 @@ class MaxPoolingWithArgmax2D(Layer):
     def compute_output_shape(self, input_shape):
         ratio = (1, self.pool_size[0], self.pool_size[1], 1)
         output_shape = [
-            dim // ratio[idx] if dim is not None else None
-            for idx, dim in enumerate(input_shape)
+            dim // ratio[idx] if dim is not None else None for idx, dim in enumerate(input_shape)
         ]
         output_shape = tuple(output_shape)
         return [output_shape, output_shape]
@@ -58,11 +55,7 @@ class MaxPoolingWithArgmax2D(Layer):
     def get_config(self):
         base_cfg = super().get_config()
         base_cfg.update(
-            {
-                "padding": self.padding,
-                "pool_size": self.pool_size,
-                "strides": self.strides,
-            }
+            {"padding": self.padding, "pool_size": self.pool_size, "strides": self.strides}
         )
         return base_cfg
 
@@ -89,12 +82,8 @@ class MaxUnpooling2D(Layer):
 
             # calculation indices for batch, height, width and feature maps
             one_like_mask = K.ones_like(mask, dtype="int32")
-            batch_shape = K.concatenate(
-                [[input_shape[0]], [1], [1], [1]], axis=0
-            )
-            batch_range = K.reshape(
-                K.tf.range(output_shape[0], dtype="int32"), shape=batch_shape
-            )
+            batch_shape = K.concatenate([[input_shape[0]], [1], [1], [1]], axis=0)
+            batch_range = K.reshape(K.tf.range(output_shape[0], dtype="int32"), shape=batch_shape)
             b = one_like_mask * batch_range
             y = mask // (output_shape[2] * output_shape[3])
             x = (mask // output_shape[3]) % output_shape[2]
@@ -103,9 +92,7 @@ class MaxUnpooling2D(Layer):
 
             # transpose indices & reshape update values to one dimension
             updates_size = K.tf.size(updates)
-            indices = K.transpose(
-                K.reshape(K.stack([b, y, x, f]), [4, updates_size])
-            )
+            indices = K.transpose(K.reshape(K.stack([b, y, x, f]), [4, updates_size]))
             values = K.reshape(updates, [updates_size])
             ret = K.tf.scatter_nd(indices, values, output_shape)
             return ret

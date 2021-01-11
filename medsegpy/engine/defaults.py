@@ -5,7 +5,6 @@ https://github.com/facebookresearch/detectron2
 """
 import argparse
 import os
-import shutil
 import warnings
 
 import keras.backend as K
@@ -15,8 +14,8 @@ from fvcore.common.file_io import PathManager
 from medsegpy import glob_constants
 from medsegpy.utils import dl_utils, env
 from medsegpy.utils.collect_env import collect_env_info
-from medsegpy.utils.logger import setup_logger
 from medsegpy.utils.io_utils import format_exp_version
+from medsegpy.utils.logger import setup_logger
 
 
 def config_exists(experiment_dir: str):
@@ -35,27 +34,17 @@ def default_argument_parser():
         argparse.ArgumentParser:
     """
     parser = argparse.ArgumentParser(description="MedSegPy Training")
-    parser.add_argument(
-        "--config-file", default="", metavar="FILE", help="path to config file"
-    )
-    parser.add_argument(
-        "--eval-only", action="store_true", help="perform evaluation only"
-    )
-    parser.add_argument(
-        "--num-gpus", type=int, default=1, help="number of gpus"
-    )
+    parser.add_argument("--config-file", default="", metavar="FILE", help="path to config file")
+    parser.add_argument("--eval-only", action="store_true", help="perform evaluation only")
+    parser.add_argument("--num-gpus", type=int, default=1, help="number of gpus")
     # parser.add_argument(
     #     "--overwrite", action="store_true", help="overwrite previous experiment"
     # )
-    parser.add_argument(
-        "--debug", action="store_true", help="run in debug mode"
-    )
+    parser.add_argument("--debug", action="store_true", help="run in debug mode")
 
     # Add option to execute non-eagerly in tensorflow 2
     if env.is_tf2():
-        parser.add_argument(
-            "--non-eagerly", action="store_true", help="run tensorflow non-eagerly"
-        )
+        parser.add_argument("--non-eagerly", action="store_true", help="run tensorflow non-eagerly")
 
     parser.add_argument(
         "opts",
@@ -86,8 +75,7 @@ def default_setup(cfg, args):
     make_new_version = not (hasattr(args, "eval_only") and args.eval_only)
     if not make_new_version and not config_exists(cfg.OUTPUT_DIR):
         raise ValueError(
-            f"Tried to evaluate on empty experiment directory. "
-            f"{cfg.OUTPUT_DIR} does not exist."
+            f"Tried to evaluate on empty experiment directory. " f"{cfg.OUTPUT_DIR} does not exist."
         )
 
     if args.eval_only and config_exists(cfg.OUTPUT_DIR):
@@ -162,8 +150,9 @@ def default_setup(cfg, args):
 def default_exp_name(cfg):
     """Extracts default experiment name from the config.
 
-    `cfg.EXP_NAME` if exists. If basename starts with "version" or "debug", take both parent directory name
-    and version name to make experiment name (e.g. "my_exp/version_001").
+    `cfg.EXP_NAME` if exists. If basename starts with "version" or "debug",
+    take both parent directory name and version name to make experiment name
+    (e.g. "my_exp/version_001").
 
     Returns:
         exp_name (str): The default convention for naming experiments.

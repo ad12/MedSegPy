@@ -27,7 +27,7 @@ echo "Running isort ..."
 isort -y -sp . --atomic
 
 echo "Running black ..."
-black -l 80 .
+black --config pyproject.toml .
 
 echo "Running flake8 ..."
 if [ -x "$(command -v flake8-3)" ]; then

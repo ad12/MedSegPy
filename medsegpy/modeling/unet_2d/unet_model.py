@@ -6,14 +6,7 @@ import numpy as np
 from keras.engine.topology import get_source_inputs
 from keras.initializers import he_normal
 from keras.layers import BatchNormalization as BN
-from keras.layers import (
-    Concatenate,
-    Conv2D,
-    Conv2DTranspose,
-    Dropout,
-    Input,
-    MaxPooling2D,
-)
+from keras.layers import Concatenate, Conv2D, Conv2DTranspose, Dropout, Input, MaxPooling2D
 
 from ..model import Model
 
@@ -29,18 +22,10 @@ TIBIAL_CARTILAGE_STR = "tc"
 __ABS_DIR__ = os.path.dirname(os.path.abspath(__file__))
 
 WEIGHTS_DICT = {
-    FEMORAL_CARTILAGE_STR: os.path.join(
-        __ABS_DIR__, "weights/unet_2d_fc_weights--0.8968.h5"
-    ),
-    MENISCUS_STR: os.path.join(
-        __ABS_DIR__, "weights/unet_2d_men_weights--0.7692.h5"
-    ),
-    PATELLAR_CARTILAGE_STR: os.path.join(
-        __ABS_DIR__, "weights/unet_2d_pc_weights--0.6206.h5"
-    ),
-    TIBIAL_CARTILAGE_STR: os.path.join(
-        __ABS_DIR__, "weights/unet_2d_tc_weights--0.8625.h5"
-    ),
+    FEMORAL_CARTILAGE_STR: os.path.join(__ABS_DIR__, "weights/unet_2d_fc_weights--0.8968.h5"),
+    MENISCUS_STR: os.path.join(__ABS_DIR__, "weights/unet_2d_men_weights--0.7692.h5"),
+    PATELLAR_CARTILAGE_STR: os.path.join(__ABS_DIR__, "weights/unet_2d_pc_weights--0.6206.h5"),
+    TIBIAL_CARTILAGE_STR: os.path.join(__ABS_DIR__, "weights/unet_2d_tc_weights--0.8625.h5"),
 }
 
 # Input size that is expected
@@ -48,31 +33,25 @@ WEIGHTS_DICT = {
 DEFAULT_INPUT_SIZE = (288, 288, 1)
 
 
-def unet_2d_model(
-    input_size=DEFAULT_INPUT_SIZE, input_tensor=None, output_mode=None
-):
+def unet_2d_model(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, output_mode=None):
     """Generate Unet 2D model compatible with Keras 2
 
     :param input_size: tuple of input size - format: (height, width, 1)
 
     :rtype: Keras model
 
-    :raise ValueError if input_size is not tuple or dimensions of input_size do not match (height, width, 1)
+    :raise ValueError if input_size is not tuple or dimensions of input_size do not match
+        (height, width, 1)
     """
     warnings.warn(
-        "unet_2d_model is deprecated. Use `UNet2D(cfg).build_model()`.",
-        DeprecationWarning,
+        "unet_2d_model is deprecated. Use `UNet2D(cfg).build_model()`.", DeprecationWarning
     )
     from medsegpy import glob_constants
 
     logger.info("Initializing unet with seed: %s" % str(glob_constants.SEED))
     SEED = glob_constants.SEED
-    if input_tensor is None and (
-        type(input_size) is not tuple or len(input_size) != 3
-    ):
-        raise ValueError(
-            "input_size must be a tuple of size (height, width, 1)"
-        )
+    if input_tensor is None and (type(input_size) is not tuple or len(input_size) != 3):
+        raise ValueError("input_size must be a tuple of size (height, width, 1)")
 
     nfeatures = [2 ** feat * 32 for feat in np.arange(6)]
     depth = len(nfeatures)
@@ -133,10 +112,7 @@ def unet_2d_model(
         up = Concatenate(axis=3)(
             [
                 Conv2DTranspose(
-                    nfeatures[depth_cnt],
-                    (3, 3),
-                    padding="same",
-                    strides=unpooling_size,
+                    nfeatures[depth_cnt], (3, 3), padding="same", strides=unpooling_size
                 )(conv),
                 conv_ptr[depth_cnt],
             ]
@@ -162,7 +138,8 @@ def unet_2d_model(
 
     # combine features
     # this if statement is required for legacy purposes
-    # some weights were trained with a joint activation, which makes it difficult to load weights effectively
+    # some weights were trained with a joint activation,
+    # which makes it difficult to load weights effectively
     if output_mode is not None:
         recon = Conv2D(
             1,
@@ -183,11 +160,7 @@ def unet_2d_model(
 
 
 def unet_2d_model_v2(
-    input_size=DEFAULT_INPUT_SIZE,
-    input_tensor=None,
-    output_mode=None,
-    num_filters=None,
-    depth=6,
+    input_size=DEFAULT_INPUT_SIZE, input_tensor=None, output_mode=None, num_filters=None, depth=6
 ):
     """Generate Unet 2D model compatible with Keras 2
 
@@ -195,22 +168,18 @@ def unet_2d_model_v2(
 
     :rtype: Keras model
 
-    :raise ValueError if input_size is not tuple or dimensions of input_size do not match (height, width, 1)
+    :raise ValueError if input_size is not tuple or dimensions of input_size do not match
+        (height, width, 1)
     """
     warnings.warn(
-        "unet_2d_model_v2 is deprecated. Use `UNet2D(cfg).build_model()`.",
-        DeprecationWarning,
+        "unet_2d_model_v2 is deprecated. Use `UNet2D(cfg).build_model()`.", DeprecationWarning
     )
     from medsegpy import glob_constants
 
     logger.info("Initializing unet with seed: %s" % str(glob_constants.SEED))
     SEED = glob_constants.SEED
-    if input_tensor is None and (
-        type(input_size) is not tuple or len(input_size) != 3
-    ):
-        raise ValueError(
-            "input_size must be a tuple of size (height, width, 1)"
-        )
+    if input_tensor is None and (type(input_size) is not tuple or len(input_size) != 3):
+        raise ValueError("input_size must be a tuple of size (height, width, 1)")
 
     if num_filters is None:
         nfeatures = [2 ** feat * 32 for feat in np.arange(depth)]
@@ -304,7 +273,8 @@ def unet_2d_model_v2(
 
     # combine features
     # this if statement is required for legacy purposes
-    # some weights were trained with a joint activation, which makes it difficult to load weights effectively
+    # some weights were trained with a joint activation,
+    # which makes it difficult to load weights effectively
     if output_mode is not None:
         recon = Conv2D(
             1,

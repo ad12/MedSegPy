@@ -35,18 +35,10 @@ TIBIAL_CARTILAGE_STR = "tc"
 __ABS_DIR__ = os.path.dirname(os.path.abspath(__file__))
 
 WEIGHTS_DICT = {
-    FEMORAL_CARTILAGE_STR: os.path.join(
-        __ABS_DIR__, "weights/unet_2d_fc_weights--0.8968.h5"
-    ),
-    MENISCUS_STR: os.path.join(
-        __ABS_DIR__, "weights/unet_2d_men_weights--0.7692.h5"
-    ),
-    PATELLAR_CARTILAGE_STR: os.path.join(
-        __ABS_DIR__, "weights/unet_2d_pc_weights--0.6206.h5"
-    ),
-    TIBIAL_CARTILAGE_STR: os.path.join(
-        __ABS_DIR__, "weights/unet_2d_tc_weights--0.8625.h5"
-    ),
+    FEMORAL_CARTILAGE_STR: os.path.join(__ABS_DIR__, "weights/unet_2d_fc_weights--0.8968.h5"),
+    MENISCUS_STR: os.path.join(__ABS_DIR__, "weights/unet_2d_men_weights--0.7692.h5"),
+    PATELLAR_CARTILAGE_STR: os.path.join(__ABS_DIR__, "weights/unet_2d_pc_weights--0.6206.h5"),
+    TIBIAL_CARTILAGE_STR: os.path.join(__ABS_DIR__, "weights/unet_2d_tc_weights--0.8625.h5"),
 }
 
 # Input size that is expected
@@ -95,7 +87,7 @@ def res_block(
     x = xi
 
     layers = []
-    for l in range(nlayers):
+    for l in range(nlayers):  # noqa: E741
         layers_dict = {
             "conv": Conv2D(
                 nfeatures,
@@ -104,16 +96,9 @@ def res_block(
                 kernel_initializer=he_normal(seed=seed),
                 name="%s_conv_%d" % (base_name, l + 1),
             ),
-            "bn": BN(
-                axis=-1,
-                momentum=0.95,
-                epsilon=0.001,
-                name="%s_bn_%d" % (base_name, l + 1),
-            ),
+            "bn": BN(axis=-1, momentum=0.95, epsilon=0.001, name="%s_bn_%d" % (base_name, l + 1)),
             "relu": Activation("relu", name="%s_relu_%d" % (base_name, l + 1)),
-            "dropout": Dropout(
-                rate=dropout_rate, name="%s_dropout_%d" % (base_name, l + 1)
-            ),
+            "dropout": Dropout(rate=dropout_rate, name="%s_dropout_%d" % (base_name, l + 1)),
         }
 
         for layer in layer_order:
@@ -147,18 +132,15 @@ def residual_unet_2d(
 
     :rtype: Keras model
 
-    :raise ValueError if input_size is not tuple or dimensions of input_size do not match (height, width, 1)
+    :raise ValueError if input_size is not tuple or dimensions of input_size do not match
+        (height, width, 1)
     """
     from medsegpy import glob_constants
 
     logger.info("Initializing unet with seed: %s" % str(glob_constants.SEED))
     SEED = glob_constants.SEED
-    if input_tensor is None and (
-        type(input_size) is not tuple or len(input_size) != 3
-    ):
-        raise ValueError(
-            "input_size must be a tuple of size (height, width, 1)"
-        )
+    if input_tensor is None and (type(input_size) is not tuple or len(input_size) != 3):
+        raise ValueError("input_size must be a tuple of size (height, width, 1)")
 
     if num_filters is None:
         nfeatures = [2 ** feat * 32 for feat in np.arange(depth)]
@@ -193,15 +175,10 @@ def residual_unet_2d(
             squeeze_excitation_ratio=squeeze_excitation_ratio,
         )
 
-        conv = Activation("relu", name="enc_%d_ouput_relu" % (depth_cnt + 1))(
+        conv = Activation("relu", name="enc_%d_ouput_relu" % (depth_cnt + 1))(conv)
+        conv = BN(axis=-1, momentum=0.95, epsilon=0.001, name="enc_%d_ouput_bn" % (depth_cnt + 1))(
             conv
         )
-        conv = BN(
-            axis=-1,
-            momentum=0.95,
-            epsilon=0.001,
-            name="enc_%d_ouput_bn" % (depth_cnt + 1),
-        )(conv)
 
         conv_ptr.append(conv)
 
@@ -215,9 +192,9 @@ def residual_unet_2d(
             elif xres % 2 == 1:
                 pooling_size = (3, 3)
 
-            pool = MaxPooling2D(
-                pool_size=pooling_size, name="enc_maxpool_%d" % (depth_cnt + 1)
-            )(conv)
+            pool = MaxPooling2D(pool_size=pooling_size, name="enc_maxpool_%d" % (depth_cnt + 1))(
+                conv
+            )
 
     # step up convolutional layers
     for depth_cnt in range(depth - 2, -1, -1):
@@ -263,23 +240,14 @@ def residual_unet_2d(
             squeeze_excitation_ratio=squeeze_excitation_ratio,
         )
 
-        conv = Activation("relu", name="dec_%d_ouput_relu" % (depth_cnt + 1))(
+        conv = Activation("relu", name="dec_%d_ouput_relu" % (depth_cnt + 1))(conv)
+        conv = BN(axis=-1, momentum=0.95, epsilon=0.001, name="dec_%d_ouput_bn" % (depth_cnt + 1))(
             conv
         )
-        conv = BN(
-            axis=-1,
-            momentum=0.95,
-            epsilon=0.001,
-            name="dec_%d_ouput_bn" % (depth_cnt + 1),
-        )(conv)
 
     if output_mode is not None:
         recon = Conv2D(
-            1,
-            (1, 1),
-            padding="same",
-            kernel_initializer=he_normal(seed=SEED),
-            name="1d_class_conv",
+            1, (1, 1), padding="same", kernel_initializer=he_normal(seed=SEED), name="1d_class_conv"
         )(conv)
         recon = Activation(output_mode, name="class_%s" % output_mode)(recon)
     else:

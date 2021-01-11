@@ -1,12 +1,11 @@
 import logging
-import warnings
 
 import numpy as np
+import scipy.special as sps
 import tensorflow as tf
 from keras import backend as K
 from keras.callbacks import Callback
 from keras.losses import binary_crossentropy
-import scipy.special as sps
 
 from medsegpy.utils import env
 
@@ -17,10 +16,7 @@ MULTI_CLASS_DICE_LOSS = ("multi_class_dice", "sigmoid")
 AVG_DICE_LOSS = ("avg_dice", "sigmoid")
 AVG_DICE_LOSS_SOFTMAX = ("avg_dice", "softmax")
 WEIGHTED_CROSS_ENTROPY_LOSS = ("weighted_cross_entropy", "softmax")
-WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS = (
-    "weighted_cross_entropy_sigmoid",
-    "sigmoid",
-)
+WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS = ("weighted_cross_entropy_sigmoid", "sigmoid")
 
 BINARY_CROSS_ENTROPY_LOSS = ("binary_crossentropy", "softmax")
 
@@ -64,7 +60,7 @@ def build_loss(cfg):
         except (ValueError, AttributeError):
             pass
     loss = get_training_loss(
-        loss, 
+        loss,
         weights=cfg.CLASS_WEIGHTS,
         # Remove computation on the background class.
         remove_background=cfg.INCLUDE_BACKGROUND,
@@ -75,9 +71,7 @@ def build_loss(cfg):
         return loss
     elif robust_loss_cls == "NaiveAdaRobLossComputer":
         return NaiveAdaRobLossComputer(
-            criterion=loss, 
-            n_groups=num_classes,
-            robust_step_size=robust_step_size,
+            criterion=loss, n_groups=num_classes, robust_step_size=robust_step_size
         )
     else:
         raise ValueError(f"{robust_loss_cls} not supported")
@@ -165,9 +159,7 @@ def dice_loss(y_true, y_pred):
     ovlp = K.sum(y_true * y_pred, axis=-1)
 
     mu = K.epsilon()
-    dice = (2.0 * ovlp + mu) / (
-        K.sum(y_true, axis=-1) + K.sum(y_pred, axis=-1) + mu
-    )
+    dice = (2.0 * ovlp + mu) / (K.sum(y_true, axis=-1) + K.sum(y_pred, axis=-1) + mu)
     loss = 1 - dice
 
     return loss
@@ -225,9 +217,7 @@ def multi_class_dice_loss(
         ovlp = K.sum(y_true * y_pred, axis=0)
 
         mu = K.epsilon()
-        dice = (2.0 * ovlp + mu) / (
-            K.sum(y_true, axis=0) + K.sum(y_pred, axis=0) + mu
-        )
+        dice = (2.0 * ovlp + mu) / (K.sum(y_true, axis=0) + K.sum(y_pred, axis=0) + mu)
         loss = 1 - dice
 
         if reduce == "class":
@@ -250,9 +240,7 @@ def multi_class_dice_loss(
         ovlp = np.sum(y_true * y_pred, axis=0)
 
         mu = K.epsilon()
-        dice = (2.0 * ovlp + mu) / (
-            np.sum(y_true, axis=0) + np.sum(y_pred, axis=0) + mu
-        )
+        dice = (2.0 * ovlp + mu) / (np.sum(y_true, axis=0) + np.sum(y_pred, axis=0) + mu)
         loss = 1 - dice
 
         if reduce == "class":
@@ -294,9 +282,7 @@ def avg_dice_loss(weights=None, remove_background: bool = False, **kwargs):
         ovlp = K.sum(y_true * y_pred, axis=1)
 
         mu = K.epsilon()
-        dice = (2.0 * ovlp + mu) / (
-            K.sum(y_true, axis=1) + K.sum(y_pred, axis=1) + mu
-        )
+        dice = (2.0 * ovlp + mu) / (K.sum(y_true, axis=1) + K.sum(y_pred, axis=1) + mu)
         loss = 1 - dice
 
         if use_weights:
@@ -368,9 +354,7 @@ def weighted_categorical_crossentropy_sigmoid(weights):
         y_pred = K.clip(y_pred, K.epsilon(), 1 - K.epsilon())
 
         # calc
-        loss = (1 - y_true) * K.log(1 - y_pred) * weights[0] + y_true * K.log(
-            y_pred
-        ) * weights[1]
+        loss = (1 - y_true) * K.log(1 - y_pred) * weights[0] + y_true * K.log(y_pred) * weights[1]
         loss = -K.mean(loss)
         return loss
 
@@ -439,12 +423,7 @@ def wasserstein_disagreement_map(prediction, ground_truth, M):
 
 
 M_tree_4 = np.array(
-    [
-        [0.0, 1.0, 1.0, 1.0],
-        [1.0, 0.0, 0.6, 0.5],
-        [1.0, 0.6, 0.0, 0.7],
-        [1.0, 0.5, 0.7, 0.0],
-    ],
+    [[0.0, 1.0, 1.0, 1.0], [1.0, 0.0, 0.6, 0.5], [1.0, 0.6, 0.0, 0.7], [1.0, 0.5, 0.7, 0.0]],
     dtype=np.float64,
 )
 
@@ -464,9 +443,7 @@ def generalised_wasserstein_dice_loss(y_true, y_predicted):
     n_classes = K.int_shape(y_predicted)[-1]
 
     ground_truth = tf.cast(tf.reshape(y_true, (-1, n_classes)), dtype=tf.int64)
-    pred_proba = tf.cast(
-        tf.reshape(y_predicted, (-1, n_classes)), dtype=tf.float64
-    )
+    pred_proba = tf.cast(tf.reshape(y_predicted, (-1, n_classes)), dtype=tf.float64)
 
     # M = tf.cast(M, dtype=tf.float64)
     # compute disagreement map (delta)
@@ -478,8 +455,7 @@ def generalised_wasserstein_dice_loss(y_true, y_predicted):
     # compute generalisation of true positives for multi-class seg
     one_hot = tf.cast(ground_truth, dtype=tf.float64)
     true_pos = tf.reduce_sum(
-        tf.multiply(tf.constant(M[0, :n_classes], dtype=tf.float64), one_hot),
-        axis=1,
+        tf.multiply(tf.constant(M[0, :n_classes], dtype=tf.float64), one_hot), axis=1
     )
     true_pos = tf.reduce_sum(tf.multiply(true_pos, 1.0 - delta), axis=0)
     WGDL = 1.0 - (2.0 * true_pos) / (2.0 * true_pos + all_error)
@@ -488,18 +464,13 @@ def generalised_wasserstein_dice_loss(y_true, y_predicted):
 
 
 class NaiveAdaRobLossComputer(Callback):
-    """Handles adaptive robust class loss computer. 
+    """Handles adaptive robust class loss computer.
 
     Use `on_batch_begin` and `on_batch_end` to do things before/after the training batch.
     Note `on_batch_end` runs **before** validation when using `model.fit_generator`.
     """
-    def __init__(
-        self,
-        criterion,
-        n_groups,
-        robust_step_size,
-        stable=True,
-    ):
+
+    def __init__(self, criterion, n_groups, robust_step_size, stable=True):
         # TF2 requires __name__ attribute which is not set by default.
         self.__name__ = "NaiveAdaRobLossComputer"
 
@@ -513,9 +484,7 @@ class NaiveAdaRobLossComputer(Callback):
         self.group_range = np.arange(self.n_groups, dtype=np.long)[..., np.newaxis]
 
         self.robust_step_size = robust_step_size
-        logger.info(
-            f"Using robust loss with inner step size {self.robust_step_size}"
-        )
+        logger.info(f"Using robust loss with inner step size {self.robust_step_size}")
         self.stable = stable
 
         # The following quantities are maintained/updated throughout training
@@ -536,8 +505,8 @@ class NaiveAdaRobLossComputer(Callback):
         #     raise RuntimeError(f"{self.__name__} does not support non-eager execution")
 
         group_losses = self.criterion(y_true, y_pred)
-        szp = y_pred.shape if isinstance(y_pred, np.ndarray) else _get_shape(y_pred)
-        batch_size = szp[0]
+        # szp = y_pred.shape if isinstance(y_pred, np.ndarray) else _get_shape(y_pred)
+        # batch_size = szp[0]
 
         # TODO: For losses where count matters, take this.
         # group_counts = np.ones(len(group_losses))
@@ -562,30 +531,26 @@ class NaiveAdaRobLossComputer(Callback):
         if not tf.executing_eagerly():
             raise ValueError(f"{self.__name__} requires eager execution")
 
-        assert self.training is not None, (
-            "`self.training` not initialized. Make sure this class is added as a callback"
-        )
+        assert (
+            self.training is not None
+        ), "`self.training` not initialized. Make sure this class is added as a callback"
         if self.training:
             # Update weighting if in training mode
             # This only works in eager mode.
-            # TODO: Find solution for non-eager mode to speed up large-scale training 
-            adjusted_loss = (
-                group_loss
-                if isinstance(group_loss, np.ndarray)
-                else group_loss.numpy()
-            )
+            # TODO: Find solution for non-eager mode to speed up large-scale training
+            adjusted_loss = group_loss if isinstance(group_loss, np.ndarray) else group_loss.numpy()
             logit_step = self.robust_step_size * adjusted_loss
             if self.stable:
                 self.adv_probs_logits = self.adv_probs_logits + logit_step
             else:
                 assert False, "This branch has not been tested"
-                self.adv_probs = self.adv_probs * torch.exp(logit_step)
-                self.adv_probs = self.adv_probs / self.adv_probs.sum()
+                # self.adv_probs = self.adv_probs * torch.exp(logit_step)
+                # self.adv_probs = self.adv_probs / self.adv_probs.sum()
 
         if self.stable:
             adv_probs = (
-                sps.softmax(self.adv_probs_logits) 
-                if isinstance(self.adv_probs_logits, np.ndarray) 
+                sps.softmax(self.adv_probs_logits)
+                if isinstance(self.adv_probs_logits, np.ndarray)
                 else K.softmax(self.adv_probs_logits, axis=-1)
             )
         else:
@@ -608,19 +573,23 @@ class NaiveAdaRobLossComputer(Callback):
         # This let's us turn off training mode during the validation period.
         self.training = False
         weighting = sps.softmax(self.adv_probs_logits)
-        logs.update({f"{self.__name__}/weights/class:{i}": weighting[i] for i in range(self.n_groups)})
+        logs.update(
+            {f"{self.__name__}/weights/class:{i}": weighting[i] for i in range(self.n_groups)}
+        )
         group_losses = self._tmp["group_losses"]
-        logs.update({f"{self.__name__}/loss/class:{i}": group_losses[i] for i in range(self.n_groups)})
+        logs.update(
+            {f"{self.__name__}/loss/class:{i}": group_losses[i] for i in range(self.n_groups)}
+        )
         self._tmp = {}
 
     def on_test_begin(self, logs=None):
         self.prev_training_state = self.training
         self.training = False
-    
+
     def on_test_end(self, logs=None):
-        assert self.prev_training_state is not None, (
-            "`self.prev_training_state` should be set in `on_test_begin`"
-        )
+        assert (
+            self.prev_training_state is not None
+        ), "`self.prev_training_state` should be set in `on_test_begin`"
         self.training = self.prev_training_state
 
     def __call__(self, y_true, y_pred):

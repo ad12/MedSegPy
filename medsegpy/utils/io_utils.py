@@ -49,8 +49,7 @@ def save_optimizer(optimizer, dirpath: str):
 
 
 def load_optimizer(dirpath: str):
-    """Return model and optimizer in previous state.
-    """
+    """Return model and optimizer in previous state."""
     from keras import optimizers
 
     filepath = os.path.join(dirpath, "optimizer.dat")
@@ -62,8 +61,7 @@ def load_optimizer(dirpath: str):
 
 
 def save_pik(data, filepath):
-    """Save data using pickle.
-    """
+    """Save data using pickle."""
     with open(filepath, "wb") as f:
         pickle.dump(data, f)
 
@@ -109,8 +107,7 @@ def format_exp_version(dir_path, new_version=True, mkdirs=False, force=False):
 
 def _find_latest_version_dir(dir_path):
     version_dirs = [
-        (x, int(x.split("_")[1]))
-        for x in os.listdir(dir_path) if re.match("^version_[0-9]*", x)
+        (x, int(x.split("_")[1])) for x in os.listdir(dir_path) if re.match("^version_[0-9]*", x)
     ]
     if len(version_dirs) == 0:
         version_dir, version_num = None, 0

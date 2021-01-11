@@ -51,9 +51,7 @@ class SegNetBottleneck(SegNet):
             eff_pool_size = eff_pool_sizes[i]
             # Do not pool on bottleneck layer.
             is_bottleneck = i == depth - 1
-            n_conv = (
-                num_conv_layers[i] - 1 if is_bottleneck else num_conv_layers[i]
-            )
+            n_conv = num_conv_layers[i] - 1 if is_bottleneck else num_conv_layers[i]
             if conv_act_bn:
                 curr_layer, l_mask = self._encoder_block_conv_act_bn(
                     curr_layer,
@@ -124,19 +122,14 @@ class SegNetBottleneck(SegNet):
                     level=i + 1,
                     num_conv_layers=num_conv_layers[i],
                     num_filters=num_filters[i],
-                    num_filters_next=num_filters[i]
-                    if i == 0
-                    else num_filters[i - 1],
+                    num_filters_next=num_filters[i] if i == 0 else num_filters[i - 1],
                     kernel=kernel,
                     pool_size=eff_pool_size,
                     single_bn=single_bn,
                 )
 
         outputs = Convolution2D(
-            n_labels,
-            (1, 1),
-            kernel_initializer=glorot_uniform(seed=seed),
-            activation=output_mode,
+            n_labels, (1, 1), kernel_initializer=glorot_uniform(seed=seed), activation=output_mode
         )(curr_layer)
 
         model = Model(inputs=inputs, outputs=outputs, name="segnet_bottleneck")

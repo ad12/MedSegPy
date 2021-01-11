@@ -26,9 +26,7 @@ def get_weights(experiment_dir):
         file_fullpath = os.path.join(experiment_dir, file)
         # Ensure the file is an h5 file
         if not (
-            os.path.isfile(file_fullpath)
-            and file_fullpath.endswith(".h5")
-            and "weights" in file
+            os.path.isfile(file_fullpath) and file_fullpath.endswith(".h5") and "weights" in file
         ):
             continue
 
@@ -47,13 +45,8 @@ def get_weights(experiment_dir):
 
 
 def _check_results_file(base_path):
-    """Recursively check for results.txt file.
-    """
-    if (
-        (base_path is None)
-        or (not os.path.isdir(base_path))
-        or (base_path == "")
-    ):
+    """Recursively check for results.txt file."""
+    if (base_path is None) or (not os.path.isdir(base_path)) or (base_path == ""):
         return []
 
     results_filepath = os.path.join(base_path, "results.txt")
@@ -137,17 +130,10 @@ def get_available_gpus(num_gpus: int = None):
 
     num_requested_gpus = num_gpus
     num_gpus = (
-        len(
-            subprocess.check_output("nvidia-smi --list-gpus", shell=True)
-            .decode()
-            .split("\n")
-        )
-        - 1
+        len(subprocess.check_output("nvidia-smi --list-gpus", shell=True).decode().split("\n")) - 1
     )
 
-    out_str = subprocess.check_output(
-        "nvidia-smi | grep MiB", shell=True
-    ).decode()
+    out_str = subprocess.check_output("nvidia-smi | grep MiB", shell=True).decode()
     mem_str = [x for x in out_str.split() if "MiB" in x]
     # First 2 * num_gpu elements correspond to memory for gpus
     # Order: (occupied-0, total-0, occupied-1, total-1, ...)
@@ -156,30 +142,17 @@ def get_available_gpus(num_gpus: int = None):
         mems[2 * gpu_id] / mems[2 * gpu_id + 1] for gpu_id in range(num_gpus)
     ]
 
-    available_gpus = [
-        gpu_id
-        for gpu_id, mem in enumerate(gpu_percent_occupied_mem)
-        if mem < 0.05
-    ]
+    available_gpus = [gpu_id for gpu_id, mem in enumerate(gpu_percent_occupied_mem) if mem < 0.05]
     if num_requested_gpus and num_requested_gpus > len(available_gpus):
         raise ValueError(
-            "Requested {} gpus, only {} are free".format(
-                num_requested_gpus, len(available_gpus)
-            )
+            "Requested {} gpus, only {} are free".format(num_requested_gpus, len(available_gpus))
         )
 
-    return (
-        available_gpus[:num_requested_gpus]
-        if num_requested_gpus
-        else available_gpus
-    )
+    return available_gpus[:num_requested_gpus] if num_requested_gpus else available_gpus
 
 
 def num_gpus():
-    if (
-        "CUDA_VISIBLE_DEVICES" not in os.environ
-        or not os.environ["CUDA_VISIBLE_DEVICES"]
-    ):
+    if "CUDA_VISIBLE_DEVICES" not in os.environ or not os.environ["CUDA_VISIBLE_DEVICES"]:
         return 0
 
     return len(os.environ["CUDA_VISIBLE_DEVICES"].split(","))
@@ -202,14 +175,14 @@ class ModelMGPU(Model):
         return super(ModelMGPU, self).__getattribute__(attrname)
 
 
-class _NoOpScope():
-    def __enter__(self): 
+class _NoOpScope:
+    def __enter__(self):
         return self
-      
-    def __exit__(self, exc_type, exc_value, exc_traceback): 
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
         pass
 
 
-class NoOpStrategy():
+class NoOpStrategy:
     def scope(self):
         return _NoOpScope()

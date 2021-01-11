@@ -20,9 +20,7 @@ class TestPatchDataLoader(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         img = np.random.rand(*cls.IMG_SIZE).astype(np.float32)
-        seg = (np.random.rand(*cls.IMG_SIZE, cls.NUM_CLASSES) >= 0.5).astype(
-            np.uint8
-        )
+        seg = (np.random.rand(*cls.IMG_SIZE, cls.NUM_CLASSES) >= 0.5).astype(np.uint8)
 
         file_path = PathManager.get_local_path(cls.FILE_PATH)
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
@@ -61,9 +59,7 @@ class TestPatchDataLoader(unittest.TestCase):
         dataset_dicts = self.get_dataset_dicts()
 
         # Simple slice
-        data_loader = PatchDataLoader(
-            cfg, dataset_dicts, is_test=False, shuffle=False
-        )
+        data_loader = PatchDataLoader(cfg, dataset_dicts, is_test=False, shuffle=False)
         assert len(data_loader) == 30
         for i in range(30):
             img, seg = data_loader[i]
@@ -80,9 +76,7 @@ class TestN5dDataLoader(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         img = np.random.rand(*cls.IMG_SIZE).astype(np.float32)
-        seg = (np.random.rand(*cls.IMG_SIZE, cls.NUM_CLASSES) >= 0.5).astype(
-            np.uint8
-        )
+        seg = (np.random.rand(*cls.IMG_SIZE, cls.NUM_CLASSES) >= 0.5).astype(np.uint8)
 
         file_path = PathManager.get_local_path(cls.FILE_PATH)
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
@@ -107,8 +101,7 @@ class TestN5dDataLoader(unittest.TestCase):
         ]
 
     def test_simple(self):
-        """Test simple 2.5d configuration.
-        """
+        """Test simple 2.5d configuration."""
         with h5py.File(PathManager.get_local_path(self.FILE_PATH), "r") as f:
             volume = f["volume"][:]
             mask = f["seg"][:]
@@ -122,9 +115,7 @@ class TestN5dDataLoader(unittest.TestCase):
 
         # No padding
         # First and last slices will be skipped b/c no padding is used
-        data_loader = N5dDataLoader(
-            cfg, dataset_dicts, is_test=False, shuffle=False
-        )
+        data_loader = N5dDataLoader(cfg, dataset_dicts, is_test=False, shuffle=False)
         assert len(data_loader) == 30 - 2 * (num_slices // 2)
         for idx, i in enumerate(range(1, 29)):
             img, seg = data_loader[idx]
@@ -148,9 +139,7 @@ class TestN5dDataLoader(unittest.TestCase):
         pad_mode = "edge"
         cfg.IMG_PAD_SIZE = (0, 0, window)
         cfg.IMG_PAD_MODE = pad_mode
-        data_loader = N5dDataLoader(
-            cfg, dataset_dicts, is_test=False, shuffle=False
-        )
+        data_loader = N5dDataLoader(cfg, dataset_dicts, is_test=False, shuffle=False)
         _s_volume = np.pad(volume, pad_size, pad_mode)
         _s_mask = np.pad(mask, pad_size + ((0, 0),), pad_mode)
         assert len(data_loader) == 30

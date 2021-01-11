@@ -28,9 +28,7 @@ class TestUNet2D(unittest.TestCase):
             l2_cfg.pop("name"), l1_cfg.pop("name")
 
             if isinstance(l2, Concatenate):
-                channel_axis = (
-                    -1 if K.image_data_format() == "channels_last" else 1
-                )  # noqa
+                channel_axis = -1 if K.image_data_format() == "channels_last" else 1  # noqa
                 mapping = {channel_axis: 3}
                 l2_cfg["axis"] = mapping[l2_cfg["axis"]]
 
@@ -40,7 +38,8 @@ class TestUNet2D(unittest.TestCase):
 
     def test_same_unet2d(self):
         """2D U-Net should be same between builder and function construct."""
-        if _TF2: return
+        if _TF2:
+            return
         cfg = UNetConfig()
         cfg.CATEGORIES = [0]
         m1 = get_model(cfg)
@@ -54,7 +53,8 @@ class TestUNet2D(unittest.TestCase):
         The builder takes in the 2D U-Net config and constructs a 2.5 config.
         This motivates deprecating UNet2_5DConfig.
         """
-        if _TF2: return
+        if _TF2:
+            return
         cfg1 = UNet2_5DConfig()
         cfg1.IMG_SIZE = (288, 288, 3)
         cfg1.CATEGORIES = [0]
@@ -72,7 +72,8 @@ class TestUNet3D(unittest.TestCase):
 
     def test_same_unet_3d(self):
         """3D U-Net should be same between builder and function construct."""
-        if _TF2: return
+        if _TF2:
+            return
         cfg = UNet3DConfig()
         cfg.CATEGORIES = [0]
         m1 = get_model(cfg)
@@ -86,9 +87,9 @@ class TestUNet3D(unittest.TestCase):
             if reached_l1 and reached_l2:
                 break
 
-            assert (
-                not reached_l1 and not reached_l2
-            ), "l1_idx: {}, l2_idx: {}".format(l1_idx, l2_idx)
+            assert not reached_l1 and not reached_l2, "l1_idx: {}, l2_idx: {}".format(
+                l1_idx, l2_idx
+            )
 
             l1 = m1.layers[l1_idx]
             l1_cfg = l1.get_config()
@@ -98,9 +99,7 @@ class TestUNet3D(unittest.TestCase):
             l1_cfg.pop("name"), l2_cfg.pop("name")
 
             if isinstance(l2, Concatenate):
-                channel_axis = (
-                    -1 if K.image_data_format() == "channels_last" else 1
-                )  # noqa
+                channel_axis = -1 if K.image_data_format() == "channels_last" else 1  # noqa
                 mapping = {channel_axis: 4}
                 l2_cfg["axis"] = mapping[l2_cfg["axis"]]
             elif isinstance(l1, Conv3D) and not isinstance(l1, Conv3DTranspose):
@@ -110,22 +109,16 @@ class TestUNet3D(unittest.TestCase):
                 assert isinstance(
                     l1_activation, Activation
                 ), "Expected Activation - l1_idx: {}: {}\n{}".format(
-                    l1_idx,
-                    type(l1_activation),
-                    m1.layers[l1_idx - 1 : l1_idx + 1],
+                    l1_idx, type(l1_activation), m1.layers[l1_idx - 1 : l1_idx + 1]
                 )
                 l1_activation = l1_activation.get_config()["activation"]
                 l2_activation = l2_cfg.pop("activation")
-                assert (
-                    l1_activation == l2_activation
-                ), "l1_idx: {} - {}\nl2_cfg: {} - {}".format(
+                assert l1_activation == l2_activation, "l1_idx: {} - {}\nl2_cfg: {} - {}".format(
                     l1_idx, l1_cfg, l2_idx, l2_cfg
                 )
                 l1_idx += 1
 
-            assert l1_cfg == l2_cfg, "{}: {}\n{}: {}".format(
-                l1.name, l1_cfg, l2.name, l2_cfg
-            )
+            assert l1_cfg == l2_cfg, "{}: {}\n{}: {}".format(l1.name, l1_cfg, l2.name, l2_cfg)
 
             l1_idx += 1
             l2_idx += 1

@@ -29,19 +29,15 @@ def get_stats_string(manager: MetricsManager):
 
     s = "============ Overall Summary ============\n"
     s += "%s\n" % manager.summary()
-    s += (
-        "Inference time (Mean +/- Std. Dev.): "
-        "{:0.2f} +/- {:0.2f} seconds.\n".format(
-            np.mean(inference_runtimes), np.std(inference_runtimes)
-        )
+    s += "Inference time (Mean +/- Std. Dev.): " "{:0.2f} +/- {:0.2f} seconds.\n".format(
+        np.mean(inference_runtimes), np.std(inference_runtimes)
     )
     return s
 
 
 @EVALUATOR_REGISTRY.register()
 class SemSegEvaluator(DatasetEvaluator):
-    """Evaluator for semantic segmentation-related tasks.
-    """
+    """Evaluator for semantic segmentation-related tasks."""
 
     def __init__(
         self,
@@ -64,9 +60,7 @@ class SemSegEvaluator(DatasetEvaluator):
         self._config = cfg
         self._dataset_name = dataset_name
         self._output_folder = (
-            output_folder
-            if output_folder
-            else os.path.join(cfg.OUTPUT_DIR, "test_results")
+            output_folder if output_folder else os.path.join(cfg.OUTPUT_DIR, "test_results")
         )
         PathManager.mkdirs(self._output_folder)
         self._num_classes = cfg.get_num_classes()
@@ -79,8 +73,7 @@ class SemSegEvaluator(DatasetEvaluator):
         cat_ids = cfg.CATEGORIES
         contiguous_id_map = meta.get("category_id_to_contiguous_id")
         contiguous_ids = [
-            contiguous_id_map[tuple(x) if isinstance(x, list) else x]
-            for x in cat_ids
+            contiguous_id_map[tuple(x) if isinstance(x, list) else x] for x in cat_ids
         ]
         categories = meta.get("categories")
         categories = [categories[c_id] for c_id in contiguous_ids]
@@ -135,11 +128,7 @@ class SemSegEvaluator(DatasetEvaluator):
                     labels[l_argmax == c, c] = 1
                 labels = labels.astype(np.uint)
             else:
-                raise ValueError(
-                    "output activation {} not supported".format(
-                        output_activation
-                    )
-                )
+                raise ValueError("output activation {} not supported".format(output_activation))
 
             # background is always excluded from analysis
             if includes_bg:
@@ -161,9 +150,7 @@ class SemSegEvaluator(DatasetEvaluator):
 
     def eval_single_scan(self, input, output, labels, time_elapsed):
         metrics_manager = self._metrics_manager
-        spacing = (
-            input["scan_spacing"] if "scan_spacing" in input else self.spacing
-        )
+        spacing = input["scan_spacing"] if "scan_spacing" in input else self.spacing
         logger = self._logger
         save_raw_data = self._save_raw_data
         output_dir = self._output_folder
@@ -177,12 +164,7 @@ class SemSegEvaluator(DatasetEvaluator):
         metrics_kwargs = {"spacing": spacing} if spacing is not None else {}
 
         summary = metrics_manager(
-            scan_id,
-            y_true=y_true,
-            y_pred=labels,
-            x=x,
-            runtime=time_elapsed,
-            **metrics_kwargs,
+            scan_id, y_true=y_true, y_pred=labels, x=x, runtime=time_elapsed, **metrics_kwargs
         )
 
         logger_info_str = "Scan #{:03d} (name = {}, {:0.2f}s) = {}".format(
@@ -226,10 +208,7 @@ class SemSegEvaluator(DatasetEvaluator):
             # Write details to test file
             with open(test_results_summary_path, "w+") as f:
                 f.write("Results generated on %s\n" % time.strftime("%X %x %Z"))
-                f.write(
-                    "Weights Loaded: %s\n"
-                    % os.path.basename(self._config.TEST_WEIGHT_PATH)
-                )
+                f.write("Weights Loaded: %s\n" % os.path.basename(self._config.TEST_WEIGHT_PATH))
 
                 f.write("--" * 20)
                 f.write("\n")
@@ -242,9 +221,7 @@ class SemSegEvaluator(DatasetEvaluator):
         # df.to_csv(os.path.join(output_dir, "metrics.csv"), header=True, index=True)  # noqa
 
         df = self._metrics_manager.data()["scan_data"]
-        df.to_csv(
-            os.path.join(output_dir, "metrics.csv"), header=True, index=True
-        )
+        df.to_csv(os.path.join(output_dir, "metrics.csv"), header=True, index=True)
 
         # TODO: Convert segmentation metrics to valid results matrix.
         return {}

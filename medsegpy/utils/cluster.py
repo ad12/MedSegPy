@@ -1,11 +1,9 @@
-import getpass
 import os
 import re
 import socket
 import warnings
 import yaml
-from enum import Enum
-from typing import List, Sequence, Union
+from typing import Sequence, Union
 
 from fvcore.common.file_io import PathManager
 
@@ -15,7 +13,7 @@ from medsegpy.utils.env import settings_dir
 _REPO_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 
 
-class Cluster():
+class Cluster:
     """Tracks config of different nodes/clusters.
 
     This class is helpful for managing different storage paths across different
@@ -38,8 +36,8 @@ class Cluster():
         self,
         name: str,
         patterns: Union[str, Sequence[str]],
-        data_dir: str=None,
-        results_dir: str=None,
+        data_dir: str = None,
+        results_dir: str = None,
     ):
         """
         Args:
@@ -49,7 +47,7 @@ class Cluster():
                 ``any(re.match(p, socket.gethostname()) for p in patterns)``.
             data_dir (str, optional): The data directory. Defaults to
                 ``os.environ['MEDSEGPY_RESULTS']`` or ``"./datasets"``.
-            results_dir (str, optional): The results directory. Defaults to 
+            results_dir (str, optional): The results directory. Defaults to
                 `"os.environ['MEDSEGPY_DATASETS']"` or ``"./results"``.
         """
         self.name = name
@@ -74,7 +72,7 @@ class Cluster():
         if not path:
             path = os.environ.get("MEDSEGPY_RESULTS", "./results")
         return PathManager.get_local_path(path)
-    
+
     def save(self):
         """Save cluster config to yaml file."""
         filepath = self.filepath()
@@ -82,34 +80,34 @@ class Cluster():
         with open(filepath, "w") as f:
             data = {(k[1:] if k.startswith("_") else k): v for k, v in self.__dict__.items()}
             yaml.safe_dump(data, f)
-    
+
     def delete(self):
         """Deletes the config file for this cluster."""
         filepath = self.filepath()
         if os.path.isfile(filepath):
             os.remove(filepath)
-    
+
     def filepath(self):
         """Returns config file path.
 
         Note:
             This does not guarantee the config exists. To save the cluster config to a file,
             use `save()`.
-        
+
         Returns:
             str: The config file path.
         """
         return os.path.join(self._config_dir(), f"{self.name}.yaml")
-    
+
     @property
     def save_dir(self):
         """Deprecated: Legacy alias for `self.results_dir`"""
         warnings.warn(
             "`save_dir` is deprecated and will be removed in v0.0.2. Use `results_dir` instead",
-            FutureWarning
+            FutureWarning,
         )
         return self.results_dir
-    
+
     @classmethod
     def all_clusters(cls):
         files = sorted(os.listdir(cls._config_dir()))
@@ -126,7 +124,7 @@ class Cluster():
             The cluster must have been saved to a config file. Also, if
             there are multiple cluster matches, only the first (sorted alphabetically)
             will be returned.
-        
+
         Returns:
             Cluster: The current cluster.
         """
@@ -136,7 +134,7 @@ class Cluster():
             if any(re.match(p, hostname) for p in clus.patterns):
                 return clus
         return _UNKNOWN
-    
+
     @classmethod
     def from_config(cls, name):
         """
@@ -155,17 +153,17 @@ class Cluster():
         with open(filepath, "r") as f:
             cfg = yaml.safe_load(f)
         return cls(**cfg)
-    
+
     @staticmethod
     def _config_dir():
         return os.path.join(settings_dir(), "clusters")
-    
+
     @staticmethod
     def working_cluster() -> "Cluster":
         return _CLUSTER
-    
+
     @staticmethod
-    def set_working_cluster(cluster = None):
+    def set_working_cluster(cluster=None):
         """Sets the working cluster.
 
         Args:
@@ -174,7 +172,7 @@ class Cluster():
                 data and results dirs will be used.
         """
         set_cluster(cluster)
-    
+
     def __repr__(self):
         return "Cluster({})".format(
             ", ".join("{}={}".format(k, v) for k, v in self.__dict__.items())
@@ -189,7 +187,7 @@ def set_cluster(cluster: Union[str, Cluster] = None):
             If ``None``, will reset cluster to _UNKNOWN, meaning default
             data and results dirs will be used.
     """
-    if cluster == None:
+    if cluster is None:
         cluster = _UNKNOWN
     elif isinstance(cluster, str):
         if cluster.lower() == _UNKNOWN.name.lower():

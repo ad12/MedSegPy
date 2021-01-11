@@ -12,6 +12,4 @@ model = SegNetBottleneck(
     output_mode="sigmoid",
 )
 model = model.build_model()
-plot_model(
-    model, show_shapes=True, to_file="../model_imgs/segnet_bottleneck.png"
-)
+plot_model(model, show_shapes=True, to_file="../model_imgs/segnet_bottleneck.png")

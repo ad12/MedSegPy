@@ -47,10 +47,7 @@ class CrossValidationProcessor:
             filepaths = self.__get_cross_validation_files(k)
 
             if not filepaths:
-                raise ValueError(
-                    "No file found for k=%d. Create file with `create_cv_bins.py`"
-                    % k
-                )
+                raise ValueError("No file found for k=%d. Create file with `create_cv_bins.py`" % k)
 
             if len(filepaths) != 1:
                 raise ValueError(
@@ -78,20 +75,11 @@ class CrossValidationProcessor:
         self.bins_split = None
 
         # Handle kwargs
-        if (
-            self.__k_NUM_VALID_BINS_KEY in kwargs
-            and self.__k_NUM_TEST_BINS_KEY in kwargs
-        ):
-            self.init_cv_experiments(
-                kwargs.get("num_valid_bins"), kwargs.get("num_test_bins")
-            )
+        if self.__k_NUM_VALID_BINS_KEY in kwargs and self.__k_NUM_TEST_BINS_KEY in kwargs:
+            self.init_cv_experiments(kwargs.get("num_valid_bins"), kwargs.get("num_test_bins"))
 
-        if (
-            self.__k_NUM_VALID_BINS_KEY not in kwargs
-            and self.__k_NUM_TEST_BINS_KEY in kwargs
-        ) or (
-            self.__k_NUM_VALID_BINS_KEY in kwargs
-            and self.__k_NUM_TEST_BINS_KEY not in kwargs
+        if (self.__k_NUM_VALID_BINS_KEY not in kwargs and self.__k_NUM_TEST_BINS_KEY in kwargs) or (
+            self.__k_NUM_VALID_BINS_KEY in kwargs and self.__k_NUM_TEST_BINS_KEY not in kwargs
         ):
             raise ValueError(
                 "%s and %s must be specified together"
@@ -111,9 +99,7 @@ class CrossValidationProcessor:
         # number of holdout bins cannot exceed k
         num_holdout = num_valid_bins + num_test_bins
         if num_holdout > k:
-            raise ValueError(
-                "Number of holdout bins (validation + test) must be < k"
-            )
+            raise ValueError("Number of holdout bins (validation + test) must be < k")
 
         # inference sets cannot overlap in cross-validation
         if k % num_test_bins != 0:
@@ -124,11 +110,7 @@ class CrossValidationProcessor:
         if num_holdout / k > 0.4:
             warnings.warn(
                 "%0.1f holdout - validation: %0.1f, test: %0.1f"
-                % (
-                    num_holdout / k * 100,
-                    num_valid_bins / k * 100,
-                    num_test_bins / k * 100,
-                )
+                % (num_holdout / k * 100, num_valid_bins / k * 100, num_test_bins / k * 100)
             )
         num_train = k - num_holdout
 
@@ -138,19 +120,10 @@ class CrossValidationProcessor:
             valid_bin_start_ind = test_bin_start_ind + num_test_bins
             train_bin_start_ind = valid_bin_start_ind + num_valid_bins
 
-            test_bins = [
-                ind % k
-                for ind in range(test_bin_start_ind, valid_bin_start_ind)
-            ]
-            valid_bins = [
-                ind % k
-                for ind in range(valid_bin_start_ind, train_bin_start_ind)
-            ]
+            test_bins = [ind % k for ind in range(test_bin_start_ind, valid_bin_start_ind)]
+            valid_bins = [ind % k for ind in range(valid_bin_start_ind, train_bin_start_ind)]
             train_bins = [
-                ind % k
-                for ind in range(
-                    train_bin_start_ind, train_bin_start_ind + num_train
-                )
+                ind % k for ind in range(train_bin_start_ind, train_bin_start_ind + num_train)
             ]
 
             assert (
@@ -196,9 +169,7 @@ class CrossValidationProcessor:
             )
 
         for bin_inds in bins_split:
-            assert (
-                len(bin_inds) == 3
-            ), "Expected 3 sets of bin indices - train, valid, test"
+            assert len(bin_inds) == 3, "Expected 3 sets of bin indices - train, valid, test"
             train_bins, valid_bins, test_bins = tuple(bin_inds)
             train_files, valid_files, test_files = self.get_fnames(
                 (train_bins, valid_bins, test_bins)
@@ -294,14 +265,9 @@ class CrossValidationFileGenerator:
         self.k_bins = k_bins
         self.data_paths = data_paths
 
-        fname = dataset_tag + "_cv-k%d-%s.cv" % (
-            k_bins,
-            strftime("%Y-%m-%d-%H-%M-%S", localtime()),
-        )
+        fname = dataset_tag + "_cv-k%d-%s.cv" % (k_bins, strftime("%Y-%m-%d-%H-%M-%S", localtime()))
         self.save_path = os.path.join(K_BIN_SAVE_DIRECTORY, fname)
-        tmp_path = os.path.join(
-            K_BIN_SAVE_DIRECTORY, "%s_cv-k%d.cv" % ("tmp", k_bins)
-        )
+        tmp_path = os.path.join(K_BIN_SAVE_DIRECTORY, "%s_cv-k%d.cv" % ("tmp", k_bins))
 
         save_path = self.save_path
 
@@ -353,12 +319,8 @@ class CrossValidationFileGenerator:
             bin_to_pid_dict[bin_id] = list(set(pids))
             bin_to_scanid_dict[bin_id] = list(set(scan_ids))
 
-        max_num_pids = max(
-            [len(bin_to_pid_dict[bin_id]) for bin_id in range(k_bins)]
-        )
-        min_num_pids = min(
-            [len(bin_to_pid_dict[bin_id]) for bin_id in range(k_bins)]
-        )
+        max_num_pids = max([len(bin_to_pid_dict[bin_id]) for bin_id in range(k_bins)])
+        min_num_pids = min([len(bin_to_pid_dict[bin_id]) for bin_id in range(k_bins)])
         assert (
             max_num_pids - min_num_pids <= 1
         ), "Difference in number of subjects between bins should be <= 1"
@@ -422,9 +384,9 @@ class CrossValidationFileGenerator:
                     im_info = self.__get_file_info(fname, dp)
                     curr_pid = im_info["pid"]
                     if curr_pid in pids.keys():
-                        assert dp == pids[curr_pid], (
-                            "dirpath mismatch. Expected: %s, got %s"
-                            % (dp, pids[curr_pid])
+                        assert dp == pids[curr_pid], "dirpath mismatch. Expected: %s, got %s" % (
+                            dp,
+                            pids[curr_pid],
                         )
                     else:
                         pids[curr_pid] = dp

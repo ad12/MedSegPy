@@ -120,12 +120,8 @@ def inference_on_dataset(
         seconds_per_processing = total_processing_time / iters_after_start
 
         if idx >= num_warmup * 2 or seconds_per_scan > 5:
-            total_seconds_per_img = (
-                time.perf_counter() - start_time
-            ) / iters_after_start
-            eta = datetime.timedelta(
-                seconds=int(total_seconds_per_img * (total - idx - 1))
-            )
+            total_seconds_per_img = (time.perf_counter() - start_time) / iters_after_start
+            eta = datetime.timedelta(seconds=int(total_seconds_per_img * (total - idx - 1)))
             log_every_n_seconds(
                 logging.INFO,
                 "Inference done {}/{}. {:.4f} s / scan ({:.4f} inference, "
@@ -145,11 +141,7 @@ def inference_on_dataset(
     logger.info("Begin evaluation...")
     results = {e.__class__.__name__: e.evaluate() for e in evaluator}
     total_eval_time = time.perf_counter() - eval_start
-    logger.info(
-        "Time Elapsed: {:.4f} seconds".format(
-            total_compute_time + total_eval_time
-        )
-    )
+    logger.info("Time Elapsed: {:.4f} seconds".format(total_compute_time + total_eval_time))
     # An evaluator may return None when not in main process.
     # Replace it by an empty dict instead to make it easier for downstream
     # code to handle

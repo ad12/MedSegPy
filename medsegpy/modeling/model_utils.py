@@ -23,11 +23,7 @@ def get_primary_shape(x: tf.Tensor):
         list: primary dimensions.
     """
     x_shape = x.shape.as_list()
-    x_shape = (
-        x_shape[1:-1]
-        if K.image_data_format() == "channels_last"
-        else x_shape[2:]
-    )
+    x_shape = x_shape[1:-1] if K.image_data_format() == "channels_last" else x_shape[2:]
 
     return x_shape
 
@@ -63,9 +59,7 @@ def zero_pad_like(x: tf.Tensor, y: tf.Tensor, x_shape=None, y_shape=None):
     if x_shape == y_shape:
         return x
     diff = [y_s - x_s for x_s, y_s in zip(x_shape, y_shape)]
-    assert all(
-        d >= 0 for d in diff
-    ), "x must be smaller than y in all dimensions"
+    assert all(d >= 0 for d in diff), "x must be smaller than y in all dimensions"
 
     if len(diff) == 2:
         padder = ZeroPadding2D
@@ -109,15 +103,9 @@ def add_sem_seg_activation(
     else:
         assert conv_type in [Conv2D, Conv3D]
     if not kernel_initializer:
-        kernel_initializer = {
-            "class_name": "glorot_uniform",
-            "config": {"seed": seed},
-        }
+        kernel_initializer = {"class_name": "glorot_uniform", "config": {"seed": seed}}
     elif isinstance(kernel_initializer, str):
-        kernel_initializer = {
-            "class_name": kernel_initializer,
-            "config": {"seed": seed},
-        }
+        kernel_initializer = {"class_name": kernel_initializer, "config": {"seed": seed}}
 
     x = conv_type(
         num_classes,
