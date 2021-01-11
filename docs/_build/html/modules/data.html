@@ -1,41 +1,55 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html4" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>medsegpy.data package &mdash; MedSegPy 0.0.1 documentation</title>
+  <title>medsegpy.data &mdash; MedSegPy 0.0.1 documentation</title>
   
-
-  
-  
-  
-  
-
-  
-  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-
-    
 
   
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../',
+              VERSION:'0.0.1',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="medsegpy.engine package" href="engine.html" />
+    <link rel="next" title="medsegpy.engine" href="engine.html" />
     <link rel="prev" title="API Documentation" href="index.html" /> 
 </head>
 
@@ -77,6 +91,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -87,17 +102,19 @@
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/index.html">Tutorials</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">API Documentation</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">medsegpy.data package</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#module-medsegpy.data.datasets">medsegpy.data.datasets module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">medsegpy.data</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-medsegpy.data.build">medsegpy.data.build</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-medsegpy.data.catalog">medsegpy.data.catalog</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-medsegpy.data.data_loader">medsegpy.data.data_loader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-medsegpy.data.data_loader">medsegpy.data.data_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-medsegpy.data.transforms">medsegpy.data.transforms</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="engine.html">medsegpy.engine package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="evaluation.html">medsegpy.evaluation package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html">medsegpy.modeling.layers package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html#module-medsegpy.modeling.meta_arch">medsegpy.modeling.meta_arch package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html#module-medsegpy.modeling">medsegpy.modeling package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="engine.html">medsegpy.engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evaluation.html">medsegpy.evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html">medsegpy.modeling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="solver.html">medsegpy.solver package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="utils.html">medsegpy.utils package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">medsegpy.utils</a></li>
 </ul>
 </li>
 </ul>
@@ -105,6 +122,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -139,20 +157,22 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../index.html">Docs</a> &raquo;</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="index.html">API Documentation</a> &raquo;</li>
         
-      <li>medsegpy.data package</li>
+      <li>medsegpy.data</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="../_sources/modules/data.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -166,13 +186,66 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-medsegpy.data">
-<span id="medsegpy-data-package"></span><h1>medsegpy.data package<a class="headerlink" href="#module-medsegpy.data" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="medsegpy-data">
+<h1>medsegpy.data<a class="headerlink" href="#medsegpy-data" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-medsegpy.data.build">
+<span id="medsegpy-data-build"></span><h2>medsegpy.data.build<a class="headerlink" href="#module-medsegpy.data.build" title="Permalink to this headline">¶</a></h2>
+<p>Build dataset dictionaries.</p>
+<dl class="function">
+<dt id="medsegpy.data.build.filter_dataset">
+<code class="descclassname">medsegpy.data.build.</code><code class="descname">filter_dataset</code><span class="sig-paren">(</span><em>dataset_dicts: List[Dict], by: collections.abc.Hashable, accepted_elements, include_missing: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/build.html#filter_dataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.build.filter_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filter by common dataset fields.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>dataset_dicts</strong> (<em>List</em><em>[</em><em>Dict</em><em>]</em>) – data in MedSegPy Dataset format.</li>
+<li><strong>by</strong> (<em>Hashable</em>) – Field to filter by.</li>
+<li><strong>accepted_elements</strong> (<em>Sequence</em>) – Acceptable elements.</li>
+<li><strong>include_missing</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><em>bool</em></a><em>, </em><em>optional</em>) – If <cite>True</cite>, include elements without
+<cite>by</cite> field in dictionary representation.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>List[Dict]</em> – Filtered dataset dictionaries.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="medsegpy.data.build.get_sem_seg_dataset_dicts">
+<code class="descclassname">medsegpy.data.build.</code><code class="descname">get_sem_seg_dataset_dicts</code><span class="sig-paren">(</span><em>dataset_names: Sequence[str], filter_empty: bool = True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/build.html#get_sem_seg_dataset_dicts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.build.get_sem_seg_dataset_dicts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load and prepare dataset dicts for semantic segmentation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>dataset_names</strong> (<em>Sequence</em><em>[</em><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a><em>]</em>) – A list of dataset names.</li>
+<li><strong>filter_empty</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><em>bool</em></a><em>, </em><em>optional</em>) – Filter datasets without field
+<cite>‘sem_seg_file’</cite>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-medsegpy.data.catalog">
+<span id="medsegpy-data-catalog"></span><h2>medsegpy.data.catalog<a class="headerlink" href="#module-medsegpy.data.catalog" title="Permalink to this headline">¶</a></h2>
+<p>Metadata catalogs for different datasets.</p>
+<p>Metadata stores information like directory paths, mapping from class ids to
+name, etc.</p>
+<p>Adopted from Facebook’s detectron2.
+<a class="reference external" href="https://github.com/facebookresearch/detectron2">https://github.com/facebookresearch/detectron2</a></p>
 <dl class="class">
-<dt id="medsegpy.data.DatasetCatalog">
-<em class="property">class </em><code class="sig-prename descclassname">medsegpy.data.</code><code class="sig-name descname">DatasetCatalog</code><a class="reference internal" href="../_modules/medsegpy/data/catalog.html#DatasetCatalog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.DatasetCatalog" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-<p>A catalog that stores information about the datasets and how to obtain them.</p>
+<dt id="medsegpy.data.catalog.DatasetCatalog">
+<em class="property">class </em><code class="descclassname">medsegpy.data.catalog.</code><code class="descname">DatasetCatalog</code><a class="reference internal" href="../_modules/medsegpy/data/catalog.html#DatasetCatalog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.catalog.DatasetCatalog" title="Permalink to this definition">¶</a></dt>
+<dd><p>A catalog that stores information about the datasets and how to obtain them.</p>
 <p>It contains a mapping from strings
 (which are names that identify a dataset, e.g. “oai_2d_train”)
 to a function which parses the dataset and returns the samples in the
@@ -182,174 +255,177 @@ format of <cite>list[dict]</cite>.</p>
 in <cite>data/build.py,data/detection_transform.py</cite>.</p>
 <p>The purpose of having this catalog is to make it easy to choose
 different datasets, by just using the strings in the config.</p>
-<dl class="method">
-<dt id="medsegpy.data.DatasetCatalog.register">
-<em class="property">static </em><code class="sig-name descname">register</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">func</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/catalog.html#DatasetCatalog.register"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.DatasetCatalog.register" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – the name that identifies a dataset,
-e.g. “coco_2014_train”.</p></li>
-<li><p><strong>func</strong> (<em>callable</em>) – a callable which takes no arguments and returns a
-list of dicts.</p></li>
+<dl class="staticmethod">
+<dt id="medsegpy.data.catalog.DatasetCatalog.register">
+<em class="property">static </em><code class="descname">register</code><span class="sig-paren">(</span><em>func</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/catalog.html#DatasetCatalog.register"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.catalog.DatasetCatalog.register" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – the name that identifies a dataset,
+e.g. “coco_2014_train”.</li>
+<li><strong>func</strong> (<em>callable</em>) – a callable which takes no arguments and returns a
+list of dicts.</li>
 </ul>
-</dd>
-</dl>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
-<dl class="method">
-<dt id="medsegpy.data.DatasetCatalog.get">
-<em class="property">static </em><code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/catalog.html#DatasetCatalog.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.DatasetCatalog.get" title="Permalink to this definition">¶</a></dt>
+<dl class="staticmethod">
+<dt id="medsegpy.data.catalog.DatasetCatalog.get">
+<em class="property">static </em><code class="descname">get</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/catalog.html#DatasetCatalog.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.catalog.DatasetCatalog.get" title="Permalink to this definition">¶</a></dt>
 <dd><p>Call the registered function and return its results.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – the name that identifies a dataset,
-e.g. “coco_2014_train”.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><em>list[dict]</em> – dataset annotations.0</p>
-</dd>
-</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – the name that identifies a dataset,
+e.g. “coco_2014_train”.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><em>list[dict]</em> – dataset annotations.0</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
-<dl class="method">
-<dt id="medsegpy.data.DatasetCatalog.list">
-<em class="property">static </em><code class="sig-name descname">list</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; List[str]<a class="reference internal" href="../_modules/medsegpy/data/catalog.html#DatasetCatalog.list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.DatasetCatalog.list" title="Permalink to this definition">¶</a></dt>
+<dl class="staticmethod">
+<dt id="medsegpy.data.catalog.DatasetCatalog.list">
+<em class="property">static </em><code class="descname">list</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; List[str]<a class="reference internal" href="../_modules/medsegpy/data/catalog.html#DatasetCatalog.list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.catalog.DatasetCatalog.list" title="Permalink to this definition">¶</a></dt>
 <dd><p>List all registered datasets.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>list[str]</p>
-</dd>
-</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">list[str]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
-<dl class="method">
-<dt id="medsegpy.data.DatasetCatalog.clear">
-<em class="property">static </em><code class="sig-name descname">clear</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/catalog.html#DatasetCatalog.clear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.DatasetCatalog.clear" title="Permalink to this definition">¶</a></dt>
+<dl class="staticmethod">
+<dt id="medsegpy.data.catalog.DatasetCatalog.clear">
+<em class="property">static </em><code class="descname">clear</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/catalog.html#DatasetCatalog.clear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.catalog.DatasetCatalog.clear" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove all registered dataset.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="class">
-<dt id="medsegpy.data.MetadataCatalog">
-<em class="property">class </em><code class="sig-prename descclassname">medsegpy.data.</code><code class="sig-name descname">MetadataCatalog</code><a class="reference internal" href="../_modules/medsegpy/data/catalog.html#MetadataCatalog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.MetadataCatalog" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-<p>MetadataCatalog provides access to “Metadata” of a given dataset.</p>
+<dt id="medsegpy.data.catalog.MetadataCatalog">
+<em class="property">class </em><code class="descclassname">medsegpy.data.catalog.</code><code class="descname">MetadataCatalog</code><a class="reference internal" href="../_modules/medsegpy/data/catalog.html#MetadataCatalog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.catalog.MetadataCatalog" title="Permalink to this definition">¶</a></dt>
+<dd><p>MetadataCatalog provides access to “Metadata” of a given dataset.</p>
 <p>The metadata associated with a certain name is a singleton: once created,
 the metadata will stay alive and will be returned by future calls to
 <cite>get(name)</cite>.</p>
 <p>It’s like global variables, so don’t abuse it.
 It’s meant for storing knowledge that’s constant and shared across the
 execution of the program, e.g.: the class names in OAI iMorphics.</p>
-<dl class="method">
-<dt id="medsegpy.data.MetadataCatalog.get">
-<em class="property">static </em><code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/catalog.html#MetadataCatalog.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.MetadataCatalog.get" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – name of a dataset (e.g. oai_2d_train).</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><em>Metadata</em> – The <code class="xref py py-class docutils literal notranslate"><span class="pre">Metadata</span></code> instance associated with this name,
-or create an empty one if none is available.</p>
-</dd>
-</dl>
+<dl class="staticmethod">
+<dt id="medsegpy.data.catalog.MetadataCatalog.get">
+<em class="property">static </em><code class="descname">get</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/catalog.html#MetadataCatalog.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.catalog.MetadataCatalog.get" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – name of a dataset (e.g. oai_2d_train).</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><em>Metadata</em> – The <code class="xref py py-class docutils literal notranslate"><span class="pre">Metadata</span></code> instance associated with this name,
+or create an empty one if none is available.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
-<dl class="method">
-<dt id="medsegpy.data.MetadataCatalog.convert_path_to_dataset">
-<em class="property">static </em><code class="sig-name descname">convert_path_to_dataset</code><span class="sig-paren">(</span><em class="sig-param">path</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/catalog.html#MetadataCatalog.convert_path_to_dataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.MetadataCatalog.convert_path_to_dataset" title="Permalink to this definition">¶</a></dt>
+<dl class="staticmethod">
+<dt id="medsegpy.data.catalog.MetadataCatalog.convert_path_to_dataset">
+<em class="property">static </em><code class="descname">convert_path_to_dataset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/catalog.html#MetadataCatalog.convert_path_to_dataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.catalog.MetadataCatalog.convert_path_to_dataset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert the dataset path to name for legacy code.</p>
 <p>This method will be phased out in future versions.</p>
 </dd></dl>
 
 </dd></dl>
 
+</div>
+<div class="section" id="module-medsegpy.data.data_loader">
+<span id="medsegpy-data-data-loader"></span><h2>medsegpy.data.data_loader<a class="headerlink" href="#module-medsegpy.data.data_loader" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
-<dt id="medsegpy.data.build_loader">
-<code class="sig-prename descclassname">medsegpy.data.</code><code class="sig-name descname">build_loader</code><span class="sig-paren">(</span><em class="sig-param">cfg: medsegpy.config.Config, dataset_names: Union[str, Sequence[str]], batch_size: int, is_test: bool, shuffle: bool, drop_last: bool, **kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/build.html#build_loader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.build_loader" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="medsegpy.data.data_loader.build_data_loader">
+<code class="descclassname">medsegpy.data.data_loader.</code><code class="descname">build_data_loader</code><span class="sig-paren">(</span><em>cfg: medsegpy.config.Config, dataset_dicts: List[Dict], **kwargs</em><span class="sig-paren">)</span> &#x2192; medsegpy.data.data_loader.DataLoader<a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#build_data_loader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.data_loader.build_data_loader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get data loader based on config <cite>TAG</cite> or name, value.</p>
+</dd></dl>
 
 <dl class="class">
-<dt id="medsegpy.data.DataLoader">
-<em class="property">class </em><code class="sig-prename descclassname">medsegpy.data.</code><code class="sig-name descname">DataLoader</code><span class="sig-paren">(</span><em class="sig-param">cfg: medsegpy.config.Config, dataset_dicts: List[Dict], is_test: bool = False, shuffle: bool = True, drop_last: bool = True, batch_size: int = 1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#DataLoader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.DataLoader" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">keras.utils.data_utils.Sequence</span></code>, <a class="reference external" href="https://docs.python.org/3.6/library/abc.html#abc.ABC" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
-<p>Data loader following <code class="xref py py-class docutils literal notranslate"><span class="pre">keras.utils.Sequence</span></code> API.</p>
+<dt id="medsegpy.data.data_loader.DataLoader">
+<em class="property">class </em><code class="descclassname">medsegpy.data.data_loader.</code><code class="descname">DataLoader</code><span class="sig-paren">(</span><em>cfg: medsegpy.config.Config, dataset_dicts: List[Dict], is_test: bool = False, shuffle: bool = True, drop_last: bool = True, batch_size: int = 1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#DataLoader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.data_loader.DataLoader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Data loader following <code class="xref py py-class docutils literal notranslate"><span class="pre">keras.utils.Sequence</span></code> API.</p>
 <p>Data loaders load data per batch in the following way:
 1. Collate inputs and outputs
 2. Optionally apply preprocessing</p>
 <p>To avoid changing the order of the base list, we shuffle a list of indices
 and query based on the index.</p>
 <p>Data loaders in medsegpy also have the ability to yield inference results
-per scan (see <a class="reference internal" href="#medsegpy.data.DataLoader.inference" title="medsegpy.data.DataLoader.inference"><code class="xref py py-meth docutils literal notranslate"><span class="pre">inference()</span></code></a>).</p>
-<dl class="attribute">
-<dt id="medsegpy.data.DataLoader.ALIASES">
-<code class="sig-name descname">ALIASES</code><em class="property"> = []</em><a class="headerlink" href="#medsegpy.data.DataLoader.ALIASES" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
+per scan (see <a class="reference internal" href="#medsegpy.data.data_loader.DataLoader.inference" title="medsegpy.data.data_loader.DataLoader.inference"><code class="xref py py-meth docutils literal notranslate"><span class="pre">inference()</span></code></a>).</p>
 <dl class="method">
-<dt id="medsegpy.data.DataLoader.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">cfg: medsegpy.config.Config, dataset_dicts: List[Dict], is_test: bool = False, shuffle: bool = True, drop_last: bool = True, batch_size: int = 1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#DataLoader.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.DataLoader.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>cfg</strong> (<em>Config</em>) – A config object.</p></li>
-<li><p><strong>dataset_dicts</strong> (<em>List</em><em>[</em><em>Dict</em><em>]</em>) – List of data in medsegpy dataset format.</p></li>
-<li><p><strong>is_test</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional) – If <cite>True</cite>, configures loader as a
+<dt id="medsegpy.data.data_loader.DataLoader.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>cfg: medsegpy.config.Config, dataset_dicts: List[Dict], is_test: bool = False, shuffle: bool = True, drop_last: bool = True, batch_size: int = 1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#DataLoader.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.data_loader.DataLoader.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>cfg</strong> (<em>Config</em>) – A config object.</li>
+<li><strong>dataset_dicts</strong> (<em>List</em><em>[</em><em>Dict</em><em>]</em>) – List of data in medsegpy dataset format.</li>
+<li><strong>is_test</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional) – If <cite>True</cite>, configures loader as a
 testing/inference loader. This is typically used when running
-evaluation.</p></li>
-<li><p><strong>shuffle</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><em>bool</em></a><em>, </em><em>optional</em>) – If <cite>True</cite>, shuffle data every epoch.</p></li>
-<li><p><strong>drop_last</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional) – Drop the last incomplete batch,
+evaluation.</li>
+<li><strong>shuffle</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><em>bool</em></a><em>, </em><em>optional</em>) – If <cite>True</cite>, shuffle data every epoch.</li>
+<li><strong>drop_last</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional) – Drop the last incomplete batch,
 if the dataset size is not divisible by the batch size. If
 <cite>False</cite> and the size of the dataset is not divisible by batch
 size, then the last batch will be smaller. This can affect
-loss calculations.</p></li>
-<li><p><strong>batch_size</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a>, optional) – Batch size.</p></li>
+loss calculations.</li>
+<li><strong>batch_size</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a>, optional) – Batch size.</li>
 </ul>
-</dd>
-</dl>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
-<dt id="medsegpy.data.DataLoader.on_epoch_end">
-<code class="sig-name descname">on_epoch_end</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#DataLoader.on_epoch_end"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.DataLoader.on_epoch_end" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.data.DataLoader.__len__">
-<code class="sig-name descname">__len__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#DataLoader.__len__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.DataLoader.__len__" title="Permalink to this definition">¶</a></dt>
+<dt id="medsegpy.data.data_loader.DataLoader.__len__">
+<code class="descname">__len__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#DataLoader.__len__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.data_loader.DataLoader.__len__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Number of batches.</p>
 <p>By default, each element in the dataset dict is independent.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="medsegpy.data.DataLoader.num_scans">
-<code class="sig-name descname">num_scans</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#DataLoader.num_scans"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.DataLoader.num_scans" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.data.DataLoader.inference">
-<em class="property">abstract </em><code class="sig-name descname">inference</code><span class="sig-paren">(</span><em class="sig-param">model</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#DataLoader.inference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.DataLoader.inference" title="Permalink to this definition">¶</a></dt>
+<dt id="medsegpy.data.data_loader.DataLoader.inference">
+<code class="descname">inference</code><span class="sig-paren">(</span><em>model</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#DataLoader.inference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.data_loader.DataLoader.inference" title="Permalink to this definition">¶</a></dt>
 <dd><p>Yields dictionaries of inputs, outputs per scan.</p>
 <p>In medical settings, data is often processed per scan, not necessarily
 per example. This distinction is critical. For example, a 2D
 segmentation network may take in 2D slices of a scan as input.
 However, during inference, it is standard to compute metrics on the full
 scan, not individual slices.</p>
-<dl class="simple">
-<dt>This method does the following:</dt><dd><ol class="arabic simple">
-<li><p>Loads dataset dicts corresponding to a scan</p></li>
-<li><p>Structures data from these dicts</p></li>
-<li><p>Runs predictions on the structured data</p></li>
-<li><dl class="simple">
-<dt>Restructures inputs. Images/volumes are restructured to HxWx…</dt><dd><p>Segmentation masks and predictions are restructured to
-HxWx…xC.</p>
-</dd>
+<dl class="docutils">
+<dt>This method does the following:</dt>
+<dd><ol class="first last arabic simple">
+<li>Loads dataset dicts corresponding to a scan</li>
+<li>Structures data from these dicts</li>
+<li>Runs predictions on the structured data</li>
+<li><dl class="first docutils">
+<dt>Restructures inputs. Images/volumes are restructured to HxWx…</dt>
+<dd>Segmentation masks and predictions are restructured to
+HxWx…xC.</dd>
 </dl>
 </li>
-<li><dl class="simple">
-<dt>Yield input, output dictionaries for the scan. Yielding continues</dt><dd><p>until all scans have been processed.</p>
-</dd>
+<li><dl class="first docutils">
+<dt>Yield input, output dictionaries for the scan. Yielding continues</dt>
+<dd>until all scans have been processed.</dd>
 </dl>
 </li>
 </ol>
@@ -358,473 +434,437 @@ HxWx…xC.</p>
 <p>This method should yield scan-specific inputs and outputs as
 dictionaries. The following keys should be in the <cite>input</cite> and <cite>output</cite>
 dictionaries for each scan at minimum.</p>
-<dl class="simple">
-<dt>Input keys:</dt><dd><ul class="simple">
-<li><p>“scan_id” (str): the scan identifier</p></li>
-<li><dl class="simple">
-<dt>“x” (ndarray): the raw (unprocessed) input. Shape HxWx…</dt><dd><p>If the network takes multiple inputs, each input should
+<dl class="docutils">
+<dt>Input keys:</dt>
+<dd><ul class="first last simple">
+<li>“scan_id” (str): the scan identifier</li>
+<li><dl class="first docutils">
+<dt>“x” (ndarray): the raw (unprocessed) input. Shape HxWx…</dt>
+<dd>If the network takes multiple inputs, each input should
 correspond to a unique key that will be handled by your
-specified evaluator.</p>
-</dd>
+specified evaluator.</dd>
 </dl>
 </li>
-<li><dl class="simple">
-<dt>“scan_XXX” (optional) scan-related parameters that will simplify</dt><dd><p>evaluation. e.g. “scan_spacing”. MedSegPy evaluators will
+<li><dl class="first docutils">
+<dt>“scan_XXX” (optional) scan-related parameters that will simplify</dt>
+<dd>evaluation. e.g. “scan_spacing”. MedSegPy evaluators will
 default to scan specific information, if provided. For example,
 if “scan_spacing” is specified, the value specified will
-override the default spacing for the dataset.</p>
-</dd>
+override the default spacing for the dataset.</dd>
 </dl>
 </li>
-<li><dl class="simple">
-<dt>“subject_id” (optional): the subject identifier for the scan.</dt><dd><p>Useful for grouping results by subject.</p>
-</dd>
+<li><dl class="first docutils">
+<dt>“subject_id” (optional): the subject identifier for the scan.</dt>
+<dd>Useful for grouping results by subject.</dd>
 </dl>
 </li>
 </ul>
 </dd>
-<dt>Output keys:</dt><dd><ul class="simple">
-<li><dl class="simple">
-<dt>“time_elapsed” (required): Amount of time required for inference</dt><dd><p>on scan.
-This quantity typically includes data loading time as well.</p>
-</dd>
+<dt>Output keys:</dt>
+<dd><ul class="first last simple">
+<li><dl class="first docutils">
+<dt>“time_elapsed” (required): Amount of time required for inference</dt>
+<dd>on scan.
+This quantity typically includes data loading time as well.</dd>
 </dl>
 </li>
-<li><dl class="simple">
-<dt>“y_true” (ndarray): Ground truth binary mask for semantic</dt><dd><p>segmentation. Shape HxWx…xC.
-Required for semantic segmentation inference.</p>
-</dd>
+<li><dl class="first docutils">
+<dt>“y_true” (ndarray): Ground truth binary mask for semantic</dt>
+<dd>segmentation. Shape HxWx…xC.
+Required for semantic segmentation inference.</dd>
 </dl>
 </li>
-<li><dl class="simple">
-<dt>“y_pred” (ndarray): Prediction probabilities for semantic</dt><dd><p>segmentation. Shape HxWx…xC.
-Required for semantic segmentation inference.</p>
-</dd>
+<li><dl class="first docutils">
+<dt>“y_pred” (ndarray): Prediction probabilities for semantic</dt>
+<dd>segmentation. Shape HxWx…xC.
+Required for semantic segmentation inference.</dd>
 </dl>
 </li>
 </ul>
 </dd>
 </dl>
 <p>All output keys except “time_elapsed” are optional and task specific.</p>
-<dl class="field-list">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> – A model to run inference on.</p></li>
-<li><p><strong>kwargs</strong> – Keyword arguments to <cite>model.predict_generator()</cite></p></li>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>model</strong> – A model to run inference on.</li>
+<li><strong>kwargs</strong> – Keyword arguments to <cite>model.predict_generator()</cite></li>
 </ul>
-</dd>
-<dt class="field-even">Yields</dt>
-<dd class="field-even"><p><em>dict, dict</em> –</p>
-<dl class="simple">
-<dt>Dictionaries of inputs and outputs corresponding to a</dt><dd><p>single scan.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Yields:</th><td class="field-body"><p class="first"><em>dict, dict</em> –</p>
+<dl class="last docutils">
+<dt>Dictionaries of inputs and outputs corresponding to a</dt>
+<dd><p class="first last">single scan.</p>
 </dd>
 </dl>
-</dd>
-</dl>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="class">
-<dt id="medsegpy.data.DefaultDataLoader">
-<em class="property">class </em><code class="sig-prename descclassname">medsegpy.data.</code><code class="sig-name descname">DefaultDataLoader</code><span class="sig-paren">(</span><em class="sig-param">cfg: medsegpy.config.Config, dataset_dicts: List[Dict], is_test: bool = False, shuffle: bool = True, drop_last: bool = False, batch_size: int = 1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#DefaultDataLoader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.DefaultDataLoader" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">medsegpy.data.data_loader.DataLoader</span></code></p>
-<p>The default data loader functionality in medsegy.</p>
-<p>This class takes a dataset dict in the MedSegPy Dataset format and maps it
-to a format that can be used by the model for semantic segmentation.</p>
+<dt id="medsegpy.data.data_loader.DefaultDataLoader">
+<em class="property">class </em><code class="descclassname">medsegpy.data.data_loader.</code><code class="descname">DefaultDataLoader</code><span class="sig-paren">(</span><em>cfg: medsegpy.config.Config, dataset_dicts: List[Dict], is_test: bool = False, shuffle: bool = True, drop_last: bool = False, batch_size: int = 1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#DefaultDataLoader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.data_loader.DefaultDataLoader" title="Permalink to this definition">¶</a></dt>
+<dd><p>The default data loader functionality in medsegy.</p>
+<p>This class takes a dataset dict in the MedSegPy 2D Dataset format and maps
+it to a format that can be used by the model for semantic segmentation.</p>
 <p>This is the default data loader.</p>
 <ol class="arabic simple">
-<li><p>Read the input matrix from “file_name”</p></li>
-<li><p>Read the ground truth mask matrix from “sem_seg_file_name”</p></li>
-<li><dl class="simple">
-<dt>If needed:</dt><dd><ol class="loweralpha simple">
-<li><p>Add binary labels for background</p></li>
+<li>Read the input matrix from “file_name”</li>
+<li>Read the ground truth mask matrix from “sem_seg_file_name”</li>
+<li><dl class="first docutils">
+<dt>If needed:</dt>
+<dd><ol class="first last loweralpha">
+<li>Add binary labels for background</li>
 </ol>
 </dd>
 </dl>
 </li>
-<li><p>Apply <code class="xref py py-class docutils literal notranslate"><span class="pre">MedTransform</span></code> transforms to input and masks.</p></li>
-<li><p>If training, return input (preprocessed), output.
+<li>Apply <code class="xref py py-class docutils literal notranslate"><span class="pre">MedTransform</span></code> transforms to input and masks.</li>
+<li>If training, return input (preprocessed), output.
 If testing, return input (preprocessed), output, input (raw).
 The testing structure is useful for tracking the original input
 without any preprocessing. This return structure does not conflict with
-existing Keras model functionality.</p></li>
+existing Keras model functionality.</li>
 </ol>
 <dl class="method">
-<dt id="medsegpy.data.DefaultDataLoader.__getitem__">
-<code class="sig-name descname">__getitem__</code><span class="sig-paren">(</span><em class="sig-param">idx</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#DefaultDataLoader.__getitem__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.DefaultDataLoader.__getitem__" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>idx</strong> – Batch index.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><em>ndarray, ndarray</em> – images NxHxWx(…)x1, masks NxHxWx(…)x1</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.data.DefaultDataLoader.inference">
-<code class="sig-name descname">inference</code><span class="sig-paren">(</span><em class="sig-param">model: medsegpy.modeling.model.Model</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#DefaultDataLoader.inference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.DefaultDataLoader.inference" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="function">
-<dt id="medsegpy.data.get_generator">
-<code class="sig-prename descclassname">medsegpy.data.</code><code class="sig-name descname">get_generator</code><span class="sig-paren">(</span><em class="sig-param">cfg: medsegpy.config.Config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#get_generator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.get_generator" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get generator based on config <cite>“TAG”</cite> value.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="medsegpy.data.GeneratorState">
-<em class="property">class </em><code class="sig-prename descclassname">medsegpy.data.</code><code class="sig-name descname">GeneratorState</code><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#GeneratorState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.GeneratorState" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/enum.html#enum.Enum" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
-<p>Defines the generator state for training/testing networks</p>
-<dl class="attribute">
-<dt id="medsegpy.data.GeneratorState.TRAINING">
-<code class="sig-name descname">TRAINING</code><em class="property"> = 1</em><a class="headerlink" href="#medsegpy.data.GeneratorState.TRAINING" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="medsegpy.data.GeneratorState.VALIDATION">
-<code class="sig-name descname">VALIDATION</code><em class="property"> = 2</em><a class="headerlink" href="#medsegpy.data.GeneratorState.VALIDATION" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="medsegpy.data.GeneratorState.TESTING">
-<code class="sig-name descname">TESTING</code><em class="property"> = 3</em><a class="headerlink" href="#medsegpy.data.GeneratorState.TESTING" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="medsegpy.data.Generator">
-<em class="property">class </em><code class="sig-prename descclassname">medsegpy.data.</code><code class="sig-name descname">Generator</code><span class="sig-paren">(</span><em class="sig-param">cfg: medsegpy.config.Config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#Generator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.Generator" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/abc.html#abc.ABC" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
-<p>Abstract class for data generator for network training and testing.</p>
-<dl class="attribute">
-<dt id="medsegpy.data.Generator.SUPPORTED_TAGS">
-<code class="sig-name descname">SUPPORTED_TAGS</code><em class="property"> = ['']</em><a class="headerlink" href="#medsegpy.data.Generator.SUPPORTED_TAGS" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.data.Generator.img_generator">
-<em class="property">abstract </em><code class="sig-name descname">img_generator</code><span class="sig-paren">(</span><em class="sig-param">state: medsegpy.data.im_gens.GeneratorState</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#Generator.img_generator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.Generator.img_generator" title="Permalink to this definition">¶</a></dt>
-<dd><p>Data generator that yields <cite>(inputs, outputs)</cite>.</p>
-<p>Use with <cite>model.fit_generator()</cite>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="#medsegpy.data.GeneratorState" title="medsegpy.data.GeneratorState"><em>GeneratorState</em></a>) – <cite>GeneratorState.TRAINING</cite> or
-<cite>GeneratorState.VALIDATION</cite></p>
-</dd>
-<dt class="field-even">Yields</dt>
-<dd class="field-even"><p><em>Tuple[ndarray, ndarray]</em> – batched inputs, batched outputs</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.data.Generator.img_generator_test">
-<em class="property">abstract </em><code class="sig-name descname">img_generator_test</code><span class="sig-paren">(</span><em class="sig-param">model=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#Generator.img_generator_test"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.Generator.img_generator_test" title="Permalink to this definition">¶</a></dt>
-<dd><p>Data generator that yields data during inference.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>model</strong> (<em>keras.models.Model</em>) – A Keras model to use for inference.</p>
-</dd>
-<dt class="field-even">Yields</dt>
-<dd class="field-even"><dl class="simple">
-<dt>inputs, outputs (ground truth), predictions, scan id, time elapsed.</dt><dd><p>predictions and time elapsed are <cite>None</cite> if <cite>model</cite> not
-specified. Volumes will have shape <cite>DxHxW</cite>.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.data.Generator.summary">
-<em class="property">abstract </em><code class="sig-name descname">summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#Generator.summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.Generator.summary" title="Permalink to this definition">¶</a></dt>
-<dd><p>Log summary based on <cite>self.cfg.STATE</cite>.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.data.Generator.num_steps">
-<em class="property">abstract </em><code class="sig-name descname">num_steps</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Tuple[int, int]<a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#Generator.num_steps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.Generator.num_steps" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns number of steps per epoch for training and validation.</p>
-<p>By default it calculates as <cite>len(elements) // batch_size</cite>. Elements are
-the unique elements that are batched together after structuring.</p>
-<p>Use for args <cite>{train,validation}_steps</cite> args in Keras <cite>model.fit()</cite>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p><em>Tuple[int, int]</em> – training steps, validation steps</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.data.Generator.num_examples">
-<em class="property">abstract </em><code class="sig-name descname">num_examples</code><span class="sig-paren">(</span><em class="sig-param">state: medsegpy.data.im_gens.GeneratorState</em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#Generator.num_examples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.Generator.num_examples" title="Permalink to this definition">¶</a></dt>
-<dd><p>Number of examples in this training set.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.data.Generator.num_scans">
-<em class="property">abstract </em><code class="sig-name descname">num_scans</code><span class="sig-paren">(</span><em class="sig-param">state: medsegpy.data.im_gens.GeneratorState</em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#Generator.num_scans"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.Generator.num_scans" title="Permalink to this definition">¶</a></dt>
-<dd><p>Number of scans corresponding to given state.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.data.Generator.sort_files">
-<code class="sig-name descname">sort_files</code><span class="sig-paren">(</span><em class="sig-param">files</em><span class="sig-paren">)</span> &#x2192; List[str]<a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#Generator.sort_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.Generator.sort_files" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sort files by name.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>files</strong> (<em>Sequence</em><em>[</em><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a><em>]</em>) – Files to load.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><em>List[str]</em> – Sorted files.</p>
-</dd>
-</dl>
+<dt id="medsegpy.data.data_loader.DefaultDataLoader.__getitem__">
+<code class="descname">__getitem__</code><span class="sig-paren">(</span><em>idx</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#DefaultDataLoader.__getitem__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.data_loader.DefaultDataLoader.__getitem__" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>idx</strong> – Batch index.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><em>ndarray, ndarray</em> – images NxHxWx(…)x1, masks NxHxWx(…)x1</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="class">
-<dt id="medsegpy.data.OAIGenerator">
-<em class="property">class </em><code class="sig-prename descclassname">medsegpy.data.</code><code class="sig-name descname">OAIGenerator</code><span class="sig-paren">(</span><em class="sig-param">cfg: medsegpy.config.Config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#OAIGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.OAIGenerator" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">medsegpy.data.im_gens.Generator</span></code></p>
-<p>Generator for data stored as 2D slices without structuring.</p>
-<p>In this generator, each slice is treated as a different element. For 2.5D
-networks, it loads sequential slices in the channel dimension.
-It should be used for 2D and 2.5D networks.</p>
-<p>Data for this generator must be stored in the medsegpy 2D dataset format.
-See <a class="reference external" href="https://ad12.github.io/MedSegPy/_build/html/tutorials/datasets.html#data-format">https://ad12.github.io/MedSegPy/_build/html/tutorials/datasets.html#data-format</a>  # noqa
-for more information.</p>
-<dl class="attribute">
-<dt id="medsegpy.data.OAIGenerator.SUPPORTED_TAGS">
-<code class="sig-name descname">SUPPORTED_TAGS</code><em class="property"> = ['oai_aug', 'oai', 'oai_2d', 'oai_aug_2d', 'oai_2.5d', 'oai_aug_2.5d']</em><a class="headerlink" href="#medsegpy.data.OAIGenerator.SUPPORTED_TAGS" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.data.OAIGenerator.img_generator">
-<code class="sig-name descname">img_generator</code><span class="sig-paren">(</span><em class="sig-param">state: medsegpy.data.im_gens.GeneratorState</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#OAIGenerator.img_generator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.OAIGenerator.img_generator" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.data.OAIGenerator.img_generator_test">
-<code class="sig-name descname">img_generator_test</code><span class="sig-paren">(</span><em class="sig-param">model=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#OAIGenerator.img_generator_test"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.OAIGenerator.img_generator_test" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.data.OAIGenerator.summary">
-<code class="sig-name descname">summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#OAIGenerator.summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.OAIGenerator.summary" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.data.OAIGenerator.num_scans">
-<code class="sig-name descname">num_scans</code><span class="sig-paren">(</span><em class="sig-param">state</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#OAIGenerator.num_scans"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.OAIGenerator.num_scans" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.data.OAIGenerator.num_steps">
-<code class="sig-name descname">num_steps</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#OAIGenerator.num_steps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.OAIGenerator.num_steps" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.data.OAIGenerator.num_examples">
-<code class="sig-name descname">num_examples</code><span class="sig-paren">(</span><em class="sig-param">state: medsegpy.data.im_gens.GeneratorState</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#OAIGenerator.num_examples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.OAIGenerator.num_examples" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="medsegpy.data.OAI3DGenerator">
-<em class="property">class </em><code class="sig-prename descclassname">medsegpy.data.</code><code class="sig-name descname">OAI3DGenerator</code><span class="sig-paren">(</span><em class="sig-param">config: medsegpy.config.Config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#OAI3DGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.OAI3DGenerator" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">medsegpy.data.im_gens.OAIGenerator</span></code></p>
-<p>Generator for training 3D networks where data is stored as 2D slices.</p>
-<dl class="attribute">
-<dt id="medsegpy.data.OAI3DGenerator.SUPPORTED_TAGS">
-<code class="sig-name descname">SUPPORTED_TAGS</code><em class="property"> = ['oai_3d']</em><a class="headerlink" href="#medsegpy.data.OAI3DGenerator.SUPPORTED_TAGS" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.data.OAI3DGenerator.__load_corresponding_slices__">
-<code class="sig-name descname">__load_corresponding_slices__</code><span class="sig-paren">(</span><em class="sig-param">filepath</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#OAI3DGenerator.__load_corresponding_slices__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.OAI3DGenerator.__load_corresponding_slices__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Loads volume that slice (filepath) corresponds to.</p>
-<p>e.g. If each input volume consists of 4 slices, slices 1-4 will be
-in the same volume. If <cite>filepath</cite> corresponds to slice 2, the volume
-(slices 1-4) and corresponding segmentations will be returned.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>filepath</strong> – Filepath corresponding to single slice</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>tuple of 2 3d numpy array corresponding to 3d input volume and
-3d segmentation volume (im_vol, seg_vol)</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="medsegpy.data.OAI3DBlockGenerator">
-<em class="property">class </em><code class="sig-prename descclassname">medsegpy.data.</code><code class="sig-name descname">OAI3DBlockGenerator</code><span class="sig-paren">(</span><em class="sig-param">config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#OAI3DBlockGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.OAI3DBlockGenerator" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">medsegpy.data.im_gens.OAI3DGenerator</span></code></p>
-<p>Generator for structuring 2D data into 3D blocks.</p>
-<dl class="attribute">
-<dt id="medsegpy.data.OAI3DBlockGenerator.SUPPORTED_TAGS">
-<code class="sig-name descname">SUPPORTED_TAGS</code><em class="property"> = ['oai_3d_block']</em><a class="headerlink" href="#medsegpy.data.OAI3DBlockGenerator.SUPPORTED_TAGS" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.data.OAI3DBlockGenerator.cached_data">
-<code class="sig-name descname">cached_data</code><span class="sig-paren">(</span><em class="sig-param">state: medsegpy.data.im_gens.GeneratorState</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#OAI3DBlockGenerator.cached_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.OAI3DBlockGenerator.cached_data" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.data.OAI3DBlockGenerator.process_filepath">
-<code class="sig-name descname">process_filepath</code><span class="sig-paren">(</span><em class="sig-param">fp</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#OAI3DBlockGenerator.process_filepath"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.OAI3DBlockGenerator.process_filepath" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.data.OAI3DBlockGenerator.unify_blocks">
-<code class="sig-name descname">unify_blocks</code><span class="sig-paren">(</span><em class="sig-param">blocks</em>, <em class="sig-param">reshape_dims</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#OAI3DBlockGenerator.unify_blocks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.OAI3DBlockGenerator.unify_blocks" title="Permalink to this definition">¶</a></dt>
-<dd><div class="line-block">
-<div class="line">1 | 2 | 3 | 4 |</div>
-</div>
-<div class="line-block">
-<div class="line">5 | 6 | 7 | 8 |</div>
-</div>
-<div class="line-block">
-<div class="line">9 | 10| 11| 12|</div>
-</div>
-<div class="line-block">
-<div class="line">13| 14| 15| 16|</div>
-</div>
-<div class="line-block">
-<div class="line">17| 18| 19| 20|</div>
-</div>
-<div class="line-block">
-<div class="line">21| 22| 23| 24|</div>
-</div>
-<div class="line-block">
-<div class="line">25| 26| 27| 28|</div>
-</div>
-<div class="line-block">
-<div class="line">29| 30| 31| 32|</div>
-</div>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>blocks</strong> – a list of tuples of numpy arrays
-[(im_block1, seg_block1), (im_block2, seg_block2)]</p></li>
-<li><p><strong>reshape_dims</strong> – </p></li>
+<dt id="medsegpy.data.data_loader.PatchDataLoader">
+<em class="property">class </em><code class="descclassname">medsegpy.data.data_loader.</code><code class="descname">PatchDataLoader</code><span class="sig-paren">(</span><em>cfg: medsegpy.config.Config, dataset_dicts: List[Dict], is_test: bool = False, shuffle: bool = True, drop_last: bool = False, batch_size: int = 1, use_singlefile: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#PatchDataLoader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.data_loader.PatchDataLoader" title="Permalink to this definition">¶</a></dt>
+<dd><p>This data loader pre-computes patch locations and padding based on
+patch size (<cite>cfg.IMG_SIZE</cite>), pad type (<cite>cfg.IMG_PAD_MODE</cite>), pad size
+(<cite>cfg.IMG_PAD_SIZE</cite>), and stride (<cite>cfg.IMG_STRIDE</cite>) parameters specified
+in the config.</p>
+<dl class="docutils">
+<dt>Assumptions:</dt>
+<dd><ul class="first last simple">
+<li>all dataset dictionaries have the same image dimensions</li>
+<li>“image_size” in dataset dict</li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
 </dl>
+<dl class="method">
+<dt id="medsegpy.data.data_loader.PatchDataLoader.__getitem__">
+<code class="descname">__getitem__</code><span class="sig-paren">(</span><em>idx</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#PatchDataLoader.__getitem__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.data_loader.PatchDataLoader.__getitem__" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>idx</strong> – Batch index.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><em>ndarray, ndarray</em> – images NxHxWx(…)x1, masks NxHxWx(…)x1</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.data.OAI3DBlockGenerator.blockify_volume">
-<code class="sig-name descname">blockify_volume</code><span class="sig-paren">(</span><em class="sig-param">im_volume: numpy.ndarray</em>, <em class="sig-param">seg_volume: numpy.ndarray</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#OAI3DBlockGenerator.blockify_volume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.OAI3DBlockGenerator.blockify_volume" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.data.OAI3DBlockGenerator.__blockify_volumes__">
-<code class="sig-name descname">__blockify_volumes__</code><span class="sig-paren">(</span><em class="sig-param">scan_volumes: dict</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#OAI3DBlockGenerator.__blockify_volumes__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.OAI3DBlockGenerator.__blockify_volumes__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Split all volumes into blocks of size <cite>config.IMG_SIZE</cite>.</p>
-<p>Throws error if volume is not perfectly divisible into blocks of size
-config.IMG_SIZE (Yi, Xi, Zi).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>scan_volumes</strong> – A dict of scan_ids –&gt; (im_volume, seg_volume)
-im_volume: 3D numpy array (Y, X, Z)
-seg_volume: 4D numpy array (Y, X, Z, #masks)</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a list of tuples im_volume and corresponding seg_volume blocks
-im_volume block: a 3D numpy array of size Y/Yi, X/Xi, Z/Zi
-seg_volume block: a 3D numpy array of size Y/Yi, X/Xi, Z/Zi, #masks  # noqa</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.data.OAI3DBlockGenerator.__validate_img_size__">
-<code class="sig-name descname">__validate_img_size__</code><span class="sig-paren">(</span><em class="sig-param">total_volume_shape</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#OAI3DBlockGenerator.__validate_img_size__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.OAI3DBlockGenerator.__validate_img_size__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Validate that image input size goes perfectly into volume
-:param total_volume_shape:
-:return:</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.data.OAI3DBlockGenerator.img_generator_test">
-<code class="sig-name descname">img_generator_test</code><span class="sig-paren">(</span><em class="sig-param">model=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#OAI3DBlockGenerator.img_generator_test"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.OAI3DBlockGenerator.img_generator_test" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.data.OAI3DBlockGenerator.img_generator">
-<code class="sig-name descname">img_generator</code><span class="sig-paren">(</span><em class="sig-param">state</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#OAI3DBlockGenerator.img_generator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.OAI3DBlockGenerator.img_generator" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.data.OAI3DBlockGenerator.summary">
-<code class="sig-name descname">summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#OAI3DBlockGenerator.summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.OAI3DBlockGenerator.summary" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.data.OAI3DBlockGenerator.num_steps">
-<code class="sig-name descname">num_steps</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#OAI3DBlockGenerator.num_steps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.OAI3DBlockGenerator.num_steps" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="medsegpy.data.OAI3DBlockGenerator.num_examples">
-<code class="sig-name descname">num_examples</code><span class="sig-paren">(</span><em class="sig-param">state: medsegpy.data.im_gens.GeneratorState</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#OAI3DBlockGenerator.num_examples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.OAI3DBlockGenerator.num_examples" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
-<dt id="medsegpy.data.OAI3DGeneratorFullVolume">
-<em class="property">class </em><code class="sig-prename descclassname">medsegpy.data.</code><code class="sig-name descname">OAI3DGeneratorFullVolume</code><span class="sig-paren">(</span><em class="sig-param">config: medsegpy.config.Config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#OAI3DGeneratorFullVolume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.OAI3DGeneratorFullVolume" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">medsegpy.data.im_gens.OAI3DGenerator</span></code></p>
-<dl class="attribute">
-<dt id="medsegpy.data.OAI3DGeneratorFullVolume.SUPPORTED_TAGS">
-<code class="sig-name descname">SUPPORTED_TAGS</code><em class="property"> = ['oai_3d_block-train_full-vol-test', 'full-vol-test', 'oai_3d_full-vol-test']</em><a class="headerlink" href="#medsegpy.data.OAI3DGeneratorFullVolume.SUPPORTED_TAGS" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="medsegpy.data.data_loader.N5dDataLoader">
+<em class="property">class </em><code class="descclassname">medsegpy.data.data_loader.</code><code class="descname">N5dDataLoader</code><span class="sig-paren">(</span><em>cfg: medsegpy.config.Config, dataset_dicts: List[Dict], is_test: bool = False, shuffle: bool = True, drop_last: bool = False, batch_size: int = 1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#N5dDataLoader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.data_loader.N5dDataLoader" title="Permalink to this definition">¶</a></dt>
+<dd><p>n.5D data loader.</p>
+<p>Use this for 2.5D, 3.5D, etc. implementations.
+Currently only last dimension is supported as the channel dimension.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="medsegpy.data.data_loader.S25dDataLoader">
+<em class="property">class </em><code class="descclassname">medsegpy.data.data_loader.</code><code class="descname">S25dDataLoader</code><span class="sig-paren">(</span><em>cfg: medsegpy.config.Config, dataset_dicts: List[Dict], is_test: bool = False, shuffle: bool = True, drop_last: bool = False, batch_size: int = 1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#S25dDataLoader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.data_loader.S25dDataLoader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Special case of 2.5D data loader compatible with 2D MedSegPy data format.</p>
+<p>Each dataset dict should represent a slice and must have the additional
+keys:
+- “slice_id” (int): Slice id (1-indexed) that the dataset corresponds to.
+- “scan_num_slices” (int): Number of total slices in the scan that the</p>
+<blockquote>
+<div>dataset dict is derived from</div></blockquote>
+<p>Padding is automatically applied to ensure all slices are considered.</p>
+<p>This is a temporary solution until the slow loading speeds of the
+<a class="reference internal" href="#medsegpy.data.data_loader.N5dDataLoader" title="medsegpy.data.data_loader.N5dDataLoader"><code class="xref py py-class docutils literal notranslate"><span class="pre">N5dDataLoader</span></code></a> are properly debugged.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-medsegpy.data.data_loader">
+<span id="medsegpy-data-data-utils"></span><h2>medsegpy.data.data_utils<a class="headerlink" href="#module-medsegpy.data.data_loader" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt>
+<code class="descclassname">medsegpy.data.data_loader.</code><code class="descname">build_data_loader</code><span class="sig-paren">(</span><em>cfg: medsegpy.config.Config, dataset_dicts: List[Dict], **kwargs</em><span class="sig-paren">)</span> &#x2192; medsegpy.data.data_loader.DataLoader<a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#build_data_loader"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Get data loader based on config <cite>TAG</cite> or name, value.</p>
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">medsegpy.data.data_loader.</code><code class="descname">DataLoader</code><span class="sig-paren">(</span><em>cfg: medsegpy.config.Config, dataset_dicts: List[Dict], is_test: bool = False, shuffle: bool = True, drop_last: bool = True, batch_size: int = 1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#DataLoader"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Data loader following <code class="xref py py-class docutils literal notranslate"><span class="pre">keras.utils.Sequence</span></code> API.</p>
+<p>Data loaders load data per batch in the following way:
+1. Collate inputs and outputs
+2. Optionally apply preprocessing</p>
+<p>To avoid changing the order of the base list, we shuffle a list of indices
+and query based on the index.</p>
+<p>Data loaders in medsegpy also have the ability to yield inference results
+per scan (see <a class="reference internal" href="#medsegpy.data.data_loader.DataLoader.inference" title="medsegpy.data.data_loader.DataLoader.inference"><code class="xref py py-meth docutils literal notranslate"><span class="pre">inference()</span></code></a>).</p>
+<dl class="method">
+<dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>cfg: medsegpy.config.Config, dataset_dicts: List[Dict], is_test: bool = False, shuffle: bool = True, drop_last: bool = True, batch_size: int = 1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#DataLoader.__init__"><span class="viewcode-link">[source]</span></a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>cfg</strong> (<em>Config</em>) – A config object.</li>
+<li><strong>dataset_dicts</strong> (<em>List</em><em>[</em><em>Dict</em><em>]</em>) – List of data in medsegpy dataset format.</li>
+<li><strong>is_test</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional) – If <cite>True</cite>, configures loader as a
+testing/inference loader. This is typically used when running
+evaluation.</li>
+<li><strong>shuffle</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><em>bool</em></a><em>, </em><em>optional</em>) – If <cite>True</cite>, shuffle data every epoch.</li>
+<li><strong>drop_last</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional) – Drop the last incomplete batch,
+if the dataset size is not divisible by the batch size. If
+<cite>False</cite> and the size of the dataset is not divisible by batch
+size, then the last batch will be smaller. This can affect
+loss calculations.</li>
+<li><strong>batch_size</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a>, optional) – Batch size.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="method">
-<dt id="medsegpy.data.OAI3DGeneratorFullVolume.num_steps">
-<code class="sig-name descname">num_steps</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#OAI3DGeneratorFullVolume.num_steps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.OAI3DGeneratorFullVolume.num_steps" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt>
+<code class="descname">__len__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#DataLoader.__len__"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Number of batches.</p>
+<p>By default, each element in the dataset dict is independent.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">inference</code><span class="sig-paren">(</span><em>model</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#DataLoader.inference"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Yields dictionaries of inputs, outputs per scan.</p>
+<p>In medical settings, data is often processed per scan, not necessarily
+per example. This distinction is critical. For example, a 2D
+segmentation network may take in 2D slices of a scan as input.
+However, during inference, it is standard to compute metrics on the full
+scan, not individual slices.</p>
+<dl class="docutils">
+<dt>This method does the following:</dt>
+<dd><ol class="first last arabic simple">
+<li>Loads dataset dicts corresponding to a scan</li>
+<li>Structures data from these dicts</li>
+<li>Runs predictions on the structured data</li>
+<li><dl class="first docutils">
+<dt>Restructures inputs. Images/volumes are restructured to HxWx…</dt>
+<dd>Segmentation masks and predictions are restructured to
+HxWx…xC.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Yield input, output dictionaries for the scan. Yielding continues</dt>
+<dd>until all scans have been processed.</dd>
+</dl>
+</li>
+</ol>
+</dd>
+</dl>
+<p>This method should yield scan-specific inputs and outputs as
+dictionaries. The following keys should be in the <cite>input</cite> and <cite>output</cite>
+dictionaries for each scan at minimum.</p>
+<dl class="docutils">
+<dt>Input keys:</dt>
+<dd><ul class="first last simple">
+<li>“scan_id” (str): the scan identifier</li>
+<li><dl class="first docutils">
+<dt>“x” (ndarray): the raw (unprocessed) input. Shape HxWx…</dt>
+<dd>If the network takes multiple inputs, each input should
+correspond to a unique key that will be handled by your
+specified evaluator.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>“scan_XXX” (optional) scan-related parameters that will simplify</dt>
+<dd>evaluation. e.g. “scan_spacing”. MedSegPy evaluators will
+default to scan specific information, if provided. For example,
+if “scan_spacing” is specified, the value specified will
+override the default spacing for the dataset.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>“subject_id” (optional): the subject identifier for the scan.</dt>
+<dd>Useful for grouping results by subject.</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt>Output keys:</dt>
+<dd><ul class="first last simple">
+<li><dl class="first docutils">
+<dt>“time_elapsed” (required): Amount of time required for inference</dt>
+<dd>on scan.
+This quantity typically includes data loading time as well.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>“y_true” (ndarray): Ground truth binary mask for semantic</dt>
+<dd>segmentation. Shape HxWx…xC.
+Required for semantic segmentation inference.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>“y_pred” (ndarray): Prediction probabilities for semantic</dt>
+<dd>segmentation. Shape HxWx…xC.
+Required for semantic segmentation inference.</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<p>All output keys except “time_elapsed” are optional and task specific.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>model</strong> – A model to run inference on.</li>
+<li><strong>kwargs</strong> – Keyword arguments to <cite>model.predict_generator()</cite></li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Yields:</th><td class="field-body"><p class="first"><em>dict, dict</em> –</p>
+<dl class="last docutils">
+<dt>Dictionaries of inputs and outputs corresponding to a</dt>
+<dd><p class="first last">single scan.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 </dd></dl>
 
 <dl class="class">
-<dt id="medsegpy.data.CTGenerator">
-<em class="property">class </em><code class="sig-prename descclassname">medsegpy.data.</code><code class="sig-name descname">CTGenerator</code><span class="sig-paren">(</span><em class="sig-param">config: medsegpy.config.Config</em>, <em class="sig-param">windows=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#CTGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.CTGenerator" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">medsegpy.data.im_gens.OAIGenerator</span></code></p>
-<p>Generator for abdominalCT.</p>
-<p>Includes windowing data as a preprocessing step.</p>
-<dl class="attribute">
-<dt id="medsegpy.data.CTGenerator.SUPPORTED_TAGS">
-<code class="sig-name descname">SUPPORTED_TAGS</code><em class="property"> = ['abct', 'abCT']</em><a class="headerlink" href="#medsegpy.data.CTGenerator.SUPPORTED_TAGS" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
+<dt>
+<em class="property">class </em><code class="descclassname">medsegpy.data.data_loader.</code><code class="descname">DefaultDataLoader</code><span class="sig-paren">(</span><em>cfg: medsegpy.config.Config, dataset_dicts: List[Dict], is_test: bool = False, shuffle: bool = True, drop_last: bool = False, batch_size: int = 1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#DefaultDataLoader"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>The default data loader functionality in medsegy.</p>
+<p>This class takes a dataset dict in the MedSegPy 2D Dataset format and maps
+it to a format that can be used by the model for semantic segmentation.</p>
+<p>This is the default data loader.</p>
+<ol class="arabic simple">
+<li>Read the input matrix from “file_name”</li>
+<li>Read the ground truth mask matrix from “sem_seg_file_name”</li>
+<li><dl class="first docutils">
+<dt>If needed:</dt>
+<dd><ol class="first last loweralpha">
+<li>Add binary labels for background</li>
+</ol>
+</dd>
+</dl>
+</li>
+<li>Apply <code class="xref py py-class docutils literal notranslate"><span class="pre">MedTransform</span></code> transforms to input and masks.</li>
+<li>If training, return input (preprocessed), output.
+If testing, return input (preprocessed), output, input (raw).
+The testing structure is useful for tracking the original input
+without any preprocessing. This return structure does not conflict with
+existing Keras model functionality.</li>
+</ol>
 <dl class="method">
-<dt id="medsegpy.data.CTGenerator.img_generator_test">
-<code class="sig-name descname">img_generator_test</code><span class="sig-paren">(</span><em class="sig-param">model=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/im_gens.html#CTGenerator.img_generator_test"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.data.CTGenerator.img_generator_test" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt>
+<code class="descname">__getitem__</code><span class="sig-paren">(</span><em>idx</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#DefaultDataLoader.__getitem__"><span class="viewcode-link">[source]</span></a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>idx</strong> – Batch index.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><em>ndarray, ndarray</em> – images NxHxWx(…)x1, masks NxHxWx(…)x1</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 </dd></dl>
 
-<div class="section" id="module-medsegpy.data.datasets">
-<span id="medsegpy-data-datasets-module"></span><h2>medsegpy.data.datasets module<a class="headerlink" href="#module-medsegpy.data.datasets" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">medsegpy.data.data_loader.</code><code class="descname">PatchDataLoader</code><span class="sig-paren">(</span><em>cfg: medsegpy.config.Config, dataset_dicts: List[Dict], is_test: bool = False, shuffle: bool = True, drop_last: bool = False, batch_size: int = 1, use_singlefile: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#PatchDataLoader"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>This data loader pre-computes patch locations and padding based on
+patch size (<cite>cfg.IMG_SIZE</cite>), pad type (<cite>cfg.IMG_PAD_MODE</cite>), pad size
+(<cite>cfg.IMG_PAD_SIZE</cite>), and stride (<cite>cfg.IMG_STRIDE</cite>) parameters specified
+in the config.</p>
+<dl class="docutils">
+<dt>Assumptions:</dt>
+<dd><ul class="first last simple">
+<li>all dataset dictionaries have the same image dimensions</li>
+<li>“image_size” in dataset dict</li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt>
+<code class="descname">__getitem__</code><span class="sig-paren">(</span><em>idx</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#PatchDataLoader.__getitem__"><span class="viewcode-link">[source]</span></a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>idx</strong> – Batch index.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><em>ndarray, ndarray</em> – images NxHxWx(…)x1, masks NxHxWx(…)x1</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">medsegpy.data.data_loader.</code><code class="descname">N5dDataLoader</code><span class="sig-paren">(</span><em>cfg: medsegpy.config.Config, dataset_dicts: List[Dict], is_test: bool = False, shuffle: bool = True, drop_last: bool = False, batch_size: int = 1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#N5dDataLoader"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>n.5D data loader.</p>
+<p>Use this for 2.5D, 3.5D, etc. implementations.
+Currently only last dimension is supported as the channel dimension.</p>
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">medsegpy.data.data_loader.</code><code class="descname">S25dDataLoader</code><span class="sig-paren">(</span><em>cfg: medsegpy.config.Config, dataset_dicts: List[Dict], is_test: bool = False, shuffle: bool = True, drop_last: bool = False, batch_size: int = 1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/data/data_loader.html#S25dDataLoader"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Special case of 2.5D data loader compatible with 2D MedSegPy data format.</p>
+<p>Each dataset dict should represent a slice and must have the additional
+keys:
+- “slice_id” (int): Slice id (1-indexed) that the dataset corresponds to.
+- “scan_num_slices” (int): Number of total slices in the scan that the</p>
+<blockquote>
+<div>dataset dict is derived from</div></blockquote>
+<p>Padding is automatically applied to ensure all slices are considered.</p>
+<p>This is a temporary solution until the slow loading speeds of the
+<a class="reference internal" href="#medsegpy.data.data_loader.N5dDataLoader" title="medsegpy.data.data_loader.N5dDataLoader"><code class="xref py py-class docutils literal notranslate"><span class="pre">N5dDataLoader</span></code></a> are properly debugged.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-medsegpy.data.transforms">
+<span id="medsegpy-data-transforms"></span><h2>medsegpy.data.transforms<a class="headerlink" href="#module-medsegpy.data.transforms" title="Permalink to this headline">¶</a></h2>
 </div>
 </div>
 
@@ -833,29 +873,29 @@ seg_volume block: a 3D numpy array of size Y/Yi, X/Xi, Z/Zi, #masks  # noqa</p>
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="engine.html" class="btn btn-neutral float-right" title="medsegpy.engine package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="index.html" class="btn btn-neutral float-left" title="API Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="engine.html" class="btn btn-neutral float-right" title="medsegpy.engine" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="index.html" class="btn btn-neutral float-left" title="API Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2020, Arjun Desai
+        &#169; Copyright 2018-2021, Arjun Desai.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -863,7 +903,6 @@ seg_volume block: a 3D numpy array of size Y/Yi, X/Xi, Z/Zi, #masks  # noqa</p>
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

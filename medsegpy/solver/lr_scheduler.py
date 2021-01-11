@@ -31,9 +31,7 @@ def step_decay(initial_lr, min_lr, drop_factor, drop_rate):
     def callback(epoch):
         import math
 
-        lrate = initial_lr * math.pow(
-            drop_factor, math.floor((1 + epoch) / drop_rate)
-        )
+        lrate = initial_lr * math.pow(drop_factor, math.floor((1 + epoch) / drop_rate))
         if lrate < min_lr:
             lrate = min_lr
 

@@ -1,9 +1,11 @@
 # Ignore project files
 **/.idea
 **/.DS_Store
+**/.vscode
 
 # Ignore cache
 **/__pycache__
+**/.pytest_cache
 
 # Ignore egg files
 **/*.egg-info
@@ -34,3 +36,6 @@
 
 #ignore cross validation files
 *.cv
+
+# settings files
+**/.settings

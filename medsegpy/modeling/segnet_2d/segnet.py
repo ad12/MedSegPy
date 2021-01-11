@@ -25,9 +25,7 @@ class KModel(ABC):
 
 
 class SegNet(KModel):
-    def __init__(
-        self, input_shape=None, input_tensor=None, seed=None, **kwargs
-    ):
+    def __init__(self, input_shape=None, input_tensor=None, seed=None, **kwargs):
         super().__init__(input_shape, input_tensor, seed)
 
         self._n_labels = kwargs.get("n_labels")
@@ -121,19 +119,14 @@ class SegNet(KModel):
                     level=i + 1,
                     num_conv_layers=num_conv_layers[i],
                     num_filters=num_filters[i],
-                    num_filters_next=num_filters[i]
-                    if i == 0
-                    else num_filters[i - 1],
+                    num_filters_next=num_filters[i] if i == 0 else num_filters[i - 1],
                     kernel=kernel,
                     pool_size=eff_pool_size,
                     single_bn=single_bn,
                 )
 
         outputs = Convolution2D(
-            n_labels,
-            (1, 1),
-            kernel_initializer=glorot_uniform(seed=seed),
-            activation=output_mode,
+            n_labels, (1, 1), kernel_initializer=glorot_uniform(seed=seed), activation=output_mode
         )(curr_layer)
 
         segnet = Model(inputs=inputs, outputs=outputs, name="segnet")
@@ -166,24 +159,16 @@ class SegNet(KModel):
                 name="enc_%d_conv_%d" % (level, i + 1),
             )(curr_layer)
             if not single_bn:
-                conv = BatchNormalization(name="enc_%d_bn_%d" % (level, i + 1))(
-                    conv
-                )
-            conv = Activation("relu", name="enc_%d_relu_%d" % (level, i + 1))(
-                conv
-            )
+                conv = BatchNormalization(name="enc_%d_bn_%d" % (level, i + 1))(conv)
+            conv = Activation("relu", name="enc_%d_relu_%d" % (level, i + 1))(conv)
             curr_layer = conv
 
         if single_bn:
-            curr_layer = BatchNormalization(name="enc_%d_bn" % level)(
-                curr_layer
-            )
+            curr_layer = BatchNormalization(name="enc_%d_bn" % level)(curr_layer)
 
         if add_pool:
             l_pool, l_mask = MaxPoolingWithArgmax2D(
-                pool_size=pool_size,
-                strides=pool_size,
-                name="enc_%d_pool" % level,
+                pool_size=pool_size, strides=pool_size, name="enc_%d_pool" % level
             )(curr_layer)
         else:
             l_pool, l_mask = curr_layer, None
@@ -208,9 +193,7 @@ class SegNet(KModel):
         curr_layer = unpool_1
 
         for i in range(num_conv_layers):
-            used_num_filters = (
-                num_filters_next if i == num_conv_layers - 1 else num_filters
-            )
+            used_num_filters = num_filters_next if i == num_conv_layers - 1 else num_filters
             conv = Convolution2D(
                 used_num_filters,
                 (kernel, kernel),
@@ -220,19 +203,13 @@ class SegNet(KModel):
             )(curr_layer)
 
             if not single_bn:
-                conv = BatchNormalization(name="dec_%d_bn_%d" % (level, i + 1))(
-                    conv
-                )
+                conv = BatchNormalization(name="dec_%d_bn_%d" % (level, i + 1))(conv)
 
-            conv = Activation("relu", name="dec_%d_relu_%d" % (level, i + 1))(
-                conv
-            )
+            conv = Activation("relu", name="dec_%d_relu_%d" % (level, i + 1))(conv)
             curr_layer = conv
 
         if single_bn:
-            curr_layer = BatchNormalization(name="dec_%d_bn" % level)(
-                curr_layer
-            )
+            curr_layer = BatchNormalization(name="dec_%d_bn" % level)(curr_layer)
 
         return curr_layer
 
@@ -261,19 +238,13 @@ class SegNet(KModel):
                 kernel_initializer=he_normal(seed=seed),
                 name="enc_%d_conv_%d" % (level, i + 1),
             )(curr_layer)
-            conv = Activation("relu", name="enc_%d_relu_%d" % (level, i + 1))(
-                conv
-            )
-            conv = BatchNormalization(name="enc_%d_bn_%d" % (level, i + 1))(
-                conv
-            )
+            conv = Activation("relu", name="enc_%d_relu_%d" % (level, i + 1))(conv)
+            conv = BatchNormalization(name="enc_%d_bn_%d" % (level, i + 1))(conv)
             curr_layer = conv
 
         if add_pool:
             l_pool, l_mask = MaxPoolingWithArgmax2D(
-                pool_size=pool_size,
-                strides=pool_size,
-                name="enc_%d_pool" % level,
+                pool_size=pool_size, strides=pool_size, name="enc_%d_pool" % level
             )(curr_layer)
         else:
             l_pool, l_mask = curr_layer, None
@@ -298,9 +269,7 @@ class SegNet(KModel):
         curr_layer = unpool_1
 
         for i in range(num_conv_layers):
-            used_num_filters = (
-                num_filters_next if i == num_conv_layers - 1 else num_filters
-            )
+            used_num_filters = num_filters_next if i == num_conv_layers - 1 else num_filters
             conv = Convolution2D(
                 used_num_filters,
                 (kernel, kernel),
@@ -308,12 +277,8 @@ class SegNet(KModel):
                 kernel_initializer=he_normal(seed=seed),
                 name="dec_%d_conv_%d" % (level, i + 1),
             )(curr_layer)
-            conv = Activation("relu", name="dec_%d_relu_%d" % (level, i + 1))(
-                conv
-            )
-            conv = BatchNormalization(name="dec_%d_bn_%d" % (level, i + 1))(
-                conv
-            )
+            conv = Activation("relu", name="dec_%d_relu_%d" % (level, i + 1))(conv)
+            conv = BatchNormalization(name="dec_%d_bn_%d" % (level, i + 1))(conv)
             curr_layer = conv
 
         return curr_layer

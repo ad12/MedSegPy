@@ -1,38 +1,52 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html4" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>Use Models &mdash; MedSegPy 0.0.1 documentation</title>
   
 
   
-  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
   
   
 
   
-  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../',
+              VERSION:'0.0.1',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
         <script type="text/javascript" src="../_static/jquery.js"></script>
         <script type="text/javascript" src="../_static/underscore.js"></script>
         <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Training" href="training.html" />
@@ -77,6 +91,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -106,6 +121,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -140,11 +156,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../index.html">Docs</a> &raquo;</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="index.html">Tutorials</a> &raquo;</li>
         
@@ -153,7 +171,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="../_sources/tutorials/models.md.txt" rel="nofollow"> View page source</a>
           
         
@@ -168,29 +186,29 @@
            <div itemprop="articleBody">
             
   <div class="section" id="use-models">
-<span id="use-models"></span><h1>Use Models<a class="headerlink" href="#use-models" title="Permalink to this headline">¶</a></h1>
+<h1>Use Models<a class="headerlink" href="#use-models" title="Permalink to this headline">¶</a></h1>
 <p>Models (and their sub-models) in medsegpy are built by
 functions such as <code class="docutils literal notranslate"><span class="pre">build_model</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">medsegpy.modeling.meta_arch</span> <span class="kn">import</span> <span class="n">build_model</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">build_model</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>  <span class="c1"># returns a torch.nn.Module</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">build_model</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>  <span class="c1"># returns a medsegpy.modeling.Model</span>
 </pre></div>
 </div>
-<p>Note that <code class="docutils literal notranslate"><span class="pre">build_model</span></code> only builds the model structure, and fill it with random parameters.
+<p>Note that <code class="docutils literal notranslate"><span class="pre">build_model</span></code> only builds the model structure, and fills it with random parameters.
 To load an existing checkpoint to the model, set
 <code class="docutils literal notranslate"><span class="pre">cfg.INIT_WEIGHTS</span></code> to the appropriate weights file.
 MedSegPy recognizes models in Keras’s <code class="docutils literal notranslate"><span class="pre">.h5</span></code> format.</p>
 <p>You can use a model by just <code class="docutils literal notranslate"><span class="pre">outputs</span> <span class="pre">=</span> <span class="pre">model.predict(inputs)</span></code>.
 Next, we explain the inputs/outputs format used by the builtin models in MedSegPy.</p>
 <p>For a detailed list of models see
-<a class="reference external" href="/modules/modeling.html#medsegpy.modeling.meta_arch">modeling/meta_arch</a></p>
+<a class="reference external" href="../modules/modeling.html#medsegpy.modeling.meta_arch">modeling/meta_arch</a></p>
 <div class="section" id="making-a-custom-model">
-<span id="making-a-custom-model"></span><h2>Making a Custom Model<a class="headerlink" href="#making-a-custom-model" title="Permalink to this headline">¶</a></h2>
+<h2>Making a Custom Model<a class="headerlink" href="#making-a-custom-model" title="Permalink to this headline">¶</a></h2>
 <p>MedSegPy is designed to support custom models and is built so that they can easily be integrated into
 the current structure.</p>
 <p>All models must extend the MedSegPy
-<a class="reference external" href="/modules/modeling.html#medsegpy.modeling.model.Model">Model</a> interface. This interface has a builtin
+<a class="reference external" href="../modules/modeling.html#medsegpy.modeling.model.Model">Model</a> interface. This interface has a builtin
 method that makes testing on different scans and running inference relatively simple.</p>
-<p>Each model is associated with a unique config type (see the <a class="reference external" href="/tutorials/configs.html">config tutorial</a>).
+<p>Each model is associated with a unique config type (see the <a class="reference external" href="configs.html">config tutorial</a>.
 Here you will define fields that are specific to controlling properties of your model architecture.</p>
 <p>If your model is very similar to existing models, see if you can modify existing configs to include
 a handful of fields that can be used to control your additions. If you do, make sure to turn
@@ -205,29 +223,29 @@ extending/subclassing your config from the existing config corresponding to the 
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="training.html" class="btn btn-neutral float-right" title="Training" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="data_loading.html" class="btn btn-neutral float-left" title="Use Custom Dataloaders" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="training.html" class="btn btn-neutral float-right" title="Training" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="data_loading.html" class="btn btn-neutral float-left" title="Use Custom Dataloaders" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2020, Arjun Desai
+        &#169; Copyright 2018-2021, Arjun Desai.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -235,7 +253,6 @@ extending/subclassing your config from the existing config corresponding to the 
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

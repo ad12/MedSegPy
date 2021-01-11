@@ -1,3 +1,5 @@
+from typing import Sequence
+
 from fvcore.common.registry import Registry
 
 from medsegpy.config import Config
@@ -16,12 +18,16 @@ The call should return a :class:`DatasetEvaluator` object.
 
 
 def build_evaluator(
-    dataset_name: str,
-    cfg: Config,
-    output_folder: str = None,
-    save_raw_data: bool = False,
+    dataset_name: str, cfg: Config, output_folder: str = None, save_raw_data: bool = False
 ):
     name = MetadataCatalog.get(dataset_name).evaluator_type
-    evaluator_cls = EVALUATOR_REGISTRY.get(name)
+    if isinstance(name, str):
+        name = [name]
+    assert isinstance(name, Sequence)
 
-    return evaluator_cls(dataset_name, cfg, output_folder, save_raw_data)
+    evaluators = []
+    for n in name:
+        evaluator_cls = EVALUATOR_REGISTRY.get(n)
+        evaluators.append(evaluator_cls(dataset_name, cfg, output_folder, save_raw_data))
+
+    return evaluators

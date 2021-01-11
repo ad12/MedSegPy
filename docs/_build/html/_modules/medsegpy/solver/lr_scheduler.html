@@ -1,0 +1,256 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html4" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>medsegpy.solver.lr_scheduler &mdash; MedSegPy 0.0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../../../',
+              VERSION:'0.0.1',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> MedSegPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/index.html">API Documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">MedSegPy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>medsegpy.solver.lr_scheduler</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for medsegpy.solver.lr_scheduler</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Learning rate schedulers.</span>
+
+<span class="sd">Usage:</span>
+<span class="sd">    &gt;&gt;&gt; callbacks = []  # list of callbacks to be used sith `fit_generator`</span>
+<span class="sd">    &gt;&gt;&gt; scheduler = step_decay(...)</span>
+<span class="sd">    &gt;&gt;&gt; callbacks.append(keras.callback.LearningRateScheduler(scheduler))</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="step_decay"><a class="viewcode-back" href="../../../modules/solver.html#medsegpy.solver.lr_scheduler.step_decay">[docs]</a><span class="k">def</span> <span class="nf">step_decay</span><span class="p">(</span><span class="n">initial_lr</span><span class="p">,</span> <span class="n">min_lr</span><span class="p">,</span> <span class="n">drop_factor</span><span class="p">,</span> <span class="n">drop_rate</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Learning rate drops by factor of `drop_factor` every `drop_rate` epochs.</span>
+
+<span class="sd">    For legacy purposes, the first drop occurs after `drop_rate - 1` epochs.</span>
+<span class="sd">    For example, if `drop_rate = 3`, the first decay will occur after 2 epochs.</span>
+<span class="sd">    Subsequently, the learning rate will drop every 3 epochs.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        initial_lr: initial learning rate (default = 1e-4)</span>
+<span class="sd">        min_lr: minimum learning rate (default = None)</span>
+<span class="sd">        drop_factor: factor to drop (default = 0.8)</span>
+<span class="sd">        drop_rate: rate of learning rate drop (default = 1.0 epochs)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        func: To be used with :class`keras.callbacks.LearningRateScheduler`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">initial_lr</span> <span class="o">=</span> <span class="n">initial_lr</span>
+    <span class="n">drop_factor</span> <span class="o">=</span> <span class="n">drop_factor</span>
+    <span class="n">drop_rate</span> <span class="o">=</span> <span class="n">drop_rate</span>
+    <span class="n">min_lr</span> <span class="o">=</span> <span class="n">min_lr</span>
+
+    <span class="k">def</span> <span class="nf">callback</span><span class="p">(</span><span class="n">epoch</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">math</span>
+
+        <span class="n">lrate</span> <span class="o">=</span> <span class="n">initial_lr</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span>
+            <span class="n">drop_factor</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">((</span><span class="mi">1</span> <span class="o">+</span> <span class="n">epoch</span><span class="p">)</span> <span class="o">/</span> <span class="n">drop_rate</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">lrate</span> <span class="o">&lt;</span> <span class="n">min_lr</span><span class="p">:</span>
+            <span class="n">lrate</span> <span class="o">=</span> <span class="n">min_lr</span>
+
+        <span class="k">return</span> <span class="n">lrate</span>
+</div>
+    <span class="k">return</span> <span class="n">callback</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2018-2021, Arjun Desai.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

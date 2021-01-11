@@ -1,0 +1,2 @@
+_BASE_: "./s3.yaml"
+IMG_SIZE: (384, 384, 7)

@@ -1,6 +1,5 @@
 # Implementation of refine module used by RefineNet
 # (http://openaccess.thecvf.com/content_cvpr_2017/papers/Lin_RefineNet_Multi-Path_Refinement_CVPR_2017_paper.pdf)
-import sys
 from typing import List
 
 from keras.layers import Activation, Add
@@ -10,21 +9,14 @@ from keras.layers import Conv2D, Layer, MaxPooling2D
 from medsegpy.modeling.deeplab_2d.deeplab_model import BilinearUpsampling
 
 
-def refine_module(
-    xs_in: List[Layer],
-    num_filters_in: int,
-    num_filters_out: int,
-    name_prefix: str,
-):
+def refine_module(xs_in: List[Layer], num_filters_in: int, num_filters_out: int, name_prefix: str):
     # 1. adaptive convolutions
     adaptive_convs = []
 
     for i in range(len(xs_in)):
         x = xs_in[i]
         adaptive_convs.append(
-            __residual_conv_unit__(
-                x, num_filters_in, "%s_adp-conv%d" % (name_prefix, i)
-            )
+            __residual_conv_unit__(x, num_filters_in, "%s_adp-conv%d" % (name_prefix, i))
         )
 
     # 2. multi-resolution fusion
@@ -35,10 +27,7 @@ def refine_module(
     x = __residual_conv_unit__(x, num_filters_in, name_prefix)
 
     x = Conv2D(
-        filters=num_filters_out,
-        kernel_size=(3, 3),
-        padding="same",
-        name="%s_conv" % name_prefix,
+        filters=num_filters_out, kernel_size=(3, 3), padding="same", name="%s_conv" % name_prefix
     )(x)
     x = BN(axis=-1, momentum=0.95, epsilon=0.001, name="%s_bn" % name_prefix)(x)
     x = Activation("relu", name="%s_relu" % name_prefix)(x)
@@ -50,12 +39,7 @@ def __residual_conv_unit__(x_in: Layer, num_filters: int, name_prefix: str):
     name_prefix = "%s_rcu" % name_prefix
     x = x_in
     for i in range(2):
-        x = BN(
-            axis=-1,
-            momentum=0.95,
-            epsilon=0.001,
-            name="%s_bn_%d" % (name_prefix, i),
-        )(x)
+        x = BN(axis=-1, momentum=0.95, epsilon=0.001, name="%s_bn_%d" % (name_prefix, i))(x)
         x = Activation("relu", name="%s_relu_%d" % (name_prefix, i))(x)
         x = Conv2D(
             filters=num_filters,
@@ -96,12 +80,7 @@ def __multi_resolution_fusion__(xs_in: List[Layer], name_prefix: str):
             padding="same",
             name="%s_conv_%d" % (name_prefix, i),
         )(x)
-        x = BN(
-            axis=-1,
-            momentum=0.95,
-            epsilon=0.001,
-            name="%s_bn_%d" % (name_prefix, i),
-        )(x)
+        x = BN(axis=-1, momentum=0.95, epsilon=0.001, name="%s_bn_%d" % (name_prefix, i))(x)
 
         if i != largest_input_ind:
             x = BilinearUpsampling(
@@ -113,21 +92,14 @@ def __multi_resolution_fusion__(xs_in: List[Layer], name_prefix: str):
     return x
 
 
-def __chained_residual_pooling__(
-    x_in: Layer, num_filters: int, name_prefix: str
-):
+def __chained_residual_pooling__(x_in: Layer, num_filters: int, name_prefix: str):
     name_prefix = "%s_crp" % name_prefix
-    x = BN(axis=-1, momentum=0.95, epsilon=0.001, name="%s_bn" % name_prefix)(
-        x_in
-    )
+    x = BN(axis=-1, momentum=0.95, epsilon=0.001, name="%s_bn" % name_prefix)(x_in)
     x = Activation("relu", name="%s_relu" % name_prefix)(x)
     residuals = [x]
     for i in range(3):
         x = MaxPooling2D(
-            pool_size=(3, 3),
-            strides=1,
-            padding="same",
-            name="%s_pool_%d" % (name_prefix, i),
+            pool_size=(3, 3), strides=1, padding="same", name="%s_pool_%d" % (name_prefix, i)
         )(x)
         x = Conv2D(
             filters=num_filters,

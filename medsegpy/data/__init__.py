@@ -1,6 +1,12 @@
 from .catalog import DatasetCatalog, MetadataCatalog
 from .build import build_loader
-from .data_loader import DataLoader, DefaultDataLoader, DATA_LOADER_REGISTRY
+from .data_loader import (
+    DataLoader,
+    DefaultDataLoader,
+    PatchDataLoader,
+    N5dDataLoader,
+    DATA_LOADER_REGISTRY,
+)
 
 # ensure the builtin datasets are registered
 from .im_gens import (

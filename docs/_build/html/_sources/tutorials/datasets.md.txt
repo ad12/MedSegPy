@@ -3,20 +3,26 @@
 If you want to use a custom dataset while also reusing medsegpy's data loaders,
 you will need to
 
-1. Optionally perform data augmentation
+1. Perform data augmentation (optional)
 2. Store data in a medsegpy friendly way.
 3. Register metadata for you dataset (i.e., tell medsegpy how to obtain your dataset).
 
-Next, we explain the above two concepts in details.
-
 ### Data Augmentation
-Volume-specific data augmentation can optionally be done outside of medsegpy.
-If augmentations are used, define different augmentations or series of augmentations with a unique numeric identifier. This identifier will be the augmentation number for different scans (see below).
+Currently, data augmentation is not done by default in medsegpy dataloaders. Data augmentation can optionally be done outside of medsegpy. If augmentations are used, define different augmentations or series of augmentations with a unique numeric identifier. This identifier will be the augmentation number for different scans (see below).
 
 Note that augmentation should only be done on the training data. If augmentations are done on the validation and testing data, medsegpy functionality cannot be guaranteed.
 
 ### Data format
-Currently, data must be stored as 2D slices in the h5df format and must follow a specific naming convention:
+Data can be stored as 2D slices or 3D volumes in the hdf5 format. All specifications detailed
+below are for compatibility with existing DataLoaders in MedSegPy. If you are designing a
+custom dataloader, you may be able to deviate from these specifications.
+
+#### 2D Data
+Many medical imaging modalities acquire single-slice acquisitions (CT, Xray, etc.).
+Additionally, 3D volumes are often split into 2D slices when training 2D networks to
+increase data speeds.
+
+Data stored in the 2D format must follow a specific naming convention:
   * Subject id: 7 digits
   * Timepoint: 2 digits
   * Augmentation Number: 2 digits. Should be `00` for volumes that are not augmented
@@ -34,39 +40,56 @@ Currently, data must be stored as 2D slices in the h5df format and must follow a
 - `0123456_V00-Aug04_001`: Subject 0123456, Timepoint 0, Augmentation 4, Slice 1
 - `0123456_V00-Aug00_999`: Subject 0123456, Timepoint 0, Augmentation 4, Slice 999
 
-The augmentation number is used to keep track of what augmentations are done. When naming files, note that slices should start at slice 1.
+**Compatible DataLoaders**:
+- [`DefaultDataLoader`](../modules/engine.html#medsegpy.data.data_loader.DefaultDataLoader)
+- [`S25dDataLoader`](../modules/engine.html#medsegpy.data.data_loader.S25dDataLoader)
 
-#### Image files
+The augmentation number is used to keep track of what augmentations are done. 
+When naming files, note that slices should start at slice 1.
+
+###### Image files
 Image files should end with a `.im` extension. The file should contain a dataset
 `data`, which contains a `HxWx1` shaped array corresponding to the slice.
 
 For example, `0123456_V00-Aug00_999.im` contains slice 999 from the volume
 `0123456_V00-Aug00`.
 
-#### Segmentation files
+###### Segmentation files
 Ground truth masks should end with a `.seg` extension. The file should contain a
 dataset `data`, which contains a `HxWx1xC` shaped binary array corresponding to the segmentation for the slice. Here, `C` refers to masks for different classes.
 
 For example, `0123456_V00-Aug00_999.seg` contains segmentations for slice 999 from the volume `0123456_V00-Aug00`.
 
+#### 3D Data
+Unlike the 2D files, 3D files do not have a particular naming convention. Additionally, 3D files will have both image and segmentation data in a single hdf5 file under different keys: `volume` for image data and `seg` for segmentation masks.
+
 #### Collating segmentations
 Segmentations can also be collated (combined) to form segmentations for
 superclasses. For example, if segmentations for "dog" and "cat" were stored
-at index `0` and `2` in the segmentation file, to segment the both classes as a single class, specify the tuple `(0, 2)` as the index to segment.
+at index `0` and `2` in the segmentation file, to segment the both classes as a single class, specify the 
+tuple `(0, 2)` as the index to segment.
 
 #### How h5 files are read
-Below is an example of how slice 999 for volume `0123456_V00-Aug00` will be read by current data loaders.
+Below are examples detailing the hdf5 structure for 2D and 3D data.
 
 ```python
 import h5py
+
+# ========= 2D Data =========
+# Read slice 999 for volume 0123456_V00-Aug00.
 
 # Read image slice.
 with h5py.File("0123456_V00-Aug00_999.im") as f:
     image = f["data"][:]  # shape: HxWx1
 
-# Read segmentations
+# Read segmentations.
 with h5py.File("0123456_V00-Aug00_999.seg") as f:
     mask = f["data"][:]  # shape: HxWx1xC
+    
+# ========= 3D Data =========
+with h5py.File("0123456_V00.h5") as f:
+    volume = f["volume"][:]  # shape: HxWxD
+    mask = f["seg"][:]  # shape: HxWxDxC
 ```
 
 #### Data paths
@@ -107,7 +130,7 @@ dictionaries:
 + `scan_id` (str): the scan this slice belongs to
 + `slice_id` (int): The slice this file corresponds to. Should be 1-indexed, meaning the
 first slice of every volume has `slice_id=1`.
-+ `total_num_slices`: the total number of slices in the volume.
++ `scan_num_slices`: the total number of slices in the scan volume.
 
 The following keys are optional:
 + `subject_id` (int): the subject id corresponding to this scan

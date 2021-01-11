@@ -1,0 +1,3 @@
+_BASE_: "./templates/s3.yaml"
+SEED: 11725701
+OUTPUT_DIR: "tcv3://volumetric/unet_2-5d/s3_seed-11725701"

@@ -10,10 +10,7 @@ from .data_loader import build_data_loader
 
 
 def filter_dataset(
-    dataset_dicts: List[Dict],
-    by: Hashable,
-    accepted_elements,
-    include_missing: bool = False,
+    dataset_dicts: List[Dict], by: Hashable, accepted_elements, include_missing: bool = False
 ):
     """Filter by common dataset fields.
 
@@ -29,9 +26,7 @@ def filter_dataset(
     """
     num_before = len(dataset_dicts)
     dataset_dicts = [
-        x
-        for x in dataset_dicts
-        if include_missing or (by in x and x[by] in accepted_elements)
+        x for x in dataset_dicts if include_missing or (by in x and x[by] in accepted_elements)
     ]
     num_after = len(dataset_dicts)
 
@@ -44,9 +39,7 @@ def filter_dataset(
     return dataset_dicts
 
 
-def get_sem_seg_dataset_dicts(
-    dataset_names: Sequence[str], filter_empty: bool = True
-):
+def get_sem_seg_dataset_dicts(dataset_names: Sequence[str], filter_empty: bool = True):
     """Load and prepare dataset dicts for semantic segmentation.
 
     Args:
@@ -55,9 +48,7 @@ def get_sem_seg_dataset_dicts(
             `'sem_seg_file'`.
     """
     assert len(dataset_names)
-    dataset_dicts = [
-        DatasetCatalog.get(dataset_name) for dataset_name in dataset_names
-    ]
+    dataset_dicts = [DatasetCatalog.get(dataset_name) for dataset_name in dataset_names]
     for dataset_name, dicts in zip(dataset_names, dataset_dicts):
         assert len(dicts), "Dataset '{}' is empty!".format(dataset_name)
 

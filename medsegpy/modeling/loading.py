@@ -47,9 +47,7 @@ def model_from_yaml(yaml_string, custom_objects=None):
       ImportError: if yaml module is not found.
     """
     if yaml is None:
-        raise ImportError(
-            "Requires yaml module installed (`pip install pyyaml`)."
-        )
+        raise ImportError("Requires yaml module installed (`pip install pyyaml`).")
     config = yaml.load(yaml_string)
     from .layers import deserialize  # noqa
 

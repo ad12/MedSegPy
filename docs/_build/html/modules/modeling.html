@@ -1,42 +1,56 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html4" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>medsegpy.modeling.layers package &mdash; MedSegPy 0.0.1 documentation</title>
+  <title>medsegpy.modeling.layers &mdash; MedSegPy 0.0.1 documentation</title>
   
-
-  
-  
-  
-  
-
-  
-  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-
-    
 
   
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../',
+              VERSION:'0.0.1',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="medsegpy.solver package" href="solver.html" />
-    <link rel="prev" title="medsegpy.evaluation package" href="evaluation.html" /> 
+    <link rel="next" title="medsegpy.solver" href="solver.html" />
+    <link rel="prev" title="medsegpy.evaluation" href="evaluation.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -77,6 +91,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -87,14 +102,23 @@
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/index.html">Tutorials</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">API Documentation</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="data.html">medsegpy.data package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="engine.html">medsegpy.engine package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="evaluation.html">medsegpy.evaluation package</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">medsegpy.modeling.layers package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-medsegpy.modeling.meta_arch">medsegpy.modeling.meta_arch package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-medsegpy.modeling">medsegpy.modeling package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="solver.html">medsegpy.solver package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="utils.html">medsegpy.utils package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data.html">medsegpy.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="engine.html">medsegpy.engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evaluation.html">medsegpy.evaluation</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">medsegpy.modeling.layers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-medsegpy.modeling.layers.attention">medsegpy.modeling.layers.attention</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-medsegpy.modeling.layers.pooling">medsegpy.modeling.layers.pooling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#medsegpy-modeling-layers-upsampling">medsegpy.modeling.layers.upsampling</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#medsegpy-modeling-meta-arch">medsegpy.modeling.meta_arch</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-medsegpy.modeling.meta_arch.build">medsegpy.modeling.meta_arch.build</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-medsegpy.modeling.meta_arch.deeplabv3">medsegpy.modeling.meta_arch.deeplabv3</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-medsegpy.modeling.meta_arch.unet">medsegpy.modeling.meta_arch.unet</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="solver.html">medsegpy.solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">medsegpy.utils</a></li>
 </ul>
 </li>
 </ul>
@@ -102,6 +126,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -136,20 +161,22 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../index.html">Docs</a> &raquo;</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="index.html">API Documentation</a> &raquo;</li>
         
-      <li>medsegpy.modeling.layers package</li>
+      <li>medsegpy.modeling.layers</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="../_sources/modules/modeling.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -163,14 +190,264 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-medsegpy.modeling.layers">
-<span id="medsegpy-modeling-layers-package"></span><h1>medsegpy.modeling.layers package<a class="headerlink" href="#module-medsegpy.modeling.layers" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="medsegpy-modeling-layers">
+<h1>medsegpy.modeling.layers<a class="headerlink" href="#medsegpy-modeling-layers" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-medsegpy.modeling.layers.attention">
+<span id="medsegpy-modeling-layers-attention"></span><h2>medsegpy.modeling.layers.attention<a class="headerlink" href="#module-medsegpy.modeling.layers.attention" title="Permalink to this headline">¶</a></h2>
+<p>Attention Layers</p>
+<p>The following layers implement an attention gating module based on the
+paper “Attention U-Net: Learning Where to Look For the Pancreas”
+(Oktay et al.). The code below is based on a PyTorch implementation of
+this technique by the paper’s authors:</p>
+<p><a class="reference external" href="https://github.com/ozan-oktay/Attention-Gated-Networks/tree/a96edb72622274f6705097d70cfaa7f2bf818a5a">https://github.com/ozan-oktay/Attention-Gated-Networks/tree/a96edb72622274f6705097d70cfaa7f2bf818a5a</a></p>
+<p>Each layer has 2D and 3D versions. Only the 2D versions have been tested
+so far.</p>
+<dl class="class">
+<dt id="medsegpy.modeling.layers.attention.CreateGatingSignal2D">
+<em class="property">class </em><code class="descclassname">medsegpy.modeling.layers.attention.</code><code class="descname">CreateGatingSignal2D</code><span class="sig-paren">(</span><em>out_channels: int</em>, <em>kernel_size: Union[int</em>, <em>typing.Sequence[int]] = 1</em>, <em>kernel_initializer: Union[str</em>, <em>typing.Dict] = 'he_normal'</em>, <em>activation: str = 'relu'</em>, <em>add_batchnorm: bool = True</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/modeling/layers/attention.html#CreateGatingSignal2D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.modeling.layers.attention.CreateGatingSignal2D" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="medsegpy.modeling.layers.attention.CreateGatingSignal3D">
+<em class="property">class </em><code class="descclassname">medsegpy.modeling.layers.attention.</code><code class="descname">CreateGatingSignal3D</code><span class="sig-paren">(</span><em>out_channels: int</em>, <em>kernel_size: Union[int</em>, <em>typing.Sequence[int]] = 1</em>, <em>kernel_initializer: Union[str</em>, <em>typing.Dict] = 'he_normal'</em>, <em>activation: str = 'relu'</em>, <em>add_batchnorm: bool = True</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/modeling/layers/attention.html#CreateGatingSignal3D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.modeling.layers.attention.CreateGatingSignal3D" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="medsegpy.modeling.layers.attention.GridAttentionModule2D">
+<em class="property">class </em><code class="descclassname">medsegpy.modeling.layers.attention.</code><code class="descname">GridAttentionModule2D</code><span class="sig-paren">(</span><em>in_channels: int</em>, <em>intermediate_channels: int</em>, <em>sub_sample_factor: Union[int</em>, <em>typing.Sequence[int]] = 2</em>, <em>kernel_initializer: Union[str</em>, <em>typing.Dict] = 'he_normal'</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/modeling/layers/attention.html#GridAttentionModule2D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.modeling.layers.attention.GridAttentionModule2D" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="medsegpy.modeling.layers.attention.GridAttentionModule3D">
+<em class="property">class </em><code class="descclassname">medsegpy.modeling.layers.attention.</code><code class="descname">GridAttentionModule3D</code><span class="sig-paren">(</span><em>in_channels: int</em>, <em>intermediate_channels: int</em>, <em>sub_sample_factor: Union[int</em>, <em>typing.Sequence[int]] = 2</em>, <em>kernel_initializer: Union[str</em>, <em>typing.Dict] = 'he_normal'</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/modeling/layers/attention.html#GridAttentionModule3D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.modeling.layers.attention.GridAttentionModule3D" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="medsegpy.modeling.layers.attention.MultiAttentionModule2D">
+<em class="property">class </em><code class="descclassname">medsegpy.modeling.layers.attention.</code><code class="descname">MultiAttentionModule2D</code><span class="sig-paren">(</span><em>in_channels: int</em>, <em>intermediate_channels: int</em>, <em>sub_sample_factor: Union[int</em>, <em>typing.Sequence[int]] = 2</em>, <em>kernel_initializer: Union[str</em>, <em>typing.Dict] = 'he_normal'</em>, <em>activation: str = 'relu'</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/modeling/layers/attention.html#MultiAttentionModule2D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.modeling.layers.attention.MultiAttentionModule2D" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="medsegpy.modeling.layers.attention.MultiAttentionModule3D">
+<em class="property">class </em><code class="descclassname">medsegpy.modeling.layers.attention.</code><code class="descname">MultiAttentionModule3D</code><span class="sig-paren">(</span><em>in_channels: int</em>, <em>intermediate_channels: int</em>, <em>sub_sample_factor: Union[int</em>, <em>typing.Sequence[int]] = 2</em>, <em>kernel_initializer: Union[str</em>, <em>typing.Dict] = 'he_normal'</em>, <em>activation: str = 'relu'</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/modeling/layers/attention.html#MultiAttentionModule3D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.modeling.layers.attention.MultiAttentionModule3D" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="medsegpy.modeling.layers.attention.DeepSupervision2D">
+<em class="property">class </em><code class="descclassname">medsegpy.modeling.layers.attention.</code><code class="descname">DeepSupervision2D</code><span class="sig-paren">(</span><em>out_channels: int, scale_factor: Union[int, typing.Sequence[int]], kernel_initializer: Union[str, typing.Dict] = 'he_normal', **kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/modeling/layers/attention.html#DeepSupervision2D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.modeling.layers.attention.DeepSupervision2D" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="medsegpy.modeling.layers.attention.DeepSupervision3D">
+<em class="property">class </em><code class="descclassname">medsegpy.modeling.layers.attention.</code><code class="descname">DeepSupervision3D</code><span class="sig-paren">(</span><em>out_channels: int, scale_factor: Union[int, typing.Sequence[int]], kernel_initializer: Union[str, typing.Dict] = 'he_normal', **kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/modeling/layers/attention.html#DeepSupervision3D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.modeling.layers.attention.DeepSupervision3D" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </div>
-<div class="section" id="module-medsegpy.modeling.meta_arch">
-<span id="medsegpy-modeling-meta-arch-package"></span><h1>medsegpy.modeling.meta_arch package<a class="headerlink" href="#module-medsegpy.modeling.meta_arch" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-medsegpy.modeling.layers.pooling">
+<span id="medsegpy-modeling-layers-pooling"></span><h2>medsegpy.modeling.layers.pooling<a class="headerlink" href="#module-medsegpy.modeling.layers.pooling" title="Permalink to this headline">¶</a></h2>
+<p>Pooling layers.</p>
+<p>MaxPoolingMask2D, MaxPoolingWithArgmax2D, and MaxUnpooling2D are based on are
+based on code from the open-source repo below. We thank the authors for making
+the code publicly available.</p>
+<p><a class="reference external" href="https://github.com/ykamikawa/tf-keras-SegNet/tree/648ee1aa6870e8280a5f24ee193caa585adde9cd">https://github.com/ykamikawa/tf-keras-SegNet/tree/648ee1aa6870e8280a5f24ee193caa585adde9cd</a>.</p>
 </div>
-<div class="section" id="module-medsegpy.modeling">
-<span id="medsegpy-modeling-package"></span><h1>medsegpy.modeling package<a class="headerlink" href="#module-medsegpy.modeling" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="medsegpy-modeling-layers-upsampling">
+<h2>medsegpy.modeling.layers.upsampling<a class="headerlink" href="#medsegpy-modeling-layers-upsampling" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-medsegpy.modeling.layers.upsampling"></span><p>Deeplabv3+ model for Keras.
+This model is based on TF repo:
+<a class="reference external" href="https://github.com/tensorflow/models/tree/master/research/deeplab">https://github.com/tensorflow/models/tree/master/research/deeplab</a>
+On Pascal VOC, original model gets to 84.56% mIOU</p>
+<p>Now this model is only available for the TensorFlow backend,
+due to its reliance on <cite>SeparableConvolution</cite> layers, but Theano will add
+this layer soon.</p>
+<p>MobileNetv2 backbone is based on this repo:
+<a class="reference external" href="https://github.com/JonathanCMitchell/mobilenet_v2_keras">https://github.com/JonathanCMitchell/mobilenet_v2_keras</a></p>
+<p># Reference
+- [Encoder-Decoder with Atrous Separable Convolution</p>
+<blockquote>
+<div>for Semantic Image Segmentation](<a class="reference external" href="https://arxiv.org/pdf/1802.02611.pdf">https://arxiv.org/pdf/1802.02611.pdf</a>)</div></blockquote>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt>[Xception: Deep Learning with Depthwise Separable Convolutions]</dt>
+<dd>(<a class="reference external" href="https://arxiv.org/abs/1610.02357">https://arxiv.org/abs/1610.02357</a>)</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>[Inverted Residuals and Linear Bottlenecks: Mobile Networks for</dt>
+<dd>Classification, Detection and Segmentation](<a class="reference external" href="https://arxiv.org/abs/1801.04381">https://arxiv.org/abs/1801.04381</a>)</dd>
+</dl>
+</li>
+</ul>
+<dl class="class">
+<dt id="medsegpy.modeling.layers.upsampling.BilinearUpsampling">
+<em class="property">class </em><code class="descclassname">medsegpy.modeling.layers.upsampling.</code><code class="descname">BilinearUpsampling</code><span class="sig-paren">(</span><em>upsampling=(2</em>, <em>2)</em>, <em>output_size=None</em>, <em>data_format=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/modeling/layers/upsampling.html#BilinearUpsampling"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.modeling.layers.upsampling.BilinearUpsampling" title="Permalink to this definition">¶</a></dt>
+<dd><p>Just a simple bilinear upsampling layer. Works only with TF.
+:param upsampling: tuple of 2 numbers &gt; 0. The upsampling ratio for h and w
+:param output_size: used instead of upsampling arg if passed!</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="medsegpy-modeling-meta-arch">
+<h1>medsegpy.modeling.meta_arch<a class="headerlink" href="#medsegpy-modeling-meta-arch" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-medsegpy.modeling.meta_arch.build">
+<span id="medsegpy-modeling-meta-arch-build"></span><h2>medsegpy.modeling.meta_arch.build<a class="headerlink" href="#module-medsegpy.modeling.meta_arch.build" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="medsegpy.modeling.meta_arch.build.build_model">
+<code class="descclassname">medsegpy.modeling.meta_arch.build.</code><code class="descname">build_model</code><span class="sig-paren">(</span><em>cfg</em>, <em>input_tensor=None</em><span class="sig-paren">)</span> &#x2192; medsegpy.modeling.model.Model<a class="reference internal" href="../_modules/medsegpy/modeling/meta_arch/build.html#build_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.modeling.meta_arch.build.build_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build the whole model architecture, defined by <code class="docutils literal notranslate"><span class="pre">cfg.MODEL_NAME</span></code>.
+Note that it does not load any weights from <code class="docutils literal notranslate"><span class="pre">cfg</span></code>.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-medsegpy.modeling.meta_arch.deeplabv3">
+<span id="medsegpy-modeling-meta-arch-deeplabv3"></span><h2>medsegpy.modeling.meta_arch.deeplabv3<a class="headerlink" href="#module-medsegpy.modeling.meta_arch.deeplabv3" title="Permalink to this headline">¶</a></h2>
+<p>DeeplabV3+ implementation.</p>
+<p>This model is based on TF and Keras repos below:
+<a class="reference external" href="https://github.com/tensorflow/models/tree/master/research/deeplab">https://github.com/tensorflow/models/tree/master/research/deeplab</a>
+<a class="reference external" href="https://github.com/bonlime/keras-deeplab-v3-plus">https://github.com/bonlime/keras-deeplab-v3-plus</a></p>
+<dl class="class">
+<dt id="medsegpy.modeling.meta_arch.deeplabv3.DeeplabV3Plus">
+<em class="property">class </em><code class="descclassname">medsegpy.modeling.meta_arch.deeplabv3.</code><code class="descname">DeeplabV3Plus</code><span class="sig-paren">(</span><em>cfg: medsegpy.config.DeeplabV3Config</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/modeling/meta_arch/deeplabv3.html#DeeplabV3Plus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.modeling.meta_arch.deeplabv3.DeeplabV3Plus" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="medsegpy.modeling.meta_arch.deeplabv3.DeeplabV3Plus.sep_conv_bn">
+<code class="descname">sep_conv_bn</code><span class="sig-paren">(</span><em>x</em>, <em>filters</em>, <em>prefix</em>, <em>stride=1</em>, <em>kernel_size=3</em>, <em>rate=1</em>, <em>depth_activation=False</em>, <em>epsilon=0.001</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/modeling/meta_arch/deeplabv3.html#DeeplabV3Plus.sep_conv_bn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.modeling.meta_arch.deeplabv3.DeeplabV3Plus.sep_conv_bn" title="Permalink to this definition">¶</a></dt>
+<dd><p>SepConv with BN between depthwise &amp; pointwise.</p>
+<p>Optionally add activation after BN.
+Implements right “same” padding for even kernel sizes</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>x</strong> – input tensor</li>
+<li><strong>filters</strong> – num of filters in pointwise convolution</li>
+<li><strong>prefix</strong> – prefix before name</li>
+<li><strong>stride</strong> – stride at depthwise conv</li>
+<li><strong>kernel_size</strong> – kernel size for depthwise convolution</li>
+<li><strong>rate</strong> – atrous rate for depthwise convolution</li>
+<li><strong>depth_activation</strong> – flag to use activation between depthwise &amp;
+pointwise convs</li>
+<li><strong>epsilon</strong> – epsilon to use in BN layer</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="medsegpy.modeling.meta_arch.deeplabv3.DeeplabV3Plus.deeplabv3">
+<code class="descname">deeplabv3</code><span class="sig-paren">(</span><em>input_tensor=None</em>, <em>input_shape=(512</em>, <em>512</em>, <em>3)</em>, <em>classes=21</em>, <em>backbone='mobilenetv2'</em>, <em>OS=16</em>, <em>alpha=1.0</em>, <em>dilation_divisor=1</em>, <em>dil_rate_input=None</em>, <em>dropout_rate=0.1</em><span class="sig-paren">)</span> &#x2192; medsegpy.modeling.model.Model<a class="reference internal" href="../_modules/medsegpy/modeling/meta_arch/deeplabv3.html#DeeplabV3Plus.deeplabv3"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.modeling.meta_arch.deeplabv3.DeeplabV3Plus.deeplabv3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiates the Deeplabv3+ architecture</p>
+<p>Optionally loads weights pre-trained
+on PASCAL VOC. This model is available for TensorFlow only,
+and can only be used with inputs following the TensorFlow
+data format <cite>(width, height, channels)</cite>.
+# Arguments</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>weights: one of ‘pascal_voc’ (pre-trained on pascal voc)</dt>
+<dd>or None (random initialization)</dd>
+<dt>input_tensor: optional Keras tensor (i.e. output of <cite>layers.Input()</cite>)</dt>
+<dd>to use as image input for the model.</dd>
+<dt>input_shape: shape of input image. format HxWxC</dt>
+<dd>PASCAL VOC model was trained on (512,512,3) images</dd>
+<dt>classes: number of desired classes. If classes != 21,</dt>
+<dd>last layer is initialized randomly</dd>
+</dl>
+<p>backbone: backbone to use. one of {‘xception’,’mobilenetv2’}
+OS: determines input_shape/feature_extractor_output ratio. One of {8,16}.</p>
+<blockquote>
+<div>Used only for xception backbone.</div></blockquote>
+<dl class="docutils">
+<dt>alpha: controls the width of the MobileNetV2 network. This is known as the</dt>
+<dd><dl class="first docutils">
+<dt>width multiplier in the MobileNetV2 paper.</dt>
+<dd><ul class="first last simple">
+<li><dl class="first docutils">
+<dt>If <cite>alpha</cite> &lt; 1.0, proportionally decreases the number</dt>
+<dd>of filters in each layer.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>If <cite>alpha</cite> &gt; 1.0, proportionally increases the number</dt>
+<dd>of filters in each layer.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>If <cite>alpha</cite> = 1, default number of filters from the paper</dt>
+<dd>are used at each layer.</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<p class="last">Used only for mobilenetv2 backbone</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="docutils">
+<dt># Returns</dt>
+<dd>A Keras model instance.</dd>
+<dt># Raises</dt>
+<dd><dl class="first docutils">
+<dt>RuntimeError: If attempting to run this model with a</dt>
+<dd>backend that does not support separable convolutions.</dd>
+</dl>
+<p class="last">ValueError: in case of invalid argument for <cite>weights</cite> or <cite>backbone</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="medsegpy.modeling.meta_arch.deeplabv3.DeeplabV3Plus.relu6">
+<code class="descname">relu6</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/modeling/meta_arch/deeplabv3.html#DeeplabV3Plus.relu6"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.modeling.meta_arch.deeplabv3.DeeplabV3Plus.relu6" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="medsegpy.modeling.meta_arch.deeplabv3.DeeplabV3Plus.build_model">
+<code class="descname">build_model</code><span class="sig-paren">(</span><em>input_tensor=None</em><span class="sig-paren">)</span> &#x2192; medsegpy.modeling.model.Model<a class="reference internal" href="../_modules/medsegpy/modeling/meta_arch/deeplabv3.html#DeeplabV3Plus.build_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.modeling.meta_arch.deeplabv3.DeeplabV3Plus.build_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-medsegpy.modeling.meta_arch.unet">
+<span id="medsegpy-modeling-meta-arch-unet"></span><h2>medsegpy.modeling.meta_arch.unet<a class="headerlink" href="#module-medsegpy.modeling.meta_arch.unet" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="medsegpy.modeling.meta_arch.unet.build_encoder_block">
+<code class="descclassname">medsegpy.modeling.meta_arch.unet.</code><code class="descname">build_encoder_block</code><span class="sig-paren">(</span><em>x: tensorflow.python.framework.ops.Tensor, num_filters: Union[int, typing.Sequence[int]], kernel_size: Union[int, typing.Sequence[int]] = 3, num_conv: int = 2, activation: str = 'relu', kernel_initializer: Union[str, typing.Dict] = 'he_normal', dropout: float = 0.0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/modeling/meta_arch/unet.html#build_encoder_block"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.modeling.meta_arch.unet.build_encoder_block" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds simple FCN encoder block.</p>
+<p>Structure is below. Where blocks in <cite>[]</cite> are repeated:</p>
+<p>[Conv -&gt; Activation] -&gt; BN -&gt; Dropout.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>x</strong> (<em>tf.Tensor</em>) – Input tensor.</li>
+<li><strong>num_filters</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a><em> or </em><em>Sequence</em><em>[</em><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a><em>]</em>) – Number of filters to use
+for each conv layer. If a sequence, will override number of conv
+layers specified by <cite>num_conv</cite>.</li>
+<li><strong>kernel_size</strong> – Kernel size accepted by Keras convolution layers.</li>
+<li><strong>num_conv</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a><em>, </em><em>optional</em>) – Number of convolutional blocks
+(conv + activation) to use.</li>
+<li><strong>activation</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a><em>, </em><em>optional</em>) – Activation type.</li>
+<li><strong>kernel_initializer</strong> – Kernel initializer accepted by
+<cite>keras.layers.Conv(…)</cite>.</li>
+<li><strong>dropout</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#float" title="(in Python v3.6)"><em>float</em></a><em>, </em><em>optional</em>) – Dropout rate.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>tf.Tensor</em> – Encoder block output.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
 </div>
 
 
@@ -178,29 +455,29 @@
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="solver.html" class="btn btn-neutral float-right" title="medsegpy.solver package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="evaluation.html" class="btn btn-neutral float-left" title="medsegpy.evaluation package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="solver.html" class="btn btn-neutral float-right" title="medsegpy.solver" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="evaluation.html" class="btn btn-neutral float-left" title="medsegpy.evaluation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2020, Arjun Desai
+        &#169; Copyright 2018-2021, Arjun Desai.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -208,7 +485,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

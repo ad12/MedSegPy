@@ -1,9 +1,33 @@
 import importlib
 import importlib.util
+import logging
 import os
 import sys
+from datetime import datetime
+from typing import Tuple
 
 __all__ = []
+
+_ENV_SETUP_DONE = False
+_SETTINGS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.settings"))
+_TF_VERSION = None
+
+
+def generate_seed():
+    """
+    Set the random seed for the RNG in torch, numpy and python.
+
+    Args:
+        seed (int): if None, will use a strong random seed.
+    """
+    seed = os.getpid() + int(datetime.now().strftime("%S%f")) + int.from_bytes(os.urandom(2), "big")
+    logger = logging.getLogger(__name__)
+    logger.info("Using a generated random seed {}".format(seed))
+    return seed
+
+
+def is_debug():
+    return os.environ.get("MEDSEGPY_RUN_MODE", "") == "debug"
 
 
 # from https://stackoverflow.com/questions/67631/how-to-import-a-module-given-the-full-path  # noqa
@@ -39,9 +63,6 @@ def _configure_libraries():
             pass
 
 
-_ENV_SETUP_DONE = False
-
-
 def setup_environment():
     """Perform environment setup work. The default setup is a no-op, but this
     function allows the user to specify a Python source file or a module in
@@ -73,12 +94,31 @@ def setup_custom_environment(custom_module):
         module = _import_file("medsegpy.utils.env.custom_module", custom_module)
     else:
         module = importlib.import_module(custom_module)
-    assert hasattr(module, "setup_environment") and callable(
-        module.setup_environment
-    ), (
+    assert hasattr(module, "setup_environment") and callable(module.setup_environment), (
         "Custom environment module defined in {} does not have the "
         "required callable attribute 'setup_environment'."
-    ).format(
-        custom_module
-    )
+    ).format(custom_module)
     module.setup_environment()
+
+
+def supports_wandb():
+    return "wandb" in sys.modules and not is_debug()
+
+
+def tf_version() -> Tuple[int, ...]:
+    global _TF_VERSION
+    if not _TF_VERSION:
+        import tensorflow as tf
+
+        _TF_VERSION = [int(x) for x in tf.__version__.split(".")[:2]]
+    return tuple(_TF_VERSION)
+
+
+def is_tf2():
+    """Returns `True` if running tensorflow 2.X"""
+    version = tf_version()
+    return version[0] == 2
+
+
+def settings_dir():
+    return os.environ.get("MEDSEGPY_SETTINGS", _SETTINGS_DIR)

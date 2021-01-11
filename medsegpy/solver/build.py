@@ -34,9 +34,7 @@ def build_optimizer(config: Config):
             amsgrad=config.USE_AMSGRAD,
         )
     elif config.NUM_GRAD_STEPS > 1:
-        logger.info(
-            "Accumulating gradient over {} steps".format(config.NUM_GRAD_STEPS)
-        )
+        logger.info("Accumulating gradient over {} steps".format(config.NUM_GRAD_STEPS))
         optimizer = AdamAccumulate(
             lr=config.INITIAL_LEARNING_RATE,
             beta_1=0.99,
@@ -79,9 +77,7 @@ def build_lr_scheduler(config: Config) -> kc.Callback:
         return kc.LearningRateScheduler(scheduler_func)
     elif name == "ReduceLROnPlateau":
         if config.LR_PATIENCE <= 0:
-            raise ValueError(
-                "LR patience must be >= 0. Got {}".format(config.LR_PATIENCE)
-            )
+            raise ValueError("LR patience must be >= 0. Got {}".format(config.LR_PATIENCE))
         return kc.ReduceLROnPlateau(
             factor=config.DROP_FACTOR,
             patience=config.LR_PATIENCE,
@@ -90,6 +86,4 @@ def build_lr_scheduler(config: Config) -> kc.Callback:
             min_lr=config.MIN_LEARNING_RATE,
         )
     else:
-        raise ValueError(
-            "LR scheduler {} not supported".format(config.LR_SCHEDULER_NAME)
-        )
+        raise ValueError("LR scheduler {} not supported".format(config.LR_SCHEDULER_NAME))

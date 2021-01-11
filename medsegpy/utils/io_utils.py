@@ -1,12 +1,13 @@
 import os
 import pickle
+import re
 from abc import ABC
 from typing import Any
 
 import h5py
 from fvcore.common.file_io import PathHandler, PathManager
 
-from .cluster import CLUSTER
+from medsegpy.utils.cluster import Cluster
 
 
 def load_h5(file_path):
@@ -48,8 +49,7 @@ def save_optimizer(optimizer, dirpath: str):
 
 
 def load_optimizer(dirpath: str):
-    """Return model and optimizer in previous state.
-    """
+    """Return model and optimizer in previous state."""
     from keras import optimizers
 
     filepath = os.path.join(dirpath, "optimizer.dat")
@@ -61,8 +61,7 @@ def load_optimizer(dirpath: str):
 
 
 def save_pik(data, filepath):
-    """Save data using pickle.
-    """
+    """Save data using pickle."""
     with open(filepath, "wb") as f:
         pickle.dump(data, f)
 
@@ -77,6 +76,47 @@ def load_pik(filepath):
         return pickle.load(f)
 
 
+def format_exp_version(dir_path, new_version=True, mkdirs=False, force=False):
+    """Adds experiment version to the directory path. Returns local path.
+
+    If `os.path.basename(dir_path)` starts with 'version', assume the version
+    has already been formatted.
+
+    Args:
+        dir_path (str): The directory path corresponding to the version.
+        force (bool, optional): If `True` force adds version even if 'version'
+            is part of basename.
+
+    Returns:
+        str: The formatted dirpath
+    """
+    dir_path = PathManager.get_local_path(dir_path)
+    if not os.path.isdir(dir_path):
+        return os.path.join(dir_path, "version_001")
+    if not force and re.match("^version_[0-9]*", os.path.basename(dir_path)):
+        return dir_path
+    version_dir, version_num = _find_latest_version_dir(dir_path)
+    if new_version:
+        version_num += 1
+        version_dir = f"version_{version_num:03d}"
+    version_dirpath = os.path.join(dir_path, version_dir)
+    if mkdirs:
+        PathManager.mkdirs(version_dirpath)
+    return version_dirpath
+
+
+def _find_latest_version_dir(dir_path):
+    version_dirs = [
+        (x, int(x.split("_")[1])) for x in os.listdir(dir_path) if re.match("^version_[0-9]*", x)
+    ]
+    if len(version_dirs) == 0:
+        version_dir, version_num = None, 0
+    else:
+        version_dirs = sorted(version_dirs, key=lambda x: x[1])
+        version_dir, version_num = version_dirs[-1]
+    return version_dir, version_num
+
+
 class GeneralPathHandler(PathHandler, ABC):
     PREFIX = ""
 
@@ -85,7 +125,7 @@ class GeneralPathHandler(PathHandler, ABC):
 
     def _get_local_path(self, path: str, **kwargs: Any):
         name = path[len(self.PREFIX) :]
-        return os.path.join(CLUSTER.save_dir, self._project_name(), name)
+        return os.path.join(Cluster.working_cluster().results_dir, self._project_name(), name)
 
     def _open(self, path, mode="r", **kwargs):
         return PathManager.open(self._get_local_path(path), mode, **kwargs)
@@ -97,6 +137,13 @@ class GeneralPathHandler(PathHandler, ABC):
         return self.PREFIX[:-3]
 
 
+class GeneralResultsPathHandler(GeneralPathHandler):
+    PREFIX = "results://"
+
+    def _project_name(self):
+        return ""
+
+
 class TechConsiderationsHandler(GeneralPathHandler):
     PREFIX = "tcv3://"
 
@@ -104,9 +151,5 @@ class TechConsiderationsHandler(GeneralPathHandler):
         return "tech-considerations"
 
 
-class abCTHandler(GeneralPathHandler):
-    PREFIX = "abCT://"
-
-
+PathManager.register_handler(GeneralResultsPathHandler())
 PathManager.register_handler(TechConsiderationsHandler())
-PathManager.register_handler(abCTHandler())

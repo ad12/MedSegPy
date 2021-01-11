@@ -6,7 +6,7 @@ https://github.com/facebookresearch/detectron2
 import datetime
 import logging
 import time
-from typing import Union
+from typing import Sequence, Union
 
 from medsegpy.data import DataLoader
 from medsegpy.data.im_gens import Generator, GeneratorState
@@ -69,7 +69,7 @@ class DatasetEvaluator:
 def inference_on_dataset(
     model,
     data_loader: Union[DataLoader, Generator],
-    evaluator: DatasetEvaluator,
+    evaluator: Union[DatasetEvaluator, Sequence[DatasetEvaluator]],
 ):
     """
     Run model on the data_loader and evaluate the metrics with evaluator.
@@ -86,7 +86,11 @@ def inference_on_dataset(
     Returns:
         The return value of `evaluator.evaluate()`
     """
-    evaluator.reset()
+    if isinstance(evaluator, DatasetEvaluator):
+        evaluator = [evaluator]
+
+    for e in evaluator:
+        e.reset()
     num_warmup = 1
     start_time = time.perf_counter()
     total_compute_time = 0
@@ -105,7 +109,8 @@ def inference_on_dataset(
         total_compute_time += time.perf_counter() - start_compute_time
 
         start_processing_time = time.perf_counter()
-        evaluator.process([input], [output])
+        for e in evaluator:
+            e.process([input], [output])
         total_processing_time += time.perf_counter() - start_processing_time
 
         total_inference_time += output["time_elapsed"]
@@ -115,12 +120,8 @@ def inference_on_dataset(
         seconds_per_processing = total_processing_time / iters_after_start
 
         if idx >= num_warmup * 2 or seconds_per_scan > 5:
-            total_seconds_per_img = (
-                time.perf_counter() - start_time
-            ) / iters_after_start
-            eta = datetime.timedelta(
-                seconds=int(total_seconds_per_img * (total - idx - 1))
-            )
+            total_seconds_per_img = (time.perf_counter() - start_time) / iters_after_start
+            eta = datetime.timedelta(seconds=int(total_seconds_per_img * (total - idx - 1)))
             log_every_n_seconds(
                 logging.INFO,
                 "Inference done {}/{}. {:.4f} s / scan ({:.4f} inference, "
@@ -138,13 +139,9 @@ def inference_on_dataset(
 
     eval_start = time.perf_counter()
     logger.info("Begin evaluation...")
-    results = evaluator.evaluate()
+    results = {e.__class__.__name__: e.evaluate() for e in evaluator}
     total_eval_time = time.perf_counter() - eval_start
-    logger.info(
-        "Time Elapsed: {:.4f} seconds".format(
-            total_compute_time + total_eval_time
-        )
-    )
+    logger.info("Time Elapsed: {:.4f} seconds".format(total_compute_time + total_eval_time))
     # An evaluator may return None when not in main process.
     # Replace it by an empty dict instead to make it easier for downstream
     # code to handle

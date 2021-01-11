@@ -1,6 +1,8 @@
 """Adopted from https://github.com/keras-team/keras/issues/3556#issuecomment-440638517"""  # noqa
 import keras.backend as K
-from keras.legacy import interfaces
+
+# TODO (TF2.X)
+# from keras.legacy import interfaces
 from keras.optimizers import Optimizer
 
 
@@ -33,25 +35,22 @@ class AdamAccumulate(Optimizer):
         self.accum_iters = K.variable(accum_iters, K.dtype(self.iterations))
         self.accum_iters_float = K.cast(self.accum_iters, K.floatx())
 
-    @interfaces.legacy_get_updates_support
+    # TODO (TF2.X)
+    #     @interfaces.legacy_get_updates_support
     def get_updates(self, loss, params):
         grads = self.get_gradients(loss, params)
         self.updates = [K.update_add(self.iterations, 1)]
 
         lr = self.lr
 
-        completed_updates = K.cast(
-            K.tf.floordiv(self.iterations, self.accum_iters), K.floatx()
-        )
+        completed_updates = K.cast(K.tf.floordiv(self.iterations, self.accum_iters), K.floatx())
 
         if self.initial_decay > 0:
             lr = lr * (1.0 / (1.0 + self.decay * completed_updates))
 
         t = completed_updates + 1
 
-        lr_t = lr * (
-            K.sqrt(1.0 - K.pow(self.beta_2, t)) / (1.0 - K.pow(self.beta_1, t))
-        )
+        lr_t = lr * (K.sqrt(1.0 - K.pow(self.beta_2, t)) / (1.0 - K.pow(self.beta_1, t)))
 
         # self.iterations incremented after processing a batch
         # batch:              1 2 3 4 5 6 7 8 9
@@ -83,20 +82,13 @@ class AdamAccumulate(Optimizer):
                 vhat_t = K.maximum(vhat, v_t)
                 p_t = p - lr_t * m_t / (K.sqrt(vhat_t) + self.epsilon)
                 self.updates.append(
-                    K.update(
-                        vhat,
-                        (1 - update_switch) * vhat + update_switch * vhat_t,
-                    )
+                    K.update(vhat, (1 - update_switch) * vhat + update_switch * vhat_t)
                 )
             else:
                 p_t = p - lr_t * m_t / (K.sqrt(v_t) + self.epsilon)
 
-            self.updates.append(
-                K.update(m, (1 - update_switch) * m + update_switch * m_t)
-            )
-            self.updates.append(
-                K.update(v, (1 - update_switch) * v + update_switch * v_t)
-            )
+            self.updates.append(K.update(m, (1 - update_switch) * m + update_switch * m_t))
+            self.updates.append(K.update(v, (1 - update_switch) * v + update_switch * v_t))
             self.updates.append(K.update(tg, (1 - update_switch) * sum_grad))
             new_p = p_t
 
@@ -104,9 +96,7 @@ class AdamAccumulate(Optimizer):
             if getattr(p, "constraint", None) is not None:
                 new_p = p.constraint(new_p)
 
-            self.updates.append(
-                K.update(p, (1 - update_switch) * p + update_switch * new_p)
-            )
+            self.updates.append(K.update(p, (1 - update_switch) * p + update_switch * new_p))
         return self.updates
 
     def get_config(self):

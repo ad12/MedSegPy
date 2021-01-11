@@ -60,15 +60,25 @@ class Config(object):
     # Model name specific to config. Cannot be changed.
     MODEL_NAME = ""
 
+    # Description of the config.
+    DESCRIPTION = ""
+
     # Loss function in form (id, output_mode)
     LOSS = DICE_LOSS
     CLASS_WEIGHTS = None
+    # Class name for robust loss computation
+    ROBUST_LOSS_NAME = ""
+    ROBUST_LOSS_STEP_SIZE = 1e-1
 
     # PIDS to include, None = all pids
     PIDS = None
 
     # Training and validation image size
     IMG_SIZE = (288, 288, 1)
+    # Patch-based image loading params used with PatchDataLoader
+    IMG_PAD_SIZE = ()
+    IMG_PAD_MODE = "edge"
+    IMG_STRIDE = ()
 
     # Training parameters
     N_EPOCHS = 100
@@ -132,6 +142,7 @@ class Config(object):
 
     # DataLoader tag.
     TAG = "DefaultDataLoader"
+    PRELOAD_DATA = False
 
     # Weights kernel initializer.
     KERNEL_INITIALIZER = "he_normal"
@@ -195,34 +206,28 @@ class Config(object):
         return config
 
     def save_config(self):
-        """Save params of config to ini file.
-        """
+        """Save params of config to ini file."""
         members = [
             attr
             for attr in dir(self)
             if not callable(getattr(self, attr))
             and not attr.startswith("__")
-            and not (
-                hasattr(type(self), attr)
-                and isinstance(getattr(type(self), attr), property)
-            )
+            and not (hasattr(type(self), attr) and isinstance(getattr(type(self), attr), property))
         ]
 
-        filepath = os.path.join(self.OUTPUT_DIR, "config.ini")
+        filepath = os.path.join(self.OUTPUT_DIR, "config.yaml")
         config_vars = dict()
         for m_var in members:
             config_vars[m_var] = getattr(self, m_var)
 
         # Save config
-        config = configparser.ConfigParser(config_vars)
-        with PathManager.open(filepath, "w+") as configfile:
-            config.write(configfile)
+        # config = configparser.ConfigParser(config_vars)
+        with PathManager.open(filepath, "w") as configfile:
+            yaml.dump(config_vars, configfile)
 
         logger.info("Full config saved to {}".format(os.path.abspath(filepath)))
 
-    def _parse_special_attributes(
-        self, full_key: str, value: Any
-    ) -> Tuple[str, Any]:
+    def _parse_special_attributes(self, full_key: str, value: Any) -> Tuple[str, Any]:
         """Special parsing values for attributes.
 
         Used when loading config from a file or from list.
@@ -246,21 +251,13 @@ class Config(object):
             }
             value = MetadataCatalog.convert_path_to_dataset(value)
             full_key = mapping[full_key]
-            logger.info(
-                "Converting {} -> {}: {} -> {}".format(
-                    prev_key, full_key, prev_val, value
-                )
-            )
+            logger.info("Converting {} -> {}: {} -> {}".format(prev_key, full_key, prev_val, value))
         elif full_key == "TAG" and value in LEGACY_DATA_LOADER_NAMES:
             value = LEGACY_DATA_LOADER_NAMES[value]
-            logger.info(
-                "Converting {}: {} -> {}".format(full_key, prev_val, value)
-            )
+            logger.info("Converting {}: {} -> {}".format(full_key, prev_val, value))
         elif full_key == "MODEL_NAME" and value in LEGACY_MODEL_NAMES:
             value = LEGACY_MODEL_NAMES[value]
-            logger.info(
-                "Converting {}: {} -> {}".format(full_key, prev_val, value)
-            )
+            logger.info("Converting {}: {} -> {}".format(full_key, prev_val, value))
         elif full_key == "LOSS" and isinstance(value, str):
             try:
                 value = get_training_loss_from_str(value)
@@ -271,13 +268,15 @@ class Config(object):
 
         return full_key, value
 
-    def merge_from_file(self, cfg_filename):
+    def merge_from_file(self, cfg_filename: str, new_allowed=False):
         """Load a ini or yaml config file and merge it with this object.
 
         "MODEL_NAME" must be specified in the file.
 
         Args:
-            cfg_filename: File path to yaml or ini file.
+            cfg_filename (str): File path to yaml or ini file.
+            new_allowed (bool, optional): If `True`, new keys, not already defined,
+                are allowed.
         """
         # Avoid circular dependencies.
         from medsegpy.modeling.meta_arch.build import LEGACY_MODEL_NAMES
@@ -290,17 +289,13 @@ class Config(object):
 
         # TODO: Handle cp save tag as a protected key.
         model_name = (
-            vars_dict["MODEL_NAME"]
-            if "MODEL_NAME" in vars_dict
-            else vars_dict["CP_SAVE_TAG"]
+            vars_dict["MODEL_NAME"] if "MODEL_NAME" in vars_dict else vars_dict["CP_SAVE_TAG"]
         )
         if model_name in LEGACY_MODEL_NAMES:
             model_name = LEGACY_MODEL_NAMES[model_name]
         if model_name != self.MODEL_NAME:
             raise ValueError(
-                "Wrong config. Expected {}. Got {}".format(
-                    self.MODEL_NAME, model_name
-                )
+                "Wrong config. Expected {}. Got {}".format(self.MODEL_NAME, model_name)
             )
 
         for full_key, value in vars_dict.items():
@@ -308,28 +303,27 @@ class Config(object):
 
             if full_key in RENAMED_KEYS:
                 new_name = RENAMED_KEYS[full_key]
-                logger.warning(
-                    "Key {} has been renamed to {}".format(full_key, new_name)
-                )
+                logger.warning("Key {} has been renamed to {}".format(full_key, new_name))
                 full_key = new_name
 
             full_key, value = self._parse_special_attributes(full_key, value)
 
             if full_key in DEPRECATED_KEYS:
-                logger.warning(
-                    "Key {} is deprecated, not loading".format(full_key)
-                )
+                logger.warning("Key {} is deprecated, not loading".format(full_key))
                 continue
 
-            if not hasattr(self, full_key):
+            if not new_allowed and not hasattr(self, full_key):
                 raise ValueError("Key {} does not exist.".format(full_key))
 
-            value = self._decode_cfg_value(
-                value, type(self.__getattribute__(full_key))
-            )
-            value = _check_and_coerce_cfg_value_type(
-                value, self.__getattribute__(full_key), full_key
-            )
+            is_new = not hasattr(self, full_key)
+
+            if is_new:
+                value = self._decode_cfg_value(value, "auto")
+            else:
+                value = self._decode_cfg_value(value, type(self.__getattribute__(full_key)))
+                value = _check_and_coerce_cfg_value_type(
+                    value, self.__getattribute__(full_key), full_key
+                )
 
             # Loading config
             self.__setattr__(full_key, value)
@@ -341,8 +335,7 @@ class Config(object):
         """
         _error_with_logging(
             len(cfg_list) % 2 == 0,
-            "Override list has odd length: {}; "
-            "it must be a list of pairs".format(cfg_list),
+            "Override list has odd length: {}; " "it must be a list of pairs".format(cfg_list),
         )
 
         for full_key, v in zip(cfg_list[0::2], cfg_list[1::2]):
@@ -359,9 +352,7 @@ class Config(object):
                 "Non-existent key: {}".format(full_key),
                 error_type=KeyError,
             )
-            value = self._decode_cfg_value(
-                v, type(self.__getattribute__(full_key))
-            )
+            value = self._decode_cfg_value(v, type(self.__getattribute__(full_key)))
             value = _check_and_coerce_cfg_value_type(
                 value, self.__getattribute__(full_key), full_key
             )
@@ -385,7 +376,9 @@ class Config(object):
         :param data_type: the type of the data
         :return: string converted to data_type
         """
-        if not isinstance(value, str):
+        if isinstance(value, dict):
+            return {k: cls._decode_cfg_value(v, "auto") for k, v in value.items()}
+        elif not isinstance(value, str):
             return value
 
         if data_type is str:
@@ -395,14 +388,18 @@ class Config(object):
         elif data_type is int:
             return int(value)
         else:
-            return ast.literal_eval(value)
+            try:
+                return ast.literal_eval(value)
+            except ValueError as e:
+                if data_type == "auto":
+                    return value
+                else:
+                    raise e
 
     def key_is_deprecated(self, full_key):
         """Test if a key is deprecated."""
         if full_key in DEPRECATED_KEYS:
-            logger.warning(
-                "Deprecated config key (ignoring): {}".format(full_key)
-            )
+            logger.warning("Deprecated config key (ignoring): {}".format(full_key))
             return True
         return False
 
@@ -418,9 +415,7 @@ class Config(object):
         else:
             msg = ""
         raise KeyError(
-            "Key {} was renamed to {}; please update your config.{}".format(
-                full_key, new_key, msg
-            )
+            "Key {} was renamed to {}; please update your config.{}".format(full_key, new_key, msg)
         )
 
     @classmethod
@@ -431,9 +426,7 @@ class Config(object):
         if base_cfg_filename:
             if base_cfg_filename.startswith("~"):
                 base_cfg_filename = os.path.expanduser(base_cfg_filename)
-            elif any(
-                map(base_cfg_filename.startswith, ["/", "https://", "http://"])
-            ):
+            elif any(map(base_cfg_filename.startswith, ["/", "https://", "http://"])):
                 raise ValueError("Remote configs not currently supported.")
             else:
                 # the path to base cfg is relative to the config file itself.
@@ -442,9 +435,7 @@ class Config(object):
             base_dict.update(vars_dict)
             vars_dict = base_dict
 
-        assert BASE_KEY not in vars_dict, "{} should be popped off!".format(
-            BASE_KEY
-        )
+        assert BASE_KEY not in vars_dict, "{} should be popped off!".format(BASE_KEY)
         return vars_dict
 
     @classmethod
@@ -453,9 +444,7 @@ class Config(object):
         if filename.endswith(".ini"):
             cfg = configparser.ConfigParser()
             if not os.path.isfile(filename):
-                raise FileNotFoundError(
-                    "Config file {} not found".format(filename)
-                )
+                raise FileNotFoundError("Config file {} not found".format(filename))
             cfg.read(filename)
             vars_dict = cfg["DEFAULT"]
             vars_dict = {k.upper(): v for k, v in vars_dict.items()}
@@ -489,11 +478,26 @@ class Config(object):
 
         if curr_val is not None and (type(val) != type(curr_val)):
             raise ValueError(
-                "%s is of type %s. Expected %s"
-                % (attr, str(type(val)), str(type(curr_val)))
+                "%s is of type %s. Expected %s" % (attr, str(type(val)), str(type(curr_val)))
             )
 
         self.__setattr__(attr, val)
+
+    def __getitem__(self, key):
+        if not hasattr(self, key):
+            raise KeyError(f"Key {key} does not exist")
+        return getattr(self, key)
+
+    def get(self, key, default=None):
+        keys = key.split(".")
+        try:
+            val = self
+            for k in keys:
+                val = val[k]
+        except KeyError:
+            return default
+
+        return val
 
     def change_to_test(self):
         """
@@ -535,7 +539,11 @@ class Config(object):
                 "AUGMENT_DATA",
                 "LOSS",
                 "CLASS_WEIGHTS",
-                "",
+                "ROBUST_LOSS_NAME"
+                if self.ROBUST_LOSS_NAME
+                else "" "ROBUST_LOSS_STEP_SIZE"
+                if self.ROBUST_LOSS_NAME
+                else "" "",
                 "USE_CROSS_VALIDATION",
                 "CV_K" if self.USE_CROSS_VALIDATION else "",
                 "CV_FILE" if self.USE_CROSS_VALIDATION else "",
@@ -675,6 +683,10 @@ class UNetConfig(Config):
     DEPTH = 6
     NUM_FILTERS = None
 
+    # Boolean arguments for attention and deep supervision
+    USE_ATTENTION = False
+    USE_DEEP_SUPERVISION = False
+
     def __init__(self, state="training", create_dirs=True):
         super().__init__(self.MODEL_NAME, state, create_dirs=create_dirs)
 
@@ -738,10 +750,7 @@ class UNet2_5DConfig(UNetConfig):
     DROP_FACTOR = 0.8
 
     def __init__(self, state="training", create_dirs=True):
-        warnings.warn(
-            "UNet2_5DConfig is deprecated. Use UNet2DConfig instead.",
-            DeprecationWarning,
-        )
+        warnings.warn("UNet2_5DConfig is deprecated. Use UNet2DConfig instead.", DeprecationWarning)
         super().__init__(state, create_dirs)
 
     def num_neighboring_slices(self):
@@ -761,9 +770,7 @@ class UNet3DConfig(UNetConfig):
 
     TAG = "oai_3d"
 
-    SLICE_SUBSET = (
-        None
-    )  # 1 indexed inclusive - i.e. (5, 64) means slices [5, 64]
+    SLICE_SUBSET = None  # 1 indexed inclusive - i.e. (5, 64) means slices [5, 64]
 
     NUM_FILTERS = [32, 64, 128, 256, 512, 1024]
 
@@ -776,16 +783,12 @@ class UNet3DConfig(UNetConfig):
 
 
 class DeeplabV3_2_5DConfig(DeeplabV3Config):
-    """2.5D DeeplabV3+.
-    """
+    """2.5D DeeplabV3+."""
 
     IMG_SIZE = (288, 288, 3)
 
     def __init__(self, state="training", create_dirs=True):
-        warnings.warn(
-            "UNet2_5DConfig is deprecated. Use UNet2DConfig instead.",
-            DeprecationWarning,
-        )
+        warnings.warn("UNet2_5DConfig is deprecated. Use UNet2DConfig instead.", DeprecationWarning)
         super().__init__(state, create_dirs)
 
     def num_neighboring_slices(self):
@@ -793,8 +796,7 @@ class DeeplabV3_2_5DConfig(DeeplabV3Config):
 
 
 class AnisotropicUNetConfig(Config):
-    """2D Anisotropic U-Net.
-    """
+    """2D Anisotropic U-Net."""
 
     MODEL_NAME = "anisotropic_unet"
 
@@ -827,6 +829,19 @@ class RefineNetConfig(Config):
     MODEL_NAME = "refinenet"
 
     INITIAL_LEARNING_RATE = 1e-3
+
+    def __init__(self, state="training", create_dirs=True):
+        super().__init__(self.MODEL_NAME, state, create_dirs=create_dirs)
+
+
+class FCDenseNetConfig(Config):
+    MODEL_NAME = "FCDenseNet"
+
+    DEPTH = 5
+    NUM_LAYERS = (5,)
+    NUM_FILTERS = (12,)
+    NUM_FILTERS_HEAD_CONV = 48
+    DROPOUT = 0.2
 
     def __init__(self, state="training", create_dirs=True):
         super().__init__(self.MODEL_NAME, state, create_dirs=create_dirs)
@@ -867,9 +882,7 @@ def _check_and_coerce_cfg_value_type(replacement, original, full_key):
 
     raise ValueError(
         "Type mismatch ({} vs. {}) with values ({} vs. {}) for config "
-        "key: {}".format(
-            original_type, replacement_type, original, replacement, full_key
-        )
+        "key: {}".format(original_type, replacement_type, original, replacement, full_key)
     )
 
 
@@ -895,6 +908,7 @@ SUPPORTED_CONFIGS = [
     UNet3DConfig,
     UNet2_5DConfig,
     DeeplabV3_2_5DConfig,
+    FCDenseNetConfig,
 ]
 
 
@@ -932,8 +946,4 @@ def get_model_name(cfg_filename: str):
         str: The model name.
     """
     vars_dict = Config.parse_base_config(cfg_filename)
-    return (
-        vars_dict["MODEL_NAME"]
-        if "MODEL_NAME" in vars_dict
-        else vars_dict["CP_SAVE_TAG"]
-    )
+    return vars_dict["MODEL_NAME"] if "MODEL_NAME" in vars_dict else vars_dict["CP_SAVE_TAG"]

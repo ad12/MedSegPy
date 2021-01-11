@@ -38,17 +38,12 @@ def build_model(cfg, input_tensor=None) -> Model:
         if name in LEGACY_MODEL_NAMES:
             name = LEGACY_MODEL_NAMES[name]
             if prev_name != name:
-                warnings.warn(
-                    "MODEL_NAME {} is deprecated. Use {} instead".format(
-                        prev_name, name
-                    )
-                )
+                warnings.warn("MODEL_NAME {} is deprecated. Use {} instead".format(prev_name, name))
 
     builder = META_ARCH_REGISTRY.get(name)(cfg)
     model = builder.build_model(input_tensor)
     assert isinstance(model, Model), (
-        "ModelBuilder.build_model should output model of type "
-        "medsegpy.modeling.Model"
+        "ModelBuilder.build_model should output model of type " "medsegpy.modeling.Model"
     )
     return model
 

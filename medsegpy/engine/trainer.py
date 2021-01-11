@@ -2,19 +2,27 @@ import copy
 import logging
 import os
 import pickle
+import warnings
 from typing import Tuple
 
+import tensorflow as tf
 from keras import callbacks as kc
 from keras.utils import plot_model
 
 from medsegpy import config, solver
 from medsegpy.data import build_loader, im_gens
-from medsegpy.engine.callbacks import LossHistory, lr_callback
+from medsegpy.engine.callbacks import LossHistory, WandBLogger, lr_callback
 from medsegpy.evaluation import build_evaluator, inference_on_dataset
-from medsegpy.losses import dice_loss, get_training_loss
-from medsegpy.modeling import get_model
+from medsegpy.losses import build_loss, dice_loss
 from medsegpy.modeling.meta_arch import build_model
-from medsegpy.utils import dl_utils, io_utils
+from medsegpy.utils import dl_utils, env, io_utils
+
+try:
+    _SUPPORTS_DISTRIBUTED = True
+    from tensorflow.distribute import MirroredStrategy
+except ModuleNotFoundError:
+    _SUPPORTS_DISTRIBUTED = False
+    MirroredStrategy = None
 
 logger = logging.getLogger(__name__)
 
@@ -22,29 +30,49 @@ logger = logging.getLogger(__name__)
 class DefaultTrainer(object):
     """Default trainer for medical semantic segmentation."""
 
-    def __init__(self, cfg: config.Config):
+    def __init__(self, cfg: config.Config, run_eagerly=None, strategy=None):
+        """
+        Args:
+            cfg (Config): An experiment config.
+            run_eagerly (bool, optional): If `True`, runs eagerly.
+                Only available in tensorflow>=2.0.
+            strategy (tf.distribute.Strategy, optional): The strategy to use for training.
+                Only available if `tf.distribute` package is available (tensorflow>=1.14).
+        """
         self._cfg = cfg
         self._loss_history = None
-
-        model = get_model(cfg)
-        plot_model(
-            model,
-            to_file=os.path.join(cfg.OUTPUT_DIR, "model.png"),
-            show_shapes=True,
+        self._default_strategy = (
+            tf.distribute.get_strategy() if _SUPPORTS_DISTRIBUTED else dl_utils.NoOpStrategy()
         )
-        model.summary(print_fn=lambda x: logger.info(x))
+        num_gpus = dl_utils.num_gpus()
+
+        if not env.is_tf2() and run_eagerly is not None:
+            warnings.warn("`run_eagerly` can only be specified in Tensorflow >2.0. " "Ignoring...")
+            run_eagerly = None
+        self._run_eagerly = run_eagerly
+
+        if strategy is None:
+            strategy = self._default_strategy
+            if _SUPPORTS_DISTRIBUTED and num_gpus > 1:
+                logger.info("Running multi gpu model")
+                strategy = MirroredStrategy()
+        self.strategy = strategy
+
+        with self.strategy.scope():
+            model = self.build_model(cfg)
+            if cfg.INIT_WEIGHTS:
+                self._init_model(model)
+
+        plot_model(model, to_file=os.path.join(cfg.OUTPUT_DIR, "model.png"), show_shapes=True)
+        model.summary(line_length=120, print_fn=lambda x: logger.info(x))
         model_json = model.to_json()
         model_json_save_path = os.path.join(cfg.OUTPUT_DIR, "model.json")
         with open(model_json_save_path, "w") as json_file:
             json_file.write(model_json)
 
-        if cfg.INIT_WEIGHTS:
-            self._init_model(model)
-
-        # Replicate model on multiple gpus.
+        # Replicate model on multiple gpus when tensorflow.distribute module not available.
         # Note this does not solve issue of having too large of a model
-        num_gpus = dl_utils.num_gpus()
-        if num_gpus > 1:
+        if not _SUPPORTS_DISTRIBUTED and num_gpus > 1:
             logger.info("Running multi gpu model")
             model = dl_utils.ModelMGPU(model, gpus=num_gpus)
 
@@ -53,12 +81,25 @@ class DefaultTrainer(object):
 
     def train(self):
         """Train model specified by config.
+
+        Do not call this under a strategy scope. Instead, set `self.strategy`.
         """
         cfg = self._cfg
 
-        self._train_model()
+        with self.strategy.scope():
+            self._train_model()
 
         if cfg.TEST_DATASET:
+            # Specialized strategies are not currently supported for testing.
+            if _SUPPORTS_DISTRIBUTED and not isinstance(
+                self.strategy, (dl_utils.NoOpStrategy, type(self._default_strategy))
+            ):
+                logger.error(
+                    f"Strategy '{type(self.strategy).__name__}' not currently "
+                    f"supported for testing. "
+                    f"Please run testing separately on a single gpu."
+                )
+                return {}
             return self.test(cfg, self._model)
         else:
             return {}
@@ -93,31 +134,35 @@ class DefaultTrainer(object):
 
         self._loss_history = LossHistory()
 
+        tb_kwargs = dict(update_freq="batch") if env.is_tf2() else {}
         callbacks.extend(
             [
                 kc.ModelCheckpoint(
-                    os.path.join(
-                        output_dir, "weights.{epoch:03d}-{val_loss:.4f}.h5"
-                    ),
+                    os.path.join(output_dir, "weights.{epoch:03d}-{val_loss:.4f}.h5"),
                     save_best_only=True,
                     save_weights_only=True,
                 ),
-                kc.TensorBoard(
-                    output_dir, write_grads=False, write_images=False
-                ),
+                kc.TensorBoard(output_dir, write_grads=False, write_images=False, **tb_kwargs),
+                WandBLogger() if env.supports_wandb() else None,
                 kc.CSVLogger(os.path.join(output_dir, "metrics.log")),
                 self._loss_history,
             ]
         )
+        callbacks = [x for x in callbacks if x is not None]
 
         return callbacks
 
     def _train_model(self):
-        """Train model."""
+        """Train model.
+
+        If multi-gpu training and distributed training is supported (tensorflow>=1.15),
+        call this function with the appropriate strategy scope::
+
+            with self.strategy.scope():
+                self._train_model()
+        """
         cfg = self._cfg
         n_epochs = cfg.N_EPOCHS
-        loss = cfg.LOSS
-        class_weights = cfg.CLASS_WEIGHTS
         num_workers = cfg.NUM_WORKERS
         output_dir = cfg.OUTPUT_DIR
 
@@ -125,18 +170,18 @@ class DefaultTrainer(object):
 
         # TODO: Add more options for metrics.
         optimizer = solver.build_optimizer(cfg)
-        # Remove computation on the background class.
-        loss_func = get_training_loss(
-            loss,
-            weights=class_weights,
-            remove_background=cfg.INCLUDE_BACKGROUND,
-        )
-        model.compile(
-            optimizer=optimizer,
-            loss=loss_func,
-            metrics=[lr_callback(optimizer), dice_loss],
-        )
+        loss_func = build_loss(cfg)
+        metrics = [lr_callback(optimizer), dice_loss]
+
         callbacks = self.build_callbacks()
+        if isinstance(loss_func, kc.Callback):
+            callbacks.insert(0, loss_func)
+            metrics.append(loss_func.criterion)
+
+        model.compile(optimizer=optimizer, loss=loss_func, metrics=metrics)
+        if env.is_tf2():
+            run_eagerly = tf.executing_eagerly() if self._run_eagerly is None else self._run_eagerly
+            model.run_eagerly = run_eagerly
 
         train_loader, val_loader = self._train_loader, self._val_loader
         use_multiprocessing = num_workers > 1
@@ -186,13 +231,18 @@ class DefaultTrainer(object):
         try:
             return build_model(cfg)
         except KeyError:
+            # TODO (TF2.X)
+            if env.is_tf2():
+                raise ValueError(
+                    "`get_model` not currently supported for tf2. "
+                    "We are working on backwards compatibility"
+                )
+            from medsegpy.modeling import get_model
+
             return get_model(cfg)
 
-    def _build_data_loaders(
-        self, cfg
-    ) -> Tuple[im_gens.Generator, im_gens.Generator]:
-        """Builds train and val data loaders.
-        """
+    def _build_data_loaders(self, cfg) -> Tuple[im_gens.Generator, im_gens.Generator]:
+        """Builds train and val data loaders."""
         train_loader = build_loader(
             cfg,
             dataset_names=cfg.TRAIN_DATASET,

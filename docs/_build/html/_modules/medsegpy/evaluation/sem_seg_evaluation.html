@@ -1,38 +1,52 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html4" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>medsegpy.evaluation.sem_seg_evaluation &mdash; MedSegPy 0.0.1 documentation</title>
   
 
   
-  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
   
   
 
   
-  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../../../',
+              VERSION:'0.0.1',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
         <script type="text/javascript" src="../../../_static/jquery.js"></script>
         <script type="text/javascript" src="../../../_static/underscore.js"></script>
         <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
 </head>
@@ -75,6 +89,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -83,13 +98,14 @@
             
             
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/index.html">User Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../modules/index.html">API Documentation</a></li>
 </ul>
 
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -124,11 +140,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../../index.html">Module code</a> &raquo;</li>
         
@@ -148,24 +166,25 @@
            <div itemprop="articleBody">
             
   <h1>Source code for medsegpy.evaluation.sem_seg_evaluation</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span></span><span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">time</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">h5py</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">fvcore.common.file_io</span> <span class="k">import</span> <span class="n">PathManager</span>
+<span class="kn">from</span> <span class="nn">fvcore.common.file_io</span> <span class="kn">import</span> <span class="n">PathManager</span>
 
-<span class="kn">from</span> <span class="nn">medsegpy.config</span> <span class="k">import</span> <span class="n">Config</span>
-<span class="kn">from</span> <span class="nn">medsegpy.data</span> <span class="k">import</span> <span class="n">MetadataCatalog</span>
+<span class="kn">from</span> <span class="nn">medsegpy.config</span> <span class="kn">import</span> <span class="n">Config</span>
+<span class="kn">from</span> <span class="nn">medsegpy.data</span> <span class="kn">import</span> <span class="n">MetadataCatalog</span>
 
-<span class="kn">from</span> <span class="nn">.build</span> <span class="k">import</span> <span class="n">EVALUATOR_REGISTRY</span>
-<span class="kn">from</span> <span class="nn">.evaluator</span> <span class="k">import</span> <span class="n">DatasetEvaluator</span>
-<span class="kn">from</span> <span class="nn">.metrics</span> <span class="k">import</span> <span class="n">Metric</span><span class="p">,</span> <span class="n">MetricsManager</span>
+<span class="kn">from</span> <span class="nn">.build</span> <span class="kn">import</span> <span class="n">EVALUATOR_REGISTRY</span>
+<span class="kn">from</span> <span class="nn">.evaluator</span> <span class="kn">import</span> <span class="n">DatasetEvaluator</span>
+<span class="kn">from</span> <span class="nn">.metrics</span> <span class="kn">import</span> <span class="n">Metric</span><span class="p">,</span> <span class="n">MetricsManager</span>
 
 
-<span class="k">def</span> <span class="nf">get_stats_string</span><span class="p">(</span><span class="n">manager</span><span class="p">:</span> <span class="n">MetricsManager</span><span class="p">):</span>
+<div class="viewcode-block" id="get_stats_string"><a class="viewcode-back" href="../../../modules/evaluation.html#medsegpy.evaluation.sem_seg_evaluation.get_stats_string">[docs]</a><span class="k">def</span> <span class="nf">get_stats_string</span><span class="p">(</span><span class="n">manager</span><span class="p">:</span> <span class="n">MetricsManager</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Returns formatted metrics manager summary string.</span>
 
 <span class="sd">    Args:</span>
@@ -183,16 +202,16 @@
         <span class="s2">&quot;</span><span class="si">{:0.2f}</span><span class="s2"> +/- </span><span class="si">{:0.2f}</span><span class="s2"> seconds.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">inference_runtimes</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">inference_runtimes</span><span class="p">)</span>
         <span class="p">)</span>
-    <span class="p">)</span>
+    <span class="p">)</span></div>
     <span class="k">return</span> <span class="n">s</span>
 
 
-<div class="viewcode-block" id="SemSegEvaluator"><a class="viewcode-back" href="../../../modules/evaluation.html#medsegpy.evaluation.SemSegEvaluator">[docs]</a><span class="nd">@EVALUATOR_REGISTRY</span><span class="o">.</span><span class="n">register</span><span class="p">()</span>
+<div class="viewcode-block" id="SemSegEvaluator"><a class="viewcode-back" href="../../../modules/evaluation.html#medsegpy.evaluation.sem_seg_evaluation.SemSegEvaluator">[docs]</a><span class="nd">@EVALUATOR_REGISTRY</span><span class="o">.</span><span class="n">register</span><span class="p">()</span>
 <span class="k">class</span> <span class="nc">SemSegEvaluator</span><span class="p">(</span><span class="n">DatasetEvaluator</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Evaluator for semantic segmentation-related tasks.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="SemSegEvaluator.__init__"><a class="viewcode-back" href="../../../modules/evaluation.html#medsegpy.evaluation.SemSegEvaluator.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+<div class="viewcode-block" id="SemSegEvaluator.__init__"><a class="viewcode-back" href="../../../modules/evaluation.html#medsegpy.evaluation.sem_seg_evaluation.SemSegEvaluator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">dataset_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">cfg</span><span class="p">:</span> <span class="n">Config</span><span class="p">,</span>
@@ -245,22 +264,22 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_save_raw_data</span> <span class="o">=</span> <span class="n">save_raw_data</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">stream_evaluation</span> <span class="o">=</span> <span class="n">stream_evaluation</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_output_activation</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">LOSS</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_output_includes_background</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">INCLUDE_BACKGROUND</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_output_activation</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">LOSS</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_output_includes_background</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">INCLUDE_BACKGROUND</span>
 
     <span class="k">def</span> <span class="nf">_get_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Metric</span><span class="p">]]:</span>
         <span class="sd">&quot;&quot;&quot;&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">TEST_METRICS</span>
 
-<div class="viewcode-block" id="SemSegEvaluator.reset"><a class="viewcode-back" href="../../../modules/evaluation.html#medsegpy.evaluation.SemSegEvaluator.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_metrics_manager</span> <span class="o">=</span> <span class="n">MetricsManager</span><span class="p">(</span>
             <span class="n">class_names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_categories</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_metrics</span><span class="p">()</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_predictions</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_scan_cnt</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_results_str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_results_str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
 
-<div class="viewcode-block" id="SemSegEvaluator.process"><a class="viewcode-back" href="../../../modules/evaluation.html#medsegpy.evaluation.SemSegEvaluator.process">[docs]</a>    <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">):</span>
+<div class="viewcode-block" id="SemSegEvaluator.process"><a class="viewcode-back" href="../../../modules/evaluation.html#medsegpy.evaluation.sem_seg_evaluation.SemSegEvaluator.process">[docs]</a>    <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        See :class:`DatasetEvaluator` in evaluator.py</span>
 <span class="sd">        for argument details.</span>
@@ -269,6 +288,10 @@
         <span class="n">includes_bg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_includes_background</span>
 
         <span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">output</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">):</span>
+            <span class="c1"># Copy because we may modify below</span>
+            <span class="nb">input</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+
             <span class="n">y_pred</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="s2">&quot;y_pred&quot;</span><span class="p">]</span>
 
             <span class="k">if</span> <span class="n">output_activation</span> <span class="o">==</span> <span class="s2">&quot;sigmoid&quot;</span><span class="p">:</span>
@@ -291,20 +314,20 @@
                 <span class="n">y_true</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="s2">&quot;y_true&quot;</span><span class="p">][</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">:]</span>
                 <span class="n">y_pred</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="s2">&quot;y_pred&quot;</span><span class="p">][</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">:]</span>
                 <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">:]</span>
-                <span class="k">if</span> <span class="n">y_true</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
-                    <span class="n">y_true</span> <span class="o">=</span> <span class="n">y_true</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
-                    <span class="n">y_pred</span> <span class="o">=</span> <span class="n">y_pred</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
-                    <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+                <span class="c1"># if y_true.ndim == 3:</span>
+                <span class="c1">#     y_true = y_true[..., np.newaxis]</span>
+                <span class="c1">#     y_pred = y_pred[..., np.newaxis]</span>
+                <span class="c1">#     labels = labels[..., np.newaxis]</span>
                 <span class="n">output</span><span class="p">[</span><span class="s2">&quot;y_true&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">y_true</span>
                 <span class="n">output</span><span class="p">[</span><span class="s2">&quot;y_pred&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">y_pred</span>
 
             <span class="n">time_elapsed</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="s2">&quot;time_elapsed&quot;</span><span class="p">]</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream_evaluation</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">eval_single_scan</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">time_elapsed</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_predictions</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">input</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">time_elapsed</span><span class="p">))</span></div>
+            <span class="k">else</span><span class="p">:</span></div>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_predictions</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">input</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">time_elapsed</span><span class="p">))</span>
 
-<div class="viewcode-block" id="SemSegEvaluator.eval_single_scan"><a class="viewcode-back" href="../../../modules/evaluation.html#medsegpy.evaluation.SemSegEvaluator.eval_single_scan">[docs]</a>    <span class="k">def</span> <span class="nf">eval_single_scan</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">time_elapsed</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">eval_single_scan</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">time_elapsed</span><span class="p">):</span>
         <span class="n">metrics_manager</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metrics_manager</span>
         <span class="n">spacing</span> <span class="o">=</span> <span class="p">(</span>
             <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;scan_spacing&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="s2">&quot;scan_spacing&quot;</span> <span class="ow">in</span> <span class="nb">input</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">spacing</span>
@@ -320,10 +343,11 @@
         <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="nb">input</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">])</span>
 
         <span class="n">metrics_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;spacing&quot;</span><span class="p">:</span> <span class="n">spacing</span><span class="p">}</span> <span class="k">if</span> <span class="n">spacing</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{}</span>
+
         <span class="n">summary</span> <span class="o">=</span> <span class="n">metrics_manager</span><span class="p">(</span>
             <span class="n">scan_id</span><span class="p">,</span>
-            <span class="n">y_true</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">])),</span>
-            <span class="n">y_pred</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">])),</span>
+            <span class="n">y_true</span><span class="o">=</span><span class="n">y_true</span><span class="p">,</span>
+            <span class="n">y_pred</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
             <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
             <span class="n">runtime</span><span class="o">=</span><span class="n">time_elapsed</span><span class="p">,</span>
             <span class="o">**</span><span class="n">metrics_kwargs</span><span class="p">,</span>
@@ -339,9 +363,9 @@
             <span class="n">save_name</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2">.pred&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="n">scan_id</span><span class="p">)</span>
             <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">save_name</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">h5f</span><span class="p">:</span>
                 <span class="n">h5f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;probs&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">output</span><span class="p">[</span><span class="s2">&quot;y_pred&quot;</span><span class="p">])</span>
-                <span class="n">h5f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;labels&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">labels</span><span class="p">)</span></div>
+                <span class="n">h5f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;labels&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">labels</span><span class="p">)</span>
 
-<div class="viewcode-block" id="SemSegEvaluator.evaluate"><a class="viewcode-back" href="../../../modules/evaluation.html#medsegpy.evaluation.SemSegEvaluator.evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="SemSegEvaluator.evaluate"><a class="viewcode-back" href="../../../modules/evaluation.html#medsegpy.evaluation.sem_seg_evaluation.SemSegEvaluator.evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Evaluates popular medical segmentation metrics specified in config.</span>
 
 <span class="sd">        * Evaluate on popular medical segmentation metrics. For supported</span>
@@ -382,28 +406,41 @@
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">stats_string</span><span class="p">)</span>
 
-        <span class="c1"># TODO: Convert segmentation metrics to valid results matrix.</span>
-        <span class="k">return</span> <span class="p">{}</span></div></div>
+        <span class="c1"># df = self._metrics_manager.data_frame()</span>
+        <span class="c1"># df.to_csv(os.path.join(output_dir, &quot;metrics.csv&quot;), header=True, index=True)  # noqa</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metrics_manager</span><span class="o">.</span><span class="n">data</span><span class="p">()[</span><span class="s2">&quot;scan_data&quot;</span><span class="p">]</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s2">&quot;metrics.csv&quot;</span><span class="p">),</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+
+        <span class="c1"># TODO: Convert segmentation metrics to valid results matrix.</span></div></div>
+        <span class="k">return</span> <span class="p">{}</span>
 </pre></div>
 
            </div>
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2020, Arjun Desai
+        &#169; Copyright 2018-2021, Arjun Desai.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -411,7 +448,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {
