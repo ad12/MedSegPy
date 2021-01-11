@@ -3,20 +3,19 @@
 If you want to use a custom dataset while also reusing medsegpy's data loaders,
 you will need to
 
-1. Optionally perform data augmentation
+1. Perform data augmentation (optional)
 2. Store data in a medsegpy friendly way.
 3. Register metadata for you dataset (i.e., tell medsegpy how to obtain your dataset).
 
-Next, we explain the above two concepts in details.
-
 ### Data Augmentation
-Volume-specific data augmentation can optionally be done outside of medsegpy.
-If augmentations are used, define different augmentations or series of augmentations with a unique numeric identifier. This identifier will be the augmentation number for different scans (see below).
+Currently, data augmentation is not done by default in medsegpy dataloaders. Data augmentation can optionally be done outside of medsegpy. If augmentations are used, define different augmentations or series of augmentations with a unique numeric identifier. This identifier will be the augmentation number for different scans (see below).
 
 Note that augmentation should only be done on the training data. If augmentations are done on the validation and testing data, medsegpy functionality cannot be guaranteed.
 
 ### Data format
-Currently, data can be stored as 2D slices or 3D volumes in the h5df format.
+Data can be stored as 2D slices or 3D volumes in the hdf5 format. All specifications detailed
+below are for compatibility with existing DataLoaders in MedSegPy. If you are designing a
+custom dataloader, you may be able to deviate from these specifications.
 
 #### 2D Data
 Many medical imaging modalities acquire single-slice acquisitions (CT, Xray, etc.).
@@ -41,6 +40,10 @@ Data stored in the 2D format must follow a specific naming convention:
 - `0123456_V00-Aug04_001`: Subject 0123456, Timepoint 0, Augmentation 4, Slice 1
 - `0123456_V00-Aug00_999`: Subject 0123456, Timepoint 0, Augmentation 4, Slice 999
 
+**Compatible DataLoaders**:
+- [`DefaultDataLoader`](../modules/engine.html#medsegpy.data.data_loader.DefaultDataLoader)
+- [`S25dDataLoader`](../modules/engine.html#medsegpy.data.data_loader.S25dDataLoader)
+
 The augmentation number is used to keep track of what augmentations are done. 
 When naming files, note that slices should start at slice 1.
 
@@ -58,21 +61,7 @@ dataset `data`, which contains a `HxWx1xC` shaped binary array corresponding to 
 For example, `0123456_V00-Aug00_999.seg` contains segmentations for slice 999 from the volume `0123456_V00-Aug00`.
 
 #### 3D Data
-Data stored in the 3D format must follow a slightly different naming convention:
-  * Subject id: 7 digits
-  * Timepoint: 2 digits
-
-**Readable format:** `SubjectID_Timepoint`
-
-**String format:** `%07d_V%02d`
-
-**Regex:** `([\d]+)_V([\d]+)`
-
-Unlike the 2D files, where image and segmentation data are separated into different files,
-3D data will have both in a single h5df file under different keys: `volume` for image data and `seg`
-for segmentation masks.
-
-We are working on adding the augmentation number (`Aug` flag) for parsing in 3D data!
+Unlike the 2D files, 3D files do not have a particular naming convention. Additionally, 3D files will have both image and segmentation data in a single hdf5 file under different keys: `volume` for image data and `seg` for segmentation masks.
 
 #### Collating segmentations
 Segmentations can also be collated (combined) to form segmentations for
@@ -81,7 +70,7 @@ at index `0` and `2` in the segmentation file, to segment the both classes as a 
 tuple `(0, 2)` as the index to segment.
 
 #### How h5 files are read
-Below are examples detailing the h5df structure for 2D and 3D data.
+Below are examples detailing the hdf5 structure for 2D and 3D data.
 
 ```python
 import h5py

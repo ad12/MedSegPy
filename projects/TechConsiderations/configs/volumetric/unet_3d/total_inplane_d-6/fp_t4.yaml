@@ -1,0 +1,5 @@
+_BASE_: "../template.yaml"
+IMG_SIZE: (384, 384, 4, 1)
+IMG_STRIDE: (384, 384, 4)
+TRAIN_BATCH_SIZE: 4
+OUTPUT_DIR: "tcv3://volumetric/unet_3d/total_inplane_d-6/fp_t-4"

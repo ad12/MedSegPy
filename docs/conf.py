@@ -38,14 +38,14 @@ except ImportError:
     for m in []:
         sys.modules[m] = mock.Mock(name=m)
 
-for m in ["cv2", "scipy", "scipy.stats"]:
+for m in ["cv2", "scipy", "scipy.stats", "scipy.special"]:
     sys.modules[m] = mock.Mock(name=m)
 sys.modules["cv2"].__version__ = "3.4"
 
 import medsegpy  # isort: skip
 
 project = "MedSegPy"
-copyright = "2020, Arjun Desai"
+copyright = "2018-2021, Arjun Desai"
 author = "Arjun Desai"
 
 version = medsegpy.__version__

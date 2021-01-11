@@ -10,6 +10,7 @@ from collections import defaultdict
 from typing import Dict, List, Sequence
 
 import h5py
+import keras.backend as K
 import numpy as np
 from fvcore.common.registry import Registry
 from keras import utils as k_utils
@@ -17,6 +18,7 @@ from tqdm import tqdm
 
 from medsegpy.config import Config
 from medsegpy.modeling import Model
+from medsegpy.utils import env
 
 from .data_utils import add_background_labels, collect_mask, compute_patches
 from .transforms import apply_transform_gens, build_preprocessing
@@ -287,7 +289,10 @@ class DefaultDataLoader(DataLoader):
             images.append(image)
             masks.append(mask)
 
-        return np.stack(images, axis=0), np.stack(masks, axis=0)
+        return (
+            np.stack(images, axis=0).astype(K.floatx()),
+            np.stack(masks, axis=0).astype(K.floatx()),
+        )
 
     def _preprocess(self, inputs: np.ndarray, outputs: np.ndarray):
         img, transforms = apply_transform_gens(self._transform_gen, inputs)
@@ -350,12 +355,23 @@ class DefaultDataLoader(DataLoader):
             self._dataset_dicts = scan_to_dict_mapping[scan_id]
 
             start = time.perf_counter()
-            x, y, preds = model.inference_generator(
-                self,
-                workers=workers,
-                use_multiprocessing=use_multiprocessing,
-                **kwargs
-            )
+            if not isinstance(model, Model):
+                if not env.is_tf2():
+                    raise ValueError("model must be a medsegpy.modeling.model.Model for TF1.0")
+                x, y, preds = Model.inference_generator_static(
+                    model,
+                    self,
+                    workers=workers,
+                    use_multiprocessing=use_multiprocessing,
+                    **kwargs
+                )
+            else:
+                x, y, preds = model.inference_generator(
+                    self,
+                    workers=workers,
+                    use_multiprocessing=use_multiprocessing,
+                    **kwargs
+                )
             time_elapsed = time.perf_counter() - start
 
             x, y, preds = self._restructure_data((x, y, preds))
@@ -442,6 +458,8 @@ class PatchDataLoader(DefaultDataLoader):
             patches = compute_patches(
                 dd["image_size"], self._patch_size, pad_size, stride
             )
+            if len(patches) == 0:
+                logger.warn(f"Dropping {dd['scan_id']} - no patches found.")
             for patch, pad in patches:
                 dataset_dict = dd.copy()
                 dataset_dict.update({"_patch": patch, "_pad": pad})
@@ -469,7 +487,7 @@ class PatchDataLoader(DefaultDataLoader):
             )
 
     def __del__(self):
-        if self._f is not None:
+        if hasattr(self, "_f") and self._f is not None:
             self._f.close()
 
     def __getitem__(self, idx):
@@ -514,7 +532,7 @@ class PatchDataLoader(DefaultDataLoader):
         }
         return cache
 
-    def _load_patch(self, dataset_dict, skip_patch: bool = False):
+    def _load_patch(self, dataset_dict, skip_patch: bool = False, img_key=None, seg_key=None):
         image_file = dataset_dict["file_name"]
         sem_seg_file = dataset_dict.get("sem_seg_file", None)
         patch = Ellipsis if skip_patch else dataset_dict["_patch"]
@@ -522,8 +540,10 @@ class PatchDataLoader(DefaultDataLoader):
         mask = None
 
         is_img_seg_file_same = image_file == sem_seg_file
-        seg_key = "seg" if is_img_seg_file_same else "data"
-        img_key = "volume" if is_img_seg_file_same else "data"
+        if seg_key is None:
+            seg_key = "seg" if is_img_seg_file_same else "data"
+        if img_key is None:
+            img_key = "volume" if is_img_seg_file_same else "data"
 
         # Load data from one h5 file if self._use_singlefile
         if not self._use_singlefile:
@@ -602,7 +622,11 @@ class PatchDataLoader(DefaultDataLoader):
 
         for idx, c in enumerate(coords):
             for vol_id in range(len(new_vols)):
-                new_vols[vol_id][c] = vols_patched[vol_id][idx]
+                # Hacky solution to handle extra axis dimension, if exists.
+                x = vols_patched[vol_id][idx]
+                if x.ndim == new_vols[vol_id][c].ndim - 1:
+                    x = x[..., np.newaxis, :]
+                new_vols[vol_id][c] = x
 
         return tuple(new_vols)
 

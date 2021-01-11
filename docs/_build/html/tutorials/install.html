@@ -1,38 +1,52 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html4" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>Installation &mdash; MedSegPy 0.0.1 documentation</title>
   
 
   
-  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
   
   
 
   
-  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../',
+              VERSION:'0.0.1',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
         <script type="text/javascript" src="../_static/jquery.js"></script>
         <script type="text/javascript" src="../_static/underscore.js"></script>
         <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Getting Started with MedSegPy" href="getting_started.html" />
@@ -77,6 +91,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -89,7 +104,8 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Installation</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#requirements">Requirements</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#build-medsegpy-from-source">Build MedSegPy from Source</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#configuring-output-paths-optional">Configuring Output Paths (optional)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-by-step-guide">Step-by-Step Guide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#configuring-paths-optional">Configuring Paths (optional)</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="getting_started.html">Getting Started with MedSegPy</a></li>
@@ -108,6 +124,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -142,11 +159,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../index.html">Docs</a> &raquo;</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="index.html">Tutorials</a> &raquo;</li>
         
@@ -155,7 +174,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="../_sources/tutorials/install.md.txt" rel="nofollow"> View page source</a>
           
         
@@ -170,29 +189,29 @@
            <div itemprop="articleBody">
             
   <div class="section" id="installation">
-<span id="installation"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
-<p>We recommend using the Anaconda virtual environment to control package
-visibility. For a detailed list of requirements, see
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<p>We recommend using a virtual environment (Anaconda, virtualenv) to to control
+package visibility. For a detailed list of requirements, see
 <a class="reference external" href="https://github.com/ad12/MedSegPy/blob/master/environment.yml">environment.yml</a>.</p>
-<p><em>Disclaimer</em>: The installation process has not been verified on cuda
-versions &gt;9.0.</p>
 <div class="section" id="requirements">
-<span id="requirements"></span><h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
+<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><p>Linux or macOS with Python ≥ 3.6</p></li>
-<li><p>keras &gt;=2.1.6,&lt;2.2.0</p></li>
-<li><p>tensorflow-gpu &gt;=1.8.0,&lt;2.0.0</p></li>
-<li><p>graphviz (download via <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">install</span> <span class="pre">graphviz</span></code>)</p></li>
+<li>Python ≥3.6</li>
+<li>tensorflow(-gpu) ≥1.8.0</li>
+<li>keras ≥2.1.6</li>
+<li>pydot (download via <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">install</span> <span class="pre">pydot</span></code>)</li>
+<li>graphviz (download via <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">install</span> <span class="pre">python-graphviz</span></code>)</li>
 </ul>
-<p>Note that the TensorFlow version 1.8.0 is used by default and is
-is prebuilt with cuda9.0. For other cuda versions, download
-a suitable TensorFlow version. Tensorflow v1 binaries are not build
-with cuda 10.1. To use cuda 10.1, you will have to build
-tensorflow from source. If you do not have a gpu, replace the
-<code class="docutils literal notranslate"><span class="pre">tensorflow-gpu</span></code> package with <code class="docutils literal notranslate"><span class="pre">tensorflow</span></code>.</p>
+<p>MedSegPy supports both TensorFlow 1 and 2. For gpu
+tensorflow versions, compatible cuda drivers and toolkits
+must be installed. If you do not have a gpu or you are using
+<code class="docutils literal notranslate"><span class="pre">tensorflow&gt;=2.0</span></code>, replace the <code class="docutils literal notranslate"><span class="pre">tensorflow-gpu</span></code> package with <code class="docutils literal notranslate"><span class="pre">tensorflow</span></code>.
+More instructions about TensorFlow cuda compatibility and installation
+can be found <a class="reference external" href="https://www.tensorflow.org/install/source#gpu">here</a>.</p>
+<p>Install these requirements prior to installing MedSegPy.</p>
 </div>
 <div class="section" id="build-medsegpy-from-source">
-<span id="build-medsegpy-from-source"></span><h2>Build MedSegPy from Source<a class="headerlink" href="#build-medsegpy-from-source" title="Permalink to this headline">¶</a></h2>
+<h2>Build MedSegPy from Source<a class="headerlink" href="#build-medsegpy-from-source" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python -m pip install <span class="s1">&#39;git+https://github.com/ad12/MedSegPy.git&#39;</span>
 <span class="c1"># (add --user if you don&#39;t have permission)</span>
 
@@ -201,18 +220,60 @@ git clone https://github.com/ad12/MedSegPy.git
 <span class="nb">cd</span> MedSegPy <span class="o">&amp;&amp;</span> python -m pip install -e .
 </pre></div>
 </div>
-<p>You often need to rebuild medsegpy after reinstalling TensorFlow and/or Keras.</p>
+<p>You may need to rebuild medsegpy after reinstalling TensorFlow and/or Keras.</p>
 </div>
-<div class="section" id="configuring-output-paths-optional">
-<span id="configuring-output-paths-optional"></span><h2>Configuring Output Paths (optional)<a class="headerlink" href="#configuring-output-paths-optional" title="Permalink to this headline">¶</a></h2>
-<p>When running multiple experiments, you may want to set a default prefix for storing
-results related to MedSegPy.</p>
-<p>As a shortcut, we designate the prefix <code class="docutils literal notranslate"><span class="pre">results://</span></code> to point
-to a result directory of your choosing. This directory is determined by the user and the machine/cluster name.
-The paths in the config <code class="docutils literal notranslate"><span class="pre">OUTPUT_DIR</span></code> beginning with the prefix <code class="docutils literal notranslate"><span class="pre">results://</span></code> will be redirected under the
-<code class="docutils literal notranslate"><span class="pre">results</span></code> path.</p>
-<p>To register your username/cluster, see
-<a class="reference external" href="https://github.com/ad12/MedSegPy/blob/dev/medsegpy/utils/cluster.py">cluster.py</a>.</p>
+<div class="section" id="step-by-step-guide">
+<h2>Step-by-Step Guide<a class="headerlink" href="#step-by-step-guide" title="Permalink to this headline">¶</a></h2>
+<p>The following instructions install MedSegPy with Python 3.7,
+Tensorflow 2.3, and Keras 2.4 into an Anaconda environment.
+Note gpu use with Tensorflow 2.3 requires cuda toolkit 10.1.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create conda environment</span>
+conda create -n medsegpy_env <span class="nv">python</span><span class="o">=</span><span class="m">3</span>.7
+conda activate medsegpy_env
+
+<span class="c1"># Install tensorflow and keras dependencies.</span>
+pip install <span class="nv">tensorflow</span><span class="o">==</span><span class="m">2</span>.3.1 <span class="nv">keras</span><span class="o">==</span><span class="m">2</span>.4.3
+
+<span class="c1"># Install visualization dependencies</span>
+conda install pydot python-graphviz
+
+<span class="c1"># Install MedSegPy</span>
+git clone https://github.com/ad12/MedSegPy.git
+<span class="nb">cd</span> MedSegPy <span class="o">&amp;&amp;</span> python -m pip install -e .
+</pre></div>
+</div>
+</div>
+<div class="section" id="configuring-paths-optional">
+<h2>Configuring Paths (optional)<a class="headerlink" href="#configuring-paths-optional" title="Permalink to this headline">¶</a></h2>
+<p>There are two primary paths that MedSegPy uses: 1. dataset paths,
+the path to the directory holding the datasets, and 2. result paths,
+the path to the directory where results should be stored.</p>
+<p><em><strong>Builtin Dataset Paths</strong></em></p>
+<p>You can set the location for builtin datasets by
+export MEDSEGPY_DATASETS=/path/to/datasets. If left unset, the default
+is ./datasets relative to your current working directory.</p>
+<p><em><strong>Result Paths</strong></em></p>
+<p>Similarly, you can set the location for the results directory by
+export MEDSEGPY_RESULTS=/path/to/results. If left unset, the default
+is ./results relative to your current working directory.</p>
+<p>As a shortcut, we designate the prefix <code class="docutils literal notranslate"><span class="pre">&quot;results://&quot;</span></code>
+in any filepath to point to a result directory of your choosing.
+For example, <code class="docutils literal notranslate"><span class="pre">&quot;results://exp1&quot;</span></code> will resolve to the path
+<code class="docutils literal notranslate"><span class="pre">&quot;&lt;MEDSEGPY_RESULTS&gt;/exp1&quot;</span></code>.</p>
+<p>An example of how to do this in python (i.e. without export statements) is shown below:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;MEDSEGPY_DATASETS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;/path/to/datasets&quot;</span>
+<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;MEDSEGPY_RESULTS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;/path/to/results&quot;</span>
+
+<span class="kn">import</span> <span class="nn">medsegpy.utils</span>  <span class="c1"># import implicitly registers prefixes</span>
+<span class="kn">from</span> <span class="nn">fvcore.common.file_io</span> <span class="kn">import</span> <span class="n">PathManager</span>
+<span class="n">PathManager</span><span class="o">.</span><span class="n">get_local_path</span><span class="p">(</span><span class="s2">&quot;results://exp1&quot;</span><span class="p">)</span>  <span class="c1"># returns &quot;/path/to/results/exp1&quot;</span>
+</pre></div>
+</div>
+<p>You can also define your own prefixes to resolve by adding your own path handler.
+This is useful if you want to use the same script to run multiple projects. See fvcore’s
+<a class="reference external" href="https://github.com/facebookresearch/fvcore/blob/master/fvcore/common/file_io.py">fileio</a>
+for more information.</p>
 </div>
 </div>
 
@@ -221,29 +282,29 @@ The paths in the config <code class="docutils literal notranslate"><span class="
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="getting_started.html" class="btn btn-neutral float-right" title="Getting Started with MedSegPy" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="index.html" class="btn btn-neutral float-left" title="Tutorials" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="getting_started.html" class="btn btn-neutral float-right" title="Getting Started with MedSegPy" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="index.html" class="btn btn-neutral float-left" title="Tutorials" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2020, Arjun Desai
+        &#169; Copyright 2018-2021, Arjun Desai.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -251,7 +312,6 @@ The paths in the config <code class="docutils literal notranslate"><span class="
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

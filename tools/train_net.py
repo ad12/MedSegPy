@@ -13,11 +13,18 @@ other customizations, we suggest writing your own script. See `ct_train.py` for
 an example of how to extend to different use cases.
 """
 import os
+import warnings
 
 from medsegpy import config
 from medsegpy.engine.defaults import default_argument_parser, default_setup
 from medsegpy.engine.trainer import DefaultTrainer
 from medsegpy.modeling import Model, model_from_json
+from medsegpy.utils import env
+
+try:
+    import wandb
+except:
+    pass
 
 
 def setup(args):
@@ -32,6 +39,25 @@ def setup(args):
     cfg.merge_from_list(args.opts)
 
     default_setup(cfg, args)
+
+        # TODO: Add suppport for resume.
+    if env.supports_wandb():
+        # TODO: Add field for experiment name.
+        exp_name = ""
+        if not exp_name:
+            warnings.warn("EXP_NAME not specified. Defaulting to basename...")
+            exp_name = os.path.basename(cfg.OUTPUT_DIR)
+        wandb.init(
+            project="tech-considerations",
+            name=exp_name,
+            config=cfg,
+            sync_tensorboard=False,
+            job_type="training",
+            dir=cfg.OUTPUT_DIR,
+            entity="arjundd",
+            notes=cfg.DESCRIPTION,
+        )
+
     return cfg
 
 
@@ -57,10 +83,15 @@ def main(args, trainer_cls: type = DefaultTrainer):
                 print(e)
         if model is None:
             model = trainer_cls.build_model(cfg)
+        if env.is_tf2():
+            model.run_eagerly = not args.non_eagerly
 
         return trainer_cls.test(cfg, model)
 
-    trainer = trainer_cls(cfg)
+    # Configure Keras to run non-eagerly instead of disabling eager mode in tensorflow.
+    # Allows larger batch size for some reason
+    extra_args = {"run_eagerly": not args.non_eagerly} if env.is_tf2() else {}
+    trainer = trainer_cls(cfg, **extra_args)
     return trainer.train()
 
 

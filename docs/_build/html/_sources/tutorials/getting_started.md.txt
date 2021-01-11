@@ -25,7 +25,7 @@ For CPU training, use `--num-gpus 0`, though this is not recommended.
 To evaluate a model's performance, use
 ```
 python tools/train_net.py \
-	--config-file /PATH/TO/SAVE/DIR/config.ini \
+	--config-file /PATH/TO/SAVE/DIR/config.yaml \
 	--eval-only TEST_WEIGHT_PATH /path/to/checkpoint_file
 ```
 For more options, see `python tools/train_net.py -h`.

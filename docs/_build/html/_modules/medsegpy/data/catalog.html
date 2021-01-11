@@ -1,38 +1,52 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html4" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>medsegpy.data.catalog &mdash; MedSegPy 0.0.1 documentation</title>
   
 
   
-  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
   
   
 
   
-  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../../../',
+              VERSION:'0.0.1',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
         <script type="text/javascript" src="../../../_static/jquery.js"></script>
         <script type="text/javascript" src="../../../_static/underscore.js"></script>
         <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
 </head>
@@ -75,6 +89,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -83,13 +98,14 @@
             
             
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/index.html">User Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../modules/index.html">API Documentation</a></li>
 </ul>
 
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -124,11 +140,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../../index.html">Module code</a> &raquo;</li>
         
@@ -159,14 +177,14 @@
 <span class="kn">import</span> <span class="nn">copy</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">types</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">List</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
 
-<span class="kn">from</span> <span class="nn">medsegpy.utils.logger</span> <span class="k">import</span> <span class="n">log_first_n</span>
+<span class="kn">from</span> <span class="nn">medsegpy.utils.logger</span> <span class="kn">import</span> <span class="n">log_first_n</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;DatasetCatalog&quot;</span><span class="p">,</span> <span class="s2">&quot;MetadataCatalog&quot;</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="DatasetCatalog"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.DatasetCatalog">[docs]</a><span class="k">class</span> <span class="nc">DatasetCatalog</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="DatasetCatalog"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.catalog.DatasetCatalog">[docs]</a><span class="k">class</span> <span class="nc">DatasetCatalog</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A catalog that stores information about the datasets and how to obtain them.</span>
 
@@ -185,7 +203,7 @@
 
     <span class="n">_REGISTERED</span> <span class="o">=</span> <span class="p">{}</span>
 
-<div class="viewcode-block" id="DatasetCatalog.register"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.DatasetCatalog.register">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="DatasetCatalog.register"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.catalog.DatasetCatalog.register">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">register</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
@@ -199,10 +217,10 @@
         <span class="p">),</span> <span class="s2">&quot;You must register a function with `DatasetCatalog.register`!&quot;</span>
         <span class="k">assert</span> <span class="p">(</span>
             <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">DatasetCatalog</span><span class="o">.</span><span class="n">_REGISTERED</span>
-        <span class="p">),</span> <span class="s2">&quot;Dataset &#39;</span><span class="si">{}</span><span class="s2">&#39; is already registered!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-        <span class="n">DatasetCatalog</span><span class="o">.</span><span class="n">_REGISTERED</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">func</span></div>
+        <span class="p">),</span> <span class="s2">&quot;Dataset &#39;</span><span class="si">{}</span><span class="s2">&#39; is already registered!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">)</span></div>
+        <span class="n">DatasetCatalog</span><span class="o">.</span><span class="n">_REGISTERED</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">func</span>
 
-<div class="viewcode-block" id="DatasetCatalog.get"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.DatasetCatalog.get">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="DatasetCatalog.get"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.catalog.DatasetCatalog.get">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Call the registered function and return its results.</span>
@@ -222,25 +240,25 @@
                 <span class="s2">&quot;Available datasets are: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                     <span class="n">name</span><span class="p">,</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DatasetCatalog</span><span class="o">.</span><span class="n">_REGISTERED</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
                 <span class="p">)</span>
-            <span class="p">)</span>
-        <span class="k">return</span> <span class="n">f</span><span class="p">()</span></div>
+            <span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">f</span><span class="p">()</span>
 
-<div class="viewcode-block" id="DatasetCatalog.list"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.DatasetCatalog.list">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="DatasetCatalog.list"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.catalog.DatasetCatalog.list">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">list</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        List all registered datasets.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            list[str]</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">DatasetCatalog</span><span class="o">.</span><span class="n">_REGISTERED</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span></div>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">DatasetCatalog</span><span class="o">.</span><span class="n">_REGISTERED</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 
-<div class="viewcode-block" id="DatasetCatalog.clear"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.DatasetCatalog.clear">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="DatasetCatalog.clear"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.catalog.DatasetCatalog.clear">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">clear</span><span class="p">():</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Remove all registered dataset.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">DatasetCatalog</span><span class="o">.</span><span class="n">_REGISTERED</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div></div>
+<span class="sd">        &quot;&quot;&quot;</span></div></div>
+        <span class="n">DatasetCatalog</span><span class="o">.</span><span class="n">_REGISTERED</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
 
 
 <span class="k">class</span> <span class="nc">Metadata</span><span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">SimpleNamespace</span><span class="p">):</span>
@@ -267,7 +285,7 @@
 
     <span class="n">_RENAMED</span> <span class="o">=</span> <span class="p">{}</span>
 
-    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_RENAMED</span><span class="p">:</span>
             <span class="n">log_first_n</span><span class="p">(</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">,</span>
@@ -285,7 +303,7 @@
             <span class="p">)</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_RENAMED</span><span class="p">:</span>
             <span class="n">log_first_n</span><span class="p">(</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">,</span>
@@ -335,7 +353,7 @@
             <span class="k">return</span> <span class="n">default</span>
 
 
-<div class="viewcode-block" id="MetadataCatalog"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.MetadataCatalog">[docs]</a><span class="k">class</span> <span class="nc">MetadataCatalog</span><span class="p">:</span>
+<div class="viewcode-block" id="MetadataCatalog"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.catalog.MetadataCatalog">[docs]</a><span class="k">class</span> <span class="nc">MetadataCatalog</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    MetadataCatalog provides access to &quot;Metadata&quot; of a given dataset.</span>
 
@@ -350,7 +368,7 @@
 
     <span class="n">_NAME_TO_META</span> <span class="o">=</span> <span class="p">{}</span>
 
-<div class="viewcode-block" id="MetadataCatalog.get"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.MetadataCatalog.get">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="MetadataCatalog.get"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.catalog.MetadataCatalog.get">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
@@ -365,10 +383,10 @@
             <span class="n">ret</span> <span class="o">=</span> <span class="n">MetadataCatalog</span><span class="o">.</span><span class="n">_NAME_TO_META</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
             <span class="k">return</span> <span class="n">ret</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">m</span> <span class="o">=</span> <span class="n">MetadataCatalog</span><span class="o">.</span><span class="n">_NAME_TO_META</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">Metadata</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">m</span></div>
+            <span class="n">m</span> <span class="o">=</span> <span class="n">MetadataCatalog</span><span class="o">.</span><span class="n">_NAME_TO_META</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">Metadata</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
+            <span class="k">return</span> <span class="n">m</span>
 
-<div class="viewcode-block" id="MetadataCatalog.convert_path_to_dataset"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.MetadataCatalog.convert_path_to_dataset">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="MetadataCatalog.convert_path_to_dataset"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.catalog.MetadataCatalog.convert_path_to_dataset">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">convert_path_to_dataset</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Convert the dataset path to name for legacy code.</span>
 
@@ -378,28 +396,33 @@
             <span class="n">m</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;scan_root&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span> <span class="n">name</span>
             <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">MetadataCatalog</span><span class="o">.</span><span class="n">_NAME_TO_META</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
         <span class="p">}</span>
-        <span class="n">catalog</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">catalog</span><span class="p">[</span><span class="n">path</span><span class="p">]</span></div></div>
+        <span class="n">catalog</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="n">catalog</span><span class="p">[</span><span class="n">path</span><span class="p">]</span>
 </pre></div>
 
            </div>
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2020, Arjun Desai
+        &#169; Copyright 2018-2021, Arjun Desai.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -407,7 +430,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

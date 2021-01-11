@@ -55,7 +55,7 @@ class MultiClassOverlay(object):
         self.colormap = colormap
 
     def overlay(self, dirpath, volume: np.ndarray, logits: np.ndarray):
-        os.makedirs(dirpath, exist_ok=True)
+        # os.makedirs(dirpath, exist_ok=True)
         assert volume.ndim == 3, "Volume must be 3D array with shape HxWxD"
         assert logits.ndim == 4, "Labels must be 4D array with shape HxWxDxC"
 
@@ -69,7 +69,8 @@ class MultiClassOverlay(object):
 
             slice_name = "%03d.png" % (z + 1)
 
-            filepath = os.path.join(dirpath, slice_name)
+            # filepath = os.path.join(dirpath, slice_name)
+            filepath = None
             self._im_overlay(x_im, label_overlay, filepath)
 
     def _apply_colormap(self, labels: np.ndarray):
@@ -93,6 +94,107 @@ class MultiClassOverlay(object):
 
         if filepath:
             cv2.imwrite(filepath, overlap_img)
+
+
+class MultiClassOverlayNew(object):
+    """
+    Class to simplify overlaying images and labels.
+    """
+    def __init__(self, num_classes,
+                 color_palette=sns.color_palette('bright'),
+                 background_label=0,
+                 opacity=0.7):
+        """
+        Constructor
+        :param num_classes: Number of classes
+        Optional:
+        :param color_palette: list of RGB tuples to use for color. Default seaborn.color_palette('pastel').
+        :param background_label: Label to exclude for background. Default: 0.
+                                 To include background, set to None.
+        :param opacity: How transparent overlay should be (0-1). Default: 0.7
+        """
+        effective_num_classes = num_classes-1 if background_label is not None else num_classes
+        if len(color_palette) < effective_num_classes:
+            raise ValueError('Must provide at least %d colors' % effective_num_classes)
+
+        if opacity < 0 or opacity > 1:
+            raise ValueError('opacity must be between 0-1')
+
+        self.num_classes = num_classes
+        self.background_label = background_label
+        self.opacity = opacity
+
+        # set colormap
+        color_palette = color_palette
+        colormap = dict()
+        cp_ind = 0
+        for i in range(num_classes):
+            if i == background_label:
+                continue
+            cp_ind += 1
+            colormap[i] = color_palette[cp_ind]
+        self.colormap = colormap
+
+    def im_overlay(self, volume: np.ndarray, logits: np.ndarray, dirpath=None):
+        """
+        Overlay volume with labels.
+        :param volume:
+        :param logits:
+        :param dirpath:
+        :return:
+        """
+        if volume.ndim != 3:
+            raise ValueError("Volume must be 3D array with shape [Y, X, Z].")
+        if logits.ndim != 4:
+            raise ValueError("Logits must be 4D binary array with shape [Y, X, Z, classes].")
+
+        # Labels are argmax(logits) in the class dimension.
+        labels = self.__logits_to_labels(logits)
+        labels_colored = self.__apply_colormap(labels)
+
+        vol_rgb = np.zeros(volume.shape + (3, ))
+        for z in range(volume.shape[-1]):
+            x_im = volume[..., z]
+            label_overlay = labels_colored[..., z, :]
+
+            slice_name = '%03d.png' % (z+1)
+
+            filepath = os.path.join(check_and_create_dir(dirpath), slice_name) if dirpath is not None else None
+            im_rgb = self.__im_overlay(x_im, label_overlay, filepath)
+            vol_rgb[..., z, :] = im_rgb
+
+        return vol_rgb
+
+    def __logits_to_labels(self, logits: np.ndarray):
+        assert logits.ndim == 4, "Logits must be 4D binary array with shape [Y, X, Z, classes]"
+        logits = np.array(logits)
+        for i in range(0, logits.shape[-1]):
+            logits[..., i] *= (i+1)
+        return np.max(logits, axis=-1)
+
+    def __apply_colormap(self, labels: np.ndarray):
+        colormap = self.colormap
+        background_label = self.background_label
+
+        labels_colored = np.zeros(labels.shape + (3,))
+
+        for c in np.unique(labels):
+            if c == background_label:
+                continue
+
+            labels_colored[labels == c, :] = colormap[c]
+
+        return (labels_colored*255).astype(np.uint8)
+
+    def __im_overlay(self, x, c_label, filepath=None):
+        x_o = scale_img(np.squeeze(x))
+        x_rgb = np.stack([x_o, x_o, x_o], axis=-1).astype(np.uint8)
+        overlap_img = cv2.addWeighted(x_rgb, 1, c_label, self.opacity, 0)
+
+        if filepath:
+            cv2.imwrite(filepath, overlap_img)
+
+        return overlap_img.astype(np.uint8)
 
 
 def write_im_overlay(dir_path, xs, im_overlay, opacity=0.7):

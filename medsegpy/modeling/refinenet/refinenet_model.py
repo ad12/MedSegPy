@@ -1,6 +1,6 @@
 from keras.models import Model
 from keras.utils import plot_model
-from resnet import ResNet50
+#from resnet import ResNet50
 
 from medsegpy.modeling.refinenet.refine_module import refine_module
 
@@ -13,6 +13,7 @@ RESNET_INFO = {
 
 
 def refinenet_model(input_shape=None, backbone="resnet50"):
+    raise NotImplementedError("This is not supported on >TF2.0")
     info = RESNET_INFO[backbone]
     downsampling_layers = info["layers"]
     num_filters = info["num_filters"]

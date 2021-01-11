@@ -62,7 +62,7 @@ def add_background_labels(mask: np.ndarray, background_last=False):
 
 def compute_patches(
     img_size: Sequence[int],
-    patch_size: Sequence[int],
+    patch_size: Sequence[int] = None,
     pad_size: Union[int, Sequence[int]] = None,
     strides: Union[int, Sequence[int]] = None,
 ):
@@ -97,18 +97,23 @@ def compute_patches(
     assert len(img_size) == len(patch_size)
 
     if pad_size is None:
-        pad_size = [0] * len(img_size)
-    elif isinstance(pad_size, int):
+        pad_size = [None] * len(img_size)
+    if isinstance(pad_size, int):
         pad_size = [pad_size] * len(img_size)
     else:
         if len(pad_size) != len(img_size):
             raise ValueError(
                 "pad_size sequence must have same length as img_size"
             )
+        pad_size = [
+            patch_size[i] - img_size[i]
+            if p is None and img_size[i] < patch_size[i] else p
+            for i, p in enumerate(pad_size)
+        ]
         pad_size = [p if isinstance(p, int) else 0 for p in pad_size]
 
     is_pad_lt_patch = all(
-        (p is None) or (P is None and p is None) or p < P
+        (p == 0) or (P is None and p == 0) or p < P
         for p, P in zip(pad_size, patch_size)
     )
     if not is_pad_lt_patch:
@@ -123,7 +128,7 @@ def compute_patches(
     elif isinstance(strides, int):
         strides = [strides] * len(patch_size)
 
-    if any(P < s for s, P in zip(strides, patch_size)):
+    if any(P is not None and P < s for s, P in zip(strides, patch_size)):
         warnings.warn(
             "Found stride dimension ({}) larger than "
             "patch dimension ({}). "

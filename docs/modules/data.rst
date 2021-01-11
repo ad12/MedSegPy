@@ -1,23 +1,37 @@
-medsegpy.data package
+medsegpy.data
 =======================
 
-.. automodule:: medsegpy.data
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-medsegpy.data.datasets module
+medsegpy.data.build
 ---------------------------------------
-
-.. automodule:: medsegpy.data.datasets
+.. automodule:: medsegpy.data.build
     :members:
-    :undoc-members:
-    :show-inheritance:
+    :no-undoc-members:
 
-medsegpy.data.transforms module
+
+medsegpy.data.catalog
+---------------------------------------
+.. automodule:: medsegpy.data.catalog
+    :members:
+    :no-undoc-members:
+
+
+medsegpy.data.data_loader
+---------------------------------------
+.. automodule:: medsegpy.data.data_loader
+    :members:
+    :no-undoc-members:
+
+
+medsegpy.data.data_utils
+---------------------------------------
+.. automodule:: medsegpy.data.data_loader
+    :members:
+    :no-undoc-members:
+
+
+medsegpy.data.transforms
 ---------------------------------------
 
 .. automodule:: medsegpy.data.transforms
     :members:
-    :undoc-members:
-    :show-inheritance:
+    :no-undoc-members:

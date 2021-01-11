@@ -1,38 +1,52 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html4" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>Use Custom Dataloaders &mdash; MedSegPy 0.0.1 documentation</title>
   
 
   
-  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
   
   
 
   
-  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../',
+              VERSION:'0.0.1',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
         <script type="text/javascript" src="../_static/jquery.js"></script>
         <script type="text/javascript" src="../_static/underscore.js"></script>
         <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Use Models" href="models.html" />
@@ -77,6 +91,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -109,6 +124,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -143,11 +159,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../index.html">Docs</a> &raquo;</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="index.html">Tutorials</a> &raquo;</li>
         
@@ -156,7 +174,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="../_sources/tutorials/data_loading.md.txt" rel="nofollow"> View page source</a>
           
         
@@ -171,9 +189,9 @@
            <div itemprop="articleBody">
             
   <div class="section" id="use-custom-dataloaders">
-<span id="use-custom-dataloaders"></span><h1>Use Custom Dataloaders<a class="headerlink" href="#use-custom-dataloaders" title="Permalink to this headline">¶</a></h1>
+<h1>Use Custom Dataloaders<a class="headerlink" href="#use-custom-dataloaders" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="how-the-existing-dataloader-works">
-<span id="how-the-existing-dataloader-works"></span><h2>How the Existing Dataloader Works<a class="headerlink" href="#how-the-existing-dataloader-works" title="Permalink to this headline">¶</a></h2>
+<h2>How the Existing Dataloader Works<a class="headerlink" href="#how-the-existing-dataloader-works" title="Permalink to this headline">¶</a></h2>
 <p>MedSegPy contains a builtin data loading pipeline.
 It’s good to understand how it works, in case you need to write a custom one.</p>
 <p>MedSegPy provides an interface for loading and structuring data stored in
@@ -183,7 +201,7 @@ gathering multiple elements into a single element
 (multiple 2D slices -&gt; 3D volume). For example, if data from a 3D scan is
 saved slice-wise across different h5 files and we want to train using a
 3D network, we can use MedSegPy’s interface for gathering data from different
-files into a single volume (note this functionality is still being built).</p>
+files into a single volume.</p>
 <p>MedSegPy’s loading/structuring interface is defined by the
 <a class="reference external" href="../modules/data.html#medsegpy.data.data_loader.DataLoader"><code class="docutils literal notranslate"><span class="pre">DataLoader</span></code></a> abstract class.
 This class extends the keras
@@ -201,23 +219,23 @@ typically calculated per scan and restructuring data outside of the data loader 
 are typically used with <a class="reference external" href="https://keras.io/models/sequential/#predict_generator"><code class="docutils literal notranslate"><span class="pre">predict_generator</span></code></a>.
 In <code class="docutils literal notranslate"><span class="pre">inference</span></code>, the data loader does the following:</p>
 <ol class="simple">
-<li><p>It loads all dataset dictionaries corresponding to a given scan</p></li>
-<li><p>Structures data in these dictionaries based on the data loader’s defined structuring method.</p></li>
-<li><p>Runs inference on scan data</p></li>
-<li><p>Reformats scan data. Images/volumes will be of the shape <code class="docutils literal notranslate"><span class="pre">HxWx...</span></code>. Semantic segmentation
-masks and predictions will have shape <code class="docutils literal notranslate"><span class="pre">HxWx...xC</span></code>.</p></li>
-<li><p>Yields a dictionary of inputs and outputs</p></li>
+<li>It loads all dataset dictionaries corresponding to a given scan</li>
+<li>Structures data in these dictionaries based on the data loader’s defined structuring method.</li>
+<li>Runs inference on scan data</li>
+<li>Reformats scan data. Images/volumes will be of the shape <code class="docutils literal notranslate"><span class="pre">HxWx...</span></code>. Semantic segmentation
+masks and predictions will have shape <code class="docutils literal notranslate"><span class="pre">HxWx...xC</span></code>.</li>
+<li>Yields a dictionary of inputs and outputs</li>
 </ol>
 <p>This method continues to yield input and output data in the medsegpy format until data for all
 scans are yielded. For more information, see
 <a class="reference external" href="../modules/data.html#medsegpy.data.DataLoader">DataLoader</a>.</p>
 </div>
 <div class="section" id="dataloader-example">
-<span id="dataloader-example"></span><h2>Dataloader example<a class="headerlink" href="#dataloader-example" title="Permalink to this headline">¶</a></h2>
+<h2>Dataloader example<a class="headerlink" href="#dataloader-example" title="Permalink to this headline">¶</a></h2>
 <p>Below we describe loading data and training a model using the for
 OAI iMorphics 2D dataset, a dataset where 3D volumes are stored
 as 2D slices. For more information on acceptable dataset h5 files, see
-<a class="reference external" href="../tutorials/datasets.html">datasets</a>.</p>
+<a class="reference external" href="datasets.html">datasets</a>.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">DefaultDataLoader</span></code> handles both 2D single-slice scans
 and 3D scans stored as 2D slices. For more information on other dataloaders,
 see data loaders in <a class="reference external" href="../modules/data.html#medsegpy.data.DataLoader">medsegpy.data.data_loader</a>.</p>
@@ -230,6 +248,8 @@ see data loaders in <a class="reference external" href="../modules/data.html#med
 <span class="n">cfg</span><span class="o">.</span><span class="n">TRAIN_DATASET</span> <span class="o">=</span> <span class="s2">&quot;oai_2d_train&quot;</span>
 <span class="n">cfg</span><span class="o">.</span><span class="n">VAL_DATASET</span> <span class="o">=</span> <span class="s2">&quot;oai_2d_val&quot;</span>
 <span class="n">cfg</span><span class="o">.</span><span class="n">TEST_DATASET</span> <span class="o">=</span> <span class="s2">&quot;oai_2d_test&quot;</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">CATEGORIES</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="mi">3</span><span class="p">,</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="n">cfg</span><span class="o">.</span><span class="n">IMG_SIZE</span> <span class="o">=</span> <span class="p">(</span><span class="mi">384</span><span class="p">,</span> <span class="mi">384</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
 <span class="n">model</span> <span class="o">=</span> <span class="n">get_model</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
 <span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>  <span class="c1"># compile with optimizer, loss, metrics, etc.</span>
@@ -241,25 +261,25 @@ see data loaders in <a class="reference external" href="../modules/data.html#med
     <span class="n">cfg</span><span class="p">,</span> 
     <span class="n">cfg</span><span class="o">.</span><span class="n">TRAIN_DATASET</span><span class="p">,</span> 
     <span class="n">batch_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
-    <span class="n">is_test</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-    <span class="n">shuffle</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-    <span class="n">drop_last</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+    <span class="n">is_test</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">drop_last</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="n">val_loader</span> <span class="o">=</span> <span class="n">build_loader</span><span class="p">(</span>
     <span class="n">cfg</span><span class="p">,</span> 
     <span class="n">cfg</span><span class="o">.</span><span class="n">VAL_DATASET</span><span class="p">,</span> 
     <span class="n">batch_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
-    <span class="n">is_test</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-    <span class="n">shuffle</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-    <span class="n">drop_last</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+    <span class="n">is_test</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">drop_last</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="n">test_loader</span> <span class="o">=</span> <span class="n">build_loader</span><span class="p">(</span>
     <span class="n">cfg</span><span class="p">,</span> 
     <span class="n">cfg</span><span class="o">.</span><span class="n">TEST_DATASET</span><span class="p">,</span> 
     <span class="n">batch_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
-    <span class="n">is_test</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-    <span class="n">shuffle</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-    <span class="n">drop_last</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+    <span class="n">is_test</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">drop_last</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="c1"># Start training</span>
@@ -276,11 +296,11 @@ see data loaders in <a class="reference external" href="../modules/data.html#med
 </div>
 </div>
 <div class="section" id="write-a-custom-dataloader">
-<span id="write-a-custom-dataloader"></span><h2>Write a Custom Dataloader<a class="headerlink" href="#write-a-custom-dataloader" title="Permalink to this headline">¶</a></h2>
+<h2>Write a Custom Dataloader<a class="headerlink" href="#write-a-custom-dataloader" title="Permalink to this headline">¶</a></h2>
 <p>Coming soon!</p>
 </div>
 <div class="section" id="use-a-custom-dataloader">
-<span id="use-a-custom-dataloader"></span><h2>Use a Custom Dataloader<a class="headerlink" href="#use-a-custom-dataloader" title="Permalink to this headline">¶</a></h2>
+<h2>Use a Custom Dataloader<a class="headerlink" href="#use-a-custom-dataloader" title="Permalink to this headline">¶</a></h2>
 <p>If you use <a class="reference external" href="../modules/engine.html#medsegpy.engine.trainer.DefaultTrainer">DefaultTrainer</a>,
 you can overwrite its <code class="docutils literal notranslate"><span class="pre">_build_data_loaders</span></code> and <code class="docutils literal notranslate"><span class="pre">build_test_data_loader</span></code> methods to use your own dataloader.</p>
 <p>If you write your own training loop, you can also plug in your data loader easily.</p>
@@ -292,29 +312,29 @@ you can overwrite its <code class="docutils literal notranslate"><span class="pr
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="models.html" class="btn btn-neutral float-right" title="Use Models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="datasets.html" class="btn btn-neutral float-left" title="Use Custom Datasets" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="models.html" class="btn btn-neutral float-right" title="Use Models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="datasets.html" class="btn btn-neutral float-left" title="Use Custom Datasets" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2020, Arjun Desai
+        &#169; Copyright 2018-2021, Arjun Desai.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -322,7 +342,6 @@ you can overwrite its <code class="docutils literal notranslate"><span class="pr
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

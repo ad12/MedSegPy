@@ -13,7 +13,7 @@ gathering multiple elements into a single element
 (multiple 2D slices -> 3D volume). For example, if data from a 3D scan is
 saved slice-wise across different h5 files and we want to train using a
 3D network, we can use MedSegPy's interface for gathering data from different
-files into a single volume (note this functionality is still being built).
+files into a single volume.
 
 MedSegPy's loading/structuring interface is defined by the
 [`DataLoader`](../modules/data.html#medsegpy.data.data_loader.DataLoader) abstract class.
@@ -64,6 +64,8 @@ cfg.TAG = "DefaultDataLoader"  # Specify the data loader type
 cfg.TRAIN_DATASET = "oai_2d_train"
 cfg.VAL_DATASET = "oai_2d_val"
 cfg.TEST_DATASET = "oai_2d_test"
+cfg.CATEGORIES = (0, (1, 2), 3, (4, 5))
+cfg.IMG_SIZE = (384, 384, 1)
 
 model = get_model(cfg)
 model.compile(...)  # compile with optimizer, loss, metrics, etc.

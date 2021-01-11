@@ -1,0 +1,968 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html4" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>medsegpy.modeling.layers.attention &mdash; MedSegPy 0.0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../../../../',
+              VERSION:'0.0.1',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> MedSegPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/index.html">API Documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">MedSegPy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>medsegpy.modeling.layers.attention</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for medsegpy.modeling.layers.attention</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot; Attention Layers</span>
+
+<span class="sd">The following layers implement an attention gating module based on the</span>
+<span class="sd">paper &quot;Attention U-Net: Learning Where to Look For the Pancreas&quot;</span>
+<span class="sd">(Oktay et al.). The code below is based on a PyTorch implementation of</span>
+<span class="sd">this technique by the paper&#39;s authors:</span>
+
+<span class="sd">https://github.com/ozan-oktay/Attention-Gated-Networks/tree/a96edb72622274f6705097d70cfaa7f2bf818a5a</span>
+
+<span class="sd">Each layer has 2D and 3D versions. Only the 2D versions have been tested</span>
+<span class="sd">so far.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">backend</span> <span class="k">as</span> <span class="n">K</span>
+<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="n">BatchNormalization</span> <span class="k">as</span> <span class="n">BN</span>
+<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Concatenate</span><span class="p">,</span>
+    <span class="n">Conv2D</span><span class="p">,</span>
+    <span class="n">Conv3D</span><span class="p">,</span>
+    <span class="n">Layer</span><span class="p">,</span>
+    <span class="n">Multiply</span><span class="p">,</span>
+    <span class="n">UpSampling2D</span><span class="p">,</span>
+    <span class="n">UpSampling3D</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">_CreateGatingSignalNDim</span><span class="p">(</span><span class="n">Layer</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dimension</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">out_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">kernel_size</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
+        <span class="n">kernel_initializer</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">],</span>
+        <span class="n">activation</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">add_batchnorm</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This layer creates the first gating signal for attention based on</span>
+<span class="sd">        a feature map. This feature map should contain contextual information</span>
+<span class="sd">        that will help the network focus on important regions in the image.</span>
+<span class="sd">        In the paper, the feature map chosen for a U-Net is the coarsest</span>
+<span class="sd">        feature map at end of the encoding arch.</span>
+
+<span class="sd">        The layer performs a simple operation to transform the feature map</span>
+<span class="sd">        into the first gating signal:</span>
+
+<span class="sd">        Convolution --&gt; Activation --&gt; BatchNorm</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            dimension: the dimension of the model&#39;s input images</span>
+<span class="sd">            out_channels: the number of channels for the gating signal</span>
+<span class="sd">            kernel_size: the kernel size used in the convolutional layer</span>
+<span class="sd">            kernel_initializer: the method for initializing the weights of the</span>
+<span class="sd">                                    convolutional layer</span>
+<span class="sd">            activation: the activation function used after the convolutional</span>
+<span class="sd">                            layer</span>
+<span class="sd">            add_batchnorm: specifies if batch normalization should be used</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">_CreateGatingSignalNDim</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Store parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="o">=</span> <span class="n">dimension</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_channels</span> <span class="o">=</span> <span class="n">out_channels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span> <span class="o">=</span> <span class="n">kernel_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel_initializer</span> <span class="o">=</span> <span class="n">kernel_initializer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">activation</span> <span class="o">=</span> <span class="n">activation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_batchnorm</span> <span class="o">=</span> <span class="n">add_batchnorm</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">conv_type</span> <span class="o">=</span> <span class="n">Conv2D</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">conv_type</span> <span class="o">=</span> <span class="n">Conv3D</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only 2D and 3D are supported&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">,</span> <span class="nb">list</span>
+        <span class="p">):</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">,</span> <span class="p">(</span>
+                <span class="s2">&quot;If list/tuple, kernel_size must have length </span><span class="si">%d</span><span class="s2">&quot;</span>
+                <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv</span> <span class="o">=</span> <span class="n">conv_type</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">out_channels</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">,</span>
+            <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+            <span class="n">activation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="p">,</span>
+            <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_initializer</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_batchnorm</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bn</span> <span class="o">=</span> <span class="n">BN</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">0.001</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_trainable_weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv</span><span class="o">.</span><span class="n">trainable_weights</span>
+        <span class="n">conv_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_batchnorm</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bn</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">conv_output_shape</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_trainable_weights</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bn</span><span class="o">.</span><span class="n">trainable_weights</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">_CreateGatingSignalNDim</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_batchnorm</span><span class="p">:</span>
+            <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bn</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">outputs</span>
+
+    <span class="k">def</span> <span class="nf">compute_output_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
+        <span class="n">conv_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span>
+        <span class="n">final_output_shape</span> <span class="o">=</span> <span class="n">conv_output_shape</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_batchnorm</span><span class="p">:</span>
+            <span class="n">bn_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bn</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span><span class="n">conv_output_shape</span><span class="p">)</span>
+            <span class="n">final_output_shape</span> <span class="o">=</span> <span class="n">bn_output_shape</span>
+        <span class="k">return</span> <span class="n">final_output_shape</span>
+
+    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">base_cfg</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
+        <span class="n">base_cfg</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;dimension&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">,</span>
+                <span class="s2">&quot;out_channels&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_channels</span><span class="p">,</span>
+                <span class="s2">&quot;kernel_size&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">,</span>
+                <span class="s2">&quot;kernel_initializer&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel_initializer</span><span class="p">,</span>
+                <span class="s2">&quot;activation&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="p">,</span>
+                <span class="s2">&quot;add_batchnorm&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_batchnorm</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">base_cfg</span>
+
+
+<div class="viewcode-block" id="CreateGatingSignal2D"><a class="viewcode-back" href="../../../../modules/modeling.html#medsegpy.modeling.layers.attention.CreateGatingSignal2D">[docs]</a><span class="k">class</span> <span class="nc">CreateGatingSignal2D</span><span class="p">(</span><span class="n">_CreateGatingSignalNDim</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">out_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">kernel_size</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">kernel_initializer</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;he_normal&quot;</span><span class="p">,</span>
+        <span class="n">activation</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;relu&quot;</span><span class="p">,</span>
+        <span class="n">add_batchnorm</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">CreateGatingSignal2D</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">dimension</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">out_channels</span><span class="o">=</span><span class="n">out_channels</span><span class="p">,</span>
+            <span class="n">kernel_size</span><span class="o">=</span><span class="n">kernel_size</span><span class="p">,</span>
+            <span class="n">kernel_initializer</span><span class="o">=</span><span class="n">kernel_initializer</span><span class="p">,</span>
+            <span class="n">activation</span><span class="o">=</span><span class="n">activation</span><span class="p">,</span>
+            <span class="n">add_batchnorm</span><span class="o">=</span><span class="n">add_batchnorm</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span></div>
+        <span class="p">)</span>
+
+
+<div class="viewcode-block" id="CreateGatingSignal3D"><a class="viewcode-back" href="../../../../modules/modeling.html#medsegpy.modeling.layers.attention.CreateGatingSignal3D">[docs]</a><span class="k">class</span> <span class="nc">CreateGatingSignal3D</span><span class="p">(</span><span class="n">_CreateGatingSignalNDim</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">out_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">kernel_size</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">kernel_initializer</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;he_normal&quot;</span><span class="p">,</span>
+        <span class="n">activation</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;relu&quot;</span><span class="p">,</span>
+        <span class="n">add_batchnorm</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">CreateGatingSignal3D</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">dimension</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+            <span class="n">out_channels</span><span class="o">=</span><span class="n">out_channels</span><span class="p">,</span>
+            <span class="n">kernel_size</span><span class="o">=</span><span class="n">kernel_size</span><span class="p">,</span>
+            <span class="n">kernel_initializer</span><span class="o">=</span><span class="n">kernel_initializer</span><span class="p">,</span>
+            <span class="n">activation</span><span class="o">=</span><span class="n">activation</span><span class="p">,</span>
+            <span class="n">add_batchnorm</span><span class="o">=</span><span class="n">add_batchnorm</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span></div>
+        <span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">_GridAttentionModuleND</span><span class="p">(</span><span class="n">Layer</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dimension</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">in_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">intermediate_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">sub_sample_factor</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
+        <span class="n">kernel_initializer</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">],</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This layer implements the additive attention gate proposed</span>
+<span class="sd">        in the paper and displayed in Figure 2 of the paper. The gate</span>
+<span class="sd">        takes in a feature map and a gating signal, calculates</span>
+<span class="sd">        the attention coefficients (ranging from 0 to 1), and multiplies</span>
+<span class="sd">        the feature map and the attention coefficients to down weight</span>
+<span class="sd">        unimportant feature vectors, based on contextual information</span>
+<span class="sd">        from the gating signal. The pruned feature map is then</span>
+<span class="sd">        linearly transformed using a convolutional layer, which is</span>
+<span class="sd">        followed by a batch normalization layer.</span>
+
+<span class="sd">        The formulas for computing the attention coefficients are</span>
+<span class="sd">        Equations 1 and 2 in the paper. The code below uses the variables</span>
+<span class="sd">        &quot;theta_x&quot; and &quot;theta_gating&quot; to represent W_x and W_g (and b_g)</span>
+<span class="sd">        found in Equations 1 and 2. Sigma_1 in Equation 1 is fixed</span>
+<span class="sd">        as the ReLU activation function and Sigma_2 in Equation 2 is</span>
+<span class="sd">        fixed as the sigmoid activation function.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            dimension: the dimension of the model&#39;s input images</span>
+<span class="sd">            in_channels: the number of channels in the input feature map</span>
+<span class="sd">            intermediate_channels: F_int (in Figure 2 of the paper)</span>
+<span class="sd">            sub_sample_factor: the factor by which the input feature map</span>
+<span class="sd">                                should be downsampled. This should be chosen</span>
+<span class="sd">                                such that the input feature map is downsampled</span>
+<span class="sd">                                to the resolution of the gating signal,</span>
+<span class="sd">                                as described in the paper under the section</span>
+<span class="sd">                                &quot;Attention Gates in U-Net Model&quot;.</span>
+<span class="sd">            kernel_initializer: the method used for initializing the weights</span>
+<span class="sd">                                    of convolutional layers</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">_GridAttentionModuleND</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Store parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="o">=</span> <span class="n">dimension</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">in_channels</span> <span class="o">=</span> <span class="n">in_channels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">intermediate_channels</span> <span class="o">=</span> <span class="n">intermediate_channels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sub_sample_factor</span> <span class="o">=</span> <span class="n">sub_sample_factor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel_initializer</span> <span class="o">=</span> <span class="n">kernel_initializer</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">conv_type</span> <span class="o">=</span> <span class="n">Conv2D</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">upsample_type</span> <span class="o">=</span> <span class="n">UpSampling2D</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">conv_type</span> <span class="o">=</span> <span class="n">Conv3D</span>
+            <span class="c1"># NOTE: The authors of the paper state they use trilinear</span>
+            <span class="c1"># interpolation for upsampling 3D images. However, there</span>
+            <span class="c1"># does not exist a trilinear interpolation</span>
+            <span class="c1"># mode for UpSampling3D.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">upsample_type</span> <span class="o">=</span> <span class="n">UpSampling3D</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only 2D and 3D are supported&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sub_sample_factor</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sub_sample_factor</span><span class="p">,</span> <span class="nb">list</span>
+        <span class="p">):</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sub_sample_factor</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">,</span> <span class="p">(</span>
+                <span class="s2">&quot;If list/tuple, sub_sample_factor must have length </span><span class="si">%d</span><span class="s2">&quot;</span>
+                <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">theta_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_type</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">intermediate_channels</span><span class="p">,</span>
+            <span class="n">kernel_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sub_sample_factor</span><span class="p">,</span>
+            <span class="n">strides</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sub_sample_factor</span><span class="p">,</span>
+            <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_initializer</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">theta_gating</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_type</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">intermediate_channels</span><span class="p">,</span>
+            <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_initializer</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">psi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_type</span><span class="p">(</span>
+            <span class="mi">1</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_initializer</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_conv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_type</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">in_channels</span><span class="p">,</span>
+            <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_initializer</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_bn</span> <span class="o">=</span> <span class="n">BN</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">0.001</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
+        <span class="n">x_shape</span><span class="p">,</span> <span class="n">gating_signal_shape</span> <span class="o">=</span> <span class="n">input_shape</span>
+
+        <span class="c1"># Build theta_x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">theta_x</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">x_shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_trainable_weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_x</span><span class="o">.</span><span class="n">trainable_weights</span>
+        <span class="n">theta_x_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_x</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span><span class="n">x_shape</span><span class="p">)</span>
+
+        <span class="c1"># Build theta_gating</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">theta_gating</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">gating_signal_shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_trainable_weights</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_gating</span><span class="o">.</span><span class="n">trainable_weights</span>
+        <span class="n">theta_gating_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_gating</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span>
+            <span class="n">gating_signal_shape</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Build upsample_gating</span>
+        <span class="n">up_ratio_gating</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor_divide</span><span class="p">(</span>
+            <span class="n">theta_x_output_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">theta_gating_output_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">upsample_gating</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsample_type</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">up_ratio_gating</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">upsample_gating</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">theta_gating_output_shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_trainable_weights</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsample_gating</span><span class="o">.</span><span class="n">trainable_weights</span>
+        <span class="n">up_gating_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsample_gating</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span>
+            <span class="n">theta_gating_output_shape</span>
+        <span class="p">)</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">up_gating_output_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">theta_x_output_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="p">),</span> <span class="s2">&quot;Cannot upsample output of theta_gating to match size of output of theta_x&quot;</span>
+
+        <span class="c1"># Build psi</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">psi</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">theta_x_output_shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_trainable_weights</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi</span><span class="o">.</span><span class="n">trainable_weights</span>
+        <span class="n">psi_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span><span class="n">theta_x_output_shape</span><span class="p">)</span>
+
+        <span class="c1"># Build upsample_attn_coeff</span>
+        <span class="n">up_ratio_attn_coeff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor_divide</span><span class="p">(</span>
+            <span class="n">x_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">psi_output_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">upsample_attn_coeff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsample_type</span><span class="p">(</span>
+            <span class="n">size</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">up_ratio_attn_coeff</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">upsample_attn_coeff</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">psi_output_shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_trainable_weights</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsample_attn_coeff</span><span class="o">.</span><span class="n">trainable_weights</span>
+        <span class="n">up_coeff_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsample_attn_coeff</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span>
+            <span class="n">psi_output_shape</span>
+        <span class="p">)</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">up_coeff_output_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">x_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="p">),</span> <span class="s2">&quot;Cannot upsample output of psi to match size of input feature map (x)&quot;</span>
+
+        <span class="c1"># Build output_conv</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_conv</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">x_shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_trainable_weights</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_conv</span><span class="o">.</span><span class="n">trainable_weights</span>
+        <span class="n">output_conv_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_conv</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span>
+            <span class="n">x_shape</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Build output_bn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_bn</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">output_conv_output_shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_trainable_weights</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_bn</span><span class="o">.</span><span class="n">trainable_weights</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">_GridAttentionModuleND</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">gating_signal</span> <span class="o">=</span> <span class="n">inputs</span>
+        <span class="n">theta_x_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_x</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">theta_gating_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_gating</span><span class="p">(</span><span class="n">gating_signal</span><span class="p">)</span>
+
+        <span class="c1"># If theta_gating_out is smaller than theta_x_out,</span>
+        <span class="c1"># then upsample using UpSampling2D or UpSampling3D. This should</span>
+        <span class="c1"># not be needed if the right value is chosen for</span>
+        <span class="c1"># sub_sample_factor.</span>
+        <span class="n">up_sampled_gating</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsample_gating</span><span class="p">(</span><span class="n">theta_gating_out</span><span class="p">)</span>
+        <span class="n">psi_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi</span><span class="p">(</span><span class="n">K</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">theta_x_out</span> <span class="o">+</span> <span class="n">up_sampled_gating</span><span class="p">))</span>
+        <span class="n">sigmoid_psi</span> <span class="o">=</span> <span class="n">K</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">(</span><span class="n">psi_out</span><span class="p">)</span>
+        <span class="n">x_size</span> <span class="o">=</span> <span class="n">K</span><span class="o">.</span><span class="n">int_shape</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="c1"># Need to upsample to size of the input feature map (x), such that</span>
+        <span class="c1"># the attention coefficients can be multiplied with the input</span>
+        <span class="c1"># feature map</span>
+        <span class="n">up_sampled_attn_coeff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsample_attn_coeff</span><span class="p">(</span><span class="n">sigmoid_psi</span><span class="p">)</span>
+        <span class="n">attn_weighted_output</span> <span class="o">=</span> <span class="n">Multiply</span><span class="p">()(</span>
+            <span class="p">[</span>
+                <span class="n">K</span><span class="o">.</span><span class="n">repeat_elements</span><span class="p">(</span>
+                    <span class="n">up_sampled_attn_coeff</span><span class="p">,</span> <span class="n">rep</span><span class="o">=</span><span class="n">x_size</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span>
+                <span class="p">),</span>
+                <span class="n">x</span><span class="p">,</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_conv</span><span class="p">(</span><span class="n">attn_weighted_output</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_bn</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="n">output</span><span class="p">,</span> <span class="n">up_sampled_attn_coeff</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">compute_output_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
+        <span class="n">x_shape</span><span class="p">,</span> <span class="n">gating_signal_shape</span> <span class="o">=</span> <span class="n">input_shape</span>
+
+        <span class="n">theta_gating_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_gating</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span>
+            <span class="n">gating_signal_shape</span>
+        <span class="p">)</span>
+        <span class="n">up_gating_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsample_gating</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span>
+            <span class="n">theta_gating_output_shape</span>
+        <span class="p">)</span>
+        <span class="n">psi_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span><span class="n">up_gating_output_shape</span><span class="p">)</span>
+        <span class="n">up_attn_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsample_attn_coeff</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span>
+            <span class="n">psi_output_shape</span>
+        <span class="p">)</span>
+        <span class="n">output_conv_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_conv</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span>
+            <span class="n">x_shape</span>
+        <span class="p">)</span>
+        <span class="n">output_bn_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_bn</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span>
+            <span class="n">output_conv_output_shape</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="n">output_bn_output_shape</span><span class="p">,</span> <span class="n">up_attn_output_shape</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">base_cfg</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
+        <span class="n">base_cfg</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;dimension&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">,</span>
+                <span class="s2">&quot;in_channels&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_channels</span><span class="p">,</span>
+                <span class="s2">&quot;intermediate_channels&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">intermediate_channels</span><span class="p">,</span>
+                <span class="s2">&quot;sub_sample_factor&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">sub_sample_factor</span><span class="p">,</span>
+                <span class="s2">&quot;kernel_initializer&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel_initializer</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">base_cfg</span>
+
+
+<div class="viewcode-block" id="GridAttentionModule2D"><a class="viewcode-back" href="../../../../modules/modeling.html#medsegpy.modeling.layers.attention.GridAttentionModule2D">[docs]</a><span class="k">class</span> <span class="nc">GridAttentionModule2D</span><span class="p">(</span><span class="n">_GridAttentionModuleND</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">in_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">intermediate_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">sub_sample_factor</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="n">kernel_initializer</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;he_normal&quot;</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">GridAttentionModule2D</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">dimension</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">in_channels</span><span class="o">=</span><span class="n">in_channels</span><span class="p">,</span>
+            <span class="n">intermediate_channels</span><span class="o">=</span><span class="n">intermediate_channels</span><span class="p">,</span>
+            <span class="n">sub_sample_factor</span><span class="o">=</span><span class="n">sub_sample_factor</span><span class="p">,</span>
+            <span class="n">kernel_initializer</span><span class="o">=</span><span class="n">kernel_initializer</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span></div>
+        <span class="p">)</span>
+
+
+<div class="viewcode-block" id="GridAttentionModule3D"><a class="viewcode-back" href="../../../../modules/modeling.html#medsegpy.modeling.layers.attention.GridAttentionModule3D">[docs]</a><span class="k">class</span> <span class="nc">GridAttentionModule3D</span><span class="p">(</span><span class="n">_GridAttentionModuleND</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">in_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">intermediate_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">sub_sample_factor</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="n">kernel_initializer</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;he_normal&quot;</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">GridAttentionModule3D</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">dimension</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+            <span class="n">in_channels</span><span class="o">=</span><span class="n">in_channels</span><span class="p">,</span>
+            <span class="n">intermediate_channels</span><span class="o">=</span><span class="n">intermediate_channels</span><span class="p">,</span>
+            <span class="n">sub_sample_factor</span><span class="o">=</span><span class="n">sub_sample_factor</span><span class="p">,</span>
+            <span class="n">kernel_initializer</span><span class="o">=</span><span class="n">kernel_initializer</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span></div>
+        <span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">_MultiAttentionModuleND</span><span class="p">(</span><span class="n">Layer</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dimension</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">in_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">intermediate_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">sub_sample_factor</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
+        <span class="n">kernel_initializer</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">],</span>
+        <span class="n">activation</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This layer combines the outputs of two attention gates that</span>
+<span class="sd">        each receive the same inputs. The outputs are concatenated</span>
+<span class="sd">        along the channel axis and passed through a convolutional layer</span>
+<span class="sd">        and a batch normalization layer. The operation is as follows:</span>
+
+<span class="sd">        Concatenated Gate Outputs --&gt; Convolution --&gt; Activation --&gt; BatchNorm</span>
+
+<span class="sd">        Due to the concatenation operation, the layer learns</span>
+<span class="sd">        multi-dimensional attention coefficients, as described in the</span>
+<span class="sd">        paper under the section &quot;Attention Gates for Image Analysis&quot;.</span>
+<span class="sd">        After concatenation, the total attention coefficients are the</span>
+<span class="sd">        coefficients for each gate, concatenated along the channel</span>
+<span class="sd">        dimension. The &quot;multi-dimensional&quot; aspect comes from how</span>
+<span class="sd">        each attention coefficient is now a vector with two elements.</span>
+
+<span class="sd">        The number of attention gates (2) was chosen because the authors</span>
+<span class="sd">        of the paper used the same number in their PyTorch implementation</span>
+<span class="sd">        (GitHub URL included above).</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            activation: the activation function after the convolutional layer</span>
+<span class="sd">            all other parameters: same as in _GridAttentionModuleND</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">_MultiAttentionModuleND</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Store parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="o">=</span> <span class="n">dimension</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">in_channels</span> <span class="o">=</span> <span class="n">in_channels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">intermediate_channels</span> <span class="o">=</span> <span class="n">intermediate_channels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sub_sample_factor</span> <span class="o">=</span> <span class="n">sub_sample_factor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel_initializer</span> <span class="o">=</span> <span class="n">kernel_initializer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">activation</span> <span class="o">=</span> <span class="n">activation</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">conv_type</span> <span class="o">=</span> <span class="n">Conv2D</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">attn_module_type</span> <span class="o">=</span> <span class="n">GridAttentionModule2D</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">conv_type</span> <span class="o">=</span> <span class="n">Conv3D</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">attn_module_type</span> <span class="o">=</span> <span class="n">GridAttentionModule3D</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only 2D and 3D are supported&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">attn_gate_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attn_module_type</span><span class="p">(</span>
+            <span class="n">in_channels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">in_channels</span><span class="p">,</span>
+            <span class="n">intermediate_channels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">intermediate_channels</span><span class="p">,</span>
+            <span class="n">sub_sample_factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sub_sample_factor</span><span class="p">,</span>
+            <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_initializer</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">attn_gate_2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attn_module_type</span><span class="p">(</span>
+            <span class="n">in_channels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">in_channels</span><span class="p">,</span>
+            <span class="n">intermediate_channels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">intermediate_channels</span><span class="p">,</span>
+            <span class="n">sub_sample_factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sub_sample_factor</span><span class="p">,</span>
+            <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_initializer</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">combine_gates_conv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_type</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">in_channels</span><span class="p">,</span>
+            <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">activation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="p">,</span>
+            <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_initializer</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">combine_gates_bn</span> <span class="o">=</span> <span class="n">BN</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">0.001</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attn_gate_1</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_trainable_weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attn_gate_1</span><span class="o">.</span><span class="n">trainable_weights</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attn_gate_2</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_trainable_weights</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attn_gate_2</span><span class="o">.</span><span class="n">trainable_weights</span>
+        <span class="n">output_attn_shape</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attn_gate_2</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span>
+            <span class="n">input_shape</span>
+        <span class="p">)</span>
+
+        <span class="n">concatenate_gate_shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">output_attn_shape</span><span class="p">)</span>
+        <span class="n">concatenate_gate_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">combine_gates_conv</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">concatenate_gate_shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_trainable_weights</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">combine_gates_conv</span><span class="o">.</span><span class="n">trainable_weights</span>
+        <span class="n">conv_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">combine_gates_conv</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span>
+            <span class="n">concatenate_gate_shape</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">combine_gates_bn</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">conv_output_shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_trainable_weights</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">combine_gates_bn</span><span class="o">.</span><span class="n">trainable_weights</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">_MultiAttentionModuleND</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">gating_signal</span> <span class="o">=</span> <span class="n">inputs</span>
+        <span class="n">gate_1_out</span><span class="p">,</span> <span class="n">attn_coeff_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attn_gate_1</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">gating_signal</span><span class="p">])</span>
+        <span class="n">gate_2_out</span><span class="p">,</span> <span class="n">attn_coeff_2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attn_gate_2</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">gating_signal</span><span class="p">])</span>
+
+        <span class="n">total_gate_outputs</span> <span class="o">=</span> <span class="n">Concatenate</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)([</span><span class="n">gate_1_out</span><span class="p">,</span> <span class="n">gate_2_out</span><span class="p">])</span>
+        <span class="n">total_attn_coeffs</span> <span class="o">=</span> <span class="n">Concatenate</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)([</span><span class="n">attn_coeff_1</span><span class="p">,</span> <span class="n">attn_coeff_2</span><span class="p">])</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">combine_gates_conv</span><span class="p">(</span><span class="n">total_gate_outputs</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">combine_gates_bn</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">output</span><span class="p">,</span> <span class="n">total_attn_coeffs</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">compute_output_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
+        <span class="n">output_attn_shape</span><span class="p">,</span> <span class="n">coeff_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attn_gate_2</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span>
+            <span class="n">input_shape</span>
+        <span class="p">)</span>
+        <span class="n">concatenate_gate_shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">output_attn_shape</span><span class="p">)</span>
+        <span class="n">concatenate_coeff_shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">coeff_shape</span><span class="p">)</span>
+        <span class="n">concatenate_gate_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">2</span>
+        <span class="n">concatenate_coeff_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">2</span>
+        <span class="n">conv_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">combine_gates_conv</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span>
+            <span class="n">concatenate_gate_shape</span>
+        <span class="p">)</span>
+        <span class="n">bn_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">combine_gates_bn</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span>
+            <span class="n">conv_output_shape</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">bn_output_shape</span><span class="p">,</span> <span class="n">concatenate_coeff_shape</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">base_cfg</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
+        <span class="n">base_cfg</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;dimension&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">,</span>
+                <span class="s2">&quot;in_channels&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_channels</span><span class="p">,</span>
+                <span class="s2">&quot;intermediate_channels&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">intermediate_channels</span><span class="p">,</span>
+                <span class="s2">&quot;sub_sample_factor&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">sub_sample_factor</span><span class="p">,</span>
+                <span class="s2">&quot;kernel_initializer&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel_initializer</span><span class="p">,</span>
+                <span class="s2">&quot;activation&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">base_cfg</span>
+
+
+<div class="viewcode-block" id="MultiAttentionModule2D"><a class="viewcode-back" href="../../../../modules/modeling.html#medsegpy.modeling.layers.attention.MultiAttentionModule2D">[docs]</a><span class="k">class</span> <span class="nc">MultiAttentionModule2D</span><span class="p">(</span><span class="n">_MultiAttentionModuleND</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">in_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">intermediate_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">sub_sample_factor</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="n">kernel_initializer</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;he_normal&quot;</span><span class="p">,</span>
+        <span class="n">activation</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;relu&quot;</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MultiAttentionModule2D</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">dimension</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">in_channels</span><span class="o">=</span><span class="n">in_channels</span><span class="p">,</span>
+            <span class="n">intermediate_channels</span><span class="o">=</span><span class="n">intermediate_channels</span><span class="p">,</span>
+            <span class="n">sub_sample_factor</span><span class="o">=</span><span class="n">sub_sample_factor</span><span class="p">,</span>
+            <span class="n">kernel_initializer</span><span class="o">=</span><span class="n">kernel_initializer</span><span class="p">,</span>
+            <span class="n">activation</span><span class="o">=</span><span class="n">activation</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span></div>
+        <span class="p">)</span>
+
+
+<div class="viewcode-block" id="MultiAttentionModule3D"><a class="viewcode-back" href="../../../../modules/modeling.html#medsegpy.modeling.layers.attention.MultiAttentionModule3D">[docs]</a><span class="k">class</span> <span class="nc">MultiAttentionModule3D</span><span class="p">(</span><span class="n">_MultiAttentionModuleND</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">in_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">intermediate_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">sub_sample_factor</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="n">kernel_initializer</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;he_normal&quot;</span><span class="p">,</span>
+        <span class="n">activation</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;relu&quot;</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MultiAttentionModule3D</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">dimension</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+            <span class="n">in_channels</span><span class="o">=</span><span class="n">in_channels</span><span class="p">,</span>
+            <span class="n">intermediate_channels</span><span class="o">=</span><span class="n">intermediate_channels</span><span class="p">,</span>
+            <span class="n">sub_sample_factor</span><span class="o">=</span><span class="n">sub_sample_factor</span><span class="p">,</span>
+            <span class="n">kernel_initializer</span><span class="o">=</span><span class="n">kernel_initializer</span><span class="p">,</span>
+            <span class="n">activation</span><span class="o">=</span><span class="n">activation</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span></div>
+        <span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">_DeepSupervisionND</span><span class="p">(</span><span class="n">Layer</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dimension</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">out_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">scale_factor</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
+        <span class="n">kernel_initializer</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">],</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This layer implements deep-supervision, as mentioned in the paper</span>
+<span class="sd">        under the section &quot;Attention Gates in U-Net Model&quot;. The</span>
+<span class="sd">        structure of the implementation follows the same structure as</span>
+<span class="sd">        the author&#39;s PyTorch implementation (GitHub URL included above).</span>
+
+<span class="sd">        The layer takes a feature map as input, passes it through a</span>
+<span class="sd">        convolutional layer, and upsamples the output of convolution</span>
+<span class="sd">        by the user-inputted scale factor.</span>
+
+<span class="sd">        In a U-Net, deep-supervision is used to transform the outputs of</span>
+<span class="sd">        all levels in the decoding arch to have a number of channels equal</span>
+<span class="sd">        to the number of classes for segmentation, and upsamples these</span>
+<span class="sd">        outputs to have the same resolution as the input image. These</span>
+<span class="sd">        transformed outputs are then concatenated along the channel dimension.</span>
+<span class="sd">        The concatenated outputs are passed through the final step of</span>
+<span class="sd">        the U-Net to obtain probabilities for segmentation.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            dimension: the dimension of the model&#39;s input images</span>
+<span class="sd">            out_channels: the number of channels for the output of the</span>
+<span class="sd">                            convolutional layer. For a U-Net, this will</span>
+<span class="sd">                            be the number of classes.</span>
+<span class="sd">            scale_factor: the factor by which the input feature map is</span>
+<span class="sd">                            upsampled</span>
+<span class="sd">            kernel_initializer: the method for initializing the weights of the</span>
+<span class="sd">                                    convolutional layer</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">_DeepSupervisionND</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Store parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="o">=</span> <span class="n">dimension</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_channels</span> <span class="o">=</span> <span class="n">out_channels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scale_factor</span> <span class="o">=</span> <span class="n">scale_factor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel_initializer</span> <span class="o">=</span> <span class="n">kernel_initializer</span>
+
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_factor</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scale_factor</span><span class="p">,</span> <span class="nb">tuple</span>
+        <span class="p">),</span> <span class="s2">&quot;scale_factor must be a list or tuple&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_factor</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scale_factor</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_factor</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">conv_type</span> <span class="o">=</span> <span class="n">Conv2D</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">upsample</span> <span class="o">=</span> <span class="n">UpSampling2D</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_factor</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">conv_type</span> <span class="o">=</span> <span class="n">Conv3D</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">upsample</span> <span class="o">=</span> <span class="n">UpSampling3D</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_factor</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only 2D and 3D are supported&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_type</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">out_channels</span><span class="p">,</span>
+            <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_initializer</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_trainable_weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv</span><span class="o">.</span><span class="n">trainable_weights</span>
+        <span class="n">conv_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">upsample</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">conv_output_shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_trainable_weights</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsample</span><span class="o">.</span><span class="n">trainable_weights</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">_DeepSupervisionND</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsample</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">outputs</span>
+
+    <span class="k">def</span> <span class="nf">compute_output_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
+        <span class="n">conv_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span>
+        <span class="n">upsample_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsample</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span>
+            <span class="n">conv_output_shape</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">upsample_output_shape</span>
+
+    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">base_cfg</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
+        <span class="n">base_cfg</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;dimension&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">,</span>
+                <span class="s2">&quot;out_channels&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_channels</span><span class="p">,</span>
+                <span class="s2">&quot;scale_factor&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_factor</span><span class="p">,</span>
+                <span class="s2">&quot;kernel_initializer&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel_initializer</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">base_cfg</span>
+
+
+<div class="viewcode-block" id="DeepSupervision2D"><a class="viewcode-back" href="../../../../modules/modeling.html#medsegpy.modeling.layers.attention.DeepSupervision2D">[docs]</a><span class="k">class</span> <span class="nc">DeepSupervision2D</span><span class="p">(</span><span class="n">_DeepSupervisionND</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">out_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">scale_factor</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
+        <span class="n">kernel_initializer</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;he_normal&quot;</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">DeepSupervision2D</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">dimension</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">out_channels</span><span class="o">=</span><span class="n">out_channels</span><span class="p">,</span>
+            <span class="n">scale_factor</span><span class="o">=</span><span class="n">scale_factor</span><span class="p">,</span>
+            <span class="n">kernel_initializer</span><span class="o">=</span><span class="n">kernel_initializer</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span></div>
+        <span class="p">)</span>
+
+
+<div class="viewcode-block" id="DeepSupervision3D"><a class="viewcode-back" href="../../../../modules/modeling.html#medsegpy.modeling.layers.attention.DeepSupervision3D">[docs]</a><span class="k">class</span> <span class="nc">DeepSupervision3D</span><span class="p">(</span><span class="n">_DeepSupervisionND</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">out_channels</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">scale_factor</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
+        <span class="n">kernel_initializer</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;he_normal&quot;</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">DeepSupervision3D</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">dimension</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+            <span class="n">out_channels</span><span class="o">=</span><span class="n">out_channels</span><span class="p">,</span>
+            <span class="n">scale_factor</span><span class="o">=</span><span class="n">scale_factor</span><span class="p">,</span>
+            <span class="n">kernel_initializer</span><span class="o">=</span><span class="n">kernel_initializer</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span></div>
+        <span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2018-2021, Arjun Desai.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -7,6 +7,8 @@ import yaml
 from enum import Enum
 from typing import List, Sequence, Union
 
+from fvcore.common.file_io import PathManager
+
 from medsegpy.utils.env import settings_dir
 
 # Path to the repository directory.
@@ -25,7 +27,7 @@ class Cluster():
     this has not been an issue as of yet.
 
     DO NOT use the node's public ip address to identify it. Not only is this not
-    returned by `socket.hostname()`, but there are also some security issues.
+    returned by ``socket.hostname()``, but there are also some security issues.
 
     Note:
         This class is not thread safe. Saving/deleting configs should be done on
@@ -44,11 +46,11 @@ class Cluster():
             name (str): The name of the cluster. Name is case-sensitive.
             patterns (Sequence[str]): Regex pattern(s) for identifying cluster.
                 Cluster will be identified by
-                `any(re.match(p, socket.gethostname()) for p in patterns)`.
+                ``any(re.match(p, socket.gethostname()) for p in patterns)``.
             data_dir (str, optional): The data directory. Defaults to
-                `os.environ['MEDSEGPY_RESULTS']` or `./datasets`.
+                ``os.environ['MEDSEGPY_RESULTS']`` or ``"./datasets"``.
             results_dir (str, optional): The results directory. Defaults to 
-                `os.environ['MEDSEGPY_DATASETS']` or `./results`.
+                `"os.environ['MEDSEGPY_DATASETS']"` or ``"./results"``.
         """
         self.name = name
 
@@ -56,20 +58,30 @@ class Cluster():
             patterns = patterns
         self.patterns = patterns
 
-        if not data_dir:
-            data_dir = os.environ.get("MEDSEGPY_DATASETS", "./datasets")
-        self.data_dir = data_dir
+        self._data_dir = data_dir
+        self._results_dir = results_dir
 
-        if not results_dir:
-            results_dir = os.environ.get("MEDSEGPY_RESULTS", "./results")
-        self.results_dir = results_dir
+    @property
+    def data_dir(self):
+        path = self._data_dir
+        if not path:
+            path = os.environ.get("MEDSEGPY_DATASETS", "./datasets")
+        return PathManager.get_local_path(path)
+
+    @property
+    def results_dir(self):
+        path = self._results_dir
+        if not path:
+            path = os.environ.get("MEDSEGPY_RESULTS", "./results")
+        return PathManager.get_local_path(path)
     
     def save(self):
         """Save cluster config to yaml file."""
         filepath = self.filepath()
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
         with open(filepath, "w") as f:
-            yaml.safe_dump(self.__dict__, f)
+            data = {(k[1:] if k.startswith("_") else k): v for k, v in self.__dict__.items()}
+            yaml.safe_dump(data, f)
     
     def delete(self):
         """Deletes the config file for this cluster."""
@@ -155,9 +167,10 @@ class Cluster():
     @staticmethod
     def set_working_cluster(cluster = None):
         """Sets the working cluster.
+
         Args:
             cluster (`str` or `Cluster`): The cluster name or cluster.
-                If `None`, will reset cluster to _UNKNOWN, meaning default
+                If ``None``, will reset cluster to _UNKNOWN, meaning default
                 data and results dirs will be used.
         """
         set_cluster(cluster)
@@ -170,9 +183,10 @@ class Cluster():
 
 def set_cluster(cluster: Union[str, Cluster] = None):
     """Sets the working cluster.
+
     Args:
         cluster (`str` or `Cluster`): The cluster name or cluster.
-            If `None`, will reset cluster to _UNKNOWN, meaning default
+            If ``None``, will reset cluster to _UNKNOWN, meaning default
             data and results dirs will be used.
     """
     if cluster == None:

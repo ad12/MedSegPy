@@ -4,6 +4,11 @@ THIS FILE IS DEPRECATED. DO NOT ADD ANY NEW MODELS HERE.
 import logging
 import warnings
 
+warnings.warn(
+    "Module medsegpy.modeling.build is deprecated. Use medsegpy.modeling.meta_arch.build.",
+    DeprecationWarning
+)
+
 from keras.initializers import glorot_uniform
 from keras.layers import Conv2D, Input
 

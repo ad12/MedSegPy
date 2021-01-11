@@ -9,9 +9,9 @@ import keras
 import tensorflow as tf
 
 tf_ver = [int(x) for x in tf.__version__.split(".")[:2]]
-assert [1, 8] <= tf_ver < [2, 0], "Requires TensorFlow >=1.8,<2.0"
+#assert [1, 8] <= tf_ver < [2, 0], "Requires TensorFlow >=1.8,<2.0"
 keras_ver = [int(x) for x in keras.__version__.split(".")[:3]]
-assert [2, 1, 6] <= keras_ver < [2, 2, 0], "Requires Keras >=2.1.6, <2.2.0"
+#assert [2, 1, 6] <= keras_ver < [2, 2, 0], "Requires Keras >=2.1.6, <2.2.0"
 
 
 def get_version():
@@ -41,16 +41,9 @@ def get_version():
     return version
 
 
-setup(
-    name="medsegpy",
-    version=get_version(),
-    author="Arjun Desai",
-    url="https://github.com/ad12/MedSegPy",
-    description="MedSegPy is a framework for research on medical image "
-    "segmentation.",
-    packages=find_packages(exclude=("configs", "tests")),
-    python_requires=">=3.6",
-    install_requires=[
+def get_required_packages():
+    """Returns list of required packages based on tensorflow and keras versions."""
+    default = [
         "Pillow",  # you can also use pillow-simd for better performance
         "matplotlib",
         "seaborn",
@@ -67,7 +60,25 @@ setup(
         "simpleitk",
         "configparser",
         "resnet",
-    ],
+        "more-itertools"
+    ]
+    if tf_ver >= [2, 0]:
+        default.extend([
+            "more-itertools",
+        ])
+    return default
+
+
+setup(
+    name="medsegpy",
+    version=get_version(),
+    author="Arjun Desai",
+    url="https://github.com/ad12/MedSegPy",
+    description="MedSegPy is a framework for research on medical image "
+    "segmentation.",
+    packages=find_packages(exclude=("configs", "tests")),
+    python_requires=">=3.6",
+    install_requires=get_required_packages(),
     extras_require={
         "all": ["shapely", "psutil"],
         "dev": [

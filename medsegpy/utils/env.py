@@ -4,10 +4,13 @@ import logging
 import os
 import sys
 from datetime import datetime
+from typing import Tuple
 
 __all__ = []
 
+_ENV_SETUP_DONE = False
 _SETTINGS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.settings"))
+_TF_VERSION = None
 
 
 def generate_seed():
@@ -64,9 +67,6 @@ def _configure_libraries():
             pass
 
 
-_ENV_SETUP_DONE = False
-
-
 def setup_environment():
     """Perform environment setup work. The default setup is a no-op, but this
     function allows the user to specify a Python source file or a module in
@@ -107,6 +107,24 @@ def setup_custom_environment(custom_module):
         custom_module
     )
     module.setup_environment()
+
+
+def supports_wandb():
+    return "wandb" in sys.modules and not is_debug()
+
+
+def tf_version() -> Tuple[int,...]:
+    global _TF_VERSION
+    if not _TF_VERSION:
+        import tensorflow as tf
+        _TF_VERSION = [int(x) for x in tf.__version__.split(".")[:2]]
+    return tuple(_TF_VERSION)
+
+
+def is_tf2():
+    """Returns `True` if running tensorflow 2.X"""
+    version = tf_version()
+    return _TF_VERSION[0] == 2
 
 
 def settings_dir():

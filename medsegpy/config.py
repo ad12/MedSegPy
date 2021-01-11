@@ -60,9 +60,15 @@ class Config(object):
     # Model name specific to config. Cannot be changed.
     MODEL_NAME = ""
 
+    # Description of the config.
+    DESCRIPTION = ""
+
     # Loss function in form (id, output_mode)
     LOSS = DICE_LOSS
     CLASS_WEIGHTS = None
+    # Class name for robust loss computation
+    ROBUST_LOSS_NAME = ""
+    ROBUST_LOSS_STEP_SIZE = 1e-1
 
     # PIDS to include, None = all pids
     PIDS = None
@@ -276,13 +282,15 @@ class Config(object):
 
         return full_key, value
 
-    def merge_from_file(self, cfg_filename):
+    def merge_from_file(self, cfg_filename: str, new_allowed=False):
         """Load a ini or yaml config file and merge it with this object.
 
         "MODEL_NAME" must be specified in the file.
 
         Args:
-            cfg_filename: File path to yaml or ini file.
+            cfg_filename (str): File path to yaml or ini file.
+            new_allowed (bool, optional): If `True`, new keys, not already defined,
+                are allowed.
         """
         # Avoid circular dependencies.
         from medsegpy.modeling.meta_arch.build import LEGACY_MODEL_NAMES
@@ -326,15 +334,20 @@ class Config(object):
                 )
                 continue
 
-            if not hasattr(self, full_key):
+            if not new_allowed and not hasattr(self, full_key):
                 raise ValueError("Key {} does not exist.".format(full_key))
 
-            value = self._decode_cfg_value(
-                value, type(self.__getattribute__(full_key))
-            )
-            value = _check_and_coerce_cfg_value_type(
-                value, self.__getattribute__(full_key), full_key
-            )
+            is_new = not hasattr(self, full_key)
+
+            if is_new:
+                value = self._decode_cfg_value(value, "auto")
+            else:
+                value = self._decode_cfg_value(
+                    value, type(self.__getattribute__(full_key))
+                )
+                value = _check_and_coerce_cfg_value_type(
+                    value, self.__getattribute__(full_key), full_key
+                )
 
             # Loading config
             self.__setattr__(full_key, value)
@@ -390,7 +403,9 @@ class Config(object):
         :param data_type: the type of the data
         :return: string converted to data_type
         """
-        if not isinstance(value, str):
+        if isinstance(value, dict):
+            return {k: cls._decode_cfg_value(v, "auto") for k, v in value.items()}
+        elif not isinstance(value, str):
             return value
 
         if data_type is str:
@@ -400,7 +415,13 @@ class Config(object):
         elif data_type is int:
             return int(value)
         else:
-            return ast.literal_eval(value)
+            try:
+                return ast.literal_eval(value)
+            except ValueError as e:
+                if data_type == "auto":
+                    return value
+                else:
+                    raise e
 
     def key_is_deprecated(self, full_key):
         """Test if a key is deprecated."""
@@ -500,6 +521,22 @@ class Config(object):
 
         self.__setattr__(attr, val)
 
+    def __getitem__(self, key):
+        if not hasattr(self, key):
+            raise KeyError(f"Key {key} does not exist")
+        return getattr(self, key)
+
+    def get(self, key, default=None):
+        keys = key.split(".")
+        try:
+            val = self
+            for k in keys:
+                val = val[k]
+        except KeyError:
+            return default
+
+        return val
+
     def change_to_test(self):
         """
         Initialize testing state
@@ -540,6 +577,8 @@ class Config(object):
                 "AUGMENT_DATA",
                 "LOSS",
                 "CLASS_WEIGHTS",
+                "ROBUST_LOSS_NAME" if self.ROBUST_LOSS_NAME else ""
+                "ROBUST_LOSS_STEP_SIZE" if self.ROBUST_LOSS_NAME else ""
                 "",
                 "USE_CROSS_VALIDATION",
                 "CV_K" if self.USE_CROSS_VALIDATION else "",
