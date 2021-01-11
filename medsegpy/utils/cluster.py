@@ -27,7 +27,7 @@ class Cluster():
     this has not been an issue as of yet.
 
     DO NOT use the node's public ip address to identify it. Not only is this not
-    returned by `socket.hostname()`, but there are also some security issues.
+    returned by ``socket.hostname()``, but there are also some security issues.
 
     Note:
         This class is not thread safe. Saving/deleting configs should be done on
@@ -46,11 +46,11 @@ class Cluster():
             name (str): The name of the cluster. Name is case-sensitive.
             patterns (Sequence[str]): Regex pattern(s) for identifying cluster.
                 Cluster will be identified by
-                `any(re.match(p, socket.gethostname()) for p in patterns)`.
+                ``any(re.match(p, socket.gethostname()) for p in patterns)``.
             data_dir (str, optional): The data directory. Defaults to
-                `os.environ['MEDSEGPY_RESULTS']` or `./datasets`.
+                ``os.environ['MEDSEGPY_RESULTS']`` or ``"./datasets"``.
             results_dir (str, optional): The results directory. Defaults to 
-                `os.environ['MEDSEGPY_DATASETS']` or `./results`.
+                `"os.environ['MEDSEGPY_DATASETS']"` or ``"./results"``.
         """
         self.name = name
 
@@ -167,9 +167,10 @@ class Cluster():
     @staticmethod
     def set_working_cluster(cluster = None):
         """Sets the working cluster.
+
         Args:
             cluster (`str` or `Cluster`): The cluster name or cluster.
-                If `None`, will reset cluster to _UNKNOWN, meaning default
+                If ``None``, will reset cluster to _UNKNOWN, meaning default
                 data and results dirs will be used.
         """
         set_cluster(cluster)
@@ -182,9 +183,10 @@ class Cluster():
 
 def set_cluster(cluster: Union[str, Cluster] = None):
     """Sets the working cluster.
+
     Args:
         cluster (`str` or `Cluster`): The cluster name or cluster.
-            If `None`, will reset cluster to _UNKNOWN, meaning default
+            If ``None``, will reset cluster to _UNKNOWN, meaning default
             data and results dirs will be used.
     """
     if cluster == None:

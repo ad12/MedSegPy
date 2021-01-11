@@ -1,0 +1,739 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html4" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>medsegpy.evaluation.metrics &mdash; MedSegPy 0.0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../../../',
+              VERSION:'0.0.1',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> MedSegPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/index.html">API Documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">MedSegPy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>medsegpy.evaluation.metrics</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for medsegpy.evaluation.metrics</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Metrics Processor.</span>
+
+<span class="sd">A processor keeps track of task-specific metrics for different classes.</span>
+<span class="sd">It should not be used to keep track of non-class-specific metrics, such as</span>
+<span class="sd">runtime.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Collection</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">tabulate</span>
+<span class="kn">from</span> <span class="nn">medpy.metric</span> <span class="kn">import</span> <span class="n">assd</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;Metric&quot;</span><span class="p">,</span> <span class="s2">&quot;DSC&quot;</span><span class="p">,</span> <span class="s2">&quot;VOE&quot;</span><span class="p">,</span> <span class="s2">&quot;CV&quot;</span><span class="p">,</span> <span class="s2">&quot;ASSD&quot;</span><span class="p">,</span> <span class="s2">&quot;Precision&quot;</span><span class="p">,</span> <span class="s2">&quot;Recall&quot;</span><span class="p">,</span> <span class="s2">&quot;MetricsManager&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">flatten_non_category_dims</span><span class="p">(</span>
+    <span class="n">xs</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">category_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Flattens all non-category dimensions into a single dimension.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        xs (ndarrays): Sequence of ndarrays with the same category dimension.</span>
+<span class="sd">        category_dim: The dimension/axis corresponding to different categories.</span>
+<span class="sd">            i.e. `C`. If `None`, behaves like `np.flatten(x)`.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ndarray: Shape (C, -1) if `category_dim` specified else shape (-1,)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">single_input</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">single_input</span><span class="p">:</span>
+        <span class="n">xs</span> <span class="o">=</span> <span class="p">[</span><span class="n">xs</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">category_dim</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">dims</span> <span class="o">=</span> <span class="p">(</span><span class="n">xs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">category_dim</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">xs</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">moveaxis</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">category_dim</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dims</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">xs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">xs</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">xs</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">single_input</span><span class="p">:</span>
+        <span class="n">xs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">xs</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">xs</span>
+
+
+<span class="k">def</span> <span class="nf">rms_cv</span><span class="p">(</span><span class="n">y_pred</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y_true</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute root-mean-squared coefficient of variation.</span>
+
+<span class="sd">    This is typically done to compare intra-method variability.</span>
+<span class="sd">    For example if multiple measurements are taken using the same method.</span>
+<span class="sd">    However, in many segmentation manuscripts, this is equation is also</span>
+<span class="sd">    used.</span>
+
+<span class="sd">    This quantity is symmetric.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        y_pred (ndarray): Measurements from trial 1.</span>
+<span class="sd">        y_true (ndarray): Measurements from trial 2.</span>
+<span class="sd">        dim (int, optional): Dimension/axis over which to compute metric.</span>
+<span class="sd">            If `None`, all dimensions will be reduced.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ndarray: If `dim=None`, scalar value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">stds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">([</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">y_true</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">means</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">y_true</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">cv</span> <span class="o">=</span> <span class="n">stds</span> <span class="o">/</span> <span class="n">means</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">cv</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">dim</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">rmse_cv</span><span class="p">(</span><span class="n">y_pred</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y_true</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute root-mean-squared error coefficient of variation.</span>
+
+<span class="sd">    This quantity is not symmetric.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        y_pred (ndarray): Predicted measurements.</span>
+<span class="sd">        y_true (ndarray): Ground-truth/baseline measurements.</span>
+<span class="sd">        dim (int, optional): Dimension/axis over which to compute metric.</span>
+<span class="sd">            If `None`, all dimensions will be reduced.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ndarray: If `dim=None`, scalar value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rmse</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">((</span><span class="n">y_pred</span> <span class="o">-</span> <span class="n">y_true</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">dim</span><span class="p">))</span>
+    <span class="n">means</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">dim</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">rmse</span> <span class="o">/</span> <span class="n">means</span>
+
+
+<span class="k">class</span> <span class="nc">Reductions</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="n">RMS_CV</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;RMS-CV&quot;</span><span class="p">,</span> <span class="n">rms_cv</span>
+    <span class="n">RMSE_CV</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;RMSE-CV&quot;</span><span class="p">,</span> <span class="n">rmse_cv</span>
+
+    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">display_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            value (int): Unique integer value.</span>
+<span class="sd">            patterns (`List[str]`): List of regex patterns that would match the</span>
+<span class="sd">                hostname on the compute cluster. There can be multiple hostnames</span>
+<span class="sd">                per compute cluster because of the different nodes.</span>
+<span class="sd">            save_dir (str): Directory to save data to.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="nb">object</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">_value_</span> <span class="o">=</span> <span class="n">value</span>
+
+        <span class="n">obj</span><span class="o">.</span><span class="n">display_name</span> <span class="o">=</span> <span class="n">display_name</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">func</span> <span class="o">=</span> <span class="n">func</span>
+
+        <span class="k">return</span> <span class="n">obj</span>
+
+
+<div class="viewcode-block" id="Metric"><a class="viewcode-back" href="../../../modules/evaluation.html#medsegpy.evaluation.metrics.Metric">[docs]</a><span class="k">class</span> <span class="nc">Metric</span><span class="p">(</span><span class="n">Callable</span><span class="p">,</span> <span class="n">ABC</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Interface for new metrics.</span>
+
+<span class="sd">    A metric should be implemented as a callable with explicitly defined</span>
+<span class="sd">    arguments. In other words, metrics should not have `**kwargs` or `**args`</span>
+<span class="sd">    options in the `__call__` method.</span>
+
+<span class="sd">    While not explicitly constrained to the return type, metrics typically</span>
+<span class="sd">    return float value(s). The number of values returned corresponds to the</span>
+<span class="sd">    number of categories.</span>
+
+<span class="sd">    * metrics should have different name() for different functionality.</span>
+<span class="sd">    * `category_dim` duck type if metric can process multiple categories at</span>
+<span class="sd">        once.</span>
+
+<span class="sd">    To compute metrics:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        metric = Metric()</span>
+<span class="sd">        results = metric(...)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">units</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="n">units</span>
+
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
+
+<div class="viewcode-block" id="Metric.display_name"><a class="viewcode-back" href="../../../modules/evaluation.html#medsegpy.evaluation.metrics.Metric.display_name">[docs]</a>    <span class="k">def</span> <span class="nf">display_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Name to use for pretty printing and display purposes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">()</span></div>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="k">else</span> <span class="n">name</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span></div>
+        <span class="k">pass</span>
+
+
+<div class="viewcode-block" id="DSC"><a class="viewcode-back" href="../../../modules/evaluation.html#medsegpy.evaluation.metrics.DSC">[docs]</a><span class="k">class</span> <span class="nc">DSC</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Dice score coefficient.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">category_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">y_pred</span> <span class="o">=</span> <span class="n">y_pred</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+        <span class="n">y_true</span> <span class="o">=</span> <span class="n">y_true</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+        <span class="n">y_pred</span><span class="p">,</span> <span class="n">y_true</span> <span class="o">=</span> <span class="n">flatten_non_category_dims</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">y_true</span><span class="p">),</span> <span class="n">category_dim</span>
+        <span class="p">)</span>
+
+        <span class="n">size_i1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">size_i2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">intersection</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">y_pred</span> <span class="o">&amp;</span> <span class="n">y_true</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</div>
+        <span class="k">return</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">intersection</span> <span class="o">/</span> <span class="p">(</span><span class="n">size_i1</span> <span class="o">+</span> <span class="n">size_i2</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="VOE"><a class="viewcode-back" href="../../../modules/evaluation.html#medsegpy.evaluation.metrics.VOE">[docs]</a><span class="k">class</span> <span class="nc">VOE</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Volumetric overlap error.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">category_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">y_pred</span> <span class="o">=</span> <span class="n">y_pred</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+        <span class="n">y_true</span> <span class="o">=</span> <span class="n">y_true</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+        <span class="n">y_pred</span><span class="p">,</span> <span class="n">y_true</span> <span class="o">=</span> <span class="n">flatten_non_category_dims</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">y_true</span><span class="p">),</span> <span class="n">category_dim</span>
+        <span class="p">)</span>
+
+        <span class="n">intersection</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">y_true</span> <span class="o">&amp;</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">union</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">y_true</span> <span class="o">|</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+</div>
+        <span class="k">return</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">intersection</span> <span class="o">/</span> <span class="n">union</span>
+
+
+<div class="viewcode-block" id="CV"><a class="viewcode-back" href="../../../modules/evaluation.html#medsegpy.evaluation.metrics.CV">[docs]</a><span class="k">class</span> <span class="nc">CV</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Coefficient of variation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">category_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">y_pred</span> <span class="o">=</span> <span class="n">y_pred</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+        <span class="n">y_true</span> <span class="o">=</span> <span class="n">y_true</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+        <span class="n">y_pred</span><span class="p">,</span> <span class="n">y_true</span> <span class="o">=</span> <span class="n">flatten_non_category_dims</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">y_true</span><span class="p">),</span> <span class="n">category_dim</span>
+        <span class="p">)</span>
+
+        <span class="n">size_i1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">size_i2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">([</span><span class="n">size_i1</span><span class="p">,</span> <span class="n">size_i2</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="n">size_i1</span><span class="p">,</span> <span class="n">size_i2</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</div>
+        <span class="k">return</span> <span class="n">std</span> <span class="o">/</span> <span class="n">mean</span>
+
+
+<div class="viewcode-block" id="ASSD"><a class="viewcode-back" href="../../../modules/evaluation.html#medsegpy.evaluation.metrics.ASSD">[docs]</a><span class="k">class</span> <span class="nc">ASSD</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Average symmetric surface distance.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">spacing</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">connectivity</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="c1"># TODO: check why this statement is needed.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">connectivity</span><span class="p">:</span>
+            <span class="n">connectivity</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">assd</span><span class="p">(</span>
+            <span class="n">y_pred</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">voxelspacing</span><span class="o">=</span><span class="n">spacing</span><span class="p">,</span> <span class="n">connectivity</span><span class="o">=</span><span class="n">connectivity</span></div>
+        <span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">Precision</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">category_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">y_pred</span> <span class="o">=</span> <span class="n">y_pred</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+        <span class="n">y_true</span> <span class="o">=</span> <span class="n">y_true</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+        <span class="n">y_pred</span><span class="p">,</span> <span class="n">y_true</span> <span class="o">=</span> <span class="n">flatten_non_category_dims</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">y_true</span><span class="p">),</span> <span class="n">category_dim</span>
+        <span class="p">)</span>
+
+        <span class="n">tp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">y_pred</span> <span class="o">&amp;</span> <span class="n">y_true</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">fp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">y_pred</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">y_true</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">tp</span> <span class="o">/</span> <span class="p">(</span><span class="n">tp</span> <span class="o">+</span> <span class="n">fp</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">Recall</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">category_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">y_pred</span> <span class="o">=</span> <span class="n">y_pred</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+        <span class="n">y_true</span> <span class="o">=</span> <span class="n">y_true</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+        <span class="n">y_pred</span><span class="p">,</span> <span class="n">y_true</span> <span class="o">=</span> <span class="n">flatten_non_category_dims</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">y_true</span><span class="p">),</span> <span class="n">category_dim</span>
+        <span class="p">)</span>
+
+        <span class="n">tp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">y_pred</span> <span class="o">&amp;</span> <span class="n">y_true</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="o">~</span><span class="n">y_pred</span> <span class="o">&amp;</span> <span class="n">y_true</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">tp</span> <span class="o">/</span> <span class="p">(</span><span class="n">tp</span> <span class="o">+</span> <span class="n">fn</span><span class="p">)</span>
+
+
+<span class="n">_BUILT_IN_METRICS</span> <span class="o">=</span> <span class="p">{</span><span class="n">x</span><span class="o">.</span><span class="vm">__name__</span><span class="p">:</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">Metric</span><span class="o">.</span><span class="n">__subclasses__</span><span class="p">()}</span>
+
+
+<div class="viewcode-block" id="MetricsManager"><a class="viewcode-back" href="../../../modules/evaluation.html#medsegpy.evaluation.metrics.MetricsManager">[docs]</a><span class="k">class</span> <span class="nc">MetricsManager</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;A class to manage and compute metrics.</span>
+
+<span class="sd">    Metrics will be calculated for the categories specified during</span>
+<span class="sd">    instantiation. All metrics are assumed to be calculated for those</span>
+<span class="sd">    categories.</span>
+
+<span class="sd">    Metrics are indexed by their string representation as returned by `name()`.</span>
+<span class="sd">    They are also computed in the order they were added.</span>
+
+<span class="sd">    To compute metrics, use this class as a callable. See `__call__` for more</span>
+<span class="sd">    details.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        class_names (Sequence[str]): Category names (in order).</span>
+
+<span class="sd">    To calculate metrics:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">        manager = MetricsManager(</span>
+<span class="sd">            category_names=(&quot;tumor&quot;, &quot;no tumor&quot;)</span>
+<span class="sd">            metrics=(DSC(), VOE())</span>
+<span class="sd">        )</span>
+
+<span class="sd">        for scan_id, x, y_pred, y_true in zip(ids, xs, preds, ground_truths):</span>
+<span class="sd">            # Compute metrics per scan.</span>
+<span class="sd">            manager(scan_id, x=x, y_pred=y_pred, y_true=y_true)</span>
+
+<span class="sd">    To get number of scans that have been processed:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">        num_scans = len(manager)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">class_names</span><span class="p">:</span> <span class="n">Collection</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">metrics</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Metric</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scan_data</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">class_names</span> <span class="o">=</span> <span class="n">class_names</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Metric</span><span class="p">]</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_metric_pairs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span>
+            <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Reductions</span><span class="p">]</span>
+        <span class="p">]</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>  <span class="c1"># noqa</span>
+        <span class="k">if</span> <span class="n">metrics</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_metrics</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">category_dim</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">class_names</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">runtimes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_data_stale</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="MetricsManager.metrics"><a class="viewcode-back" href="../../../modules/evaluation.html#medsegpy.evaluation.metrics.MetricsManager.metrics">[docs]</a>    <span class="k">def</span> <span class="nf">metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns names of current metrics.&quot;&quot;&quot;</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+
+<div class="viewcode-block" id="MetricsManager.add_metrics"><a class="viewcode-back" href="../../../modules/evaluation.html#medsegpy.evaluation.metrics.MetricsManager.add_metrics">[docs]</a>    <span class="k">def</span> <span class="nf">add_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metrics</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Metric</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]):</span>
+        <span class="sd">&quot;&quot;&quot;Add metrics to compute.</span>
+
+<span class="sd">        Metrics with the same `name()` cannot be added.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            metrics (Metric(s)/str(s)): Metrics to compute. `str` values should</span>
+<span class="sd">                only be used for built-in metrics.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If `metric.name()` already exists. Metrics with the</span>
+<span class="sd">                same name mean the same computation will be done twice, which</span>
+<span class="sd">                is not a supported feature.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="p">(</span><span class="n">Metric</span><span class="p">,</span> <span class="nb">str</span><span class="p">)):</span>
+            <span class="n">metrics</span> <span class="o">=</span> <span class="p">[</span><span class="n">metrics</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">m</span> <span class="o">=</span> <span class="n">_BUILT_IN_METRICS</span><span class="p">[</span><span class="n">m</span><span class="p">]()</span>
+            <span class="n">m_name</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">name</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">m_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Metric </span><span class="si">{}</span><span class="s2"> already exists&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">m_name</span><span class="p">))</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span><span class="p">[</span><span class="n">m_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span>
+
+    <span class="k">def</span> <span class="nf">register_pairs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">pred_metric</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">base_metric</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">reductions</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Reductions</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Reductions</span><span class="p">]],</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="n">pred_metric</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`pred_metric` &#39;</span><span class="si">{}</span><span class="s2">&#39; not found&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pred_metric</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">base_metric</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`base_metric` &#39;</span><span class="si">{}</span><span class="s2">&#39; not found&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">base_metric</span><span class="p">))</span>
+
+        <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">pred_metric</span><span class="p">,</span> <span class="n">base_metric</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metric_pairs</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Pair </span><span class="si">{}</span><span class="s2"> already registered&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span><span class="p">[</span><span class="n">pred_metric</span><span class="p">]</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_metric_pairs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">reductions</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MetricsManager.remove_metrics"><a class="viewcode-back" href="../../../modules/evaluation.html#medsegpy.evaluation.metrics.MetricsManager.remove_metrics">[docs]</a>    <span class="k">def</span> <span class="nf">remove_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metrics</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]]):</span>
+        <span class="sd">&quot;&quot;&quot;Remove metrics to compute.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            metrics (`str(s)`): Names of metrics to remove.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">metrics</span> <span class="o">=</span> <span class="p">[</span><span class="n">metrics</span><span class="p">]</span>
+        <span class="n">pairs_to_remove</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">:</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span><span class="p">[</span><span class="n">m</span><span class="p">]</span>
+            <span class="n">pairs_to_remove</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metric_pairs</span> <span class="k">if</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">x</span><span class="p">])</span>
+
+        <span class="k">for</span> <span class="n">pair</span> <span class="ow">in</span> <span class="n">pairs_to_remove</span><span class="p">:</span></div>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metric_pairs</span><span class="p">[</span><span class="n">pair</span><span class="p">]</span>
+
+<div class="viewcode-block" id="MetricsManager.__call__"><a class="viewcode-back" href="../../../modules/evaluation.html#medsegpy.evaluation.metrics.MetricsManager.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">scan_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">y_pred</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">y_true</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">runtime</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Compute metrics for a scan.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            scan_id (str): The scan/example identifier</span>
+<span class="sd">            x (ndarray, optional): The input `x` accepted by most metrics.</span>
+<span class="sd">            y_pred (ndarray, optional): The predicted output.</span>
+<span class="sd">                For most metrics, should be binarized.</span>
+<span class="sd">                If computing for multiple classes, last dimension should</span>
+<span class="sd">                index different categories in the order of `self.class_names`.</span>
+<span class="sd">            y_true (ndarray, optional): The binarized ground truth output.</span>
+<span class="sd">                For multiple classes, format like `y_pred`.</span>
+<span class="sd">            runtime (float, optional): The compute time. If specified, logged</span>
+<span class="sd">                as an additional metric.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: A summary of the results for the scan.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Hacky way to define some expected values but still add them</span>
+        <span class="c1"># to kwargs for future processing.</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">locals</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y_pred&quot;</span><span class="p">,</span> <span class="s2">&quot;y_true&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+
+        <span class="n">num_classes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">class_names</span><span class="p">)</span>
+        <span class="n">metrics_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">display_name</span><span class="p">()</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+        <span class="n">metrics_data</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getfullargspec</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span><span class="o">.</span><span class="n">args</span>
+
+            <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">name</span><span class="p">:</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">args</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;self&quot;</span><span class="p">]</span>
+            <span class="p">}</span>
+
+            <span class="k">if</span> <span class="n">num_classes</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="s2">&quot;category_dim&quot;</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+                <span class="n">params</span><span class="p">[</span><span class="s2">&quot;category_dim&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">category_dim</span>
+                <span class="n">metrics_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">metric</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">metrics_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">[</span>
+                        <span class="n">metric</span><span class="p">(</span>
+                            <span class="o">**</span><span class="p">{</span>
+                                <span class="n">k</span><span class="p">:</span> <span class="n">v</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span>
+                                <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;y_pred&quot;</span><span class="p">,</span> <span class="s2">&quot;y_true&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">]</span>
+                                <span class="k">else</span> <span class="n">v</span>
+                                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                            <span class="p">}</span>
+                        <span class="p">)</span>
+                        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_classes</span><span class="p">)</span>
+                    <span class="p">]</span>
+                <span class="p">)</span>
+
+        <span class="n">metrics_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+            <span class="n">metrics_data</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">metrics_names</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">class_names</span>
+        <span class="p">)</span>
+        <span class="n">metrics_data</span><span class="o">.</span><span class="n">replace</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">runtimes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">runtime</span><span class="p">)</span>
+
+        <span class="n">strs</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">: </span><span class="si">{:0.3f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">metrics_names</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">metrics_data</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+        <span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scan_data</span><span class="p">[</span><span class="n">scan_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">metrics_data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_data_stale</span> <span class="o">=</span> <span class="kc">True</span>
+</div>
+        <span class="k">return</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">strs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_compute_metric_pairs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arr</span><span class="p">):</span>
+        <span class="n">pair_names</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">vals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">pred_key</span><span class="p">,</span> <span class="n">base_key</span><span class="p">),</span> <span class="p">(</span><span class="n">reds</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metric_pairs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">pred_idx</span><span class="p">,</span> <span class="n">base_idx</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">pred_key</span><span class="p">),</span> <span class="n">names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">base_key</span><span class="p">)</span>
+            <span class="n">preds</span> <span class="o">=</span> <span class="n">arr</span><span class="p">[:,</span> <span class="n">pred_idx</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+            <span class="n">base</span> <span class="o">=</span> <span class="n">arr</span><span class="p">[:,</span> <span class="n">base_idx</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+
+            <span class="n">vals</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">r</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">reds</span><span class="p">])</span>
+            <span class="n">e_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">display_name</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">reds</span><span class="p">]</span>
+            <span class="n">pair_names</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">e_names</span><span class="p">)</span>
+
+        <span class="n">vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">pair_names</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">class_names</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">df</span>
+
+<div class="viewcode-block" id="MetricsManager.scan_summary"><a class="viewcode-back" href="../../../modules/evaluation.html#medsegpy.evaluation.metrics.MetricsManager.scan_summary">[docs]</a>    <span class="k">def</span> <span class="nf">scan_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scan_id</span><span class="p">,</span> <span class="n">delimiter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Get summary of results for a scan.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            scan_id: Scan id for which to summarize results.</span>
+<span class="sd">            delimiter (`str`, optional): Delimiter between different metrics.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: A summary of metrics for the scan. Values are averaged across</span>
+<span class="sd">                all categories.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">scan_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scan_data</span><span class="p">[</span><span class="n">scan_id</span><span class="p">]</span>
+        <span class="n">avg_data</span> <span class="o">=</span> <span class="n">scan_data</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">strs</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">: </span><span class="si">{:0.3f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">avg_data</span><span class="p">[</span><span class="n">n</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">avg_data</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="p">]</span>
+</div>
+        <span class="k">return</span> <span class="n">delimiter</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">strs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">data_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">raw_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scan_data</span><span class="o">.</span><span class="n">values</span><span class="p">()],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span>
+        <span class="p">)</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">raw_arr</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">display_name</span><span class="p">()</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">names</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">class_names</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metric_pairs</span><span class="p">:</span>
+            <span class="n">df_pairs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_metric_pairs</span><span class="p">(</span><span class="n">raw_arr</span><span class="p">)</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">df</span><span class="p">,</span> <span class="n">df_pairs</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">df</span>
+
+<div class="viewcode-block" id="MetricsManager.summary"><a class="viewcode-back" href="../../../modules/evaluation.html#medsegpy.evaluation.metrics.MetricsManager.summary">[docs]</a>    <span class="k">def</span> <span class="nf">summary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get summary of results overall scans.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: Tabulated summary. Rows=metrics. Columns=classes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_frame</span><span class="p">()</span>
+</div>
+        <span class="k">return</span> <span class="n">tabulate</span><span class="o">.</span><span class="n">tabulate</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">class_names</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+<div class="viewcode-block" id="MetricsManager.data"><a class="viewcode-back" href="../../../modules/evaluation.html#medsegpy.evaluation.metrics.MetricsManager.data">[docs]</a>    <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        TODO: Determine format</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scan_data</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="n">keys</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_scan_data</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span></div>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;runtimes&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">runtimes</span><span class="p">,</span> <span class="s2">&quot;scan_data&quot;</span><span class="p">:</span> <span class="n">df</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scan_data</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scan_id</span><span class="p">):</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scan_data</span><span class="p">[</span><span class="n">scan_id</span><span class="p">]</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2018-2021, Arjun Desai.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,38 +1,52 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html4" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>medsegpy.utils package &mdash; MedSegPy 0.0.1 documentation</title>
+  <title>medsegpy.utils &mdash; MedSegPy 0.0.1 documentation</title>
   
-
-  
-  
-  
-  
-
-  
-  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-
-    
 
   
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../',
+              VERSION:'0.0.1',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="prev" title="medsegpy.solver package" href="solver.html" /> 
@@ -76,6 +90,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -86,16 +101,16 @@
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/index.html">Tutorials</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">API Documentation</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="data.html">medsegpy.data package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="engine.html">medsegpy.engine package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="evaluation.html">medsegpy.evaluation package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html">medsegpy.modeling.layers package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html#module-medsegpy.modeling.meta_arch">medsegpy.modeling.meta_arch package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html#module-medsegpy.modeling">medsegpy.modeling package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data.html">medsegpy.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="engine.html">medsegpy.engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evaluation.html">medsegpy.evaluation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html">medsegpy.modeling</a></li>
 <li class="toctree-l2"><a class="reference internal" href="solver.html">medsegpy.solver package</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">medsegpy.utils package</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#module-medsegpy.utils.logger">medsegpy.utils.logger module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#module-medsegpy.utils.dl_utils">medsegpy.utils.dl_utils module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">medsegpy.utils</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-medsegpy.utils.cluster">medsegpy.utils.cluster</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-medsegpy.utils.dl_utils">medsegpy.utils.dl_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-medsegpy.utils.env">medsegpy.utils.env</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-medsegpy.utils.logger">medsegpy.utils.logger</a></li>
 </ul>
 </li>
 </ul>
@@ -105,6 +120,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -139,20 +155,22 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../index.html">Docs</a> &raquo;</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="index.html">API Documentation</a> &raquo;</li>
         
-      <li>medsegpy.utils package</li>
+      <li>medsegpy.utils</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="../_sources/modules/utils.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -166,46 +184,276 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="medsegpy-utils-package">
-<h1>medsegpy.utils package<a class="headerlink" href="#medsegpy-utils-package" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="medsegpy-utils">
+<h1>medsegpy.utils<a class="headerlink" href="#medsegpy-utils" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-medsegpy.utils.cluster">
+<span id="medsegpy-utils-cluster"></span><h2>medsegpy.utils.cluster<a class="headerlink" href="#module-medsegpy.utils.cluster" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="medsegpy.utils.cluster.Cluster">
+<em class="property">class </em><code class="descclassname">medsegpy.utils.cluster.</code><code class="descname">Cluster</code><span class="sig-paren">(</span><em>name: str, patterns: Union[str, typing.Sequence[str]], data_dir: str = None, results_dir: str = None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/cluster.html#Cluster"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.cluster.Cluster" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tracks config of different nodes/clusters.</p>
+<p>This class is helpful for managing different storage paths across different
+nodes/clusters without the overhead of duplicating the codebase across
+multiple nodes.</p>
+<p>To identify the current node, we inspect the hostname.
+This can be problematic if two machines have the same hostname, though
+this has not been an issue as of yet.</p>
+<p>DO NOT use the node’s public ip address to identify it. Not only is this not
+returned by <code class="docutils literal notranslate"><span class="pre">socket.hostname()</span></code>, but there are also some security issues.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This class is not thread safe. Saving/deleting configs should be done on
+the main thread.</p>
+</div>
+<dl class="method">
+<dt id="medsegpy.utils.cluster.Cluster.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>name: str, patterns: Union[str, typing.Sequence[str]], data_dir: str = None, results_dir: str = None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/cluster.html#Cluster.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.cluster.Cluster.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – The name of the cluster. Name is case-sensitive.</li>
+<li><strong>patterns</strong> (<em>Sequence</em><em>[</em><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a><em>]</em>) – Regex pattern(s) for identifying cluster.
+Cluster will be identified by
+<code class="docutils literal notranslate"><span class="pre">any(re.match(p,</span> <span class="pre">socket.gethostname())</span> <span class="pre">for</span> <span class="pre">p</span> <span class="pre">in</span> <span class="pre">patterns)</span></code>.</li>
+<li><strong>data_dir</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a><em>, </em><em>optional</em>) – The data directory. Defaults to
+<code class="docutils literal notranslate"><span class="pre">os.environ['MEDSEGPY_RESULTS']</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;./datasets&quot;</span></code>.</li>
+<li><strong>results_dir</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a><em>, </em><em>optional</em>) – The results directory. Defaults to
+<cite>“os.environ[‘MEDSEGPY_DATASETS’]”</cite> or <code class="docutils literal notranslate"><span class="pre">&quot;./results&quot;</span></code>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="medsegpy.utils.cluster.Cluster.save">
+<code class="descname">save</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/cluster.html#Cluster.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.cluster.Cluster.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save cluster config to yaml file.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="medsegpy.utils.cluster.Cluster.delete">
+<code class="descname">delete</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/cluster.html#Cluster.delete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.cluster.Cluster.delete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deletes the config file for this cluster.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="medsegpy.utils.cluster.Cluster.filepath">
+<code class="descname">filepath</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/cluster.html#Cluster.filepath"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.cluster.Cluster.filepath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns config file path.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This does not guarantee the config exists. To save the cluster config to a file,
+use <cite>save()</cite>.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><em>str</em> – The config file path.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="medsegpy.utils.cluster.Cluster.save_dir">
+<code class="descname">save_dir</code><a class="headerlink" href="#medsegpy.utils.cluster.Cluster.save_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Deprecated</em> – Legacy alias for <cite>self.results_dir</cite></p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="medsegpy.utils.cluster.Cluster.cluster">
+<em class="property">classmethod </em><code class="descname">cluster</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/cluster.html#Cluster.cluster"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.cluster.Cluster.cluster" title="Permalink to this definition">¶</a></dt>
+<dd><p>Searches saved clusters by regex matching with hostname.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The cluster must have been saved to a config file. Also, if
+there are multiple cluster matches, only the first (sorted alphabetically)
+will be returned.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><em>Cluster</em> – The current cluster.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="medsegpy.utils.cluster.Cluster.from_config">
+<em class="property">classmethod </em><code class="descname">from_config</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/cluster.html#Cluster.from_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.cluster.Cluster.from_config" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Cluster name or path to config file.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><em>Cluster</em> – The Cluster object</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="medsegpy.utils.cluster.Cluster.set_working_cluster">
+<em class="property">static </em><code class="descname">set_working_cluster</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/cluster.html#Cluster.set_working_cluster"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.cluster.Cluster.set_working_cluster" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the working cluster.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cluster</strong> (<cite>str</cite> or <cite>Cluster</cite>) – The cluster name or cluster.
+If <code class="docutils literal notranslate"><span class="pre">None</span></code>, will reset cluster to _UNKNOWN, meaning default
+data and results dirs will be used.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="medsegpy.utils.cluster.set_cluster">
+<code class="descclassname">medsegpy.utils.cluster.</code><code class="descname">set_cluster</code><span class="sig-paren">(</span><em>cluster: Union[str</em>, <em>medsegpy.utils.cluster.Cluster] = None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/cluster.html#set_cluster"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.cluster.set_cluster" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the working cluster.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cluster</strong> (<cite>str</cite> or <cite>Cluster</cite>) – The cluster name or cluster.
+If <code class="docutils literal notranslate"><span class="pre">None</span></code>, will reset cluster to _UNKNOWN, meaning default
+data and results dirs will be used.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-medsegpy.utils.dl_utils">
+<span id="medsegpy-utils-dl-utils"></span><h2>medsegpy.utils.dl_utils<a class="headerlink" href="#module-medsegpy.utils.dl_utils" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="medsegpy.utils.dl_utils.get_weights">
+<code class="descclassname">medsegpy.utils.dl_utils.</code><code class="descname">get_weights</code><span class="sig-paren">(</span><em>experiment_dir</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/dl_utils.html#get_weights"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.dl_utils.get_weights" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the weights file corresponding to lowest validation loss.</p>
+<p>Assumes that only the best weights are stored, so searching for the epoch
+should be enough.
+TODO: remove this assumption.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>experiment_dir</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Experiment directory where weights are stored.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><em>str</em> – Path to weights h5 file.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="medsegpy.utils.dl_utils.get_valid_subdirs">
+<code class="descclassname">medsegpy.utils.dl_utils.</code><code class="descname">get_valid_subdirs</code><span class="sig-paren">(</span><em>root_dir: str</em>, <em>exist_ok: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/dl_utils.html#get_valid_subdirs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.dl_utils.get_valid_subdirs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recursively search for experiments that are ready to be tested.</p>
+<p>Different experiments live in different folders. Based on training protocol,
+we assume that an valid experiment has completed training if its folder
+contains files “config.ini” and “pik_data.dat”.</p>
+<p>To avoid recomputing experiments with results, <cite>exist_ok=False</cite> by default.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>root_dir</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Root folder to search.</li>
+<li><strong>exist_ok</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional) – If <cite>True</cite>, recompute results for
+experiments.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>List[str]</em> – Experiment directories to test.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="medsegpy.utils.dl_utils.get_available_gpus">
+<code class="descclassname">medsegpy.utils.dl_utils.</code><code class="descname">get_available_gpus</code><span class="sig-paren">(</span><em>num_gpus: int = None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/dl_utils.html#get_available_gpus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.dl_utils.get_available_gpus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get gpu ids for gpus that are &gt;95% free.</p>
+<p>Tensorflow does not support checking free memory on gpus.
+This is a crude method that relies on <cite>nvidia-smi</cite> to
+determine which gpus are occupied and which are free.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>num_gpus</strong> – Number of requested gpus. If not specified,
+ids of all available gpu(s) are returned.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><em>List[int]</em> –<dl class="docutils">
+<dt>List of gpu ids that are free. Length</dt>
+<dd>will equal <cite>num_gpus</cite>, if specified.</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-medsegpy.utils.env">
+<span id="medsegpy-utils-env"></span><h2>medsegpy.utils.env<a class="headerlink" href="#module-medsegpy.utils.env" title="Permalink to this headline">¶</a></h2>
+</div>
 <div class="section" id="module-medsegpy.utils.logger">
-<span id="medsegpy-utils-logger-module"></span><h2>medsegpy.utils.logger module<a class="headerlink" href="#module-medsegpy.utils.logger" title="Permalink to this headline">¶</a></h2>
+<span id="medsegpy-utils-logger"></span><h2>medsegpy.utils.logger<a class="headerlink" href="#module-medsegpy.utils.logger" title="Permalink to this headline">¶</a></h2>
 <dl class="attribute">
 <dt id="medsegpy.utils.logger.setup_logger">
-<code class="sig-prename descclassname">medsegpy.utils.logger.</code><code class="sig-name descname">setup_logger</code><a class="reference internal" href="../_modules/medsegpy/utils/logger.html#setup_logger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.logger.setup_logger" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">medsegpy.utils.logger.</code><code class="descname">setup_logger</code><a class="reference internal" href="../_modules/medsegpy/utils/logger.html#setup_logger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.logger.setup_logger" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize the detectron2 logger and set its verbosity level to “INFO”.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>output</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – a file name or a directory to save log. If None, will not
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>output</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – a file name or a directory to save log. If None, will not
 save log file. If ends with “.txt” or “.log”, assumed to be a file
-name. Otherwise, logs will be saved to <cite>output/log.txt</cite>.</p></li>
-<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – the root module name of this logger</p></li>
-<li><p><strong>abbrev_name</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – an abbreviation of the module, to avoid long names in
+name. Otherwise, logs will be saved to <cite>output/log.txt</cite>.</li>
+<li><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – the root module name of this logger</li>
+<li><strong>abbrev_name</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – an abbreviation of the module, to avoid long names in
 logs. Set to “” to not log the root module in logs.
 By default, will abbreviate “detectron2” to “d2” and leave other
-modules unchanged.</p></li>
+modules unchanged.</li>
 </ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><em>logging.Logger</em> – a logger</p>
-</dd>
-</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>logging.Logger</em> – a logger</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="medsegpy.utils.logger.log_first_n">
-<code class="sig-prename descclassname">medsegpy.utils.logger.</code><code class="sig-name descname">log_first_n</code><span class="sig-paren">(</span><em class="sig-param">lvl</em>, <em class="sig-param">msg</em>, <em class="sig-param">n=1</em>, <em class="sig-param">*</em>, <em class="sig-param">name=None</em>, <em class="sig-param">key='caller'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/logger.html#log_first_n"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.logger.log_first_n" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">medsegpy.utils.logger.</code><code class="descname">log_first_n</code><span class="sig-paren">(</span><em>lvl</em>, <em>msg</em>, <em>n=1</em>, <em>*</em>, <em>name=None</em>, <em>key='caller'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/logger.html#log_first_n"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.logger.log_first_n" title="Permalink to this definition">¶</a></dt>
 <dd><p>Log only for the first n times.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>lvl</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – the logging level</p></li>
-<li><p><strong>msg</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – </p></li>
-<li><p><strong>n</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – </p></li>
-<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – name of the logger to use. Will use the caller’s module by
-default.</p></li>
-<li><p><strong>key</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#tuple" title="(in Python v3.6)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a><em>]</em>) – the string(s) can be one of “caller” or
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>lvl</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – the logging level</li>
+<li><strong>msg</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – </li>
+<li><strong>n</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – </li>
+<li><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – name of the logger to use. Will use the caller’s module by
+default.</li>
+<li><strong>key</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#tuple" title="(in Python v3.6)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a><em>]</em>) – the string(s) can be one of “caller” or
 “message”, which defines how to identify duplicated logs.
 For example, if called with <cite>n=1, key=”caller”</cite>, this function
 will only log the first call from the same caller, regardless of
@@ -215,142 +463,71 @@ same content only once, even if they are called from different
 places.
 If called with <cite>n=1, key=(“caller”, “message”)</cite>, this function
 will not log only if the same caller has logged the same message
-before.</p></li>
+before.</li>
 </ul>
-</dd>
-</dl>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="medsegpy.utils.logger.log_every_n">
-<code class="sig-prename descclassname">medsegpy.utils.logger.</code><code class="sig-name descname">log_every_n</code><span class="sig-paren">(</span><em class="sig-param">lvl</em>, <em class="sig-param">msg</em>, <em class="sig-param">n=1</em>, <em class="sig-param">*</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/logger.html#log_every_n"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.logger.log_every_n" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">medsegpy.utils.logger.</code><code class="descname">log_every_n</code><span class="sig-paren">(</span><em>lvl</em>, <em>msg</em>, <em>n=1</em>, <em>*</em>, <em>name=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/logger.html#log_every_n"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.logger.log_every_n" title="Permalink to this definition">¶</a></dt>
 <dd><p>Log once per n times.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>lvl</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – the logging level</p></li>
-<li><p><strong>msg</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – </p></li>
-<li><p><strong>n</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – </p></li>
-<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – name of the logger to use. Will use the caller’s module by
-default.</p></li>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>lvl</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – the logging level</li>
+<li><strong>msg</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – </li>
+<li><strong>n</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – </li>
+<li><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – name of the logger to use. Will use the caller’s module by
+default.</li>
 </ul>
-</dd>
-</dl>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="medsegpy.utils.logger.log_every_n_seconds">
-<code class="sig-prename descclassname">medsegpy.utils.logger.</code><code class="sig-name descname">log_every_n_seconds</code><span class="sig-paren">(</span><em class="sig-param">lvl</em>, <em class="sig-param">msg</em>, <em class="sig-param">n=1</em>, <em class="sig-param">*</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/logger.html#log_every_n_seconds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.logger.log_every_n_seconds" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">medsegpy.utils.logger.</code><code class="descname">log_every_n_seconds</code><span class="sig-paren">(</span><em>lvl</em>, <em>msg</em>, <em>n=1</em>, <em>*</em>, <em>name=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/logger.html#log_every_n_seconds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.logger.log_every_n_seconds" title="Permalink to this definition">¶</a></dt>
 <dd><p>Log no more than once per n seconds.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>lvl</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – the logging level</p></li>
-<li><p><strong>msg</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – </p></li>
-<li><p><strong>n</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – </p></li>
-<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – name of the logger to use. Will use the caller’s module by
-default.</p></li>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>lvl</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – the logging level</li>
+<li><strong>msg</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – </li>
+<li><strong>n</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – </li>
+<li><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – name of the logger to use. Will use the caller’s module by
+default.</li>
 </ul>
-</dd>
-</dl>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="medsegpy.utils.logger.create_small_table">
-<code class="sig-prename descclassname">medsegpy.utils.logger.</code><code class="sig-name descname">create_small_table</code><span class="sig-paren">(</span><em class="sig-param">small_dict</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/logger.html#create_small_table"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.logger.create_small_table" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">medsegpy.utils.logger.</code><code class="descname">create_small_table</code><span class="sig-paren">(</span><em>small_dict</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/logger.html#create_small_table"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.logger.create_small_table" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a small table using the keys of small_dict as headers. This is only
 suitable for small dictionaries.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>small_dict</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><em>dict</em></a>) – a result dictionary of only a few items.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><em>str</em> – the table as a string.</p>
-</dd>
-</dl>
-</dd></dl>
-
-</div>
-<div class="section" id="module-medsegpy.utils.dl_utils">
-<span id="medsegpy-utils-dl-utils-module"></span><h2>medsegpy.utils.dl_utils module<a class="headerlink" href="#module-medsegpy.utils.dl_utils" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="medsegpy.utils.dl_utils.get_weights">
-<code class="sig-prename descclassname">medsegpy.utils.dl_utils.</code><code class="sig-name descname">get_weights</code><span class="sig-paren">(</span><em class="sig-param">experiment_dir</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/dl_utils.html#get_weights"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.dl_utils.get_weights" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets the weights file corresponding to lowest validation loss.</p>
-<p>Assumes that only the best weights are stored, so searching for the epoch
-should be enough.
-TODO: remove this assumption.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>experiment_dir</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Experiment directory where weights are stored.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><em>str</em> – Path to weights h5 file.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="medsegpy.utils.dl_utils.get_valid_subdirs">
-<code class="sig-prename descclassname">medsegpy.utils.dl_utils.</code><code class="sig-name descname">get_valid_subdirs</code><span class="sig-paren">(</span><em class="sig-param">root_dir: str</em>, <em class="sig-param">exist_ok: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/dl_utils.html#get_valid_subdirs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.dl_utils.get_valid_subdirs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Recursively search for experiments that are ready to be tested.</p>
-<p>Different experiments live in different folders. Based on training protocol,
-we assume that an valid experiment has completed training if its folder
-contains files “config.ini” and “pik_data.dat”.</p>
-<p>To avoid recomputing experiments with results, <cite>exist_ok=False</cite> by default.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>root_dir</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Root folder to search.</p></li>
-<li><p><strong>exist_ok</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional) – If <cite>True</cite>, recompute results for
-experiments.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><em>List[str]</em> – Experiment directories to test.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="medsegpy.utils.dl_utils.get_available_gpus">
-<code class="sig-prename descclassname">medsegpy.utils.dl_utils.</code><code class="sig-name descname">get_available_gpus</code><span class="sig-paren">(</span><em class="sig-param">num_gpus: int = None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/dl_utils.html#get_available_gpus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.dl_utils.get_available_gpus" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get gpu ids for gpus that are &gt;95% free.</p>
-<p>Tensorflow does not support checking free memory on gpus.
-This is a crude method that relies on <cite>nvidia-smi</cite> to
-determine which gpus are occupied and which are free.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>num_gpus</strong> – Number of requested gpus. If not specified,
-ids of all available gpu(s) are returned.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><p><em>List[int]</em> –</p>
-<dl class="simple">
-<dt>List of gpu ids that are free. Length</dt><dd><p>will equal <cite>num_gpus</cite>, if specified.</p>
-</dd>
-</dl>
-</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="medsegpy.utils.dl_utils.num_gpus">
-<code class="sig-prename descclassname">medsegpy.utils.dl_utils.</code><code class="sig-name descname">num_gpus</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/dl_utils.html#num_gpus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.dl_utils.num_gpus" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="class">
-<dt id="medsegpy.utils.dl_utils.ModelMGPU">
-<em class="property">class </em><code class="sig-prename descclassname">medsegpy.utils.dl_utils.</code><code class="sig-name descname">ModelMGPU</code><span class="sig-paren">(</span><em class="sig-param">ser_model</em>, <em class="sig-param">gpus</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/dl_utils.html#ModelMGPU"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.dl_utils.ModelMGPU" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">medsegpy.modeling.model.Model</span></code></p>
-<dl class="method">
-<dt id="medsegpy.utils.dl_utils.ModelMGPU.__getattribute__">
-<code class="sig-name descname">__getattribute__</code><span class="sig-paren">(</span><em class="sig-param">attrname</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/utils/dl_utils.html#ModelMGPU.__getattribute__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.utils.dl_utils.ModelMGPU.__getattribute__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Override load and save methods to be used from the serial-model. The
-serial-model holds references to the weights in the multi-gpu model.</p>
-</dd></dl>
-
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>small_dict</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><em>dict</em></a>) – a result dictionary of only a few items.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><em>str</em> – the table as a string.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
@@ -361,27 +538,28 @@ serial-model holds references to the weights in the multi-gpu model.</p>
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-      
-        <a href="solver.html" class="btn btn-neutral float-left" title="medsegpy.solver package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="solver.html" class="btn btn-neutral float-left" title="medsegpy.solver package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2020, Arjun Desai
+        &#169; Copyright 2018-2021, Arjun Desai.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -389,7 +567,6 @@ serial-model holds references to the weights in the multi-gpu model.</p>
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

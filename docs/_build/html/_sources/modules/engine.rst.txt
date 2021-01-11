@@ -1,32 +1,28 @@
-medsegpy.engine package
+medsegpy.engine
 =========================
 
 
 .. automodule:: medsegpy.engine
     :members:
-    :undoc-members:
-    :show-inheritance:
+    :no-undoc-members:
 
-medsegpy.engine.trainer module
+medsegpy.engine.trainer
 ---------------------------------
 
 .. automodule:: medsegpy.engine.trainer
     :members:
-    :undoc-members:
-    :show-inheritance:
+    :no-undoc-members:
 
-medsegpy.engine.defaults module
+medsegpy.engine.defaults
 ---------------------------------
 
 .. automodule:: medsegpy.engine.defaults
     :members:
-    :undoc-members:
-    :show-inheritance:
+    :no-undoc-members:
 
-medsegpy.engine.callbacks module
+medsegpy.engine.callbacks
 ---------------------------------
 
 .. automodule:: medsegpy.engine.callbacks
     :members:
-    :undoc-members:
-    :show-inheritance:
+    :no-undoc-members:

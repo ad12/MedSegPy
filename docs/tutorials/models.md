@@ -26,7 +26,7 @@ All models must extend the MedSegPy
 [Model](../modules/modeling.html#medsegpy.modeling.model.Model) interface. This interface has a builtin
 method that makes testing on different scans and running inference relatively simple.
 
-Each model is associated with a unique config type (see the [config tutorial](./configs.html)).
+Each model is associated with a unique config type (see the [config tutorial](configs.html).
 Here you will define fields that are specific to controlling properties of your model architecture.
 
 If your model is very similar to existing models, see if you can modify existing configs to include

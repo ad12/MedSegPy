@@ -1,38 +1,52 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html4" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>medsegpy.data.build &mdash; MedSegPy 0.0.1 documentation</title>
   
 
   
-  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
   
   
 
   
-  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../../../',
+              VERSION:'0.0.1',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
         <script type="text/javascript" src="../../../_static/jquery.js"></script>
         <script type="text/javascript" src="../../../_static/underscore.js"></script>
         <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
 </head>
@@ -75,6 +89,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -83,13 +98,14 @@
             
             
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials/index.html">User Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../modules/index.html">API Documentation</a></li>
 </ul>
 
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -124,11 +140,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../../index.html">Module code</a> &raquo;</li>
         
@@ -151,15 +169,15 @@
 <span></span><span class="sd">&quot;&quot;&quot;Build dataset dictionaries.&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">itertools</span>
 <span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">from</span> <span class="nn">medsegpy.config</span> <span class="k">import</span> <span class="n">Config</span>
+<span class="kn">from</span> <span class="nn">medsegpy.config</span> <span class="kn">import</span> <span class="n">Config</span>
 
-<span class="kn">from</span> <span class="nn">.catalog</span> <span class="k">import</span> <span class="n">DatasetCatalog</span>
-<span class="kn">from</span> <span class="nn">.data_loader</span> <span class="k">import</span> <span class="n">build_data_loader</span>
+<span class="kn">from</span> <span class="nn">.catalog</span> <span class="kn">import</span> <span class="n">DatasetCatalog</span>
+<span class="kn">from</span> <span class="nn">.data_loader</span> <span class="kn">import</span> <span class="n">build_data_loader</span>
 
 
-<span class="k">def</span> <span class="nf">filter_dataset</span><span class="p">(</span>
+<div class="viewcode-block" id="filter_dataset"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.build.filter_dataset">[docs]</a><span class="k">def</span> <span class="nf">filter_dataset</span><span class="p">(</span>
     <span class="n">dataset_dicts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">],</span>
     <span class="n">by</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">,</span>
     <span class="n">accepted_elements</span><span class="p">,</span>
@@ -190,11 +208,11 @@
         <span class="s2">&quot;Removed </span><span class="si">{}</span><span class="s2"> elements with filter &#39;</span><span class="si">{}</span><span class="s2">&#39;. </span><span class="si">{}</span><span class="s2"> elements left.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="n">num_before</span> <span class="o">-</span> <span class="n">num_after</span><span class="p">,</span> <span class="n">by</span><span class="p">,</span> <span class="n">num_after</span>
         <span class="p">)</span>
-    <span class="p">)</span>
+    <span class="p">)</span></div>
     <span class="k">return</span> <span class="n">dataset_dicts</span>
 
 
-<span class="k">def</span> <span class="nf">get_sem_seg_dataset_dicts</span><span class="p">(</span>
+<div class="viewcode-block" id="get_sem_seg_dataset_dicts"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.build.get_sem_seg_dataset_dicts">[docs]</a><span class="k">def</span> <span class="nf">get_sem_seg_dataset_dicts</span><span class="p">(</span>
     <span class="n">dataset_names</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">filter_empty</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Load and prepare dataset dicts for semantic segmentation.</span>
@@ -223,11 +241,11 @@
                 <span class="n">num_before</span> <span class="o">-</span> <span class="n">num_after</span><span class="p">,</span> <span class="n">num_after</span>
             <span class="p">)</span>
         <span class="p">)</span>
-
+</div>
     <span class="k">return</span> <span class="n">dataset_dicts</span>
 
 
-<div class="viewcode-block" id="build_loader"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.build_loader">[docs]</a><span class="k">def</span> <span class="nf">build_loader</span><span class="p">(</span>
+<span class="k">def</span> <span class="nf">build_loader</span><span class="p">(</span>
     <span class="n">cfg</span><span class="p">:</span> <span class="n">Config</span><span class="p">,</span>
     <span class="n">dataset_names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
     <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -244,27 +262,32 @@
     <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;drop_last&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">drop_last</span>
 
     <span class="n">dataset_dicts</span> <span class="o">=</span> <span class="n">get_sem_seg_dataset_dicts</span><span class="p">(</span><span class="n">dataset_names</span><span class="p">,</span> <span class="n">filter_empty</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">build_data_loader</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">dataset_dicts</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">build_data_loader</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">dataset_dicts</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
            </div>
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2020, Arjun Desai
+        &#169; Copyright 2018-2021, Arjun Desai.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -272,7 +295,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

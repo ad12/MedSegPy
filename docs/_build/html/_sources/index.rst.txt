@@ -6,6 +6,8 @@
 Welcome to MedSegPy's documentation!
 ====================================
 
+MedSegPy is a Python library for rapid training, validation, and deployment of medical segmentation models. 
+
 .. toctree::
    :maxdepth: 2
 

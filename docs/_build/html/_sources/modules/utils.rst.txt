@@ -1,21 +1,36 @@
-medsegpy.utils package
+medsegpy.utils
 ========================
 
-medsegpy.utils.logger module
-------------------------------
+medsegpy.utils.cluster
+--------------------------------
 
-.. automodule:: medsegpy.utils.logger
+.. automodule:: medsegpy.utils.cluster
     :members:
-    :undoc-members:
-    :show-inheritance:
+    :no-undoc-members:
 
 
-medsegpy.utils.dl_utils module
+medsegpy.utils.dl_utils
 --------------------------------
 
 .. automodule:: medsegpy.utils.dl_utils
     :members:
-    :undoc-members:
-    :show-inheritance:
+    :no-undoc-members:
+
+
+medsegpy.utils.env
+--------------------------------
+
+.. automodule:: medsegpy.utils.env
+    :members:
+    :no-undoc-members:
+
+
+medsegpy.utils.logger
+------------------------------
+
+.. automodule:: medsegpy.utils.logger
+    :members:
+    :no-undoc-members:
+
 
 

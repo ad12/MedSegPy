@@ -1,38 +1,52 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html4" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>Overview: module code &mdash; MedSegPy 0.0.1 documentation</title>
   
 
   
-  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
   
   
 
   
-  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../',
+              VERSION:'0.0.1',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
         <script type="text/javascript" src="../_static/jquery.js"></script>
         <script type="text/javascript" src="../_static/underscore.js"></script>
         <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" /> 
 </head>
@@ -75,6 +89,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -83,13 +98,14 @@
             
             
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/index.html">User Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../modules/index.html">API Documentation</a></li>
 </ul>
 
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -124,11 +140,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../index.html">Docs</a> &raquo;</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>Overview: module code</li>
     
@@ -149,13 +167,21 @@
 <ul><li><a href="medsegpy/data/build.html">medsegpy.data.build</a></li>
 <li><a href="medsegpy/data/catalog.html">medsegpy.data.catalog</a></li>
 <li><a href="medsegpy/data/data_loader.html">medsegpy.data.data_loader</a></li>
-<li><a href="medsegpy/data/im_gens.html">medsegpy.data.im_gens</a></li>
 <li><a href="medsegpy/engine/callbacks.html">medsegpy.engine.callbacks</a></li>
 <li><a href="medsegpy/engine/defaults.html">medsegpy.engine.defaults</a></li>
 <li><a href="medsegpy/engine/trainer.html">medsegpy.engine.trainer</a></li>
-<li><a href="medsegpy/evaluation/build.html">medsegpy.evaluation.build</a></li>
 <li><a href="medsegpy/evaluation/evaluator.html">medsegpy.evaluation.evaluator</a></li>
+<li><a href="medsegpy/evaluation/metrics.html">medsegpy.evaluation.metrics</a></li>
 <li><a href="medsegpy/evaluation/sem_seg_evaluation.html">medsegpy.evaluation.sem_seg_evaluation</a></li>
+<li><a href="medsegpy/modeling/layers/attention.html">medsegpy.modeling.layers.attention</a></li>
+<li><a href="medsegpy/modeling/layers/upsampling.html">medsegpy.modeling.layers.upsampling</a></li>
+<li><a href="medsegpy/modeling/meta_arch/build.html">medsegpy.modeling.meta_arch.build</a></li>
+<li><a href="medsegpy/modeling/meta_arch/deeplabv3.html">medsegpy.modeling.meta_arch.deeplabv3</a></li>
+<li><a href="medsegpy/modeling/meta_arch/unet.html">medsegpy.modeling.meta_arch.unet</a></li>
+<li><a href="medsegpy/solver/build.html">medsegpy.solver.build</a></li>
+<li><a href="medsegpy/solver/lr_scheduler.html">medsegpy.solver.lr_scheduler</a></li>
+<li><a href="medsegpy/solver/optimizer.html">medsegpy.solver.optimizer</a></li>
+<li><a href="medsegpy/utils/cluster.html">medsegpy.utils.cluster</a></li>
 <li><a href="medsegpy/utils/dl_utils.html">medsegpy.utils.dl_utils</a></li>
 <li><a href="medsegpy/utils/logger.html">medsegpy.utils.logger</a></li>
 </ul>
@@ -164,20 +190,25 @@
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2020, Arjun Desai
+        &#169; Copyright 2018-2021, Arjun Desai.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -185,7 +216,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

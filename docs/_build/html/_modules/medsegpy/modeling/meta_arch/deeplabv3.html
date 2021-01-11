@@ -1,0 +1,1037 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html4" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>medsegpy.modeling.meta_arch.deeplabv3 &mdash; MedSegPy 0.0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../../../../',
+              VERSION:'0.0.1',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> MedSegPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/index.html">API Documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">MedSegPy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>medsegpy.modeling.meta_arch.deeplabv3</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for medsegpy.modeling.meta_arch.deeplabv3</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;DeeplabV3+ implementation.</span>
+
+<span class="sd">This model is based on TF and Keras repos below:</span>
+<span class="sd">https://github.com/tensorflow/models/tree/master/research/deeplab</span>
+<span class="sd">https://github.com/bonlime/keras-deeplab-v3-plus</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">backend</span> <span class="k">as</span> <span class="n">K</span>
+<span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">layers</span>
+<span class="kn">from</span> <span class="nn">keras.engine.topology</span> <span class="kn">import</span> <span class="n">get_source_inputs</span>
+<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Activation</span><span class="p">,</span>
+    <span class="n">Add</span><span class="p">,</span>
+    <span class="n">AveragePooling2D</span><span class="p">,</span>
+    <span class="n">BatchNormalization</span><span class="p">,</span>
+    <span class="n">Concatenate</span><span class="p">,</span>
+    <span class="n">Conv2D</span><span class="p">,</span>
+    <span class="n">DepthwiseConv2D</span><span class="p">,</span>
+    <span class="n">Dropout</span><span class="p">,</span>
+    <span class="n">Input</span><span class="p">,</span>
+    <span class="n">ZeroPadding2D</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">keras.models</span> <span class="kn">import</span> <span class="n">Model</span>
+
+<span class="kn">from</span> <span class="nn">medsegpy.config</span> <span class="kn">import</span> <span class="n">DeeplabV3Config</span>
+
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">model_utils</span> <span class="k">as</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">..layers</span> <span class="kn">import</span> <span class="n">BilinearUpsampling</span>
+<span class="kn">from</span> <span class="nn">..model</span> <span class="kn">import</span> <span class="n">Model</span>
+<span class="kn">from</span> <span class="nn">.build</span> <span class="kn">import</span> <span class="n">META_ARCH_REGISTRY</span><span class="p">,</span> <span class="n">ModelBuilder</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="DeeplabV3Plus"><a class="viewcode-back" href="../../../../modules/modeling.html#medsegpy.modeling.meta_arch.deeplabv3.DeeplabV3Plus">[docs]</a><span class="nd">@META_ARCH_REGISTRY</span><span class="o">.</span><span class="n">register</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">DeeplabV3Plus</span><span class="p">(</span><span class="n">ModelBuilder</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg</span><span class="p">:</span> <span class="n">DeeplabV3Config</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_seed</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">SEED</span>
+
+    <span class="k">def</span> <span class="nf">_get_seed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="c1"># We change the seed to avoid initializing all kernels with the same</span>
+        <span class="c1"># seed, but still keeping the individual seeds deterministic.</span>
+        <span class="n">seed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seed</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_seed</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">seed</span>
+
+    <span class="k">def</span> <span class="nf">_kernel_initializer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">kernel_initializer</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">build_keras_config</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span><span class="o">.</span><span class="n">KERNEL_INITIALIZER</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_seed</span><span class="p">()</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">kernel_initializer</span>
+
+<div class="viewcode-block" id="DeeplabV3Plus.sep_conv_bn"><a class="viewcode-back" href="../../../../modules/modeling.html#medsegpy.modeling.meta_arch.deeplabv3.DeeplabV3Plus.sep_conv_bn">[docs]</a>    <span class="k">def</span> <span class="nf">sep_conv_bn</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">x</span><span class="p">,</span>
+        <span class="n">filters</span><span class="p">,</span>
+        <span class="n">prefix</span><span class="p">,</span>
+        <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+        <span class="n">rate</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">depth_activation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;SepConv with BN between depthwise &amp; pointwise.</span>
+
+<span class="sd">        Optionally add activation after BN.</span>
+<span class="sd">        Implements right &quot;same&quot; padding for even kernel sizes</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x: input tensor</span>
+<span class="sd">            filters: num of filters in pointwise convolution</span>
+<span class="sd">            prefix: prefix before name</span>
+<span class="sd">            stride: stride at depthwise conv</span>
+<span class="sd">            kernel_size: kernel size for depthwise convolution</span>
+<span class="sd">            rate: atrous rate for depthwise convolution</span>
+<span class="sd">            depth_activation: flag to use activation between depthwise &amp;</span>
+<span class="sd">                pointwise convs</span>
+<span class="sd">            epsilon: epsilon to use in BN layer</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">stride</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">depth_padding</span> <span class="o">=</span> <span class="s2">&quot;same&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">kernel_size_effective</span> <span class="o">=</span> <span class="n">kernel_size</span> <span class="o">+</span> <span class="p">(</span><span class="n">kernel_size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">rate</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">pad_total</span> <span class="o">=</span> <span class="n">kernel_size_effective</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">pad_beg</span> <span class="o">=</span> <span class="n">pad_total</span> <span class="o">//</span> <span class="mi">2</span>
+            <span class="n">pad_end</span> <span class="o">=</span> <span class="n">pad_total</span> <span class="o">-</span> <span class="n">pad_beg</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">ZeroPadding2D</span><span class="p">((</span><span class="n">pad_beg</span><span class="p">,</span> <span class="n">pad_end</span><span class="p">))(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">depth_padding</span> <span class="o">=</span> <span class="s2">&quot;valid&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">depth_activation</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">Activation</span><span class="p">(</span><span class="s2">&quot;relu&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">DepthwiseConv2D</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">),</span>
+            <span class="n">strides</span><span class="o">=</span><span class="p">(</span><span class="n">stride</span><span class="p">,</span> <span class="n">stride</span><span class="p">),</span>
+            <span class="n">dilation_rate</span><span class="o">=</span><span class="p">(</span><span class="n">rate</span><span class="p">,</span> <span class="n">rate</span><span class="p">),</span>
+            <span class="n">padding</span><span class="o">=</span><span class="n">depth_padding</span><span class="p">,</span>
+            <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_kernel_initializer</span><span class="p">(),</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;_depthwise&quot;</span><span class="p">,</span>
+        <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;_depthwise_BN&quot;</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="n">epsilon</span><span class="p">)(</span>
+            <span class="n">x</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">depth_activation</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">Activation</span><span class="p">(</span><span class="s2">&quot;relu&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">Conv2D</span><span class="p">(</span>
+            <span class="n">filters</span><span class="p">,</span>
+            <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+            <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_kernel_initializer</span><span class="p">(),</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;_pointwise&quot;</span><span class="p">,</span>
+        <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;_pointwise_BN&quot;</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="n">epsilon</span><span class="p">)(</span>
+            <span class="n">x</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">depth_activation</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">Activation</span><span class="p">(</span><span class="s2">&quot;relu&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+</div>
+        <span class="k">return</span> <span class="n">x</span>
+
+    <span class="k">def</span> <span class="nf">_conv2d_same</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">prefix</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Implements right &#39;same&#39; padding for even kernel sizes</span>
+<span class="sd">            Without this there is a 1 pixel drift when stride = 2</span>
+<span class="sd">            Args:</span>
+<span class="sd">                x: input tensor</span>
+<span class="sd">                filters: num of filters in pointwise convolution</span>
+<span class="sd">                prefix: prefix before name</span>
+<span class="sd">                stride: stride at depthwise conv</span>
+<span class="sd">                kernel_size: kernel size for depthwise convolution</span>
+<span class="sd">                rate: atrous rate for depthwise convolution</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">stride</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Conv2D</span><span class="p">(</span>
+                <span class="n">filters</span><span class="p">,</span>
+                <span class="p">(</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">),</span>
+                <span class="n">strides</span><span class="o">=</span><span class="p">(</span><span class="n">stride</span><span class="p">,</span> <span class="n">stride</span><span class="p">),</span>
+                <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+                <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">dilation_rate</span><span class="o">=</span><span class="p">(</span><span class="n">rate</span><span class="p">,</span> <span class="n">rate</span><span class="p">),</span>
+                <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_kernel_initializer</span><span class="p">(),</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">prefix</span><span class="p">,</span>
+            <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">kernel_size_effective</span> <span class="o">=</span> <span class="n">kernel_size</span> <span class="o">+</span> <span class="p">(</span><span class="n">kernel_size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">rate</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">pad_total</span> <span class="o">=</span> <span class="n">kernel_size_effective</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">pad_beg</span> <span class="o">=</span> <span class="n">pad_total</span> <span class="o">//</span> <span class="mi">2</span>
+            <span class="n">pad_end</span> <span class="o">=</span> <span class="n">pad_total</span> <span class="o">-</span> <span class="n">pad_beg</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">ZeroPadding2D</span><span class="p">((</span><span class="n">pad_beg</span><span class="p">,</span> <span class="n">pad_end</span><span class="p">))(</span><span class="n">x</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Conv2D</span><span class="p">(</span>
+                <span class="n">filters</span><span class="p">,</span>
+                <span class="p">(</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">),</span>
+                <span class="n">strides</span><span class="o">=</span><span class="p">(</span><span class="n">stride</span><span class="p">,</span> <span class="n">stride</span><span class="p">),</span>
+                <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;valid&quot;</span><span class="p">,</span>
+                <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">dilation_rate</span><span class="o">=</span><span class="p">(</span><span class="n">rate</span><span class="p">,</span> <span class="n">rate</span><span class="p">),</span>
+                <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_kernel_initializer</span><span class="p">(),</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">prefix</span><span class="p">,</span>
+            <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_xception_block</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">,</span>
+        <span class="n">depth_list</span><span class="p">,</span>
+        <span class="n">prefix</span><span class="p">,</span>
+        <span class="n">skip_connection_type</span><span class="p">,</span>
+        <span class="n">stride</span><span class="p">,</span>
+        <span class="n">rate</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">depth_activation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">return_skip</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Basic building block of modified Xception network</span>
+<span class="sd">            Args:</span>
+<span class="sd">                inputs: input tensor</span>
+<span class="sd">                depth_list: number of filters in each SepConv layer. len(depth_list) == 3</span>
+<span class="sd">                prefix: prefix before name</span>
+<span class="sd">                skip_connection_type: one of {&#39;conv&#39;,&#39;sum&#39;,&#39;none&#39;}</span>
+<span class="sd">                stride: stride at last depthwise conv</span>
+<span class="sd">                rate: atrous rate for depthwise convolution</span>
+<span class="sd">                depth_activation: flag to use activation between depthwise &amp; pointwise convs</span>
+<span class="sd">                return_skip: flag to return additional tensor after 2 SepConvs for decoder</span>
+<span class="sd">                &quot;&quot;&quot;</span>
+        <span class="n">residual</span> <span class="o">=</span> <span class="n">inputs</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+            <span class="n">residual</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sep_conv_bn</span><span class="p">(</span>
+                <span class="n">residual</span><span class="p">,</span>
+                <span class="n">depth_list</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                <span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;_separable_conv</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
+                <span class="n">stride</span><span class="o">=</span><span class="n">stride</span> <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">2</span> <span class="k">else</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="n">rate</span><span class="o">=</span><span class="n">rate</span><span class="p">,</span>
+                <span class="n">depth_activation</span><span class="o">=</span><span class="n">depth_activation</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">skip</span> <span class="o">=</span> <span class="n">residual</span>
+        <span class="k">if</span> <span class="n">skip_connection_type</span> <span class="o">==</span> <span class="s2">&quot;conv&quot;</span><span class="p">:</span>
+            <span class="n">shortcut</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conv2d_same</span><span class="p">(</span>
+                <span class="n">inputs</span><span class="p">,</span>
+                <span class="n">depth_list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                <span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;_shortcut&quot;</span><span class="p">,</span>
+                <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">stride</span><span class="o">=</span><span class="n">stride</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">shortcut</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;_shortcut_BN&quot;</span><span class="p">)(</span>
+                <span class="n">shortcut</span>
+            <span class="p">)</span>
+            <span class="n">outputs</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">add</span><span class="p">([</span><span class="n">residual</span><span class="p">,</span> <span class="n">shortcut</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="n">skip_connection_type</span> <span class="o">==</span> <span class="s2">&quot;sum&quot;</span><span class="p">:</span>
+            <span class="n">outputs</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">add</span><span class="p">([</span><span class="n">residual</span><span class="p">,</span> <span class="n">inputs</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="n">skip_connection_type</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
+            <span class="n">outputs</span> <span class="o">=</span> <span class="n">residual</span>
+        <span class="k">if</span> <span class="n">return_skip</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">skip</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">outputs</span>
+
+    <span class="k">def</span> <span class="nf">_make_divisible</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">divisor</span><span class="p">,</span> <span class="n">min_value</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">min_value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">min_value</span> <span class="o">=</span> <span class="n">divisor</span>
+        <span class="n">new_v</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">min_value</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">v</span> <span class="o">+</span> <span class="n">divisor</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">//</span> <span class="n">divisor</span> <span class="o">*</span> <span class="n">divisor</span><span class="p">)</span>
+        <span class="c1"># Make sure that round down does not go down by more than 10%.</span>
+        <span class="k">if</span> <span class="n">new_v</span> <span class="o">&lt;</span> <span class="mf">0.9</span> <span class="o">*</span> <span class="n">v</span><span class="p">:</span>
+            <span class="n">new_v</span> <span class="o">+=</span> <span class="n">divisor</span>
+        <span class="k">return</span> <span class="n">new_v</span>
+
+    <span class="k">def</span> <span class="nf">_inverted_res_block</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">,</span>
+        <span class="n">expansion</span><span class="p">,</span>
+        <span class="n">stride</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="p">,</span>
+        <span class="n">filters</span><span class="p">,</span>
+        <span class="n">block_id</span><span class="p">,</span>
+        <span class="n">skip_connection</span><span class="p">,</span>
+        <span class="n">rate</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">in_channels</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">_keras_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">pointwise_conv_filters</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">filters</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">)</span>
+        <span class="n">pointwise_filters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_divisible</span><span class="p">(</span><span class="n">pointwise_conv_filters</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">inputs</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;expanded_conv_</span><span class="si">{}</span><span class="s2">_&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">block_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">block_id</span><span class="p">:</span>
+            <span class="c1"># Expand</span>
+
+            <span class="n">x</span> <span class="o">=</span> <span class="n">Conv2D</span><span class="p">(</span>
+                <span class="n">expansion</span> <span class="o">*</span> <span class="n">in_channels</span><span class="p">,</span>
+                <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+                <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">activation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_kernel_initializer</span><span class="p">(),</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;expand&quot;</span><span class="p">,</span>
+            <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span>
+                <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.999</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;expand_BN&quot;</span>
+            <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">Activation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">relu6</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;expand_relu&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;expanded_conv_&quot;</span>
+        <span class="c1"># Depthwise</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">DepthwiseConv2D</span><span class="p">(</span>
+            <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+            <span class="n">strides</span><span class="o">=</span><span class="n">stride</span><span class="p">,</span>
+            <span class="n">activation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+            <span class="n">dilation_rate</span><span class="o">=</span><span class="p">(</span><span class="n">rate</span><span class="p">,</span> <span class="n">rate</span><span class="p">),</span>
+            <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_kernel_initializer</span><span class="p">(),</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;depthwise&quot;</span><span class="p">,</span>
+        <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span>
+            <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.999</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;depthwise_BN&quot;</span>
+        <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="n">Activation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">relu6</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;depthwise_relu&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="c1"># Project</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">Conv2D</span><span class="p">(</span>
+            <span class="n">pointwise_filters</span><span class="p">,</span>
+            <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+            <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">activation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_kernel_initializer</span><span class="p">(),</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;project&quot;</span><span class="p">,</span>
+        <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span>
+            <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.999</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;project_BN&quot;</span>
+        <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">skip_connection</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Add</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;add&quot;</span><span class="p">)([</span><span class="n">inputs</span><span class="p">,</span> <span class="n">x</span><span class="p">])</span>
+
+        <span class="c1"># if in_channels == pointwise_filters and stride == 1:</span>
+        <span class="c1">#    return Add(name=&#39;res_connect_&#39; + str(block_id))([inputs, x])</span>
+
+        <span class="k">return</span> <span class="n">x</span>
+
+<div class="viewcode-block" id="DeeplabV3Plus.deeplabv3"><a class="viewcode-back" href="../../../../modules/modeling.html#medsegpy.modeling.meta_arch.deeplabv3.DeeplabV3Plus.deeplabv3">[docs]</a>    <span class="k">def</span> <span class="nf">deeplabv3</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">input_tensor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">512</span><span class="p">,</span> <span class="mi">512</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+        <span class="n">classes</span><span class="o">=</span><span class="mi">21</span><span class="p">,</span>
+        <span class="n">backbone</span><span class="o">=</span><span class="s2">&quot;mobilenetv2&quot;</span><span class="p">,</span>
+        <span class="n">OS</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">dilation_divisor</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">dil_rate_input</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">dropout_rate</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Model</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; Instantiates the Deeplabv3+ architecture</span>
+
+<span class="sd">        Optionally loads weights pre-trained</span>
+<span class="sd">        on PASCAL VOC. This model is available for TensorFlow only,</span>
+<span class="sd">        and can only be used with inputs following the TensorFlow</span>
+<span class="sd">        data format `(width, height, channels)`.</span>
+<span class="sd">        # Arguments</span>
+<span class="sd">            weights: one of &#39;pascal_voc&#39; (pre-trained on pascal voc)</span>
+<span class="sd">                or None (random initialization)</span>
+<span class="sd">            input_tensor: optional Keras tensor (i.e. output of `layers.Input()`)</span>
+<span class="sd">                to use as image input for the model.</span>
+<span class="sd">            input_shape: shape of input image. format HxWxC</span>
+<span class="sd">                PASCAL VOC model was trained on (512,512,3) images</span>
+<span class="sd">            classes: number of desired classes. If classes != 21,</span>
+<span class="sd">                last layer is initialized randomly</span>
+<span class="sd">            backbone: backbone to use. one of {&#39;xception&#39;,&#39;mobilenetv2&#39;}</span>
+<span class="sd">            OS: determines input_shape/feature_extractor_output ratio. One of {8,16}.</span>
+<span class="sd">                Used only for xception backbone.</span>
+<span class="sd">            alpha: controls the width of the MobileNetV2 network. This is known as the</span>
+<span class="sd">                width multiplier in the MobileNetV2 paper.</span>
+<span class="sd">                    - If `alpha` &lt; 1.0, proportionally decreases the number</span>
+<span class="sd">                        of filters in each layer.</span>
+<span class="sd">                    - If `alpha` &gt; 1.0, proportionally increases the number</span>
+<span class="sd">                        of filters in each layer.</span>
+<span class="sd">                    - If `alpha` = 1, default number of filters from the paper</span>
+<span class="sd">                        are used at each layer.</span>
+<span class="sd">                Used only for mobilenetv2 backbone</span>
+
+<span class="sd">        # Returns</span>
+<span class="sd">            A Keras model instance.</span>
+
+<span class="sd">        # Raises</span>
+<span class="sd">            RuntimeError: If attempting to run this model with a</span>
+<span class="sd">                backend that does not support separable convolutions.</span>
+<span class="sd">            ValueError: in case of invalid argument for `weights` or `backbone`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">K</span><span class="o">.</span><span class="n">backend</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">&quot;tensorflow&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;The Deeplabv3+ model is only available with &quot;</span>
+                <span class="s2">&quot;the TensorFlow backend.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">backbone</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;xception&quot;</span><span class="p">,</span> <span class="s2">&quot;mobilenetv2&quot;</span><span class="p">}):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The `backbone` argument should be either &quot;</span>
+                <span class="s2">&quot;`xception`  or `mobilenetv2` &quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">input_tensor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">img_input</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">K</span><span class="o">.</span><span class="n">is_keras_tensor</span><span class="p">(</span><span class="n">input_tensor</span><span class="p">):</span>
+                <span class="n">img_input</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">tensor</span><span class="o">=</span><span class="n">input_tensor</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">img_input</span> <span class="o">=</span> <span class="n">input_tensor</span>
+
+        <span class="k">if</span> <span class="n">backbone</span> <span class="o">==</span> <span class="s2">&quot;xception&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">OS</span> <span class="o">==</span> <span class="mi">8</span><span class="p">:</span>
+                <span class="n">entry_block3_stride</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">middle_block_rate</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># ! Not mentioned in paper, but required</span>
+                <span class="n">exit_block_rates</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+                <span class="n">atrous_rates</span> <span class="o">=</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">36</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">entry_block3_stride</span> <span class="o">=</span> <span class="mi">2</span>
+                <span class="n">middle_block_rate</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">exit_block_rates</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+                <span class="n">atrous_rates</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="mi">6</span> <span class="o">//</span> <span class="n">dilation_divisor</span><span class="p">,</span>
+                    <span class="mi">12</span> <span class="o">//</span> <span class="n">dilation_divisor</span><span class="p">,</span>
+                    <span class="mi">18</span> <span class="o">//</span> <span class="n">dilation_divisor</span><span class="p">,</span>
+                <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">dil_rate_input</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">atrous_rates</span> <span class="o">=</span> <span class="n">dil_rate_input</span>
+
+            <span class="n">x</span> <span class="o">=</span> <span class="n">Conv2D</span><span class="p">(</span>
+                <span class="mi">32</span><span class="p">,</span>
+                <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+                <span class="n">strides</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;entry_flow_conv1_1&quot;</span><span class="p">,</span>
+                <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+                <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_kernel_initializer</span><span class="p">(),</span>
+            <span class="p">)(</span><span class="n">img_input</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;entry_flow_conv1_1_BN&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">Activation</span><span class="p">(</span><span class="s2">&quot;relu&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conv2d_same</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="s2">&quot;entry_flow_conv1_2&quot;</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span>
+            <span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;entry_flow_conv1_2_BN&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">Activation</span><span class="p">(</span><span class="s2">&quot;relu&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_xception_block</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span>
+                <span class="p">[</span><span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">],</span>
+                <span class="s2">&quot;entry_flow_block1&quot;</span><span class="p">,</span>
+                <span class="n">skip_connection_type</span><span class="o">=</span><span class="s2">&quot;conv&quot;</span><span class="p">,</span>
+                <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">depth_activation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">skip1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_xception_block</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span>
+                <span class="p">[</span><span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">],</span>
+                <span class="s2">&quot;entry_flow_block2&quot;</span><span class="p">,</span>
+                <span class="n">skip_connection_type</span><span class="o">=</span><span class="s2">&quot;conv&quot;</span><span class="p">,</span>
+                <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">depth_activation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">return_skip</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_xception_block</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span>
+                <span class="p">[</span><span class="mi">728</span><span class="p">,</span> <span class="mi">728</span><span class="p">,</span> <span class="mi">728</span><span class="p">],</span>
+                <span class="s2">&quot;entry_flow_block3&quot;</span><span class="p">,</span>
+                <span class="n">skip_connection_type</span><span class="o">=</span><span class="s2">&quot;conv&quot;</span><span class="p">,</span>
+                <span class="n">stride</span><span class="o">=</span><span class="n">entry_block3_stride</span><span class="p">,</span>
+                <span class="n">depth_activation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">16</span><span class="p">):</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_xception_block</span><span class="p">(</span>
+                    <span class="n">x</span><span class="p">,</span>
+                    <span class="p">[</span><span class="mi">728</span><span class="p">,</span> <span class="mi">728</span><span class="p">,</span> <span class="mi">728</span><span class="p">],</span>
+                    <span class="s2">&quot;middle_flow_unit_</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
+                    <span class="n">skip_connection_type</span><span class="o">=</span><span class="s2">&quot;sum&quot;</span><span class="p">,</span>
+                    <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">rate</span><span class="o">=</span><span class="n">middle_block_rate</span><span class="p">,</span>
+                    <span class="n">depth_activation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="p">)</span>
+
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_xception_block</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span>
+                <span class="p">[</span><span class="mi">728</span><span class="p">,</span> <span class="mi">1024</span><span class="p">,</span> <span class="mi">1024</span><span class="p">],</span>
+                <span class="s2">&quot;exit_flow_block1&quot;</span><span class="p">,</span>
+                <span class="n">skip_connection_type</span><span class="o">=</span><span class="s2">&quot;conv&quot;</span><span class="p">,</span>
+                <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">rate</span><span class="o">=</span><span class="n">exit_block_rates</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">depth_activation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_xception_block</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span>
+                <span class="p">[</span><span class="mi">1536</span><span class="p">,</span> <span class="mi">1536</span><span class="p">,</span> <span class="mi">2048</span><span class="p">],</span>
+                <span class="s2">&quot;exit_flow_block2&quot;</span><span class="p">,</span>
+                <span class="n">skip_connection_type</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span>
+                <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">rate</span><span class="o">=</span><span class="n">exit_block_rates</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                <span class="n">depth_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">OS</span> <span class="o">=</span> <span class="mi">8</span>
+            <span class="n">first_block_filters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_divisible</span><span class="p">(</span><span class="mi">32</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">Conv2D</span><span class="p">(</span>
+                <span class="n">first_block_filters</span><span class="p">,</span>
+                <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                <span class="n">strides</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+                <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+                <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Conv&quot;</span><span class="p">,</span>
+                <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_kernel_initializer</span><span class="p">(),</span>
+            <span class="p">)(</span><span class="n">img_input</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span>
+                <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.999</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Conv_BN&quot;</span>
+            <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">Activation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">relu6</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Conv_Relu6&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverted_res_block</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span>
+                <span class="n">filters</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+                <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+                <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">expansion</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">block_id</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">skip_connection</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverted_res_block</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span>
+                <span class="n">filters</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span>
+                <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+                <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">expansion</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+                <span class="n">block_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">skip_connection</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverted_res_block</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span>
+                <span class="n">filters</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span>
+                <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+                <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">expansion</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+                <span class="n">block_id</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">skip_connection</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverted_res_block</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span>
+                <span class="n">filters</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+                <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+                <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">expansion</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+                <span class="n">block_id</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                <span class="n">skip_connection</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverted_res_block</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span>
+                <span class="n">filters</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+                <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+                <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">expansion</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+                <span class="n">block_id</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                <span class="n">skip_connection</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverted_res_block</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span>
+                <span class="n">filters</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+                <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+                <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">expansion</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+                <span class="n">block_id</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+                <span class="n">skip_connection</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="c1"># stride in block 6 changed from 2 -&gt; 1, so we need to use rate = 2</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverted_res_block</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span>
+                <span class="n">filters</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+                <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+                <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>  <span class="c1"># 1!</span>
+                <span class="n">expansion</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+                <span class="n">block_id</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+                <span class="n">skip_connection</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverted_res_block</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span>
+                <span class="n">filters</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+                <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+                <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">rate</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">expansion</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+                <span class="n">block_id</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
+                <span class="n">skip_connection</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverted_res_block</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span>
+                <span class="n">filters</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+                <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+                <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">rate</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">expansion</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+                <span class="n">block_id</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+                <span class="n">skip_connection</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverted_res_block</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span>
+                <span class="n">filters</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+                <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+                <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">rate</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">expansion</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+                <span class="n">block_id</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span>
+                <span class="n">skip_connection</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverted_res_block</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span>
+                <span class="n">filters</span><span class="o">=</span><span class="mi">96</span><span class="p">,</span>
+                <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+                <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">rate</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">expansion</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+                <span class="n">block_id</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                <span class="n">skip_connection</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverted_res_block</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span>
+                <span class="n">filters</span><span class="o">=</span><span class="mi">96</span><span class="p">,</span>
+                <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+                <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">rate</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">expansion</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+                <span class="n">block_id</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span>
+                <span class="n">skip_connection</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverted_res_block</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span>
+                <span class="n">filters</span><span class="o">=</span><span class="mi">96</span><span class="p">,</span>
+                <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+                <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">rate</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">expansion</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+                <span class="n">block_id</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+                <span class="n">skip_connection</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverted_res_block</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span>
+                <span class="n">filters</span><span class="o">=</span><span class="mi">160</span><span class="p">,</span>
+                <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+                <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">rate</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>  <span class="c1"># 1!</span>
+                <span class="n">expansion</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+                <span class="n">block_id</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span>
+                <span class="n">skip_connection</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverted_res_block</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span>
+                <span class="n">filters</span><span class="o">=</span><span class="mi">160</span><span class="p">,</span>
+                <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+                <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">rate</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                <span class="n">expansion</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+                <span class="n">block_id</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span>
+                <span class="n">skip_connection</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverted_res_block</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span>
+                <span class="n">filters</span><span class="o">=</span><span class="mi">160</span><span class="p">,</span>
+                <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+                <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">rate</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                <span class="n">expansion</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+                <span class="n">block_id</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+                <span class="n">skip_connection</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverted_res_block</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span>
+                <span class="n">filters</span><span class="o">=</span><span class="mi">320</span><span class="p">,</span>
+                <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+                <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">rate</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                <span class="n">expansion</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+                <span class="n">block_id</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+                <span class="n">skip_connection</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># end of feature extractor</span>
+
+        <span class="c1"># branching for Atrous Spatial Pyramid Pooling</span>
+
+        <span class="c1"># Image Feature branch</span>
+        <span class="c1"># out_shape = int(np.ceil(input_shape[0] / OS))</span>
+        <span class="n">b4</span> <span class="o">=</span> <span class="n">AveragePooling2D</span><span class="p">(</span>
+            <span class="n">pool_size</span><span class="o">=</span><span class="p">(</span>
+                <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">OS</span><span class="p">)),</span>
+                <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">OS</span><span class="p">)),</span>
+            <span class="p">)</span>
+        <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">b4</span> <span class="o">=</span> <span class="n">Conv2D</span><span class="p">(</span>
+            <span class="mi">256</span><span class="p">,</span>
+            <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+            <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_kernel_initializer</span><span class="p">(),</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;image_pooling&quot;</span><span class="p">,</span>
+        <span class="p">)(</span><span class="n">b4</span><span class="p">)</span>
+        <span class="n">b4</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;image_pooling_BN&quot;</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">)(</span><span class="n">b4</span><span class="p">)</span>
+        <span class="n">b4</span> <span class="o">=</span> <span class="n">Activation</span><span class="p">(</span><span class="s2">&quot;relu&quot;</span><span class="p">)(</span><span class="n">b4</span><span class="p">)</span>
+        <span class="n">b4</span> <span class="o">=</span> <span class="n">BilinearUpsampling</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">OS</span><span class="p">)),</span>
+                <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">OS</span><span class="p">)),</span>
+            <span class="p">)</span>
+        <span class="p">)(</span><span class="n">b4</span><span class="p">)</span>
+
+        <span class="c1"># simple 1x1</span>
+        <span class="n">b0</span> <span class="o">=</span> <span class="n">Conv2D</span><span class="p">(</span>
+            <span class="mi">256</span><span class="p">,</span>
+            <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+            <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_kernel_initializer</span><span class="p">(),</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;aspp0&quot;</span><span class="p">,</span>
+        <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">b0</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;aspp0_BN&quot;</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">)(</span><span class="n">b0</span><span class="p">)</span>
+        <span class="n">b0</span> <span class="o">=</span> <span class="n">Activation</span><span class="p">(</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;aspp0_activation&quot;</span><span class="p">)(</span><span class="n">b0</span><span class="p">)</span>
+
+        <span class="c1"># there are only 2 branches in mobilenetV2. not sure why</span>
+        <span class="k">if</span> <span class="n">backbone</span> <span class="o">==</span> <span class="s2">&quot;xception&quot;</span><span class="p">:</span>
+            <span class="c1"># rate = 6 (12)</span>
+            <span class="n">b1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sep_conv_bn</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span>
+                <span class="mi">256</span><span class="p">,</span>
+                <span class="s2">&quot;aspp1&quot;</span><span class="p">,</span>
+                <span class="n">rate</span><span class="o">=</span><span class="n">atrous_rates</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">depth_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="c1"># rate = 12 (24)</span>
+            <span class="n">b2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sep_conv_bn</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span>
+                <span class="mi">256</span><span class="p">,</span>
+                <span class="s2">&quot;aspp2&quot;</span><span class="p">,</span>
+                <span class="n">rate</span><span class="o">=</span><span class="n">atrous_rates</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                <span class="n">depth_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="c1"># rate = 18 (36)</span>
+            <span class="n">b3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sep_conv_bn</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span>
+                <span class="mi">256</span><span class="p">,</span>
+                <span class="s2">&quot;aspp3&quot;</span><span class="p">,</span>
+                <span class="n">rate</span><span class="o">=</span><span class="n">atrous_rates</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                <span class="n">depth_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="c1"># concatenate ASPP branches &amp; project</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">Concatenate</span><span class="p">()([</span><span class="n">b4</span><span class="p">,</span> <span class="n">b0</span><span class="p">,</span> <span class="n">b1</span><span class="p">,</span> <span class="n">b2</span><span class="p">,</span> <span class="n">b3</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">Concatenate</span><span class="p">()([</span><span class="n">b4</span><span class="p">,</span> <span class="n">b0</span><span class="p">])</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="n">Conv2D</span><span class="p">(</span>
+            <span class="mi">256</span><span class="p">,</span>
+            <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+            <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_kernel_initializer</span><span class="p">(),</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;concat_projection&quot;</span><span class="p">,</span>
+        <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;concat_projection_BN&quot;</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">Activation</span><span class="p">(</span><span class="s2">&quot;relu&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">Dropout</span><span class="p">(</span><span class="n">dropout_rate</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_seed</span><span class="p">())(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="c1"># DeepLab v.3+ decoder</span>
+
+        <span class="k">if</span> <span class="n">backbone</span> <span class="o">==</span> <span class="s2">&quot;xception&quot;</span><span class="p">:</span>
+            <span class="c1"># Feature projection</span>
+            <span class="c1"># x4 (x2) block</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">BilinearUpsampling</span><span class="p">(</span>
+                <span class="n">output_size</span><span class="o">=</span><span class="p">(</span>
+                    <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)),</span>
+                    <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)),</span>
+                <span class="p">)</span>
+            <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">dec_skip1</span> <span class="o">=</span> <span class="n">Conv2D</span><span class="p">(</span>
+                <span class="mi">48</span><span class="p">,</span>
+                <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+                <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_kernel_initializer</span><span class="p">(),</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;feature_projection0&quot;</span><span class="p">,</span>
+            <span class="p">)(</span><span class="n">skip1</span><span class="p">)</span>
+            <span class="n">dec_skip1</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;feature_projection0_BN&quot;</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-5</span>
+            <span class="p">)(</span><span class="n">dec_skip1</span><span class="p">)</span>
+            <span class="n">dec_skip1</span> <span class="o">=</span> <span class="n">Activation</span><span class="p">(</span><span class="s2">&quot;relu&quot;</span><span class="p">)(</span><span class="n">dec_skip1</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">Concatenate</span><span class="p">()([</span><span class="n">x</span><span class="p">,</span> <span class="n">dec_skip1</span><span class="p">])</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sep_conv_bn</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="s2">&quot;decoder_conv0&quot;</span><span class="p">,</span> <span class="n">depth_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-5</span>
+            <span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sep_conv_bn</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="s2">&quot;decoder_conv1&quot;</span><span class="p">,</span> <span class="n">depth_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-5</span>
+            <span class="p">)</span>
+
+        <span class="c1"># you can use it with arbitary number of classes</span>
+        <span class="k">if</span> <span class="n">classes</span> <span class="o">==</span> <span class="mi">21</span><span class="p">:</span>
+            <span class="n">last_layer_name</span> <span class="o">=</span> <span class="s2">&quot;logits_semantic&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">last_layer_name</span> <span class="o">=</span> <span class="s2">&quot;custom_logits_semantic&quot;</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="n">Conv2D</span><span class="p">(</span>
+            <span class="n">classes</span><span class="p">,</span>
+            <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">,</span>
+            <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_kernel_initializer</span><span class="p">(),</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">last_layer_name</span><span class="p">,</span>
+        <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">BilinearUpsampling</span><span class="p">(</span><span class="n">output_size</span><span class="o">=</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="c1"># 1x1 convolution to get pixel-wise semantic segmentation.</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">add_sem_seg_activation</span><span class="p">(</span>
+            <span class="n">x</span><span class="p">,</span>
+            <span class="n">classes</span><span class="p">,</span>
+            <span class="n">conv_type</span><span class="o">=</span><span class="n">Conv2D</span><span class="p">,</span>
+            <span class="n">activation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span><span class="o">.</span><span class="n">LOSS</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="n">kernel_initializer</span><span class="o">=</span><span class="s2">&quot;glorot_uniform&quot;</span><span class="p">,</span>
+            <span class="n">seed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span><span class="o">.</span><span class="n">SEED</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Ensure that the model takes into account</span>
+        <span class="c1"># any potential predecessors of `input_tensor`.</span>
+        <span class="k">if</span> <span class="n">input_tensor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">inputs</span> <span class="o">=</span> <span class="n">get_source_inputs</span><span class="p">(</span><span class="n">input_tensor</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">inputs</span> <span class="o">=</span> <span class="n">img_input</span>
+
+        <span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;deeplabv3+&quot;</span><span class="p">)</span>
+</div>
+        <span class="k">return</span> <span class="n">model</span>
+
+<div class="viewcode-block" id="DeeplabV3Plus.relu6"><a class="viewcode-back" href="../../../../modules/modeling.html#medsegpy.modeling.meta_arch.deeplabv3.DeeplabV3Plus.relu6">[docs]</a>    <span class="k">def</span> <span class="nf">relu6</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span></div>
+        <span class="k">return</span> <span class="n">K</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">max_value</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DeeplabV3Plus.build_model"><a class="viewcode-back" href="../../../../modules/modeling.html#medsegpy.modeling.meta_arch.deeplabv3.DeeplabV3Plus.build_model">[docs]</a>    <span class="k">def</span> <span class="nf">build_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_tensor</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Model</span><span class="p">:</span>
+        <span class="n">cfg</span><span class="p">:</span> <span class="n">DeeplabV3Config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">deeplabv3</span><span class="p">(</span>
+            <span class="n">input_tensor</span><span class="o">=</span><span class="n">input_tensor</span><span class="p">,</span>
+            <span class="n">input_shape</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">IMG_SIZE</span><span class="p">,</span>
+            <span class="n">classes</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">get_num_classes</span><span class="p">(),</span>
+            <span class="n">OS</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">OS</span><span class="p">,</span>
+            <span class="n">dil_rate_input</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">DIL_RATES</span><span class="p">,</span>
+            <span class="n">dropout_rate</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">DROPOUT_RATE</span><span class="p">,</span>
+            <span class="n">backbone</span><span class="o">=</span><span class="s2">&quot;xception&quot;</span><span class="p">,</span></div></div>
+        <span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2018-2021, Arjun Desai.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

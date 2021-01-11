@@ -30,7 +30,7 @@ In medsegpy, there are two types of interfaces that address this tension togethe
    included in medsegpy, these well-defined components can be reused.
 
 
-If you need to extend mesegpy to your own needs,
+If you need to extend MedSegPy to your own needs,
 see the following tutorials for more details:
 
 * MedSegPy includes a few standard datasets, but you can use custom ones. See
