@@ -7,6 +7,17 @@ vergte() {
   [ "$2" = "$(echo -e "$1\n$2" | sort -V | head -n1)" ]
 }
 
+
+formatFiles=0
+if [ ! -z $1 ]; then
+  if [[ $1 == "format" ]]; then
+    formatFiles=1
+  else
+    echo "Unknown option $1"
+    exit 1
+  fi
+fi
+
 {
 	black --version | grep "19.3b0" > /dev/null
 } || {
@@ -24,10 +35,20 @@ vergte "$ISORT_VERSION" "$ISORT_TARGET_VERSION" || {
 set -v
 
 echo "Running isort ..."
-isort -y -sp . --atomic
+if [ "$formatFiles" -eq "0" ]; then
+  isort -c -sp . --atomic
+else
+  isort -y -sp . --atomic
+fi
 
 echo "Running black ..."
-black --config pyproject.toml .
+if [ "$formatFiles" -eq "0" ]; then
+  black --config pyproject.toml . --check
+else
+  black --config pyproject.toml .
+fi
+echo $?
+exit 1
 
 echo "Running flake8 ..."
 if [ -x "$(command -v flake8-3)" ]; then
