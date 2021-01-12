@@ -40,6 +40,10 @@ if [ "$formatFiles" -eq "0" ]; then
 else
   isort -y -sp . --atomic
 fi
+errCode=$?
+if [ "$errCode" != 0 ]; then
+  exit $errCode
+fi
 
 echo "Running black ..."
 if [ "$formatFiles" -eq "0" ]; then
@@ -47,8 +51,10 @@ if [ "$formatFiles" -eq "0" ]; then
 else
   black --config pyproject.toml .
 fi
-echo $?
-exit 1
+errCode=$?
+if [ "$errCode" != 0 ]; then
+  exit $errCode
+fi
 
 echo "Running flake8 ..."
 if [ -x "$(command -v flake8-3)" ]; then
@@ -56,5 +62,9 @@ if [ -x "$(command -v flake8-3)" ]; then
 else
   python3 -m flake8 .
 fi
+errCode=$?
+if [ "$errCode" != 0 ]; then
+  exit $errCode
+fi
 
-command -v arc > /dev/null && arc lint
+# command -v arc > /dev/null && arc lint
