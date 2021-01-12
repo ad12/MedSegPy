@@ -208,6 +208,24 @@ class Config(object):
 
     def save_config(self):
         """Save params of config to ini file."""
+        filepath = os.path.join(self.OUTPUT_DIR, "config.yaml")
+        config_vars = self.to_dict()
+
+        # Save config
+        with PathManager.open(filepath, "w") as configfile:
+            yaml.dump(config_vars, configfile)
+
+        logger.info("Full config saved to {}".format(os.path.abspath(filepath)))
+
+    def to_dict(self):
+        """Returns a dictionary representation of the config.
+
+        This representation only contains public instance variable fields.
+        Private and protected instance variables are excluded. Methods are excluded.
+
+        Returns:
+            dict: The config as a dictionary.
+        """
         members = [
             attr
             for attr in dir(self)
@@ -215,18 +233,7 @@ class Config(object):
             and not attr.startswith("__")
             and not (hasattr(type(self), attr) and isinstance(getattr(type(self), attr), property))
         ]
-
-        filepath = os.path.join(self.OUTPUT_DIR, "config.yaml")
-        config_vars = dict()
-        for m_var in members:
-            config_vars[m_var] = getattr(self, m_var)
-
-        # Save config
-        # config = configparser.ConfigParser(config_vars)
-        with PathManager.open(filepath, "w") as configfile:
-            yaml.dump(config_vars, configfile)
-
-        logger.info("Full config saved to {}".format(os.path.abspath(filepath)))
+        return {m_var: getattr(self, m_var) for m_var in members}
 
     def _parse_special_attributes(self, full_key: str, value: Any) -> Tuple[str, Any]:
         """Special parsing values for attributes.

@@ -1,8 +1,8 @@
 """Adopted from https://github.com/keras-team/keras/issues/3556#issuecomment-440638517"""  # noqa
-import keras.backend as K
 
 # TODO (TF2.X)
 # from keras.legacy import interfaces
+import keras.backend as K
 from keras.optimizers import Optimizer
 
 

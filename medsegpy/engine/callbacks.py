@@ -7,6 +7,7 @@ from medsegpy.utils import env
 
 try:
     import wandb
+    import wandb.wandb_run
 
     _WANDB_AVAILABLE = True
 except ImportError:  # pragma: no-cover
@@ -63,11 +64,15 @@ class WandBLogger(kc.Callback):
     Currently only supports logging scalars.
     """
 
-    def __init__(self, period: int = 20, **kwargs):
+    def __init__(self, period: int = 20, experiment="auto", **kwargs):
         """
         Args:
             period (int, optional): Logging period.
-            **kwargs: Options to pass to wandb.init()
+            experiment (`wandb.wandb_run.Run` | `str` | `None`): The experiment run.
+                If ``"auto"``, a run will only be created if ``wandb.run`` is None.
+                If ``None``, a run will be created.
+            **kwargs: Options to pass to ``wandb.init()`` to create run. Ignored
+                if ``experiment`` specified.
         """
         if not env.supports_wandb():
             raise ValueError(
@@ -75,10 +80,10 @@ class WandBLogger(kc.Callback):
                 "Install package via `pip install wandb`. "
                 "See documentation https://docs.wandb.com/ "
             )
-        if not wandb.run and not kwargs:
-            raise ValueError("Run `wandb.init(...)` to configure the W&B run or pass keyword arguments.")
-        wandb.init(**kwargs)
-            
+        assert isinstance(experiment, wandb.wandb_run.Run) or experiment in ("auto", None)
+        if (not wandb.run and experiment == "auto") or experiment is None:
+            wandb.init(**kwargs)
+
         assert isinstance(period, int) and period > 0, "`period` must be int >0"
 
         self._period = period

@@ -296,7 +296,7 @@ class Model(_Model):
                         # tmp_batch_outputs = predict_function(iterator)
                         tmp_batch_outputs = model.predict(batch_x)
                         if data_handler.should_sync:
-                            context.async_wait()
+                            context.async_wait()  # noqa: F821
                         batch_outputs = tmp_batch_outputs  # No error, now safe to assign.
 
                         if batch_x_raw is not None:

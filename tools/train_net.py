@@ -41,7 +41,7 @@ def setup(args):
     default_setup(cfg, args)
 
     # TODO: Add suppport for resume.
-    if env.supports_wandb():
+    if env.supports_wandb() and not args.eval_only:
         exp_name = cfg.EXP_NAME
         if not exp_name:
             warnings.warn("EXP_NAME not specified. Defaulting to basename...")
@@ -49,7 +49,7 @@ def setup(args):
         wandb.init(
             project="tech-considerations",
             name=exp_name,
-            config=cfg,
+            config=cfg.to_dict(),
             sync_tensorboard=False,
             job_type="training",
             dir=cfg.OUTPUT_DIR,
