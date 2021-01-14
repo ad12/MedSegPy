@@ -152,6 +152,11 @@ class DefaultTrainer(object):
 
         return callbacks
 
+    def build_loss(self):
+        """Builds loss function used with ``model.compile(loss=...)``.
+        """
+        return build_loss(self._cfg)
+
     def _train_model(self):
         """Train model.
 
@@ -170,7 +175,7 @@ class DefaultTrainer(object):
 
         # TODO: Add more options for metrics.
         optimizer = solver.build_optimizer(cfg)
-        loss_func = build_loss(cfg)
+        loss_func = self.build_loss()
         metrics = [lr_callback(optimizer), dice_loss]
 
         callbacks = self.build_callbacks()

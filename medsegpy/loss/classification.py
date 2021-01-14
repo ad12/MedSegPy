@@ -25,6 +25,7 @@ class DiceLoss:
         reduction: str = "mean",
         reduction_axis=None,
         eps: float = None,
+        name: str = None,
     ):
         """
         Args:
@@ -45,7 +46,9 @@ class DiceLoss:
                 * `"sum"`: The output will be summed
             reduction_axis (int, optional): The axis to apply reduction to.
             eps (float, optional): Smoothing factor. Defaults to `keras.backend.epsilon()`.
+            name (str, optional): Optional name for the op.
         """
+        self.__name__ = name if name else type(self).__name__
         self.weights = np.asarray(weights) if weights is not None else weights
         self.remove_background = remove_background
         self.eps = K.epsilon() if eps is None else eps
