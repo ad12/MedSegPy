@@ -50,8 +50,6 @@ def get_required_packages():
         "resnet",
         "more-itertools",
     ]
-    if tf_ver >= [2, 0]:
-        default.extend(["more-itertools"])
     return default
 
 
