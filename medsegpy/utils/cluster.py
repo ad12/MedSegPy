@@ -110,10 +110,12 @@ class Cluster:
 
     @classmethod
     def all_clusters(cls):
-        files = sorted(os.listdir(cls._config_dir()))
+        config_dir = cls._config_dir()
         clusters = []
-        for f in files:
-            clusters.append(cls.from_config(os.path.join(cls._config_dir(), f)))
+        if os.path.isdir(config_dir):
+            files = sorted(os.listdir(config_dir))
+            for f in files:
+                clusters.append(cls.from_config(os.path.join(config_dir, f)))
         return clusters
 
     @classmethod
