@@ -100,7 +100,7 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/index.html">User Guide</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">API Documentation</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="data.html">medsegpy.data</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">medsegpy.engine</a><ul>
@@ -110,8 +110,9 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="evaluation.html">medsegpy.evaluation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modeling.html">medsegpy.modeling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="solver.html">medsegpy.solver package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html">medsegpy.modeling.layers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling.html#medsegpy-modeling-meta-arch">medsegpy.modeling.meta_arch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver.html">medsegpy.solver</a></li>
 <li class="toctree-l2"><a class="reference internal" href="utils.html">medsegpy.utils</a></li>
 </ul>
 </li>
@@ -201,9 +202,10 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>cfg</strong> (<em>Config</em>) – An experiment config.</li>
-<li><strong>run_eagerly</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><em>bool</em></a><em>, </em><em>optional</em>) – If <cite>True</cite>, runs eagerly. Only available in tensorflow&gt;=2.0.</li>
-<li><strong>strategy</strong> (<em>tf.distribute.Strategy</em><em>, </em><em>optional</em>) – The strategy to use for training. Only available
-if <cite>tf.distribute</cite> package is available (tensorflow&gt;=1.14).</li>
+<li><strong>run_eagerly</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><em>bool</em></a><em>, </em><em>optional</em>) – If <cite>True</cite>, runs eagerly.
+Only available in tensorflow&gt;=2.0.</li>
+<li><strong>strategy</strong> (<em>tf.distribute.Strategy</em><em>, </em><em>optional</em>) – The strategy to use for training.
+Only available if <cite>tf.distribute</cite> package is available (tensorflow&gt;=1.14).</li>
 </ul>
 </td>
 </tr>
@@ -216,6 +218,12 @@ if <cite>tf.distribute</cite> package is available (tensorflow&gt;=1.14).</li>
 <code class="descname">train</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/engine/trainer.html#DefaultTrainer.train"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.engine.trainer.DefaultTrainer.train" title="Permalink to this definition">¶</a></dt>
 <dd><p>Train model specified by config.</p>
 <p>Do not call this under a strategy scope. Instead, set <cite>self.strategy</cite>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="medsegpy.engine.trainer.DefaultTrainer.build_loss">
+<code class="descname">build_loss</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/engine/trainer.html#DefaultTrainer.build_loss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.engine.trainer.DefaultTrainer.build_loss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds loss function used with <code class="docutils literal notranslate"><span class="pre">model.compile(loss=...)</span></code>.</p>
 </dd></dl>
 
 </dd></dl>
@@ -268,8 +276,9 @@ if <cite>tf.distribute</cite> package is available (tensorflow&gt;=1.14).</li>
 <dt id="medsegpy.engine.defaults.default_exp_name">
 <code class="descclassname">medsegpy.engine.defaults.</code><code class="descname">default_exp_name</code><span class="sig-paren">(</span><em>cfg</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/engine/defaults.html#default_exp_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.engine.defaults.default_exp_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Extracts default experiment name from the config.</p>
-<p><cite>cfg.EXP_NAME</cite> if exists. If basename starts with “version” or “debug”, take both parent directory name
-and version name to make experiment name (e.g. “my_exp/version_001”).</p>
+<p><cite>cfg.EXP_NAME</cite> if exists. If basename starts with “version” or “debug”,
+take both parent directory name and version name to make experiment name
+(e.g. “my_exp/version_001”).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -307,9 +316,30 @@ and version name to make experiment name (e.g. “my_exp/version_001”).</p>
 
 <dl class="class">
 <dt id="medsegpy.engine.callbacks.WandBLogger">
-<em class="property">class </em><code class="descclassname">medsegpy.engine.callbacks.</code><code class="descname">WandBLogger</code><span class="sig-paren">(</span><em>period: int = 20</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/engine/callbacks.html#WandBLogger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.engine.callbacks.WandBLogger" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">medsegpy.engine.callbacks.</code><code class="descname">WandBLogger</code><span class="sig-paren">(</span><em>period: int = 20</em>, <em>experiment='auto'</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/engine/callbacks.html#WandBLogger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.engine.callbacks.WandBLogger" title="Permalink to this definition">¶</a></dt>
 <dd><p>A Keras callback to log to weights and biases.</p>
 <p>Currently only supports logging scalars.</p>
+<dl class="method">
+<dt id="medsegpy.engine.callbacks.WandBLogger.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>period: int = 20</em>, <em>experiment='auto'</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/medsegpy/engine/callbacks.html#WandBLogger.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medsegpy.engine.callbacks.WandBLogger.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>period</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a><em>, </em><em>optional</em>) – Logging period.</li>
+<li><strong>experiment</strong> (<cite>wandb.wandb_run.Run</cite> | <cite>str</cite> | <cite>None</cite>) – The experiment run.
+If <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>, a run will only be created if <code class="docutils literal notranslate"><span class="pre">wandb.run</span></code> is None.
+If <code class="docutils literal notranslate"><span class="pre">None</span></code>, a run will be created.</li>
+<li><strong>**kwargs</strong> – Options to pass to <code class="docutils literal notranslate"><span class="pre">wandb.init()</span></code> to create run. Ignored
+if <code class="docutils literal notranslate"><span class="pre">experiment</span></code> specified.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 </div>

@@ -188,8 +188,6 @@
 <span class="sd">- [Inverted Residuals and Linear Bottlenecks: Mobile Networks for</span>
 <span class="sd">    Classification, Detection and Segmentation](https://arxiv.org/abs/1801.04381)</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">import</span> <span class="nn">logging</span>
-
 <span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">backend</span> <span class="k">as</span> <span class="n">K</span>
 <span class="kn">from</span> <span class="nn">keras.engine</span> <span class="kn">import</span> <span class="n">InputSpec</span><span class="p">,</span> <span class="n">Layer</span>
 <span class="kn">from</span> <span class="nn">keras.utils</span> <span class="kn">import</span> <span class="n">conv_utils</span>
@@ -197,42 +195,28 @@
 
 <div class="viewcode-block" id="BilinearUpsampling"><a class="viewcode-back" href="../../../../modules/modeling.html#medsegpy.modeling.layers.upsampling.BilinearUpsampling">[docs]</a><span class="k">class</span> <span class="nc">BilinearUpsampling</span><span class="p">(</span><span class="n">Layer</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Just a simple bilinear upsampling layer. Works only with TF.</span>
-<span class="sd">       Args:</span>
-<span class="sd">           upsampling: tuple of 2 numbers &gt; 0. The upsampling ratio for h and w</span>
-<span class="sd">           output_size: used instead of upsampling arg if passed!</span>
+<span class="sd">    Args:</span>
+<span class="sd">        upsampling: tuple of 2 numbers &gt; 0. The upsampling ratio for h and w</span>
+<span class="sd">        output_size: used instead of upsampling arg if passed!</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">upsampling</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">output_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-    <span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">upsampling</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">output_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
         <span class="nb">super</span><span class="p">(</span><span class="n">BilinearUpsampling</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">data_format</span> <span class="o">=</span> <span class="n">conv_utils</span><span class="o">.</span><span class="n">normalize_data_format</span><span class="p">(</span><span class="n">data_format</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span><span class="n">ndim</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">output_size</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">output_size</span> <span class="o">=</span> <span class="n">conv_utils</span><span class="o">.</span><span class="n">normalize_tuple</span><span class="p">(</span>
-                <span class="n">output_size</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;output_size&quot;</span>
-            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">output_size</span> <span class="o">=</span> <span class="n">conv_utils</span><span class="o">.</span><span class="n">normalize_tuple</span><span class="p">(</span><span class="n">output_size</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;output_size&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">upsampling</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">output_size</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">upsampling</span> <span class="o">=</span> <span class="n">conv_utils</span><span class="o">.</span><span class="n">normalize_tuple</span><span class="p">(</span>
-                <span class="n">upsampling</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;upsampling&quot;</span>
-            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">upsampling</span> <span class="o">=</span> <span class="n">conv_utils</span><span class="o">.</span><span class="n">normalize_tuple</span><span class="p">(</span><span class="n">upsampling</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;upsampling&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">compute_output_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsampling</span><span class="p">:</span>
-            <span class="n">height</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">upsampling</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-                <span class="k">if</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-                <span class="k">else</span> <span class="kc">None</span>
-            <span class="p">)</span>
-            <span class="n">width</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">upsampling</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-                <span class="k">if</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-                <span class="k">else</span> <span class="kc">None</span>
-            <span class="p">)</span>
+            <span class="n">height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsampling</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsampling</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">if</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
@@ -242,17 +226,12 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsampling</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">K</span><span class="o">.</span><span class="n">tf</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">resize_bilinear</span><span class="p">(</span>
                 <span class="n">inputs</span><span class="p">,</span>
-                <span class="p">(</span>
-                    <span class="n">inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsampling</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-                    <span class="n">inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsampling</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
-                <span class="p">),</span>
+                <span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsampling</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsampling</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
                 <span class="n">align_corners</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">K</span><span class="o">.</span><span class="n">tf</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">resize_bilinear</span><span class="p">(</span>
-                <span class="n">inputs</span><span class="p">,</span>
-                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
-                <span class="n">align_corners</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">inputs</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">align_corners</span><span class="o">=</span><span class="kc">True</span>
             <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>

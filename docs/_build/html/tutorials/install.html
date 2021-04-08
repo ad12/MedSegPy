@@ -50,7 +50,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Getting Started with MedSegPy" href="getting_started.html" />
-    <link rel="prev" title="Tutorials" href="index.html" /> 
+    <link rel="prev" title="User Guide" href="index.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -100,7 +100,7 @@
             
             
               <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">Tutorials</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User Guide</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Installation</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#requirements">Requirements</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#build-medsegpy-from-source">Build MedSegPy from Source</a></li>
@@ -167,7 +167,7 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-          <li><a href="index.html">Tutorials</a> &raquo;</li>
+          <li><a href="index.html">User Guide</a> &raquo;</li>
         
       <li>Installation</li>
     
@@ -274,6 +274,27 @@ For example, <code class="docutils literal notranslate"><span class="pre">&quot;
 This is useful if you want to use the same script to run multiple projects. See fvcore’s
 <a class="reference external" href="https://github.com/facebookresearch/fvcore/blob/master/fvcore/common/file_io.py">fileio</a>
 for more information.</p>
+<p><em><strong>Using Clusters</strong></em>
+It can often be difficult to manage multiple machines may be used.
+For example, data in <code class="docutils literal notranslate"><span class="pre">machineA</span></code> could be stored at a different location
+than on <code class="docutils literal notranslate"><span class="pre">machineB</span></code>, but the code you have written is visible to both machines.
+In these scenarios, managing centralized code can become quite challenging
+because of hardcoded paths.</p>
+<p>We can use <code class="docutils literal notranslate"><span class="pre">Cluster</span></code> to store our preferences for paths on different machines.
+The code below saves the path preferences for each machine to a file.
+Whenever these machines are detected (matched using hostname) when using MedSegPy,
+the machine-specific datasets and results paths will be use.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dosma.utils.cluster</span> <span class="kn">import</span> <span class="n">Cluster</span>
+
+<span class="c1"># Define paths for machineA</span>
+<span class="n">machineA</span> <span class="o">=</span> <span class="n">Cluster</span><span class="p">(</span><span class="s2">&quot;machineA&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;machineA_hostname_pattern&quot;</span><span class="p">],</span> <span class="s2">&quot;path/to/machineA/datasets&quot;</span><span class="p">,</span> <span class="s2">&quot;path/to/machineA/results&quot;</span><span class="p">)</span>
+<span class="n">machineA</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+
+<span class="c1"># Define paths for machineB</span>
+<span class="n">machineB</span> <span class="o">=</span> <span class="n">Cluster</span><span class="p">(</span><span class="s2">&quot;machineB&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;machineB_hostname_pattern&quot;</span><span class="p">],</span> <span class="s2">&quot;path/to/machineB/datasets&quot;</span><span class="p">,</span> <span class="s2">&quot;path/to/machineB/results&quot;</span><span class="p">)</span>
+<span class="n">machineB</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</pre></div>
+</div>
 </div>
 </div>
 
@@ -284,7 +305,7 @@ for more information.</p>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
         <a href="getting_started.html" class="btn btn-neutral float-right" title="Getting Started with MedSegPy" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="index.html" class="btn btn-neutral float-left" title="Tutorials" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="index.html" class="btn btn-neutral float-left" title="User Guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

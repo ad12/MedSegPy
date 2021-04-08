@@ -197,19 +197,15 @@
 
     <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;============ Overall Summary ============</span><span class="se">\n</span><span class="s2">&quot;</span>
     <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">manager</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
-    <span class="n">s</span> <span class="o">+=</span> <span class="p">(</span>
-        <span class="s2">&quot;Inference time (Mean +/- Std. Dev.): &quot;</span>
-        <span class="s2">&quot;</span><span class="si">{:0.2f}</span><span class="s2"> +/- </span><span class="si">{:0.2f}</span><span class="s2"> seconds.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">inference_runtimes</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">inference_runtimes</span><span class="p">)</span>
-        <span class="p">)</span>
+    <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;Inference time (Mean +/- Std. Dev.): &quot;</span> <span class="s2">&quot;</span><span class="si">{:0.2f}</span><span class="s2"> +/- </span><span class="si">{:0.2f}</span><span class="s2"> seconds.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">inference_runtimes</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">inference_runtimes</span><span class="p">)</span>
     <span class="p">)</span></div>
     <span class="k">return</span> <span class="n">s</span>
 
 
 <div class="viewcode-block" id="SemSegEvaluator"><a class="viewcode-back" href="../../../modules/evaluation.html#medsegpy.evaluation.sem_seg_evaluation.SemSegEvaluator">[docs]</a><span class="nd">@EVALUATOR_REGISTRY</span><span class="o">.</span><span class="n">register</span><span class="p">()</span>
 <span class="k">class</span> <span class="nc">SemSegEvaluator</span><span class="p">(</span><span class="n">DatasetEvaluator</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Evaluator for semantic segmentation-related tasks.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Evaluator for semantic segmentation-related tasks.&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="SemSegEvaluator.__init__"><a class="viewcode-back" href="../../../modules/evaluation.html#medsegpy.evaluation.sem_seg_evaluation.SemSegEvaluator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -232,9 +228,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_config</span> <span class="o">=</span> <span class="n">cfg</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_dataset_name</span> <span class="o">=</span> <span class="n">dataset_name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_output_folder</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">output_folder</span>
-            <span class="k">if</span> <span class="n">output_folder</span>
-            <span class="k">else</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">OUTPUT_DIR</span><span class="p">,</span> <span class="s2">&quot;test_results&quot;</span><span class="p">)</span>
+            <span class="n">output_folder</span> <span class="k">if</span> <span class="n">output_folder</span> <span class="k">else</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">OUTPUT_DIR</span><span class="p">,</span> <span class="s2">&quot;test_results&quot;</span><span class="p">)</span>
         <span class="p">)</span>
         <span class="n">PathManager</span><span class="o">.</span><span class="n">mkdirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_output_folder</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_num_classes</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get_num_classes</span><span class="p">()</span>
@@ -247,8 +241,7 @@
         <span class="n">cat_ids</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">CATEGORIES</span>
         <span class="n">contiguous_id_map</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;category_id_to_contiguous_id&quot;</span><span class="p">)</span>
         <span class="n">contiguous_ids</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">contiguous_id_map</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">x</span><span class="p">]</span>
-            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">cat_ids</span>
+            <span class="n">contiguous_id_map</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">cat_ids</span>
         <span class="p">]</span>
         <span class="n">categories</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;categories&quot;</span><span class="p">)</span>
         <span class="n">categories</span> <span class="o">=</span> <span class="p">[</span><span class="n">categories</span><span class="p">[</span><span class="n">c_id</span><span class="p">]</span> <span class="k">for</span> <span class="n">c_id</span> <span class="ow">in</span> <span class="n">contiguous_ids</span><span class="p">]</span>
@@ -303,11 +296,7 @@
                     <span class="n">labels</span><span class="p">[</span><span class="n">l_argmax</span> <span class="o">==</span> <span class="n">c</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
                 <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;output activation </span><span class="si">{}</span><span class="s2"> not supported&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                        <span class="n">output_activation</span>
-                    <span class="p">)</span>
-                <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;output activation </span><span class="si">{}</span><span class="s2"> not supported&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">output_activation</span><span class="p">))</span>
 
             <span class="c1"># background is always excluded from analysis</span>
             <span class="k">if</span> <span class="n">includes_bg</span><span class="p">:</span>
@@ -329,9 +318,7 @@
 
     <span class="k">def</span> <span class="nf">eval_single_scan</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">time_elapsed</span><span class="p">):</span>
         <span class="n">metrics_manager</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metrics_manager</span>
-        <span class="n">spacing</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;scan_spacing&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="s2">&quot;scan_spacing&quot;</span> <span class="ow">in</span> <span class="nb">input</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">spacing</span>
-        <span class="p">)</span>
+        <span class="n">spacing</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;scan_spacing&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="s2">&quot;scan_spacing&quot;</span> <span class="ow">in</span> <span class="nb">input</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">spacing</span>
         <span class="n">logger</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span>
         <span class="n">save_raw_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_save_raw_data</span>
         <span class="n">output_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_folder</span>
@@ -345,12 +332,7 @@
         <span class="n">metrics_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;spacing&quot;</span><span class="p">:</span> <span class="n">spacing</span><span class="p">}</span> <span class="k">if</span> <span class="n">spacing</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{}</span>
 
         <span class="n">summary</span> <span class="o">=</span> <span class="n">metrics_manager</span><span class="p">(</span>
-            <span class="n">scan_id</span><span class="p">,</span>
-            <span class="n">y_true</span><span class="o">=</span><span class="n">y_true</span><span class="p">,</span>
-            <span class="n">y_pred</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
-            <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
-            <span class="n">runtime</span><span class="o">=</span><span class="n">time_elapsed</span><span class="p">,</span>
-            <span class="o">**</span><span class="n">metrics_kwargs</span><span class="p">,</span>
+            <span class="n">scan_id</span><span class="p">,</span> <span class="n">y_true</span><span class="o">=</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">runtime</span><span class="o">=</span><span class="n">time_elapsed</span><span class="p">,</span> <span class="o">**</span><span class="n">metrics_kwargs</span>
         <span class="p">)</span>
 
         <span class="n">logger_info_str</span> <span class="o">=</span> <span class="s2">&quot;Scan #</span><span class="si">{:03d}</span><span class="s2"> (name = </span><span class="si">{}</span><span class="s2">, </span><span class="si">{:0.2f}</span><span class="s2">s) = </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
@@ -394,10 +376,7 @@
             <span class="c1"># Write details to test file</span>
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">test_results_summary_path</span><span class="p">,</span> <span class="s2">&quot;w+&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Results generated on </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%X</span><span class="s2"> </span><span class="si">%x</span><span class="s2"> %Z&quot;</span><span class="p">))</span>
-                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
-                    <span class="s2">&quot;Weights Loaded: </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span>
-                    <span class="o">%</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">TEST_WEIGHT_PATH</span><span class="p">)</span>
-                <span class="p">)</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Weights Loaded: </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">TEST_WEIGHT_PATH</span><span class="p">))</span>
 
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;--&quot;</span> <span class="o">*</span> <span class="mi">20</span><span class="p">)</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -410,9 +389,7 @@
         <span class="c1"># df.to_csv(os.path.join(output_dir, &quot;metrics.csv&quot;), header=True, index=True)  # noqa</span>
 
         <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metrics_manager</span><span class="o">.</span><span class="n">data</span><span class="p">()[</span><span class="s2">&quot;scan_data&quot;</span><span class="p">]</span>
-        <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s2">&quot;metrics.csv&quot;</span><span class="p">),</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">True</span>
-        <span class="p">)</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s2">&quot;metrics.csv&quot;</span><span class="p">),</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="c1"># TODO: Convert segmentation metrics to valid results matrix.</span></div></div>
         <span class="k">return</span> <span class="p">{}</span>

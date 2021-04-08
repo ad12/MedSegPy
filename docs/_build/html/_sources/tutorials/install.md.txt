@@ -94,3 +94,27 @@ You can also define your own prefixes to resolve by adding your own path handler
 This is useful if you want to use the same script to run multiple projects. See fvcore's
 [fileio](https://github.com/facebookresearch/fvcore/blob/master/fvcore/common/file_io.py)
 for more information.
+
+***Using Clusters***
+It can often be difficult to manage multiple machines may be used.
+For example, data in `machineA` could be stored at a different location
+than on `machineB`, but the code you have written is visible to both machines.
+In these scenarios, managing centralized code can become quite challenging
+because of hardcoded paths.
+
+We can use `Cluster` to store our preferences for paths on different machines.
+The code below saves the path preferences for each machine to a file.
+Whenever these machines are detected (matched using hostname) when using MedSegPy,
+the machine-specific datasets and results paths will be use.
+
+```python
+from dosma.utils.cluster import Cluster
+
+# Define paths for machineA
+machineA = Cluster("machineA", ["machineA_hostname_pattern"], "path/to/machineA/datasets", "path/to/machineA/results")
+machineA.save()
+
+# Define paths for machineB
+machineB = Cluster("machineB", ["machineB_hostname_pattern"], "path/to/machineB/datasets", "path/to/machineB/results")
+machineB.save()
+```

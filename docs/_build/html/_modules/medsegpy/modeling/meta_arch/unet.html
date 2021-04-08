@@ -288,13 +288,7 @@
 
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">num_filters</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">build_encoder_block</span><span class="p">(</span>
-            <span class="n">x</span><span class="p">,</span>
-            <span class="n">num_filters</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
-            <span class="n">kernel_size</span><span class="p">,</span>
-            <span class="n">num_conv</span><span class="p">,</span>
-            <span class="n">activation</span><span class="p">,</span>
-            <span class="n">kernel_initializer</span><span class="p">,</span>
-            <span class="n">dropout</span><span class="p">,</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">num_filters</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">kernel_size</span><span class="p">,</span> <span class="n">num_conv</span><span class="p">,</span> <span class="n">activation</span><span class="p">,</span> <span class="n">kernel_initializer</span><span class="p">,</span> <span class="n">dropout</span>
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">x</span>
 
@@ -317,16 +311,12 @@
     <span class="k">def</span> <span class="nf">build_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_tensor</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Model</span><span class="p">:</span>
         <span class="n">cfg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span>
         <span class="n">seed</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">SEED</span>
-        <span class="n">input_size</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">IMG_SIZE</span>
         <span class="n">depth</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">DEPTH</span>
         <span class="n">kernel_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">use_attention</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">USE_ATTENTION</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">use_deep_supervision</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">USE_DEEP_SUPERVISION</span>
 
-        <span class="n">kernel_initializer</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;class_name&quot;</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">KERNEL_INITIALIZER</span><span class="p">,</span>
-            <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;seed&quot;</span><span class="p">:</span> <span class="n">seed</span><span class="p">},</span>
-        <span class="p">}</span>
+        <span class="n">kernel_initializer</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;class_name&quot;</span><span class="p">:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">KERNEL_INITIALIZER</span><span class="p">,</span> <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;seed&quot;</span><span class="p">:</span> <span class="n">seed</span><span class="p">}}</span>
         <span class="n">output_mode</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">LOSS</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
         <span class="k">assert</span> <span class="n">output_mode</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;sigmoid&quot;</span><span class="p">,</span> <span class="s2">&quot;softmax&quot;</span><span class="p">]</span>
         <span class="n">num_classes</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get_num_classes</span><span class="p">()</span>
@@ -365,15 +355,11 @@
                 <span class="n">pool_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_pool_size</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
                 <span class="n">pool_sizes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pool_size</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">depth_cnt</span> <span class="o">&lt;</span> <span class="n">depth</span> <span class="o">-</span> <span class="mi">2</span><span class="p">:</span>
-                    <span class="n">scale_factors</span><span class="p">[</span><span class="n">depth_cnt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                        <span class="n">scale_factors</span><span class="p">[</span><span class="n">depth_cnt</span><span class="p">]</span> <span class="o">*</span> <span class="n">pool_size</span>
-                    <span class="p">)</span>
+                    <span class="n">scale_factors</span><span class="p">[</span><span class="n">depth_cnt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">scale_factors</span><span class="p">[</span><span class="n">depth_cnt</span><span class="p">]</span> <span class="o">*</span> <span class="n">pool_size</span>
                 <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pooler_type</span><span class="p">(</span><span class="n">pool_size</span><span class="o">=</span><span class="n">pool_size</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
 
         <span class="c1"># Decoder.</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">x_skip</span><span class="p">,</span> <span class="n">unpool_size</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
-            <span class="nb">zip</span><span class="p">(</span><span class="n">x_skips</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">pool_sizes</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-        <span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">x_skip</span><span class="p">,</span> <span class="n">unpool_size</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">x_skips</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">pool_sizes</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])):</span>
             <span class="n">depth_cnt</span> <span class="o">=</span> <span class="n">depth</span> <span class="o">-</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">2</span>
             <span class="n">skip_connect</span> <span class="o">=</span> <span class="n">x_skip</span>
             <span class="c1"># The first skip connection is not passed through</span>
@@ -409,8 +395,7 @@
                 <span class="c1"># Determine scale factor for deep supervision</span>
                 <span class="n">deep_supervision_outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_deep_supervision</span><span class="p">(</span>
-                        <span class="n">out_channels</span><span class="o">=</span><span class="n">num_classes</span><span class="p">,</span>
-                        <span class="n">scale_factor</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">scale_factors</span><span class="p">[</span><span class="n">depth_cnt</span><span class="p">]),</span>
+                        <span class="n">out_channels</span><span class="o">=</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">scale_factor</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">scale_factors</span><span class="p">[</span><span class="n">depth_cnt</span><span class="p">])</span>
                     <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
                 <span class="p">)</span>
 
@@ -443,10 +428,7 @@
         <span class="k">return</span> <span class="n">Input</span><span class="p">(</span><span class="n">input_size</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_get_pool_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">[</span>
-            <span class="mi">2</span> <span class="k">if</span> <span class="n">d</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">d</span> <span class="o">%</span> <span class="mi">3</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">3</span>
-            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">as_list</span><span class="p">()[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="p">]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="mi">2</span> <span class="k">if</span> <span class="n">d</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">d</span> <span class="o">%</span> <span class="mi">3</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">3</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">as_list</span><span class="p">()[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
 
 
 <span class="nd">@META_ARCH_REGISTRY</span><span class="o">.</span><span class="n">register</span><span class="p">()</span>

@@ -183,15 +183,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">backend</span> <span class="k">as</span> <span class="n">K</span>
 <span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="n">BatchNormalization</span> <span class="k">as</span> <span class="n">BN</span>
-<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">Concatenate</span><span class="p">,</span>
-    <span class="n">Conv2D</span><span class="p">,</span>
-    <span class="n">Conv3D</span><span class="p">,</span>
-    <span class="n">Layer</span><span class="p">,</span>
-    <span class="n">Multiply</span><span class="p">,</span>
-    <span class="n">UpSampling2D</span><span class="p">,</span>
-    <span class="n">UpSampling3D</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="n">Concatenate</span><span class="p">,</span> <span class="n">Conv2D</span><span class="p">,</span> <span class="n">Conv3D</span><span class="p">,</span> <span class="n">Layer</span><span class="p">,</span> <span class="n">Multiply</span><span class="p">,</span> <span class="n">UpSampling2D</span><span class="p">,</span> <span class="n">UpSampling3D</span>
 
 
 <span class="k">class</span> <span class="nc">_CreateGatingSignalNDim</span><span class="p">(</span><span class="n">Layer</span><span class="p">):</span>
@@ -244,12 +236,9 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only 2D and 3D are supported&quot;</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">,</span> <span class="nb">list</span>
-        <span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">,</span> <span class="p">(</span>
-                <span class="s2">&quot;If list/tuple, kernel_size must have length </span><span class="si">%d</span><span class="s2">&quot;</span>
-                <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span>
+                <span class="s2">&quot;If list/tuple, kernel_size must have length </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span>
             <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">conv</span> <span class="o">=</span> <span class="n">conv_type</span><span class="p">(</span>
@@ -406,12 +395,9 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only 2D and 3D are supported&quot;</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sub_sample_factor</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">sub_sample_factor</span><span class="p">,</span> <span class="nb">list</span>
-        <span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sub_sample_factor</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sub_sample_factor</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sub_sample_factor</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span><span class="p">,</span> <span class="p">(</span>
-                <span class="s2">&quot;If list/tuple, sub_sample_factor must have length </span><span class="si">%d</span><span class="s2">&quot;</span>
-                <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span>
+                <span class="s2">&quot;If list/tuple, sub_sample_factor must have length </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimension</span>
             <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">theta_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_type</span><span class="p">(</span>
@@ -423,19 +409,13 @@
         <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">theta_gating</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_type</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">intermediate_channels</span><span class="p">,</span>
-            <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-            <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_initializer</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">intermediate_channels</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_initializer</span>
         <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">psi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_type</span><span class="p">(</span>
-            <span class="mi">1</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_initializer</span>
-        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">psi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_type</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_initializer</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">output_conv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_type</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">in_channels</span><span class="p">,</span>
-            <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-            <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_initializer</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">in_channels</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_initializer</span>
         <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">output_bn</span> <span class="o">=</span> <span class="n">BN</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">0.001</span><span class="p">)</span>
@@ -451,9 +431,7 @@
         <span class="c1"># Build theta_gating</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">theta_gating</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">gating_signal_shape</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_trainable_weights</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_gating</span><span class="o">.</span><span class="n">trainable_weights</span>
-        <span class="n">theta_gating_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_gating</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span>
-            <span class="n">gating_signal_shape</span>
-        <span class="p">)</span>
+        <span class="n">theta_gating_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_gating</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span><span class="n">gating_signal_shape</span><span class="p">)</span>
 
         <span class="c1"># Build upsample_gating</span>
         <span class="n">up_ratio_gating</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor_divide</span><span class="p">(</span>
@@ -475,17 +453,11 @@
         <span class="n">psi_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span><span class="n">theta_x_output_shape</span><span class="p">)</span>
 
         <span class="c1"># Build upsample_attn_coeff</span>
-        <span class="n">up_ratio_attn_coeff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor_divide</span><span class="p">(</span>
-            <span class="n">x_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">psi_output_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">upsample_attn_coeff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsample_type</span><span class="p">(</span>
-            <span class="n">size</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">up_ratio_attn_coeff</span><span class="p">)</span>
-        <span class="p">)</span>
+        <span class="n">up_ratio_attn_coeff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor_divide</span><span class="p">(</span><span class="n">x_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">psi_output_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">upsample_attn_coeff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsample_type</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">up_ratio_attn_coeff</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">upsample_attn_coeff</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">psi_output_shape</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_trainable_weights</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsample_attn_coeff</span><span class="o">.</span><span class="n">trainable_weights</span>
-        <span class="n">up_coeff_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsample_attn_coeff</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span>
-            <span class="n">psi_output_shape</span>
-        <span class="p">)</span>
+        <span class="n">up_coeff_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsample_attn_coeff</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span><span class="n">psi_output_shape</span><span class="p">)</span>
         <span class="k">assert</span> <span class="p">(</span>
             <span class="n">up_coeff_output_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">x_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="p">),</span> <span class="s2">&quot;Cannot upsample output of psi to match size of input feature map (x)&quot;</span>
@@ -493,9 +465,7 @@
         <span class="c1"># Build output_conv</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">output_conv</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">x_shape</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_trainable_weights</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_conv</span><span class="o">.</span><span class="n">trainable_weights</span>
-        <span class="n">output_conv_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_conv</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span>
-            <span class="n">x_shape</span>
-        <span class="p">)</span>
+        <span class="n">output_conv_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_conv</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span><span class="n">x_shape</span><span class="p">)</span>
 
         <span class="c1"># Build output_bn</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">output_bn</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">output_conv_output_shape</span><span class="p">)</span>
@@ -522,12 +492,7 @@
         <span class="c1"># feature map</span>
         <span class="n">up_sampled_attn_coeff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsample_attn_coeff</span><span class="p">(</span><span class="n">sigmoid_psi</span><span class="p">)</span>
         <span class="n">attn_weighted_output</span> <span class="o">=</span> <span class="n">Multiply</span><span class="p">()(</span>
-            <span class="p">[</span>
-                <span class="n">K</span><span class="o">.</span><span class="n">repeat_elements</span><span class="p">(</span>
-                    <span class="n">up_sampled_attn_coeff</span><span class="p">,</span> <span class="n">rep</span><span class="o">=</span><span class="n">x_size</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span>
-                <span class="p">),</span>
-                <span class="n">x</span><span class="p">,</span>
-            <span class="p">]</span>
+            <span class="p">[</span><span class="n">K</span><span class="o">.</span><span class="n">repeat_elements</span><span class="p">(</span><span class="n">up_sampled_attn_coeff</span><span class="p">,</span> <span class="n">rep</span><span class="o">=</span><span class="n">x_size</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">),</span> <span class="n">x</span><span class="p">]</span>
         <span class="p">)</span>
         <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_conv</span><span class="p">(</span><span class="n">attn_weighted_output</span><span class="p">)</span>
         <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_bn</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
@@ -537,22 +502,14 @@
     <span class="k">def</span> <span class="nf">compute_output_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
         <span class="n">x_shape</span><span class="p">,</span> <span class="n">gating_signal_shape</span> <span class="o">=</span> <span class="n">input_shape</span>
 
-        <span class="n">theta_gating_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_gating</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span>
-            <span class="n">gating_signal_shape</span>
-        <span class="p">)</span>
+        <span class="n">theta_gating_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_gating</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span><span class="n">gating_signal_shape</span><span class="p">)</span>
         <span class="n">up_gating_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsample_gating</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span>
             <span class="n">theta_gating_output_shape</span>
         <span class="p">)</span>
         <span class="n">psi_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">psi</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span><span class="n">up_gating_output_shape</span><span class="p">)</span>
-        <span class="n">up_attn_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsample_attn_coeff</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span>
-            <span class="n">psi_output_shape</span>
-        <span class="p">)</span>
-        <span class="n">output_conv_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_conv</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span>
-            <span class="n">x_shape</span>
-        <span class="p">)</span>
-        <span class="n">output_bn_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_bn</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span>
-            <span class="n">output_conv_output_shape</span>
-        <span class="p">)</span>
+        <span class="n">up_attn_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsample_attn_coeff</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span><span class="n">psi_output_shape</span><span class="p">)</span>
+        <span class="n">output_conv_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_conv</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span><span class="n">x_shape</span><span class="p">)</span>
+        <span class="n">output_bn_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_bn</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span><span class="n">output_conv_output_shape</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="p">[</span><span class="n">output_bn_output_shape</span><span class="p">,</span> <span class="n">up_attn_output_shape</span><span class="p">]</span>
 
@@ -689,17 +646,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_trainable_weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attn_gate_1</span><span class="o">.</span><span class="n">trainable_weights</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">attn_gate_2</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_trainable_weights</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attn_gate_2</span><span class="o">.</span><span class="n">trainable_weights</span>
-        <span class="n">output_attn_shape</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attn_gate_2</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span>
-            <span class="n">input_shape</span>
-        <span class="p">)</span>
+        <span class="n">output_attn_shape</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attn_gate_2</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span>
 
         <span class="n">concatenate_gate_shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">output_attn_shape</span><span class="p">)</span>
         <span class="n">concatenate_gate_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">2</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">combine_gates_conv</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">concatenate_gate_shape</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_trainable_weights</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">combine_gates_conv</span><span class="o">.</span><span class="n">trainable_weights</span>
-        <span class="n">conv_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">combine_gates_conv</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span>
-            <span class="n">concatenate_gate_shape</span>
-        <span class="p">)</span>
+        <span class="n">conv_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">combine_gates_conv</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span><span class="n">concatenate_gate_shape</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">combine_gates_bn</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">conv_output_shape</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_trainable_weights</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">combine_gates_bn</span><span class="o">.</span><span class="n">trainable_weights</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">_MultiAttentionModuleND</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span>
@@ -716,19 +669,13 @@
         <span class="k">return</span> <span class="p">[</span><span class="n">output</span><span class="p">,</span> <span class="n">total_attn_coeffs</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="nf">compute_output_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
-        <span class="n">output_attn_shape</span><span class="p">,</span> <span class="n">coeff_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attn_gate_2</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span>
-            <span class="n">input_shape</span>
-        <span class="p">)</span>
+        <span class="n">output_attn_shape</span><span class="p">,</span> <span class="n">coeff_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attn_gate_2</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span>
         <span class="n">concatenate_gate_shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">output_attn_shape</span><span class="p">)</span>
         <span class="n">concatenate_coeff_shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">coeff_shape</span><span class="p">)</span>
         <span class="n">concatenate_gate_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">2</span>
         <span class="n">concatenate_coeff_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">2</span>
-        <span class="n">conv_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">combine_gates_conv</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span>
-            <span class="n">concatenate_gate_shape</span>
-        <span class="p">)</span>
-        <span class="n">bn_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">combine_gates_bn</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span>
-            <span class="n">conv_output_shape</span>
-        <span class="p">)</span>
+        <span class="n">conv_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">combine_gates_conv</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span><span class="n">concatenate_gate_shape</span><span class="p">)</span>
+        <span class="n">bn_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">combine_gates_bn</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span><span class="n">conv_output_shape</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">bn_output_shape</span><span class="p">,</span> <span class="n">concatenate_coeff_shape</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -850,9 +797,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only 2D and 3D are supported&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">conv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_type</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">out_channels</span><span class="p">,</span>
-            <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-            <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_initializer</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">out_channels</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_initializer</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
@@ -870,9 +815,7 @@
 
     <span class="k">def</span> <span class="nf">compute_output_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
         <span class="n">conv_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span>
-        <span class="n">upsample_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsample</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span>
-            <span class="n">conv_output_shape</span>
-        <span class="p">)</span>
+        <span class="n">upsample_output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upsample</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span><span class="n">conv_output_shape</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">upsample_output_shape</span>
 
     <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>

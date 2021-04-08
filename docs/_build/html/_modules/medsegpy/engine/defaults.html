@@ -173,7 +173,6 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">argparse</span>
 <span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">shutil</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 
 <span class="kn">import</span> <span class="nn">keras.backend</span> <span class="k">as</span> <span class="nn">K</span>
@@ -183,8 +182,8 @@
 <span class="kn">from</span> <span class="nn">medsegpy</span> <span class="kn">import</span> <span class="n">glob_constants</span>
 <span class="kn">from</span> <span class="nn">medsegpy.utils</span> <span class="kn">import</span> <span class="n">dl_utils</span><span class="p">,</span> <span class="n">env</span>
 <span class="kn">from</span> <span class="nn">medsegpy.utils.collect_env</span> <span class="kn">import</span> <span class="n">collect_env_info</span>
-<span class="kn">from</span> <span class="nn">medsegpy.utils.logger</span> <span class="kn">import</span> <span class="n">setup_logger</span>
 <span class="kn">from</span> <span class="nn">medsegpy.utils.io_utils</span> <span class="kn">import</span> <span class="n">format_exp_version</span>
+<span class="kn">from</span> <span class="nn">medsegpy.utils.logger</span> <span class="kn">import</span> <span class="n">setup_logger</span>
 
 
 <span class="k">def</span> <span class="nf">config_exists</span><span class="p">(</span><span class="n">experiment_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
@@ -203,27 +202,17 @@
 <span class="sd">        argparse.ArgumentParser:</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;MedSegPy Training&quot;</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--config-file&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s2">&quot;FILE&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;path to config file&quot;</span>
-    <span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--eval-only&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;perform evaluation only&quot;</span>
-    <span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--num-gpus&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;number of gpus&quot;</span>
-    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--config-file&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s2">&quot;FILE&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;path to config file&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--eval-only&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;perform evaluation only&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--num-gpus&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;number of gpus&quot;</span><span class="p">)</span>
     <span class="c1"># parser.add_argument(</span>
     <span class="c1">#     &quot;--overwrite&quot;, action=&quot;store_true&quot;, help=&quot;overwrite previous experiment&quot;</span>
     <span class="c1"># )</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--debug&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;run in debug mode&quot;</span>
-    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--debug&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;run in debug mode&quot;</span><span class="p">)</span>
 
     <span class="c1"># Add option to execute non-eagerly in tensorflow 2</span>
     <span class="k">if</span> <span class="n">env</span><span class="o">.</span><span class="n">is_tf2</span><span class="p">():</span>
-        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-            <span class="s2">&quot;--non-eagerly&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;run tensorflow non-eagerly&quot;</span>
-        <span class="p">)</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--non-eagerly&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;run tensorflow non-eagerly&quot;</span><span class="p">)</span>
 
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;opts&quot;</span><span class="p">,</span>
@@ -254,8 +243,7 @@
     <span class="n">make_new_version</span> <span class="o">=</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="s2">&quot;eval_only&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">args</span><span class="o">.</span><span class="n">eval_only</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">make_new_version</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">config_exists</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">OUTPUT_DIR</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Tried to evaluate on empty experiment directory. &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">cfg</span><span class="o">.</span><span class="n">OUTPUT_DIR</span><span class="si">}</span><span class="s2"> does not exist.&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Tried to evaluate on empty experiment directory. &quot;</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">cfg</span><span class="o">.</span><span class="n">OUTPUT_DIR</span><span class="si">}</span><span class="s2"> does not exist.&quot;</span>
         <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">eval_only</span> <span class="ow">and</span> <span class="n">config_exists</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">OUTPUT_DIR</span><span class="p">):</span>
@@ -330,8 +318,9 @@
 <div class="viewcode-block" id="default_exp_name"><a class="viewcode-back" href="../../../modules/engine.html#medsegpy.engine.defaults.default_exp_name">[docs]</a><span class="k">def</span> <span class="nf">default_exp_name</span><span class="p">(</span><span class="n">cfg</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Extracts default experiment name from the config.</span>
 
-<span class="sd">    `cfg.EXP_NAME` if exists. If basename starts with &quot;version&quot; or &quot;debug&quot;, take both parent directory name</span>
-<span class="sd">    and version name to make experiment name (e.g. &quot;my_exp/version_001&quot;).</span>
+<span class="sd">    `cfg.EXP_NAME` if exists. If basename starts with &quot;version&quot; or &quot;debug&quot;,</span>
+<span class="sd">    take both parent directory name and version name to make experiment name</span>
+<span class="sd">    (e.g. &quot;my_exp/version_001&quot;).</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        exp_name (str): The default convention for naming experiments.</span>

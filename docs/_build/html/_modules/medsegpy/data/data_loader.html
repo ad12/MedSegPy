@@ -166,8 +166,7 @@
            <div itemprop="articleBody">
             
   <h1>Source code for medsegpy.data.data_loader</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">logging</span>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">random</span>
 <span class="kn">import</span> <span class="nn">threading</span>
@@ -208,20 +207,13 @@
 <span class="s2">The call should return a :class:`DataLoader` object.</span>
 <span class="s2">&quot;&quot;&quot;</span>
 
-<span class="n">_LEGACY_DATA_LOADER_MAP</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="p">(</span><span class="s2">&quot;oai_aug&quot;</span><span class="p">,</span> <span class="s2">&quot;oai&quot;</span><span class="p">,</span> <span class="s2">&quot;oai_2d&quot;</span><span class="p">,</span> <span class="s2">&quot;oai_aug_2d&quot;</span><span class="p">):</span> <span class="s2">&quot;DefaultDataLoader&quot;</span>
-<span class="p">}</span>
+<span class="n">_LEGACY_DATA_LOADER_MAP</span> <span class="o">=</span> <span class="p">{(</span><span class="s2">&quot;oai_aug&quot;</span><span class="p">,</span> <span class="s2">&quot;oai&quot;</span><span class="p">,</span> <span class="s2">&quot;oai_2d&quot;</span><span class="p">,</span> <span class="s2">&quot;oai_aug_2d&quot;</span><span class="p">):</span> <span class="s2">&quot;DefaultDataLoader&quot;</span><span class="p">}</span>
 
-<span class="n">LEGACY_DATA_LOADER_NAMES</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="n">x</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">_LEGACY_DATA_LOADER_MAP</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">k</span>
-<span class="p">}</span>
+<span class="n">LEGACY_DATA_LOADER_NAMES</span> <span class="o">=</span> <span class="p">{</span><span class="n">x</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">_LEGACY_DATA_LOADER_MAP</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">k</span><span class="p">}</span>
 
 
-<div class="viewcode-block" id="build_data_loader"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.data_loader.build_data_loader">[docs]</a><span class="k">def</span> <span class="nf">build_data_loader</span><span class="p">(</span>
-    <span class="n">cfg</span><span class="p">:</span> <span class="n">Config</span><span class="p">,</span> <span class="n">dataset_dicts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;DataLoader&quot;</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Get data loader based on config `TAG` or name, value.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="build_data_loader"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.data_loader.build_data_loader">[docs]</a><span class="k">def</span> <span class="nf">build_data_loader</span><span class="p">(</span><span class="n">cfg</span><span class="p">:</span> <span class="n">Config</span><span class="p">,</span> <span class="n">dataset_dicts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;DataLoader&quot;</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Get data loader based on config `TAG` or name, value.&quot;&quot;&quot;</span>
     <span class="n">name</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">TAG</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">data_loader_cls</span> <span class="o">=</span> <span class="n">DATA_LOADER_REGISTRY</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
@@ -230,11 +222,7 @@
         <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">LEGACY_DATA_LOADER_NAMES</span><span class="p">:</span>
             <span class="n">name</span> <span class="o">=</span> <span class="n">LEGACY_DATA_LOADER_NAMES</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">prev_name</span> <span class="o">!=</span> <span class="n">name</span><span class="p">:</span>
-                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                    <span class="s2">&quot;TAG </span><span class="si">{}</span><span class="s2"> is deprecated. Use </span><span class="si">{}</span><span class="s2"> instead&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                        <span class="n">prev_name</span><span class="p">,</span> <span class="n">name</span>
-                    <span class="p">)</span>
-                <span class="p">)</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;TAG </span><span class="si">{}</span><span class="s2"> is deprecated. Use </span><span class="si">{}</span><span class="s2"> instead&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">prev_name</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
 
         <span class="n">data_loader_cls</span> <span class="o">=</span> <span class="n">DATA_LOADER_REGISTRY</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 </div>
@@ -408,9 +396,7 @@
         <span class="n">drop_last</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">cfg</span><span class="p">,</span> <span class="n">dataset_dicts</span><span class="p">,</span> <span class="n">is_test</span><span class="p">,</span> <span class="n">shuffle</span><span class="p">,</span> <span class="n">drop_last</span><span class="p">,</span> <span class="n">batch_size</span>
-        <span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">dataset_dicts</span><span class="p">,</span> <span class="n">is_test</span><span class="p">,</span> <span class="n">shuffle</span><span class="p">,</span> <span class="n">drop_last</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_include_background</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">INCLUDE_BACKGROUND</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_num_classes</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get_num_classes</span><span class="p">()</span>
@@ -527,18 +513,11 @@
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">is_tf2</span><span class="p">():</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;model must be a medsegpy.modeling.model.Model for TF1.0&quot;</span><span class="p">)</span>
                 <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">preds</span> <span class="o">=</span> <span class="n">Model</span><span class="o">.</span><span class="n">inference_generator_static</span><span class="p">(</span>
-                    <span class="n">model</span><span class="p">,</span>
-                    <span class="bp">self</span><span class="p">,</span>
-                    <span class="n">workers</span><span class="o">=</span><span class="n">workers</span><span class="p">,</span>
-                    <span class="n">use_multiprocessing</span><span class="o">=</span><span class="n">use_multiprocessing</span><span class="p">,</span>
-                    <span class="o">**</span><span class="n">kwargs</span>
+                    <span class="n">model</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">workers</span><span class="o">=</span><span class="n">workers</span><span class="p">,</span> <span class="n">use_multiprocessing</span><span class="o">=</span><span class="n">use_multiprocessing</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
                 <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">preds</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">inference_generator</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="p">,</span>
-                    <span class="n">workers</span><span class="o">=</span><span class="n">workers</span><span class="p">,</span>
-                    <span class="n">use_multiprocessing</span><span class="o">=</span><span class="n">use_multiprocessing</span><span class="p">,</span>
-                    <span class="o">**</span><span class="n">kwargs</span>
+                    <span class="bp">self</span><span class="p">,</span> <span class="n">workers</span><span class="o">=</span><span class="n">workers</span><span class="p">,</span> <span class="n">use_multiprocessing</span><span class="o">=</span><span class="n">use_multiprocessing</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
                 <span class="p">)</span>
             <span class="n">time_elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span>
 
@@ -552,25 +531,14 @@
             <span class="p">}</span>
             <span class="nb">input</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">scan_params</span><span class="p">)</span>
 
-            <span class="n">output</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;y_pred&quot;</span><span class="p">:</span> <span class="n">preds</span><span class="p">,</span>
-                <span class="s2">&quot;y_true&quot;</span><span class="p">:</span> <span class="n">y</span><span class="p">,</span>
-                <span class="s2">&quot;time_elapsed&quot;</span><span class="p">:</span> <span class="n">time_elapsed</span><span class="p">,</span>
-            <span class="p">}</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;y_pred&quot;</span><span class="p">:</span> <span class="n">preds</span><span class="p">,</span> <span class="s2">&quot;y_true&quot;</span><span class="p">:</span> <span class="n">y</span><span class="p">,</span> <span class="s2">&quot;time_elapsed&quot;</span><span class="p">:</span> <span class="n">time_elapsed</span><span class="p">}</span>
 
             <span class="k">yield</span> <span class="nb">input</span><span class="p">,</span> <span class="n">output</span>
 </div>
         <span class="bp">self</span><span class="o">.</span><span class="n">_dataset_dicts</span> <span class="o">=</span> <span class="n">dataset_dicts</span>
 
 
-<span class="n">_SUPPORTED_PADDING_MODES</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="s2">&quot;constant&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;edge&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;reflect&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;symmetric&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;warp&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;empty&quot;</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="n">_SUPPORTED_PADDING_MODES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;constant&quot;</span><span class="p">,</span> <span class="s2">&quot;edge&quot;</span><span class="p">,</span> <span class="s2">&quot;reflect&quot;</span><span class="p">,</span> <span class="s2">&quot;symmetric&quot;</span><span class="p">,</span> <span class="s2">&quot;warp&quot;</span><span class="p">,</span> <span class="s2">&quot;empty&quot;</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="PatchDataLoader"><a class="viewcode-back" href="../../../modules/data.html#medsegpy.data.data_loader.PatchDataLoader">[docs]</a><span class="nd">@DATA_LOADER_REGISTRY</span><span class="o">.</span><span class="n">register</span><span class="p">()</span>
@@ -594,7 +562,7 @@
         <span class="n">shuffle</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">drop_last</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="n">use_singlefile</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">use_singlefile</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="c1"># Create patch elements from dataset dict.</span>
         <span class="c1"># TODO: change pad/patching based on test/train</span>
@@ -615,17 +583,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_patch_size</span> <span class="o">=</span> <span class="n">patch_size</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_pad_mode</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">IMG_PAD_MODE</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pad_mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_SUPPORTED_PADDING_MODES</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;pad mode </span><span class="si">{}</span><span class="s2"> not supported&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">IMG_PAD_MODE</span><span class="p">)</span>
-            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;pad mode </span><span class="si">{}</span><span class="s2"> not supported&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">IMG_PAD_MODE</span><span class="p">))</span>
         <span class="n">pad_size</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">IMG_PAD_SIZE</span> <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">IMG_PAD_SIZE</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="n">stride</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">IMG_STRIDE</span> <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">IMG_STRIDE</span> <span class="k">else</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">patch_size</span><span class="p">)</span>
 
         <span class="n">dd_patched</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">dd</span> <span class="ow">in</span> <span class="n">dataset_dicts</span><span class="p">:</span>
-            <span class="n">patches</span> <span class="o">=</span> <span class="n">compute_patches</span><span class="p">(</span>
-                <span class="n">dd</span><span class="p">[</span><span class="s2">&quot;image_size&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_patch_size</span><span class="p">,</span> <span class="n">pad_size</span><span class="p">,</span> <span class="n">stride</span>
-            <span class="p">)</span>
+            <span class="n">patches</span> <span class="o">=</span> <span class="n">compute_patches</span><span class="p">(</span><span class="n">dd</span><span class="p">[</span><span class="s2">&quot;image_size&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_patch_size</span><span class="p">,</span> <span class="n">pad_size</span><span class="p">,</span> <span class="n">stride</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">patches</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Dropping </span><span class="si">{</span><span class="n">dd</span><span class="p">[</span><span class="s1">&#39;scan_id&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> - no patches found.&quot;</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">patch</span><span class="p">,</span> <span class="n">pad</span> <span class="ow">in</span> <span class="n">patches</span><span class="p">:</span>
@@ -633,9 +597,7 @@
                 <span class="n">dataset_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;_patch&quot;</span><span class="p">:</span> <span class="n">patch</span><span class="p">,</span> <span class="s2">&quot;_pad&quot;</span><span class="p">:</span> <span class="n">pad</span><span class="p">})</span>
                 <span class="n">dd_patched</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dataset_dict</span><span class="p">)</span>
 
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">cfg</span><span class="p">,</span> <span class="n">dd_patched</span><span class="p">,</span> <span class="n">is_test</span><span class="p">,</span> <span class="n">shuffle</span><span class="p">,</span> <span class="n">drop_last</span><span class="p">,</span> <span class="n">batch_size</span>
-        <span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">dd_patched</span><span class="p">,</span> <span class="n">is_test</span><span class="p">,</span> <span class="n">shuffle</span><span class="p">,</span> <span class="n">drop_last</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_preload_data</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">PRELOAD_DATA</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cached_data</span> <span class="o">=</span> <span class="kc">None</span>
@@ -646,13 +608,9 @@
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preload_data</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">threading</span><span class="o">.</span><span class="n">current_thread</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">threading</span><span class="o">.</span><span class="n">main_thread</span><span class="p">():</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;Data pre-loading can only be done on the main thread.&quot;</span>
-                <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Data pre-loading can only be done on the main thread.&quot;</span><span class="p">)</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Pre-loading data...&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_cached_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_all_data</span><span class="p">(</span>
-                <span class="n">dataset_dicts</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">NUM_WORKERS</span>
-            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cached_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_all_data</span><span class="p">(</span><span class="n">dataset_dicts</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">NUM_WORKERS</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_f&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_f</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -694,10 +652,7 @@
             <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">image</span><span class="p">,</span> <span class="s2">&quot;mask&quot;</span><span class="p">:</span> <span class="n">mask</span><span class="p">}</span>
 
         <span class="n">cache</span> <span class="o">=</span> <span class="p">[</span><span class="n">_load</span><span class="p">(</span><span class="n">dd</span><span class="p">)</span> <span class="k">for</span> <span class="n">dd</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">dataset_dicts</span><span class="p">)]</span>
-        <span class="n">cache</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="p">(</span><span class="n">dd</span><span class="p">[</span><span class="s2">&quot;file_name&quot;</span><span class="p">],</span> <span class="n">dd</span><span class="p">[</span><span class="s2">&quot;sem_seg_file&quot;</span><span class="p">]):</span> <span class="n">x</span>
-            <span class="k">for</span> <span class="n">dd</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">dataset_dicts</span><span class="p">,</span> <span class="n">cache</span><span class="p">)</span>
-        <span class="p">}</span>
+        <span class="n">cache</span> <span class="o">=</span> <span class="p">{(</span><span class="n">dd</span><span class="p">[</span><span class="s2">&quot;file_name&quot;</span><span class="p">],</span> <span class="n">dd</span><span class="p">[</span><span class="s2">&quot;sem_seg_file&quot;</span><span class="p">]):</span> <span class="n">x</span> <span class="k">for</span> <span class="n">dd</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">dataset_dicts</span><span class="p">,</span> <span class="n">cache</span><span class="p">)}</span>
         <span class="k">return</span> <span class="n">cache</span>
 
     <span class="k">def</span> <span class="nf">_load_patch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset_dict</span><span class="p">,</span> <span class="n">skip_patch</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">img_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seg_key</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -720,7 +675,7 @@
             <span class="k">if</span> <span class="n">sem_seg_file</span> <span class="ow">and</span> <span class="n">is_img_seg_file_same</span><span class="p">:</span>
                 <span class="n">mask</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="n">seg_key</span><span class="p">][</span><span class="n">patch</span><span class="p">]</span>  <span class="c1"># HxWxDx...xC</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">s</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">sem_seg_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> 
+                <span class="n">s</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">sem_seg_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
                 <span class="n">mask</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="n">seg_key</span><span class="p">][</span><span class="n">patch</span><span class="p">]</span>
                 <span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
             <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
@@ -779,9 +734,7 @@
         <span class="n">coords</span> <span class="o">=</span> <span class="p">[</span><span class="n">dd</span><span class="p">[</span><span class="s2">&quot;_patch&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">dd</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset_dicts</span><span class="p">]</span>
 
         <span class="n">num_patches</span> <span class="o">=</span> <span class="n">vols_patched</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span> <span class="o">==</span> <span class="n">num_patches</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> patches, </span><span class="si">{}</span><span class="s2"> coords&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-            <span class="n">num_patches</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
-        <span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span> <span class="o">==</span> <span class="n">num_patches</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> patches, </span><span class="si">{}</span><span class="s2"> coords&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">num_patches</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">))</span>
         <span class="c1"># num_vols = len(vols_patched)</span>
         <span class="c1"># TODO: fix in case that v.shape[-1] is not actually a channel dimension</span>
         <span class="n">new_vols</span> <span class="o">=</span> <span class="p">[</span>
@@ -827,9 +780,7 @@
         <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">IMG_SIZE</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;channel dimension must be odd&quot;</span><span class="p">)</span>
 
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">cfg</span><span class="p">,</span> <span class="n">dataset_dicts</span><span class="p">,</span> <span class="n">is_test</span><span class="p">,</span> <span class="n">shuffle</span><span class="p">,</span> <span class="n">drop_last</span><span class="p">,</span> <span class="n">batch_size</span>
-        <span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">dataset_dicts</span><span class="p">,</span> <span class="n">is_test</span><span class="p">,</span> <span class="n">shuffle</span><span class="p">,</span> <span class="n">drop_last</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_load_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset_dict</span><span class="p">):</span>
         <span class="n">image</span><span class="p">,</span> <span class="n">mask</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_load_input</span><span class="p">(</span><span class="n">dataset_dict</span><span class="p">)</span>
@@ -872,23 +823,18 @@
         <span class="c1"># slice.</span>
         <span class="c1"># TODO: remove copying dictionaries if runtime speed issues found</span>
         <span class="n">mapping</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
-        <span class="n">sorted_dataset_dicts</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
-            <span class="n">dataset_dicts</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">d</span><span class="p">:</span> <span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;scan_id&quot;</span><span class="p">],</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;slice_id&quot;</span><span class="p">])</span>
-        <span class="p">)</span>
+        <span class="n">sorted_dataset_dicts</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">dataset_dicts</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">d</span><span class="p">:</span> <span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;scan_id&quot;</span><span class="p">],</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;slice_id&quot;</span><span class="p">]))</span>
         <span class="k">for</span> <span class="n">dd</span> <span class="ow">in</span> <span class="n">sorted_dataset_dicts</span><span class="p">:</span>
             <span class="n">mapping</span><span class="p">[</span><span class="n">dd</span><span class="p">[</span><span class="s2">&quot;scan_id&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dd</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">scan_id</span><span class="p">,</span> <span class="n">dds</span> <span class="ow">in</span> <span class="n">mapping</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">slice_order</span> <span class="o">=</span> <span class="p">[</span><span class="n">dd</span><span class="p">[</span><span class="s2">&quot;slice_id&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">dd</span> <span class="ow">in</span> <span class="n">dds</span><span class="p">]</span>
-            <span class="k">assert</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">slice_order</span><span class="p">)</span> <span class="o">==</span> <span class="n">slice_order</span><span class="p">,</span> <span class="p">(</span>
-                <span class="s2">&quot;Error in sorting dataset dictionaries &quot;</span>
-                <span class="s2">&quot;for scan </span><span class="si">{}</span><span class="s2"> by slice id&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">scan_id</span><span class="p">)</span>
-            <span class="p">)</span>
+            <span class="k">assert</span> <span class="p">(</span>
+                <span class="nb">sorted</span><span class="p">(</span><span class="n">slice_order</span><span class="p">)</span> <span class="o">==</span> <span class="n">slice_order</span>
+            <span class="p">),</span> <span class="s2">&quot;Error in sorting dataset dictionaries &quot;</span> <span class="s2">&quot;for scan </span><span class="si">{}</span><span class="s2"> by slice id&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">scan_id</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_scan_to_dicts</span> <span class="o">=</span> <span class="n">mapping</span>
 
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">cfg</span><span class="p">,</span> <span class="n">dataset_dicts</span><span class="p">,</span> <span class="n">is_test</span><span class="p">,</span> <span class="n">shuffle</span><span class="p">,</span> <span class="n">drop_last</span><span class="p">,</span> <span class="n">batch_size</span>
-        <span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">dataset_dicts</span><span class="p">,</span> <span class="n">is_test</span><span class="p">,</span> <span class="n">shuffle</span><span class="p">,</span> <span class="n">drop_last</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_load_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset_dict</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Find dataset dicts corresponding to flanking/neighboring slices and</span>

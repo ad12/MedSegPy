@@ -181,7 +181,7 @@
 <span class="kn">from</span> <span class="nn">medsegpy.data</span> <span class="kn">import</span> <span class="n">build_loader</span><span class="p">,</span> <span class="n">im_gens</span>
 <span class="kn">from</span> <span class="nn">medsegpy.engine.callbacks</span> <span class="kn">import</span> <span class="n">LossHistory</span><span class="p">,</span> <span class="n">WandBLogger</span><span class="p">,</span> <span class="n">lr_callback</span>
 <span class="kn">from</span> <span class="nn">medsegpy.evaluation</span> <span class="kn">import</span> <span class="n">build_evaluator</span><span class="p">,</span> <span class="n">inference_on_dataset</span>
-<span class="kn">from</span> <span class="nn">medsegpy.losses</span> <span class="kn">import</span> <span class="n">dice_loss</span><span class="p">,</span> <span class="n">get_training_loss</span><span class="p">,</span> <span class="n">build_loss</span>
+<span class="kn">from</span> <span class="nn">medsegpy.losses</span> <span class="kn">import</span> <span class="n">build_loss</span><span class="p">,</span> <span class="n">dice_loss</span>
 <span class="kn">from</span> <span class="nn">medsegpy.modeling.meta_arch</span> <span class="kn">import</span> <span class="n">build_model</span>
 <span class="kn">from</span> <span class="nn">medsegpy.utils</span> <span class="kn">import</span> <span class="n">dl_utils</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">io_utils</span>
 
@@ -202,22 +202,22 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            cfg (Config): An experiment config.</span>
-<span class="sd">            run_eagerly (bool, optional): If `True`, runs eagerly. Only available in tensorflow&gt;=2.0.</span>
-<span class="sd">            strategy (tf.distribute.Strategy, optional): The strategy to use for training. Only available</span>
-<span class="sd">                if `tf.distribute` package is available (tensorflow&gt;=1.14).</span>
+<span class="sd">            run_eagerly (bool, optional): If `True`, runs eagerly.</span>
+<span class="sd">                Only available in tensorflow&gt;=2.0.</span>
+<span class="sd">            strategy (tf.distribute.Strategy, optional): The strategy to use for training.</span>
+<span class="sd">                Only available if `tf.distribute` package is available (tensorflow&gt;=1.14).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span> <span class="o">=</span> <span class="n">cfg</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_loss_history</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_default_strategy</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">distribute</span><span class="o">.</span><span class="n">get_strategy</span><span class="p">()</span> <span class="k">if</span> <span class="n">_SUPPORTS_DISTRIBUTED</span> <span class="k">else</span> <span class="n">dl_utils</span><span class="o">.</span><span class="n">NoOpStrategy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_default_strategy</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">tf</span><span class="o">.</span><span class="n">distribute</span><span class="o">.</span><span class="n">get_strategy</span><span class="p">()</span> <span class="k">if</span> <span class="n">_SUPPORTS_DISTRIBUTED</span> <span class="k">else</span> <span class="n">dl_utils</span><span class="o">.</span><span class="n">NoOpStrategy</span><span class="p">()</span>
+        <span class="p">)</span>
         <span class="n">num_gpus</span> <span class="o">=</span> <span class="n">dl_utils</span><span class="o">.</span><span class="n">num_gpus</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">env</span><span class="o">.</span><span class="n">is_tf2</span><span class="p">()</span> <span class="ow">and</span> <span class="n">run_eagerly</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                <span class="s2">&quot;`run_eagerly` can only be specified in Tensorflow &gt;2.0. &quot;</span>
-                <span class="s2">&quot;Ignoring...&quot;</span>
-            <span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;`run_eagerly` can only be specified in Tensorflow &gt;2.0. &quot;</span> <span class="s2">&quot;Ignoring...&quot;</span><span class="p">)</span>
             <span class="n">run_eagerly</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_run_eagerly</span><span class="o">=</span> <span class="n">run_eagerly</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_run_eagerly</span> <span class="o">=</span> <span class="n">run_eagerly</span>
 
         <span class="k">if</span> <span class="n">strategy</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">strategy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_strategy</span>
@@ -231,11 +231,7 @@
             <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">INIT_WEIGHTS</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_init_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 
-        <span class="n">plot_model</span><span class="p">(</span>
-            <span class="n">model</span><span class="p">,</span>
-            <span class="n">to_file</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">OUTPUT_DIR</span><span class="p">,</span> <span class="s2">&quot;model.png&quot;</span><span class="p">),</span>
-            <span class="n">show_shapes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="n">plot_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">to_file</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">OUTPUT_DIR</span><span class="p">,</span> <span class="s2">&quot;model.png&quot;</span><span class="p">),</span> <span class="n">show_shapes</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">model</span><span class="o">.</span><span class="n">summary</span><span class="p">(</span><span class="n">line_length</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span> <span class="n">print_fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
         <span class="n">model_json</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span>
         <span class="n">model_json_save_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">OUTPUT_DIR</span><span class="p">,</span> <span class="s2">&quot;model.json&quot;</span><span class="p">)</span>
@@ -267,7 +263,8 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">strategy</span><span class="p">,</span> <span class="p">(</span><span class="n">dl_utils</span><span class="o">.</span><span class="n">NoOpStrategy</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_default_strategy</span><span class="p">))</span>
             <span class="p">):</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Strategy &#39;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">strategy</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; not currently supported for testing. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Strategy &#39;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">strategy</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; not currently &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;supported for testing. &quot;</span>
                     <span class="sa">f</span><span class="s2">&quot;Please run testing separately on a single gpu.&quot;</span>
                 <span class="p">)</span>
                 <span class="k">return</span> <span class="p">{}</span>
@@ -309,18 +306,11 @@
         <span class="n">callbacks</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
             <span class="p">[</span>
                 <span class="n">kc</span><span class="o">.</span><span class="n">ModelCheckpoint</span><span class="p">(</span>
-                    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-                        <span class="n">output_dir</span><span class="p">,</span> <span class="s2">&quot;weights.</span><span class="si">{epoch:03d}</span><span class="s2">-</span><span class="si">{val_loss:.4f}</span><span class="s2">.h5&quot;</span>
-                    <span class="p">),</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s2">&quot;weights.</span><span class="si">{epoch:03d}</span><span class="s2">-</span><span class="si">{val_loss:.4f}</span><span class="s2">.h5&quot;</span><span class="p">),</span>
                     <span class="n">save_best_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                     <span class="n">save_weights_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                 <span class="p">),</span>
-                <span class="n">kc</span><span class="o">.</span><span class="n">TensorBoard</span><span class="p">(</span>
-                    <span class="n">output_dir</span><span class="p">,</span> 
-                    <span class="n">write_grads</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
-                    <span class="n">write_images</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                    <span class="o">**</span><span class="n">tb_kwargs</span>
-                <span class="p">),</span>
+                <span class="n">kc</span><span class="o">.</span><span class="n">TensorBoard</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="n">write_grads</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">write_images</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">tb_kwargs</span><span class="p">),</span>
                 <span class="n">WandBLogger</span><span class="p">()</span> <span class="k">if</span> <span class="n">env</span><span class="o">.</span><span class="n">supports_wandb</span><span class="p">()</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
                 <span class="n">kc</span><span class="o">.</span><span class="n">CSVLogger</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s2">&quot;metrics.log&quot;</span><span class="p">)),</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_loss_history</span><span class="p">,</span>
@@ -329,6 +319,11 @@
         <span class="n">callbacks</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">callbacks</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
 
         <span class="k">return</span> <span class="n">callbacks</span>
+
+<div class="viewcode-block" id="DefaultTrainer.build_loss"><a class="viewcode-back" href="../../../modules/engine.html#medsegpy.engine.trainer.DefaultTrainer.build_loss">[docs]</a>    <span class="k">def</span> <span class="nf">build_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Builds loss function used with ``model.compile(loss=...)``.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+        <span class="k">return</span> <span class="n">build_loss</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_train_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Train model.</span>
@@ -341,8 +336,6 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">cfg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span>
         <span class="n">n_epochs</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">N_EPOCHS</span>
-        <span class="n">loss</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">LOSS</span>
-        <span class="n">class_weights</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">CLASS_WEIGHTS</span>
         <span class="n">num_workers</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">NUM_WORKERS</span>
         <span class="n">output_dir</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">OUTPUT_DIR</span>
 
@@ -350,7 +343,7 @@
 
         <span class="c1"># TODO: Add more options for metrics.</span>
         <span class="n">optimizer</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">build_optimizer</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
-        <span class="n">loss_func</span> <span class="o">=</span> <span class="n">build_loss</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+        <span class="n">loss_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_loss</span><span class="p">()</span>
         <span class="n">metrics</span> <span class="o">=</span> <span class="p">[</span><span class="n">lr_callback</span><span class="p">(</span><span class="n">optimizer</span><span class="p">),</span> <span class="n">dice_loss</span><span class="p">]</span>
 
         <span class="n">callbacks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_callbacks</span><span class="p">()</span>
@@ -358,11 +351,7 @@
             <span class="n">callbacks</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">loss_func</span><span class="p">)</span>
             <span class="n">metrics</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss_func</span><span class="o">.</span><span class="n">criterion</span><span class="p">)</span>
 
-        <span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
-            <span class="n">optimizer</span><span class="o">=</span><span class="n">optimizer</span><span class="p">,</span>
-            <span class="n">loss</span><span class="o">=</span><span class="n">loss_func</span><span class="p">,</span>
-            <span class="n">metrics</span><span class="o">=</span><span class="n">metrics</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">optimizer</span><span class="o">=</span><span class="n">optimizer</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="n">loss_func</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="n">metrics</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">env</span><span class="o">.</span><span class="n">is_tf2</span><span class="p">():</span>
             <span class="n">run_eagerly</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">executing_eagerly</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_eagerly</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_eagerly</span>
             <span class="n">model</span><span class="o">.</span><span class="n">run_eagerly</span> <span class="o">=</span> <span class="n">run_eagerly</span>
@@ -422,13 +411,11 @@
                     <span class="s2">&quot;We are working on backwards compatibility&quot;</span>
                 <span class="p">)</span>
             <span class="kn">from</span> <span class="nn">medsegpy.modeling</span> <span class="kn">import</span> <span class="n">get_model</span>
+
             <span class="k">return</span> <span class="n">get_model</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_build_data_loaders</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">cfg</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">im_gens</span><span class="o">.</span><span class="n">Generator</span><span class="p">,</span> <span class="n">im_gens</span><span class="o">.</span><span class="n">Generator</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;Builds train and val data loaders.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_build_data_loaders</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">im_gens</span><span class="o">.</span><span class="n">Generator</span><span class="p">,</span> <span class="n">im_gens</span><span class="o">.</span><span class="n">Generator</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Builds train and val data loaders.&quot;&quot;&quot;</span>
         <span class="n">train_loader</span> <span class="o">=</span> <span class="n">build_loader</span><span class="p">(</span>
             <span class="n">cfg</span><span class="p">,</span>
             <span class="n">dataset_names</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">TRAIN_DATASET</span><span class="p">,</span>

@@ -191,7 +191,6 @@
     <span class="n">Input</span><span class="p">,</span>
     <span class="n">ZeroPadding2D</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">keras.models</span> <span class="kn">import</span> <span class="n">Model</span>
 
 <span class="kn">from</span> <span class="nn">medsegpy.config</span> <span class="kn">import</span> <span class="n">DeeplabV3Config</span>
 
@@ -273,9 +272,7 @@
             <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_kernel_initializer</span><span class="p">(),</span>
             <span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;_depthwise&quot;</span><span class="p">,</span>
         <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;_depthwise_BN&quot;</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="n">epsilon</span><span class="p">)(</span>
-            <span class="n">x</span>
-        <span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;_depthwise_BN&quot;</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="n">epsilon</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">depth_activation</span><span class="p">:</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">Activation</span><span class="p">(</span><span class="s2">&quot;relu&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">Conv2D</span><span class="p">(</span>
@@ -286,9 +283,7 @@
             <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_kernel_initializer</span><span class="p">(),</span>
             <span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;_pointwise&quot;</span><span class="p">,</span>
         <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;_pointwise_BN&quot;</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="n">epsilon</span><span class="p">)(</span>
-            <span class="n">x</span>
-        <span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;_pointwise_BN&quot;</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="n">epsilon</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">depth_activation</span><span class="p">:</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">Activation</span><span class="p">(</span><span class="s2">&quot;relu&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
 </div>
@@ -296,14 +291,14 @@
 
     <span class="k">def</span> <span class="nf">_conv2d_same</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">prefix</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Implements right &#39;same&#39; padding for even kernel sizes</span>
-<span class="sd">            Without this there is a 1 pixel drift when stride = 2</span>
-<span class="sd">            Args:</span>
-<span class="sd">                x: input tensor</span>
-<span class="sd">                filters: num of filters in pointwise convolution</span>
-<span class="sd">                prefix: prefix before name</span>
-<span class="sd">                stride: stride at depthwise conv</span>
-<span class="sd">                kernel_size: kernel size for depthwise convolution</span>
-<span class="sd">                rate: atrous rate for depthwise convolution</span>
+<span class="sd">        Without this there is a 1 pixel drift when stride = 2</span>
+<span class="sd">        Args:</span>
+<span class="sd">            x: input tensor</span>
+<span class="sd">            filters: num of filters in pointwise convolution</span>
+<span class="sd">            prefix: prefix before name</span>
+<span class="sd">            stride: stride at depthwise conv</span>
+<span class="sd">            kernel_size: kernel size for depthwise convolution</span>
+<span class="sd">            rate: atrous rate for depthwise convolution</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">stride</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Conv2D</span><span class="p">(</span>
@@ -344,17 +339,17 @@
         <span class="n">depth_activation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">return_skip</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Basic building block of modified Xception network</span>
-<span class="sd">            Args:</span>
-<span class="sd">                inputs: input tensor</span>
-<span class="sd">                depth_list: number of filters in each SepConv layer. len(depth_list) == 3</span>
-<span class="sd">                prefix: prefix before name</span>
-<span class="sd">                skip_connection_type: one of {&#39;conv&#39;,&#39;sum&#39;,&#39;none&#39;}</span>
-<span class="sd">                stride: stride at last depthwise conv</span>
-<span class="sd">                rate: atrous rate for depthwise convolution</span>
-<span class="sd">                depth_activation: flag to use activation between depthwise &amp; pointwise convs</span>
-<span class="sd">                return_skip: flag to return additional tensor after 2 SepConvs for decoder</span>
-<span class="sd">                &quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Basic building block of modified Xception network</span>
+<span class="sd">        Args:</span>
+<span class="sd">            inputs: input tensor</span>
+<span class="sd">            depth_list: number of filters in each SepConv layer. len(depth_list) == 3</span>
+<span class="sd">            prefix: prefix before name</span>
+<span class="sd">            skip_connection_type: one of {&#39;conv&#39;,&#39;sum&#39;,&#39;none&#39;}</span>
+<span class="sd">            stride: stride at last depthwise conv</span>
+<span class="sd">            rate: atrous rate for depthwise convolution</span>
+<span class="sd">            depth_activation: flag to use activation between depthwise &amp; pointwise convs</span>
+<span class="sd">            return_skip: flag to return additional tensor after 2 SepConvs for decoder</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">residual</span> <span class="o">=</span> <span class="n">inputs</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
             <span class="n">residual</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sep_conv_bn</span><span class="p">(</span>
@@ -369,15 +364,9 @@
                 <span class="n">skip</span> <span class="o">=</span> <span class="n">residual</span>
         <span class="k">if</span> <span class="n">skip_connection_type</span> <span class="o">==</span> <span class="s2">&quot;conv&quot;</span><span class="p">:</span>
             <span class="n">shortcut</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conv2d_same</span><span class="p">(</span>
-                <span class="n">inputs</span><span class="p">,</span>
-                <span class="n">depth_list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
-                <span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;_shortcut&quot;</span><span class="p">,</span>
-                <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                <span class="n">stride</span><span class="o">=</span><span class="n">stride</span><span class="p">,</span>
+                <span class="n">inputs</span><span class="p">,</span> <span class="n">depth_list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;_shortcut&quot;</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="n">stride</span>
             <span class="p">)</span>
-            <span class="n">shortcut</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;_shortcut_BN&quot;</span><span class="p">)(</span>
-                <span class="n">shortcut</span>
-            <span class="p">)</span>
+            <span class="n">shortcut</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;_shortcut_BN&quot;</span><span class="p">)(</span><span class="n">shortcut</span><span class="p">)</span>
             <span class="n">outputs</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">add</span><span class="p">([</span><span class="n">residual</span><span class="p">,</span> <span class="n">shortcut</span><span class="p">])</span>
         <span class="k">elif</span> <span class="n">skip_connection_type</span> <span class="o">==</span> <span class="s2">&quot;sum&quot;</span><span class="p">:</span>
             <span class="n">outputs</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">add</span><span class="p">([</span><span class="n">residual</span><span class="p">,</span> <span class="n">inputs</span><span class="p">])</span>
@@ -398,15 +387,7 @@
         <span class="k">return</span> <span class="n">new_v</span>
 
     <span class="k">def</span> <span class="nf">_inverted_res_block</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="p">,</span>
-        <span class="n">expansion</span><span class="p">,</span>
-        <span class="n">stride</span><span class="p">,</span>
-        <span class="n">alpha</span><span class="p">,</span>
-        <span class="n">filters</span><span class="p">,</span>
-        <span class="n">block_id</span><span class="p">,</span>
-        <span class="n">skip_connection</span><span class="p">,</span>
-        <span class="n">rate</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">expansion</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">block_id</span><span class="p">,</span> <span class="n">skip_connection</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="mi">1</span>
     <span class="p">):</span>
         <span class="n">in_channels</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">_keras_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">pointwise_conv_filters</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">filters</span> <span class="o">*</span> <span class="n">alpha</span><span class="p">)</span>
@@ -425,9 +406,7 @@
                 <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_kernel_initializer</span><span class="p">(),</span>
                 <span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;expand&quot;</span><span class="p">,</span>
             <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span>
-                <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.999</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;expand_BN&quot;</span>
-            <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span><span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.999</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;expand_BN&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">Activation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">relu6</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;expand_relu&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;expanded_conv_&quot;</span>
@@ -442,9 +421,7 @@
             <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_kernel_initializer</span><span class="p">(),</span>
             <span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;depthwise&quot;</span><span class="p">,</span>
         <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span>
-            <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.999</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;depthwise_BN&quot;</span>
-        <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span><span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.999</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;depthwise_BN&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
 
         <span class="n">x</span> <span class="o">=</span> <span class="n">Activation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">relu6</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;depthwise_relu&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
 
@@ -458,9 +435,7 @@
             <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_kernel_initializer</span><span class="p">(),</span>
             <span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;project&quot;</span><span class="p">,</span>
         <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span>
-            <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.999</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;project_BN&quot;</span>
-        <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span><span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.999</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;project_BN&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">skip_connection</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Add</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">prefix</span> <span class="o">+</span> <span class="s2">&quot;add&quot;</span><span class="p">)([</span><span class="n">inputs</span><span class="p">,</span> <span class="n">x</span><span class="p">])</span>
@@ -482,7 +457,7 @@
         <span class="n">dil_rate_input</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">dropout_rate</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Model</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot; Instantiates the Deeplabv3+ architecture</span>
+        <span class="sd">&quot;&quot;&quot;Instantiates the Deeplabv3+ architecture</span>
 
 <span class="sd">        Optionally loads weights pre-trained</span>
 <span class="sd">        on PASCAL VOC. This model is available for TensorFlow only,</span>
@@ -521,14 +496,12 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">K</span><span class="o">.</span><span class="n">backend</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">&quot;tensorflow&quot;</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="s2">&quot;The Deeplabv3+ model is only available with &quot;</span>
-                <span class="s2">&quot;the TensorFlow backend.&quot;</span>
+                <span class="s2">&quot;The Deeplabv3+ model is only available with &quot;</span> <span class="s2">&quot;the TensorFlow backend.&quot;</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">backbone</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;xception&quot;</span><span class="p">,</span> <span class="s2">&quot;mobilenetv2&quot;</span><span class="p">}):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;The `backbone` argument should be either &quot;</span>
-                <span class="s2">&quot;`xception`  or `mobilenetv2` &quot;</span>
+                <span class="s2">&quot;The `backbone` argument should be either &quot;</span> <span class="s2">&quot;`xception`  or `mobilenetv2` &quot;</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">input_tensor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -570,9 +543,7 @@
             <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;entry_flow_conv1_1_BN&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">Activation</span><span class="p">(</span><span class="s2">&quot;relu&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
 
-            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conv2d_same</span><span class="p">(</span>
-                <span class="n">x</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="s2">&quot;entry_flow_conv1_2&quot;</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span>
-            <span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conv2d_same</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="s2">&quot;entry_flow_conv1_2&quot;</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;entry_flow_conv1_2_BN&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">Activation</span><span class="p">(</span><span class="s2">&quot;relu&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
 
@@ -644,66 +615,28 @@
                 <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Conv&quot;</span><span class="p">,</span>
                 <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_kernel_initializer</span><span class="p">(),</span>
             <span class="p">)(</span><span class="n">img_input</span><span class="p">)</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span>
-                <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.999</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Conv_BN&quot;</span>
-            <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span><span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.999</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Conv_BN&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">Activation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">relu6</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Conv_Relu6&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
 
             <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverted_res_block</span><span class="p">(</span>
-                <span class="n">x</span><span class="p">,</span>
-                <span class="n">filters</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
-                <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
-                <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                <span class="n">expansion</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                <span class="n">block_id</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                <span class="n">skip_connection</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">expansion</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">block_id</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">skip_connection</span><span class="o">=</span><span class="kc">False</span>
             <span class="p">)</span>
 
             <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverted_res_block</span><span class="p">(</span>
-                <span class="n">x</span><span class="p">,</span>
-                <span class="n">filters</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span>
-                <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
-                <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-                <span class="n">expansion</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
-                <span class="n">block_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                <span class="n">skip_connection</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">expansion</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">block_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">skip_connection</span><span class="o">=</span><span class="kc">False</span>
             <span class="p">)</span>
             <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverted_res_block</span><span class="p">(</span>
-                <span class="n">x</span><span class="p">,</span>
-                <span class="n">filters</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span>
-                <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
-                <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                <span class="n">expansion</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
-                <span class="n">block_id</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-                <span class="n">skip_connection</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">expansion</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">block_id</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">skip_connection</span><span class="o">=</span><span class="kc">True</span>
             <span class="p">)</span>
 
             <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverted_res_block</span><span class="p">(</span>
-                <span class="n">x</span><span class="p">,</span>
-                <span class="n">filters</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
-                <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
-                <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-                <span class="n">expansion</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
-                <span class="n">block_id</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
-                <span class="n">skip_connection</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">expansion</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">block_id</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">skip_connection</span><span class="o">=</span><span class="kc">False</span>
             <span class="p">)</span>
             <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverted_res_block</span><span class="p">(</span>
-                <span class="n">x</span><span class="p">,</span>
-                <span class="n">filters</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
-                <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
-                <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                <span class="n">expansion</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
-                <span class="n">block_id</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
-                <span class="n">skip_connection</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">expansion</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">block_id</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">skip_connection</span><span class="o">=</span><span class="kc">True</span>
             <span class="p">)</span>
             <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverted_res_block</span><span class="p">(</span>
-                <span class="n">x</span><span class="p">,</span>
-                <span class="n">filters</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
-                <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
-                <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                <span class="n">expansion</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
-                <span class="n">block_id</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
-                <span class="n">skip_connection</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">expansion</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">block_id</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">skip_connection</span><span class="o">=</span><span class="kc">True</span>
             <span class="p">)</span>
 
             <span class="c1"># stride in block 6 changed from 2 -&gt; 1, so we need to use rate = 2</span>
@@ -827,10 +760,7 @@
         <span class="c1"># Image Feature branch</span>
         <span class="c1"># out_shape = int(np.ceil(input_shape[0] / OS))</span>
         <span class="n">b4</span> <span class="o">=</span> <span class="n">AveragePooling2D</span><span class="p">(</span>
-            <span class="n">pool_size</span><span class="o">=</span><span class="p">(</span>
-                <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">OS</span><span class="p">)),</span>
-                <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">OS</span><span class="p">)),</span>
-            <span class="p">)</span>
+            <span class="n">pool_size</span><span class="o">=</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">OS</span><span class="p">)),</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">OS</span><span class="p">)))</span>
         <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
         <span class="n">b4</span> <span class="o">=</span> <span class="n">Conv2D</span><span class="p">(</span>
             <span class="mi">256</span><span class="p">,</span>
@@ -843,10 +773,7 @@
         <span class="n">b4</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;image_pooling_BN&quot;</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">)(</span><span class="n">b4</span><span class="p">)</span>
         <span class="n">b4</span> <span class="o">=</span> <span class="n">Activation</span><span class="p">(</span><span class="s2">&quot;relu&quot;</span><span class="p">)(</span><span class="n">b4</span><span class="p">)</span>
         <span class="n">b4</span> <span class="o">=</span> <span class="n">BilinearUpsampling</span><span class="p">(</span>
-            <span class="p">(</span>
-                <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">OS</span><span class="p">)),</span>
-                <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">OS</span><span class="p">)),</span>
-            <span class="p">)</span>
+            <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">OS</span><span class="p">)),</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">OS</span><span class="p">)))</span>
         <span class="p">)(</span><span class="n">b4</span><span class="p">)</span>
 
         <span class="c1"># simple 1x1</span>
@@ -865,30 +792,15 @@
         <span class="k">if</span> <span class="n">backbone</span> <span class="o">==</span> <span class="s2">&quot;xception&quot;</span><span class="p">:</span>
             <span class="c1"># rate = 6 (12)</span>
             <span class="n">b1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sep_conv_bn</span><span class="p">(</span>
-                <span class="n">x</span><span class="p">,</span>
-                <span class="mi">256</span><span class="p">,</span>
-                <span class="s2">&quot;aspp1&quot;</span><span class="p">,</span>
-                <span class="n">rate</span><span class="o">=</span><span class="n">atrous_rates</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-                <span class="n">depth_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span>
+                <span class="n">x</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="s2">&quot;aspp1&quot;</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="n">atrous_rates</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">depth_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-5</span>
             <span class="p">)</span>
             <span class="c1"># rate = 12 (24)</span>
             <span class="n">b2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sep_conv_bn</span><span class="p">(</span>
-                <span class="n">x</span><span class="p">,</span>
-                <span class="mi">256</span><span class="p">,</span>
-                <span class="s2">&quot;aspp2&quot;</span><span class="p">,</span>
-                <span class="n">rate</span><span class="o">=</span><span class="n">atrous_rates</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
-                <span class="n">depth_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span>
+                <span class="n">x</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="s2">&quot;aspp2&quot;</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="n">atrous_rates</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">depth_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-5</span>
             <span class="p">)</span>
             <span class="c1"># rate = 18 (36)</span>
             <span class="n">b3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sep_conv_bn</span><span class="p">(</span>
-                <span class="n">x</span><span class="p">,</span>
-                <span class="mi">256</span><span class="p">,</span>
-                <span class="s2">&quot;aspp3&quot;</span><span class="p">,</span>
-                <span class="n">rate</span><span class="o">=</span><span class="n">atrous_rates</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
-                <span class="n">depth_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span>
+                <span class="n">x</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="s2">&quot;aspp3&quot;</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="n">atrous_rates</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">depth_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-5</span>
             <span class="p">)</span>
 
             <span class="c1"># concatenate ASPP branches &amp; project</span>
@@ -914,10 +826,7 @@
             <span class="c1"># Feature projection</span>
             <span class="c1"># x4 (x2) block</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">BilinearUpsampling</span><span class="p">(</span>
-                <span class="n">output_size</span><span class="o">=</span><span class="p">(</span>
-                    <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)),</span>
-                    <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)),</span>
-                <span class="p">)</span>
+                <span class="n">output_size</span><span class="o">=</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)),</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)))</span>
             <span class="p">)(</span><span class="n">x</span><span class="p">)</span>
             <span class="n">dec_skip1</span> <span class="o">=</span> <span class="n">Conv2D</span><span class="p">(</span>
                 <span class="mi">48</span><span class="p">,</span>
@@ -927,17 +836,11 @@
                 <span class="n">kernel_initializer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_kernel_initializer</span><span class="p">(),</span>
                 <span class="n">name</span><span class="o">=</span><span class="s2">&quot;feature_projection0&quot;</span><span class="p">,</span>
             <span class="p">)(</span><span class="n">skip1</span><span class="p">)</span>
-            <span class="n">dec_skip1</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span>
-                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;feature_projection0_BN&quot;</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-5</span>
-            <span class="p">)(</span><span class="n">dec_skip1</span><span class="p">)</span>
+            <span class="n">dec_skip1</span> <span class="o">=</span> <span class="n">BatchNormalization</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;feature_projection0_BN&quot;</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">)(</span><span class="n">dec_skip1</span><span class="p">)</span>
             <span class="n">dec_skip1</span> <span class="o">=</span> <span class="n">Activation</span><span class="p">(</span><span class="s2">&quot;relu&quot;</span><span class="p">)(</span><span class="n">dec_skip1</span><span class="p">)</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">Concatenate</span><span class="p">()([</span><span class="n">x</span><span class="p">,</span> <span class="n">dec_skip1</span><span class="p">])</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sep_conv_bn</span><span class="p">(</span>
-                <span class="n">x</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="s2">&quot;decoder_conv0&quot;</span><span class="p">,</span> <span class="n">depth_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-5</span>
-            <span class="p">)</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sep_conv_bn</span><span class="p">(</span>
-                <span class="n">x</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="s2">&quot;decoder_conv1&quot;</span><span class="p">,</span> <span class="n">depth_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-5</span>
-            <span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sep_conv_bn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="s2">&quot;decoder_conv0&quot;</span><span class="p">,</span> <span class="n">depth_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sep_conv_bn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="s2">&quot;decoder_conv1&quot;</span><span class="p">,</span> <span class="n">depth_activation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">)</span>
 
         <span class="c1"># you can use it with arbitary number of classes</span>
         <span class="k">if</span> <span class="n">classes</span> <span class="o">==</span> <span class="mi">21</span><span class="p">:</span>

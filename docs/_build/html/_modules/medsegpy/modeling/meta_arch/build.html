@@ -206,17 +206,12 @@
         <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">LEGACY_MODEL_NAMES</span><span class="p">:</span>
             <span class="n">name</span> <span class="o">=</span> <span class="n">LEGACY_MODEL_NAMES</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">prev_name</span> <span class="o">!=</span> <span class="n">name</span><span class="p">:</span>
-                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                    <span class="s2">&quot;MODEL_NAME </span><span class="si">{}</span><span class="s2"> is deprecated. Use </span><span class="si">{}</span><span class="s2"> instead&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                        <span class="n">prev_name</span><span class="p">,</span> <span class="n">name</span>
-                    <span class="p">)</span>
-                <span class="p">)</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;MODEL_NAME </span><span class="si">{}</span><span class="s2"> is deprecated. Use </span><span class="si">{}</span><span class="s2"> instead&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">prev_name</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
 
     <span class="n">builder</span> <span class="o">=</span> <span class="n">META_ARCH_REGISTRY</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)(</span><span class="n">cfg</span><span class="p">)</span>
     <span class="n">model</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">build_model</span><span class="p">(</span><span class="n">input_tensor</span><span class="p">)</span>
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">Model</span><span class="p">),</span> <span class="p">(</span>
-        <span class="s2">&quot;ModelBuilder.build_model should output model of type &quot;</span>
-        <span class="s2">&quot;medsegpy.modeling.Model&quot;</span>
+        <span class="s2">&quot;ModelBuilder.build_model should output model of type &quot;</span> <span class="s2">&quot;medsegpy.modeling.Model&quot;</span>
     <span class="p">)</span></div>
     <span class="k">return</span> <span class="n">model</span>
 
