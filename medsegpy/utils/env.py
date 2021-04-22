@@ -2,9 +2,13 @@ import importlib
 import importlib.util
 import logging
 import os
+import random
 import sys
 from datetime import datetime
 from typing import Tuple
+
+import numpy as np
+import tensorflow as tf
 
 __all__ = []
 
@@ -14,16 +18,32 @@ _TF_VERSION = None
 
 
 def generate_seed():
-    """
-    Set the random seed for the RNG in torch, numpy and python.
-
-    Args:
-        seed (int): if None, will use a strong random seed.
-    """
+    """Generate a random seed."""
     seed = os.getpid() + int(datetime.now().strftime("%S%f")) + int.from_bytes(os.urandom(2), "big")
     logger = logging.getLogger(__name__)
-    logger.info("Using a generated random seed {}".format(seed))
+    logger.info("Generated random seed {}".format(seed))
     return seed
+
+
+def seed_all_rng(seed=None):
+    """Set random seed for RNG in tensorflow, numpy, and python.
+
+    Args:
+        seed (int, optional): The random seed. If not specified, this function
+            generates a random seed using :func:`generate_seed`.
+    """
+    logger = logging.getLogger(__name__)
+    if seed is None:
+        seed = generate_seed()
+
+    np.random.seed(seed)
+    try:
+        tf.random.set_seed(seed)
+    except AttributeError:
+        tf.random.set_random_seed(seed)
+    random.seed(seed)
+    os.environ["PYTHONHASHSEED"] = str(seed)
+    logger.info("Using random seed {}".format(seed))
 
 
 def is_debug():
