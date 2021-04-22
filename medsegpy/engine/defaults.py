@@ -61,9 +61,10 @@ def default_setup(cfg, args):
     Perform some basic common setups at the beginning of a job, including:
 
     1. Set up the medsegpy logger
-    2. Log basic information about environment, cmdline arguments, and config
-    3. Backup the config to the output directory
-    4. Version experiments
+    2. Set python random seed.
+    3. Log basic information about environment, cmdline arguments, and config
+    4. Backup the config to the output directory
+    5. Version experiments
 
     Args:
         cfg (CfgNode): the full config to be used
@@ -100,7 +101,7 @@ def default_setup(cfg, args):
         os.environ["CUDA_VISIBLE_DEVICES"] = ""
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
-    # Set seed.
+    # Generate seed (if not specified).
     if cfg.SEED == -1:
         cfg.SEED = env.generate_seed()
 
@@ -114,6 +115,10 @@ def default_setup(cfg, args):
     setup_logger(output_dir, name="fvcore")
     logger = setup_logger(output_dir)
 
+    # Set seed.
+    env.seed_all_rng(cfg.SEED)
+
+    # Log environment information
     logger.info("Environment info:\n" + collect_env_info())
 
     logger.info("Command line arguments: " + str(args))
