@@ -117,7 +117,7 @@ def load_oai_3d_sf_from_dir(scan_root, dataset_name=None):
     """
     FNAME_REGEX = "([\d]+)_V([\d]+)"
     f = h5py.File(scan_root, "r")
-    keys = [key for key in f.keys()]
+    keys = list(f.keys())
     f.close()
     dataset_dicts = []
     for key in keys:

@@ -108,7 +108,7 @@ def _to_negative_index(axis, ndim):
     """Convert positive axes to their negative counterparts."""
     if not isinstance(axis, Sequence):
         axis = (axis,)
-    axis = tuple(set(dim if dim < 0 else -ndim + dim for dim in axis))
+    axis = tuple({dim if dim < 0 else -ndim + dim for dim in axis})
     if len(axis) == 1:
         axis = axis[0]
     return axis

@@ -14,6 +14,6 @@ docs-build:
 	cd docs; make html
 
 dev:
-	pip install black==19.3b0 isort==4.3.21 flake8 sphinx-rtd-theme nbsphinx recommonmark
+	pip install black==19.3b0 isort==4.3.21 flake8 flake8-bugbear flake8-comprehensions sphinx-rtd-theme nbsphinx recommonmark
 
 all: autoformat lint test

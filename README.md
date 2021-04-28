@@ -1,3 +1,5 @@
+[![codecov](https://codecov.io/gh/ad12/MedSegPy/branch/master/graph/badge.svg?token=GKSGMGAY6C)](https://codecov.io/gh/ad12/MedSegPy)
+
 # MedSegPy
 MedSegPy is a medical segmentation framework that implements state-of-the-art semantic segmentation algorithms. It is designed to utilize the Keras/Tensorflow libraries and make training easily configurable.
 

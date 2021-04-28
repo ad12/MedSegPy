@@ -15,7 +15,7 @@ else:
 class TestDeeplabV3Plus(unittest.TestCase):
     """Test building 2D/2.5D UNet using the builder."""
 
-    def _compare_layers(cls, m1, m2):
+    def _compare_layers(self, m1, m2):
         for l1, l2 in zip(m1.layers, m2.layers):
             assert type(l1) == type(l2)  # noqa
 
