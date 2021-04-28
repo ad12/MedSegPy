@@ -543,7 +543,7 @@ class NaiveAdaRobLossComputer(Callback):
             if self.stable:
                 self.adv_probs_logits = self.adv_probs_logits + logit_step
             else:
-                assert False, "This branch has not been tested"
+                raise AssertionError("This branch has not been tested")
                 # self.adv_probs = self.adv_probs * torch.exp(logit_step)
                 # self.adv_probs = self.adv_probs / self.adv_probs.sum()
 

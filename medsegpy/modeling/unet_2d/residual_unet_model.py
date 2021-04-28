@@ -79,7 +79,7 @@ def res_block(
     nlayers: int = 2,
     kernel_size=(3, 3),
     seed=None,
-    layer_order=["conv", "relu", "bn"],
+    layer_order=("conv", "relu", "bn"),
     dropout_rate=0.0,
     use_squeeze_excitation=False,
     squeeze_excitation_ratio=8,
@@ -122,7 +122,7 @@ def residual_unet_2d(
     num_filters=None,
     depth=6,
     dropout_rate=0.0,
-    layer_order=["relu", "bn", "dropout", "conv"],
+    layer_order=("relu", "bn", "dropout", "conv"),
     use_squeeze_excitation=False,
     squeeze_excitation_ratio=8,
 ):

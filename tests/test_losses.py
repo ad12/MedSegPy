@@ -40,7 +40,7 @@ class TestNaiveAdaRobLossComputer(unittest.TestCase):
         )
         loss.training = True
 
-        for i in range(1000):
+        for _i in range(1000):
             gt = np.random.rand(1, 5, num_classes) > 0
             pred = np.concatenate([gt[..., :2], np.random.rand(1, 5, 1)], axis=-1)
             _ = loss(gt, pred)
@@ -58,7 +58,7 @@ class TestNaiveAdaRobLossComputer(unittest.TestCase):
         )
         loss.training = True
 
-        for i in range(10):
+        for _i in range(10):
             gt = np.random.rand(1, 5, num_classes) > 0
             pred = np.concatenate([gt[..., :2], np.random.rand(1, 5, 1)], axis=-1)
             _ = loss(K.constant(gt), K.constant(pred))

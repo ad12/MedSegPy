@@ -89,22 +89,18 @@ class MultiClassOverlayNew(object):
     Class to simplify overlaying images and labels.
     """
 
-    def __init__(
-        self,
-        num_classes,
-        color_palette=sns.color_palette("bright"),
-        background_label=0,
-        opacity=0.7,
-    ):
+    def __init__(self, num_classes, color_palette=None, background_label=0, opacity=0.7):
         """
         Args:
             num_classes: Number of classes.
             color_palette: list of RGB tuples to use for color.
-                Default seaborn.color_palette('pastel').
+                Default seaborn.color_palette('bright').
             background_label: Label to exclude for background. Default: 0.
                                  To include background, set to None.
             opacity: How transparent overlay should be (0-1). Default: 0.7
         """
+        if color_palette is None:
+            color_palette = sns.color_palette("bright")
         effective_num_classes = num_classes - 1 if background_label is not None else num_classes
         if len(color_palette) < effective_num_classes:
             raise ValueError("Must provide at least %d colors" % effective_num_classes)
