@@ -64,6 +64,15 @@ setup(
     install_requires=get_required_packages(),
     extras_require={
         "all": ["shapely", "psutil"],
-        "dev": ["flake8", "isort", "black==19.3b0", "flake8-bugbear", "flake8-comprehensions"],
+        "dev": [
+            "flake8",
+            "isort==4.3.21",
+            "black==19.3b0",
+            "flake8-bugbear",
+            "flake8-comprehensions",
+            "sphinx-rtd-theme",
+            "nbsphinx",
+            "recommonmark",
+        ],
     },
 )
