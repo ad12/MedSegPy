@@ -7,6 +7,9 @@ lint:
 test:
 	pytest tests/
 
+test-cov:
+	pytest tests/ --cov=./ --cov-report=xml
+
 docs-build:
 	cd docs; make html
 

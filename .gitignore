@@ -40,3 +40,7 @@
 
 # settings files
 **/.settings
+
+# coverage files
+.coverage
+coverage.xml
