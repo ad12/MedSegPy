@@ -16,6 +16,8 @@ from medsegpy.utils import utils as utils
 
 logger = logging.getLogger(__name__)
 
+raise ValueError
+
 # Keys that have been deprecated.
 DEPRECATED_KEYS = [
     "NUM_CLASSES",
