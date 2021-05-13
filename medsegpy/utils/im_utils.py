@@ -140,7 +140,8 @@ class MultiClassOverlayNew(object):
         labels = self.__logits_to_labels(logits)
         labels_colored = self.__apply_colormap(labels)
 
-        os.makedirs(dirpath, exist_ok=True)
+        if dirpath is not None:
+            os.makedirs(dirpath, exist_ok=True)
 
         vol_rgb = np.zeros(volume.shape + (3,))
         for z in range(volume.shape[-1]):

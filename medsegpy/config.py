@@ -325,7 +325,7 @@ class Config(object):
 
             is_new = not hasattr(self, full_key)
 
-            if is_new:
+            if is_new or full_key == "TRAIN_DATASET":
                 value = self._decode_cfg_value(value, "auto")
             else:
                 value = self._decode_cfg_value(value, type(self.__getattribute__(full_key)))
