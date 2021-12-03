@@ -12,7 +12,7 @@ import h5py
 import keras.backend as K
 import numpy as np
 from fvcore.common.registry import Registry
-from keras import utils as k_utils
+from keras.utils.data_utils import Sequence as kSequence
 from tqdm import tqdm
 
 from medsegpy.config import Config
@@ -61,8 +61,8 @@ def build_data_loader(cfg: Config, dataset_dicts: List[Dict], **kwargs) -> "Data
     return data_loader_cls(cfg, dataset_dicts, **kwargs)
 
 
-class DataLoader(k_utils.Sequence, ABC):
-    """Data loader following :class:`keras.utils.Sequence` API.
+class DataLoader(kSequence, ABC):
+    """Data loader following :class:`keras.utils.data_utils.Sequence` API.
 
     Data loaders load data per batch in the following way:
     1. Collate inputs and outputs
