@@ -213,7 +213,7 @@ class Config(object):
 
         # Save config
         with PathManager.open(filepath, "w") as configfile:
-            yaml.dump(config_vars, configfile)
+            yaml.safe_dump(config_vars, configfile)
 
         logger.info("Full config saved to {}".format(os.path.abspath(filepath)))
 
@@ -470,7 +470,7 @@ class Config(object):
             vars_dict = {k.upper(): v for k, v in vars_dict.items()}
         elif filename.endswith(".yaml") or filename.endswith(".yml"):
             with open(filename, "r") as f:
-                vars_dict = yaml.load(f)
+                vars_dict = yaml.safe_load(f)
         else:
             raise ValueError("file {} not supported".format(filename))
 

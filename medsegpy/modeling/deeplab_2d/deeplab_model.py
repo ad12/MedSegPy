@@ -27,7 +27,6 @@ import numpy as np
 from keras import backend as K
 from keras import layers
 from keras.applications import imagenet_utils
-from keras.engine.topology import get_source_inputs
 from keras.layers import (
     Activation,
     Add,
@@ -41,6 +40,7 @@ from keras.layers import (
     ZeroPadding2D,
 )
 from keras.utils.data_utils import get_file
+from keras.utils.layer_utils import get_source_inputs
 
 from medsegpy.modeling import initializer_utils as init_utils
 
