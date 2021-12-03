@@ -213,7 +213,7 @@ class Config(object):
 
         # Save config
         with PathManager.open(filepath, "w") as configfile:
-            yaml.dump(config_vars, configfile)
+            yaml.safe_dump(config_vars, configfile)
 
         logger.info("Full config saved to {}".format(os.path.abspath(filepath)))
 
@@ -229,8 +229,8 @@ class Config(object):
         members = [
             attr
             for attr in dir(self)
-            if not callable(getattr(self, attr))
-            and not attr.startswith("__")
+            if not attr.startswith("__")
+            and not callable(getattr(self, attr))
             and not (hasattr(type(self), attr) and isinstance(getattr(type(self), attr), property))
         ]
         return {m_var: getattr(self, m_var) for m_var in members}
@@ -325,7 +325,7 @@ class Config(object):
 
             is_new = not hasattr(self, full_key)
 
-            if is_new:
+            if is_new or full_key == "TRAIN_DATASET":
                 value = self._decode_cfg_value(value, "auto")
             else:
                 value = self._decode_cfg_value(value, type(self.__getattribute__(full_key)))
@@ -398,7 +398,7 @@ class Config(object):
         else:
             try:
                 return ast.literal_eval(value)
-            except ValueError as e:
+            except (SyntaxError, ValueError) as e:
                 if data_type == "auto":
                     return value
                 else:
@@ -414,6 +414,18 @@ class Config(object):
     def key_is_renamed(self, full_key):
         """Test if a key is renamed."""
         return full_key in RENAMED_KEYS
+
+    def add_new_key(self, key, value) -> None:
+        """Add a new key to the config schema.
+
+        Args:
+            key (str): Key name
+            value (Any): Value of the key to set.
+        """
+        if key in self.__dict__:
+            raise KeyError("Key {} already exists in config.".format(key))
+        value = self._decode_cfg_value(value, "auto")
+        self.__setattr__(key, value)
 
     def raise_key_rename_error(self, full_key):
         new_key = RENAMED_KEYS[full_key]
@@ -458,7 +470,7 @@ class Config(object):
             vars_dict = {k.upper(): v for k, v in vars_dict.items()}
         elif filename.endswith(".yaml") or filename.endswith(".yml"):
             with open(filename, "r") as f:
-                vars_dict = yaml.load(f)
+                vars_dict = yaml.safe_load(f)
         else:
             raise ValueError("file {} not supported".format(filename))
 

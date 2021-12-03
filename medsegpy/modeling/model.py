@@ -68,7 +68,7 @@ class Model(_Model):
         Arguments:
             model: The Keras model.
             generator: Generator yielding batches of input samples
-                or an instance of Sequence (keras.utils.Sequence)
+                or an instance of Sequence (keras.utils.data_utils.Sequence)
                 object in order to avoid duplicate data
                 when using multiprocessing.
             steps: Total number of steps (batches of samples)
@@ -150,7 +150,7 @@ class Model(_Model):
                 UserWarning(
                     "Using a generator with `use_multiprocessing=True`"
                     " and multiple workers may duplicate your data."
-                    " Please consider using the`keras.utils.Sequence"
+                    " Please consider using the`keras.utils.data_utils.Sequence"
                     " class."
                 )
             )
@@ -160,9 +160,9 @@ class Model(_Model):
             else:
                 raise ValueError(
                     "`steps=None` is only valid for a generator"
-                    " based on the `keras.utils.Sequence` class."
+                    " based on the `keras.utils.data_utils.Sequence` class."
                     " Please specify `steps` or use the"
-                    " `keras.utils.Sequence` class."
+                    " `keras.utils.data_utils.Sequence` class."
                 )
         enqueuer = None
 

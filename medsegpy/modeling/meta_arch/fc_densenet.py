@@ -6,7 +6,6 @@ from typing import Dict, Sequence, Union
 
 import tensorflow as tf
 from keras import backend as K
-from keras.engine import get_source_inputs
 from keras.layers import Activation
 from keras.layers import BatchNormalization as BN
 from keras.layers import (
@@ -20,6 +19,7 @@ from keras.layers import (
     MaxPooling2D,
     MaxPooling3D,
 )
+from keras.utils.layer_utils import get_source_inputs
 
 from medsegpy.config import FCDenseNetConfig
 

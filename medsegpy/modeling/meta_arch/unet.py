@@ -3,7 +3,6 @@ from typing import Dict, Sequence, Union
 import numpy as np
 import tensorflow as tf
 from keras import Input
-from keras.engine import get_source_inputs
 from keras.layers import BatchNormalization as BN
 from keras.layers import (
     Concatenate,
@@ -15,6 +14,7 @@ from keras.layers import (
     MaxPooling2D,
     MaxPooling3D,
 )
+from keras.utils.layer_utils import get_source_inputs
 
 from medsegpy.config import UNet3DConfig, UNetConfig
 from medsegpy.modeling.layers.attention import (

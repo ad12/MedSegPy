@@ -3,10 +3,10 @@ import os
 import warnings
 
 import numpy as np
-from keras.engine.topology import get_source_inputs
 from keras.initializers import he_normal
 from keras.layers import BatchNormalization as BN
 from keras.layers import Concatenate, Conv2D, Conv2DTranspose, Dropout, Input, MaxPooling2D
+from keras.utils.layer_utils import get_source_inputs
 
 from ..model import Model
 

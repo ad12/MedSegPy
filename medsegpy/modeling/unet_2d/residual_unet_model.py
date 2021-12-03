@@ -3,7 +3,6 @@ import os
 
 import keras.backend as K
 import numpy as np
-from keras.engine.topology import get_source_inputs
 from keras.initializers import he_normal
 from keras.layers import Activation, Add
 from keras.layers import BatchNormalization as BN
@@ -22,6 +21,7 @@ from keras.layers import (
 )
 from keras.models import Model
 from keras.utils import plot_model
+from keras.utils.layer_utils import get_source_inputs
 
 logger = logging.getLogger(__name__)
 

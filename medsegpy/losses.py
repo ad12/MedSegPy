@@ -7,6 +7,7 @@ from keras import backend as K
 from keras.callbacks import Callback
 from keras.losses import binary_crossentropy
 
+from medsegpy.loss.classification import DiceLoss
 from medsegpy.utils import env
 
 logger = logging.getLogger(__name__)
@@ -15,6 +16,7 @@ DICE_LOSS = ("dice", "sigmoid")
 MULTI_CLASS_DICE_LOSS = ("multi_class_dice", "sigmoid")
 AVG_DICE_LOSS = ("avg_dice", "sigmoid")
 AVG_DICE_LOSS_SOFTMAX = ("avg_dice", "softmax")
+AVG_DICE_NO_REDUCE = ("avg_dice_no_reduce", "sigmoid")
 WEIGHTED_CROSS_ENTROPY_LOSS = ("weighted_cross_entropy", "softmax")
 WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS = ("weighted_cross_entropy_sigmoid", "sigmoid")
 
@@ -33,6 +35,7 @@ CMD_LINE_SUPPORTED_LOSSES = [
     "MULTI_CLASS_DICE_LOSS",
     "AVG_DICE_LOSS",
     "AVG_DICE_LOSS_SOFTMAX",
+    "AVG_DICE_NO_REDUCE",
     "WEIGHTED_CROSS_ENTROPY_LOSS",
     "WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS",
     "BINARY_CROSS_ENTROPY_LOSS",
@@ -86,6 +89,8 @@ def get_training_loss_from_str(loss_str: str):
         return MULTI_CLASS_DICE_LOSS
     elif loss_str == "AVG_DICE_LOSS" or loss_str == "AVG_DICE_LOSS_SOFTMAX":
         return AVG_DICE_LOSS
+    elif loss_str == "AVG_DICE_NO_REDUCE":
+        return AVG_DICE_NO_REDUCE
     elif loss_str == "WEIGHTED_CROSS_ENTROPY_LOSS":
         return WEIGHTED_CROSS_ENTROPY_LOSS
     elif loss_str == "WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS":
@@ -125,6 +130,10 @@ def get_training_loss(loss, **kwargs):
         return dice_focal_loss
     elif loss == DICE_MEDIAN_LOSS:
         return dice_median_loss
+    elif loss == AVG_DICE_NO_REDUCE:
+        kwargs.pop("reduce", None)
+        kwargs["reduction"] = "none"
+        return DiceLoss(**kwargs)
     else:
         raise ValueError("Loss type not supported")
 
@@ -468,6 +477,10 @@ class NaiveAdaRobLossComputer(Callback):
 
     Use `on_batch_begin` and `on_batch_end` to do things before/after the training batch.
     Note `on_batch_end` runs **before** validation when using `model.fit_generator`.
+    Requires tf>=2.0 and eager mode execution.
+
+    TODO:
+        - Add adjustment
     """
 
     def __init__(self, criterion, n_groups, robust_step_size, stable=True):
@@ -504,16 +517,10 @@ class NaiveAdaRobLossComputer(Callback):
         # if not tf.executing_eagerly():
         #     raise RuntimeError(f"{self.__name__} does not support non-eager execution")
 
-        group_losses = self.criterion(y_true, y_pred)
-        # szp = y_pred.shape if isinstance(y_pred, np.ndarray) else _get_shape(y_pred)
-        # batch_size = szp[0]
-
-        # TODO: For losses where count matters, take this.
-        # group_counts = np.ones(len(group_losses))
-
-        # group_dq_losses, group_counts = self.compute_group_avg(per_sample_dq_losses, group_idx)
-        # corrects = (torch.argmax(yhat, 1) == y).float()
-        # group_accs, group_counts = self.compute_group_avg(corrects, group_idx)
+        group_losses = self.criterion(y_true, y_pred)  # Nx...xC
+        if group_losses.ndim > 1:
+            group_losses = tf.math.reduce_mean(group_losses, axis=range(0, group_losses.ndim - 1))
+        # group_losses, group_counts = self.compute_group_avg(group_losses, y_true)
 
         # Compute overall loss.
         # The naive implementation does not do any sort of grouping.
@@ -561,6 +568,25 @@ class NaiveAdaRobLossComputer(Callback):
         else:
             robust_loss = K.sum(group_loss * adv_probs)
         return robust_loss
+
+    def compute_group_avg(self, per_sample_losses, group_idx):
+        """Compute average loss per group and counts of each group.
+
+        Count is defined as the number of pixels corresponding to a group.
+        Even for pixel-aggregate losses, such as dice, this is the default
+        used.
+
+        Args:
+            per_sample_losses: Losses for each sample. Sample can either be batch
+                or per-pixel.
+        """
+        group_count = tf.math.reduce_sum(group_idx, axis=range(1, group_idx.ndim - 1))
+        if per_sample_losses.ndim == 2:  # NxC
+            group_loss = tf.math.reduce_mean(per_sample_losses, axis=0)
+        else:
+            raise ValueError("`per_sample_losses` must have shape [N,C]")
+
+        return group_loss, group_count
 
     def on_batch_begin(self, batch, logs=None):
         # Hacky way to turn on training before training batch in case it is off.

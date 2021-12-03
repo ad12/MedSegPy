@@ -8,7 +8,7 @@ Some transforms implemented in this file are meant to overload transforms in the
 """
 import inspect
 from abc import ABC, abstractmethod
-from typing import Callable, Sequence, Tuple, TypeVar
+from typing import Any, Callable, Dict, Sequence, Tuple, TypeVar
 
 import numpy as np
 
@@ -43,7 +43,7 @@ class MedTransform(ABC):
     efficiency.
     """
 
-    def _set_attributes(self, params: list = None):
+    def _set_attributes(self, params: dict = None):
         """
         Set attributes from the input list of parameters.
 
@@ -55,6 +55,9 @@ class MedTransform(ABC):
             for k, v in params.items():
                 if k != "self" and not k.startswith("_"):
                     setattr(self, k, v)
+
+    def state_dict(self, ignore) -> Dict[str, Any]:
+        return dict(self.__dict__)
 
     @abstractmethod
     def apply_image(self, img: np.ndarray):
@@ -213,7 +216,7 @@ class CropTransform(MedTransform):
     def __init__(self, coords0: Sequence[int], crop_size: Sequence[int]):
         assert len(coords0) == len(crop_size)
         super().__init__()
-        window = [slice(c, c + s) for c, s in zip(coords0, crop_size)]
+        window = [slice(c, c + s) for c, s in zip(coords0, crop_size)] + [slice()]
         window.insert(0, Ellipsis)
         self._set_attributes({"window": window})
 
@@ -234,27 +237,111 @@ class ZeroMeanNormalization(MedTransform):
     """Zero mean unit variance normalization.
 
     Volumes are dynamically normalized to be zero-mean and unit variance.
+
+    Args:
+        axis (int|Tuple[int]): Axis or axes along which the statistics
+            (means and standard deviations) are computed. The default is
+            to compute the statistics over the spatial dimensions only
+            (i.e. batch and channel dims are ignored).
     """
 
-    def __init__(self):
+    def __init__(self, axis=None):
         super().__init__()
+        self._set_attributes({"axis": axis})
 
     def apply_image(self, img: np.ndarray):
         """Crop the image(s).
 
         Args:
-            img (ndarray): of shape NxCxDxHxW, or NxDxHxW or DxHxW.
+            img (ndarray): of shape `CxHxWx...`
 
         Returns:
             ndarray: zero-mean, unit variance image.
         """
-        mean = img.mean(axis=(-1, -2, -3), keepdims=True)
-        std = img.mean(axis=(-1, -2, -3), keepdims=True)
+        axis = self.axis
+        if axis is None:
+            axis = tuple(range(1, img.ndim))
+        mean = img.mean(axis=axis, keepdims=True)
+        std = img.mean(axis=axis, keepdims=True)
         return (img - mean) / std
 
     def apply_segmentation(self, segmentation: np.ndarray):
         """Segmentation should not be normalized."""
         return segmentation
+
+
+class AffineNormalization(MedTransform):
+    """Affine normalization by ``scale`` and ``bias``.
+
+    Image ``x`` will be normalized as ``x = (x - bias) / scale``.
+    If ``bias`` or ``scale`` are 1D vectors, they will be applied along
+    the channel dimension.
+
+    Args:
+        scale (float | array-like): Scaling parameter.
+            If this is 1D, it will be applied along the channel dimension.
+        bias (float | array-like): Bias parameter.
+            If this is 1D, it will be applied along the channel dimension.
+    """
+
+    def __init__(self, scale=1.0, bias=0.0):
+        super().__init__()
+        self._set_attributes({"scale": scale, "bias": bias})
+
+    def _broadcast_param(self, param, ndim):
+        param = np.asarray(param)
+        if param.ndim == 1:
+            param = param.reshape((param.shape[0],) + (1,) * (ndim - 2))
+        return param
+
+    def apply_image(self, img: np.ndarray):
+        """Crop the image(s).
+
+        Args:
+            img (ndarray): of shape `NxCx...`
+
+        Returns:
+            ndarray: zero-mean, unit variance image.
+        """
+        scale = self._broadcast_param(self.scale, img.ndim)
+        bias = self._broadcast_param(self.bias, img.ndim)
+        return (img - bias) / scale
+
+    def apply_segmentation(self, segmentation: np.ndarray):
+        """Segmentation should not be normalized."""
+        return segmentation
+
+
+class FlipTransform(MedTransform):
+    """Flip image along axis or axes.
+
+    Input images and segmentations will be flipped along ``axis``.
+    In most cases, these axes should correspond to spatial dimensions.
+    If a channel dimension is specified, the segmentation channels will
+    also flip.
+
+    Args:
+        axis (int|Tuple[int]): Axis or axes along which to flip.
+            Defaults to no flipping.
+    """
+
+    def __init__(self, axis=None) -> None:
+        super().__init__()
+        self._set_attributes({"axis": axis})
+
+    def apply_image(self, img: np.ndarray) -> np.ndarray:
+        """Crop the image(s).
+
+        Args:
+            img (ndarray): of shape >=`len(self.window)`
+
+        Returns:
+            ndarray: cropped image(s).
+        """
+        axis = self.axis
+        if not axis:
+            return img
+        return np.flip(img, axis=self.axis)
 
 
 class Windowing(MedTransform):
@@ -296,6 +383,26 @@ class Windowing(MedTransform):
     def apply_segmentation(self, segmentation: np.ndarray):
         """Segmentation should not be windowed."""
         return segmentation
+
+
+class NoOpTransform(MedTransform):
+    """
+    A transform that does nothing.
+    """
+
+    def __init__(self):
+        super().__init__()
+
+    def apply_image(self, img: np.ndarray) -> np.ndarray:
+        return img
+
+    def inverse(self) -> MedTransform:
+        return self
+
+    def __getattr__(self, name: str):
+        if name.startswith("apply_"):
+            return lambda x: x
+        raise AttributeError("NoOpTransform object has no attribute {}".format(name))
 
 
 def build_preprocessing(cfg: Config):

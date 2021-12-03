@@ -21,7 +21,7 @@ https://github.com/JonathanCMitchell/mobilenet_v2_keras
     Classification, Detection and Segmentation](https://arxiv.org/abs/1801.04381)
 """
 from keras import backend as K
-from keras.engine import InputSpec, Layer
+from keras.layers import InputSpec, Layer
 from keras.utils import conv_utils
 
 

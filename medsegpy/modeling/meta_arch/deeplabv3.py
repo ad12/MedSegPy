@@ -10,7 +10,6 @@ import logging
 import numpy as np
 from keras import backend as K
 from keras import layers
-from keras.engine.topology import get_source_inputs
 from keras.layers import (
     Activation,
     Add,
@@ -23,6 +22,7 @@ from keras.layers import (
     Input,
     ZeroPadding2D,
 )
+from keras.utils.layer_utils import get_source_inputs
 
 from medsegpy.config import DeeplabV3Config
 
