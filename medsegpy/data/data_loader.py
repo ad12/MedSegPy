@@ -337,6 +337,10 @@ class DefaultDataLoader(DataLoader):
 
         workers = kwargs.pop("workers", self._cfg.NUM_WORKERS)
         use_multiprocessing = kwargs.pop("use_multiprocessing", workers > 1)
+
+        kwargs["mc_dropout"] = self._cfg.MC_DROPOUT
+        kwargs["mc_dropout_T"] = self._cfg.MC_DROPOUT_T
+
         for scan_id in scan_ids:
             self._dataset_dicts = scan_to_dict_mapping[scan_id]
 
@@ -355,8 +359,8 @@ class DefaultDataLoader(DataLoader):
 
             preds_mc_dropout = None
             if isinstance(preds, dict):
-                preds_mc_dropout = np.squeeze(preds['preds_mc_dropout'])
-                preds_mc_dropout = preds_mc_dropout.transpose((1, 2, 3, 0))
+                if preds['preds_mc_dropout'] is not None:
+                    preds_mc_dropout = np.squeeze(preds['preds_mc_dropout']).transpose((1, 2, 3, 0))
 
                 preds = preds['preds']
 

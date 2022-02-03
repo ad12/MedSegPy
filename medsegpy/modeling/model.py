@@ -42,7 +42,9 @@ class Model(_Model):
         max_queue_size=10,
         workers=1,
         use_multiprocessing=False,
-        verbose=0,
+        mc_dropout=False,
+        mc_dropout_T=100,
+        verbose=0
     ):
         return self.inference_generator_static(
             self, generator, steps, max_queue_size, workers, use_multiprocessing, verbose
@@ -57,7 +59,9 @@ class Model(_Model):
         max_queue_size=10,
         workers=1,
         use_multiprocessing=False,
-        verbose=0,
+        mc_dropout=False,
+        mc_dropout_T=100,
+        verbose=0
     ):
         """Generates predictions for the input samples from a data generator
         and returns inputs, ground truth, and predictions.
@@ -252,6 +256,8 @@ class Model(_Model):
         max_queue_size=10,
         workers=1,
         use_multiprocessing=False,
+        mc_dropout=False,
+        mc_dropout_T=100
     ):
         """Inference generator for TensorFlow 2."""
         outputs = []
@@ -299,8 +305,8 @@ class Model(_Model):
 
                         
                         tmp_batch_outputs_mc_dropout = None
-                        if True: #mc_dropout:
-                            tmp_batch_outputs_mc_dropout = np.stack([model(batch_x, training=True) for _ in range(100)]) # TODO: 100 -> T
+                        if mc_dropout:
+                            tmp_batch_outputs_mc_dropout = np.stack([model(batch_x, training=True) for _ in range(mc_dropout_T)])
 
                         if data_handler.should_sync:
                             context.async_wait()  # noqa: F821
@@ -326,7 +332,7 @@ class Model(_Model):
             all_xs = nest.map_structure_up_to(batch_x, np.concatenate, xs)
             all_ys = nest.map_structure_up_to(batch_y, np.concatenate, ys)
             all_outputs = nest.map_structure_up_to(batch_outputs, np.concatenate, outputs)
-            all_outputs_mc_dropout = nest.map_structure_up_to(batch_outputs_mc_dropout, np.concatenate, outputs_mc_dropout)
+            all_outputs_mc_dropout = nest.map_structure_up_to(batch_outputs_mc_dropout, np.concatenate, outputs_mc_dropout) if mc_dropout else None
 
             outputs = {'preds': all_outputs, 'preds_mc_dropout': all_outputs_mc_dropout}
 

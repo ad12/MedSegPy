@@ -108,6 +108,8 @@ class Config(object):
 
     # Dropout rate
     DROPOUT_RATE = 0.0
+    MC_DROPOUT = False
+    MC_DROPOUT_T = 100
 
     # Batch sizes
     TRAIN_BATCH_SIZE = 12
@@ -593,6 +595,8 @@ class Config(object):
                 "EARLY_STOPPING_CRITERION" if self.USE_EARLY_STOPPING else "",
                 "",
                 "DROPOUT_RATE",
+                "MC_DROPOUT",
+                "MC_DROPOUT_T" if self.MC_DROPOUT else ""
                 "",
                 "KERNEL_INITIALIZER",
                 "SEED" if self.SEED else "",
