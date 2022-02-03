@@ -353,6 +353,13 @@ class DefaultDataLoader(DataLoader):
                 )
             time_elapsed = time.perf_counter() - start
 
+            preds_mc_dropout = None
+            if isinstance(preds, dict):
+                preds_mc_dropout = np.squeeze(preds['preds_mc_dropout'])
+                preds_mc_dropout = preds_mc_dropout.transpose((1, 2, 3, 0))
+
+                preds = preds['preds']
+
             x, y, preds = self._restructure_data((x, y, preds))
 
             input = {"x": x, "scan_id": scan_id}
@@ -363,7 +370,7 @@ class DefaultDataLoader(DataLoader):
             }
             input.update(scan_params)
 
-            output = {"y_pred": preds, "y_true": y, "time_elapsed": time_elapsed}
+            output = {"y_pred": preds, "y_mc_dropout":preds_mc_dropout, "y_true": y, "time_elapsed": time_elapsed}
 
             yield input, output
 
