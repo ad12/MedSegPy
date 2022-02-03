@@ -255,6 +255,7 @@ class Model(_Model):
     ):
         """Inference generator for TensorFlow 2."""
         outputs = []
+        outputs_mc_dropout = []
         xs = []
         ys = []
         with model.distribute_strategy.scope():
@@ -295,14 +296,21 @@ class Model(_Model):
                         batch_x, batch_y, batch_x_raw = _extract_inference_inputs(next(iterator))
                         # tmp_batch_outputs = predict_function(iterator)
                         tmp_batch_outputs = model.predict(batch_x)
+
+                        
+                        tmp_batch_outputs_mc_dropout = None
+                        if True: #mc_dropout:
+                            tmp_batch_outputs_mc_dropout = np.stack([model(batch_x, training=True) for _ in range(100)]) # TODO: 100 -> T
+
                         if data_handler.should_sync:
                             context.async_wait()  # noqa: F821
                         batch_outputs = tmp_batch_outputs  # No error, now safe to assign.
+                        batch_outputs_mc_dropout = tmp_batch_outputs_mc_dropout
 
                         if batch_x_raw is not None:
                             batch_x = batch_x_raw
                         for batch, running in zip(
-                            [batch_x, batch_y, batch_outputs], [xs, ys, outputs]
+                            [batch_x, batch_y, batch_outputs, batch_outputs_mc_dropout], [xs, ys, outputs, outputs_mc_dropout]
                         ):
                             nest.map_structure_up_to(
                                 batch, lambda x, batch_x: x.append(batch_x), running, batch
@@ -318,7 +326,11 @@ class Model(_Model):
             all_xs = nest.map_structure_up_to(batch_x, np.concatenate, xs)
             all_ys = nest.map_structure_up_to(batch_y, np.concatenate, ys)
             all_outputs = nest.map_structure_up_to(batch_outputs, np.concatenate, outputs)
-            return all_xs, all_ys, all_outputs
+            all_outputs_mc_dropout = nest.map_structure_up_to(batch_outputs_mc_dropout, np.concatenate, outputs_mc_dropout)
+
+            outputs = {'preds': all_outputs, 'preds_mc_dropout': all_outputs_mc_dropout}
+
+            return all_xs, all_ys, outputs
 
             # all_xs = nest.map_structure_up_to(batch_x, concat, xs)
             # all_ys = nest.map_structure_up_to(batch_y, concat, ys)
