@@ -337,7 +337,7 @@ class DefaultDataLoader(DataLoader):
 
         workers = kwargs.pop("workers", self._cfg.NUM_WORKERS)
         use_multiprocessing = kwargs.pop("use_multiprocessing", workers > 1)
-
+        
         kwargs["mc_dropout"] = self._cfg.MC_DROPOUT
         kwargs["mc_dropout_T"] = self._cfg.MC_DROPOUT_T
 

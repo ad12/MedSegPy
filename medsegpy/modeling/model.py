@@ -119,6 +119,8 @@ class Model(_Model):
                 max_queue_size=max_queue_size,
                 workers=workers,
                 use_multiprocessing=use_multiprocessing,
+                mc_dropout=mc_dropout,
+                mc_dropout_T=mc_dropout_T,
                 verbose=verbose,
             )
         else:
