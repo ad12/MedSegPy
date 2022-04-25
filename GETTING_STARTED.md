@@ -76,7 +76,7 @@ machineB.save()
 
 ### Training & Evaluation in Command Line
 
-We provide a script in "medsegpy/train_net.py", that is made to train
+We provide a script in "tools/train_net.py", that is made to train
 all the configs provided in medsegpy.
 You may want to use it as a reference to write your own training script for
 new research.
