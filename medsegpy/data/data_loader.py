@@ -18,6 +18,7 @@ from tqdm import tqdm
 from medsegpy.config import Config
 from medsegpy.modeling import Model
 from medsegpy.utils import env
+from pydicom import dcmread
 
 from .data_utils import add_background_labels, collect_mask, compute_patches
 from .transforms import apply_transform_gens, build_preprocessing
@@ -242,8 +243,10 @@ class DefaultDataLoader(DataLoader):
         if self._cached_data is not None:
             image, mask = self._cached_data[(image_file, sem_seg_file)]
         else:
-            with h5py.File(image_file, "r") as f:
-                image = f["data"][:]
+            # with h5py.File(image_file, "r") as f:
+            #     image = f["data"][:]
+            ds = dcmread(image_file)
+            image = ds.pixel_array
             if image.shape[-1] != 1:
                 image = image[..., np.newaxis]
 
@@ -323,7 +326,11 @@ class DefaultDataLoader(DataLoader):
             axes = (1, 2, 0)
             if v.ndim > 3:
                 axes = axes + tuple(i for i in range(3, v.ndim))
-            new_vols.append(v.transpose(axes))
+            # new_vols.append(v.transpose(axes))
+            if v.ndim == 1:
+                new_vols.append(v)
+            else:
+                new_vols.append(v.transpose(axes))
         vols = (np.squeeze(v) for v in new_vols)
         return tuple(vols)
 
@@ -340,9 +347,12 @@ class DefaultDataLoader(DataLoader):
         
         kwargs["mc_dropout"] = self._cfg.MC_DROPOUT
         kwargs["mc_dropout_T"] = self._cfg.MC_DROPOUT_T
+        kwargs["batch_size"] = 1
 
-        for scan_id in scan_ids:
-            self._dataset_dicts = scan_to_dict_mapping[scan_id]
+        # for scan_id in scan_ids:
+        #     self._dataset_dicts = scan_to_dict_mapping[scan_id]
+        for scan_id in range(1):
+            self._dataset_dicts = dataset_dicts
 
             start = time.perf_counter()
             if not isinstance(model, Model):

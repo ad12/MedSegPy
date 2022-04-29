@@ -61,7 +61,8 @@ class Model(_Model):
         use_multiprocessing=False,
         mc_dropout=False,
         mc_dropout_T=100,
-        verbose=0
+        verbose=0,
+        batch_size=None
     ):
         """Generates predictions for the input samples from a data generator
         and returns inputs, ground truth, and predictions.
@@ -122,6 +123,7 @@ class Model(_Model):
                 mc_dropout=mc_dropout,
                 mc_dropout_T=mc_dropout_T,
                 verbose=verbose,
+                batch_size=batch_size
             )
         else:
             return model._inference_generator_tf1(

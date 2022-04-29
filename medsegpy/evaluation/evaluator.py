@@ -109,8 +109,8 @@ def inference_on_dataset(
         total_compute_time += time.perf_counter() - start_compute_time
 
         start_processing_time = time.perf_counter()
-        for e in evaluator:
-            e.process([input], [output])
+        # for e in evaluator:
+        #     e.process([input], [output])
         total_processing_time += time.perf_counter() - start_processing_time
 
         total_inference_time += output["time_elapsed"]
@@ -139,7 +139,7 @@ def inference_on_dataset(
 
     eval_start = time.perf_counter()
     logger.info("Begin evaluation...")
-    results = {e.__class__.__name__: e.evaluate() for e in evaluator}
+    # results = {e.__class__.__name__: e.evaluate() for e in evaluator}
     total_eval_time = time.perf_counter() - eval_start
     logger.info("Time Elapsed: {:.4f} seconds".format(total_compute_time + total_eval_time))
     # An evaluator may return None when not in main process.
