@@ -132,6 +132,9 @@ class Config(object):
     VAL_DATASET = ""
     TEST_DATASET = ""
 
+    # Inference only, with no evaluation
+    INFERENCE_ONLY = False
+
     # Cross-Validation-Parameters
     USE_CROSS_VALIDATION = False
     CV_FILE = ""
@@ -555,6 +558,7 @@ class Config(object):
                 "TRAIN_DATASET",
                 "VAL_DATASET",
                 "TEST_DATASET",
+                "INFERENCE_ONLY",
                 "",
                 "CATEGORIES",
                 "",

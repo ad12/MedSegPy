@@ -349,10 +349,8 @@ class DefaultDataLoader(DataLoader):
         kwargs["mc_dropout_T"] = self._cfg.MC_DROPOUT_T
         kwargs["batch_size"] = 1
 
-        # for scan_id in scan_ids:
-        #     self._dataset_dicts = scan_to_dict_mapping[scan_id]
-        for scan_id in range(1):
-            self._dataset_dicts = dataset_dicts
+        for scan_id in scan_ids:
+            self._dataset_dicts = scan_to_dict_mapping[scan_id]
 
             start = time.perf_counter()
             if not isinstance(model, Model):
