@@ -44,7 +44,8 @@ class Model(_Model):
         use_multiprocessing=False,
         mc_dropout=False,
         mc_dropout_T=100,
-        verbose=0
+        verbose=0,
+        batch_size=None
     ):
         return self.inference_generator_static(
             self, generator, steps, max_queue_size, workers, use_multiprocessing, verbose

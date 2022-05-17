@@ -243,10 +243,13 @@ class DefaultDataLoader(DataLoader):
         if self._cached_data is not None:
             image, mask = self._cached_data[(image_file, sem_seg_file)]
         else:
-            # with h5py.File(image_file, "r") as f:
-            #     image = f["data"][:]
-            ds = dcmread(image_file)
-            image = ds.pixel_array
+            if image_file.endswith('.dcm'):
+                ds = dcmread(image_file)
+                image = ds.pixel_array
+            else:
+                with h5py.File(image_file, "r") as f:
+                    image = f["data"][:]
+        
             if image.shape[-1] != 1:
                 image = image[..., np.newaxis]
 
