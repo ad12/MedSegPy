@@ -106,11 +106,6 @@ class Config(object):
     EARLY_STOPPING_PATIENCE = 0
     EARLY_STOPPING_CRITERION = "val_loss"
 
-    # Dropout rate
-    DROPOUT_RATE = 0.0
-    MC_DROPOUT = False
-    MC_DROPOUT_T = 100
-
     # Batch sizes
     TRAIN_BATCH_SIZE = 12
     VALID_BATCH_SIZE = 35
@@ -597,10 +592,6 @@ class Config(object):
                 "EARLY_STOPPING_MIN_DELTA" if self.USE_EARLY_STOPPING else "",
                 "EARLY_STOPPING_PATIENCE" if self.USE_EARLY_STOPPING else "",
                 "EARLY_STOPPING_CRITERION" if self.USE_EARLY_STOPPING else "",
-                "",
-                "DROPOUT_RATE",
-                "MC_DROPOUT",
-                "MC_DROPOUT_T" if self.MC_DROPOUT else ""
                 "",
                 "KERNEL_INITIALIZER",
                 "SEED" if self.SEED else "",
