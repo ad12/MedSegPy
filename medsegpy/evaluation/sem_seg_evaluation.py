@@ -134,7 +134,7 @@ class SemSegEvaluator(DatasetEvaluator):
             if includes_bg:
                 y_true = output["y_true"][..., 1:]
                 y_pred = output["y_pred"][..., 1:]
-                y_mc_dropout = None if output["y_mc_dropout"] is None else output["y_pred"][..., 1:]
+                y_mc_dropout = None if output["y_mc_dropout"] is None else output["y_mc_dropout"][..., 1:]
                 labels = labels[..., 1:]
                 # if y_true.ndim == 3:
                 #     y_true = y_true[..., np.newaxis]
