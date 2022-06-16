@@ -23,6 +23,7 @@ class TestMCDropout(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        np.random.seed(0)
         img = np.random.rand(*cls.IMG_SIZE).astype(np.float32)
         seg = (np.random.rand(*cls.IMG_SIZE, cls.NUM_CLASSES) >= 0.5).astype(np.uint8)
 
