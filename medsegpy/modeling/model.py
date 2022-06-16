@@ -6,6 +6,7 @@ from keras import utils as k_utils
 from keras.models import Model as _Model
 from keras.utils.data_utils import GeneratorEnqueuer, OrderedEnqueuer
 from keras.utils.generic_utils import Progbar
+import random
 
 from medsegpy.utils import env
 
@@ -47,7 +48,7 @@ class Model(_Model):
         verbose=0
     ):
         return self.inference_generator_static(
-            self, generator, steps, max_queue_size, workers, use_multiprocessing, verbose
+            self, generator, steps, max_queue_size, workers, use_multiprocessing, mc_dropout, mc_dropout_T, verbose
         )
 
     @classmethod
@@ -262,6 +263,7 @@ class Model(_Model):
         mc_dropout_T=100
     ):
         """Inference generator for TensorFlow 2."""
+        random.seed(0)
         outputs = []
         outputs_mc_dropout = []
         xs = []

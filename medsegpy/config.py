@@ -108,7 +108,10 @@ class Config(object):
 
     # Dropout rate
     DROPOUT_RATE = 0.0
+
+    # Use Monte Carlo dropout to generate predictive uncertainty values
     MC_DROPOUT = False
+    # Number of Monte Carlo dropout iterations
     MC_DROPOUT_T = 100
 
     # Batch sizes

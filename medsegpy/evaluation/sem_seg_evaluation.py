@@ -180,7 +180,6 @@ class SemSegEvaluator(DatasetEvaluator):
             with h5py.File(save_name, "w") as h5f:
                 h5f.create_dataset("probs", data=output["y_pred"])
                 h5f.create_dataset("labels", data=labels)
-                h5f.create_dataset("true", data=output["y_true"])
                 if output["y_mc_dropout"] is not None:
                     h5f.create_dataset("mc_dropout", data=output["y_mc_dropout"])
 
