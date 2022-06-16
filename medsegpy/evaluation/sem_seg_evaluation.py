@@ -134,6 +134,7 @@ class SemSegEvaluator(DatasetEvaluator):
             if includes_bg:
                 y_true = output["y_true"][..., 1:]
                 y_pred = output["y_pred"][..., 1:]
+                y_mc_dropout = None if output["y_mc_dropout"] is None else output["y_mc_dropout"][..., 1:]
                 labels = labels[..., 1:]
                 # if y_true.ndim == 3:
                 #     y_true = y_true[..., np.newaxis]
@@ -141,6 +142,7 @@ class SemSegEvaluator(DatasetEvaluator):
                 #     labels = labels[..., np.newaxis]
                 output["y_true"] = y_true
                 output["y_pred"] = y_pred
+                output["y_mc_dropout"] = y_mc_dropout
 
             time_elapsed = output["time_elapsed"]
             if self.stream_evaluation:
@@ -178,6 +180,8 @@ class SemSegEvaluator(DatasetEvaluator):
             with h5py.File(save_name, "w") as h5f:
                 h5f.create_dataset("probs", data=output["y_pred"])
                 h5f.create_dataset("labels", data=labels)
+                if output["y_mc_dropout"] is not None:
+                    h5f.create_dataset("mc_dropout", data=output["y_mc_dropout"])
 
     def evaluate(self):
         """Evaluates popular medical segmentation metrics specified in config.
