@@ -176,7 +176,14 @@ class DefaultTrainer(object):
         # TODO: Add more options for metrics.
         optimizer = solver.build_optimizer(cfg)
         loss_func = self.build_loss()
-        metrics = [lr_callback(optimizer), dice_loss]
+
+        loss_metrics = []
+        if len(cfg.LOSS_METRICS) > 0:
+            for loss_idx, loss_metric in enumerate(cfg.LOSS_METRICS):
+                new_metric = build_loss(cfg, build_additional_metric=True, additional_metric=loss_metric)
+                new_metric.name = f'{loss_metric[0][0]}_{loss_idx}'
+                loss_metrics.append(new_metric)
+        metrics = [lr_callback(optimizer), dice_loss] + loss_metrics
 
         callbacks = self.build_callbacks()
         if isinstance(loss_func, kc.Callback):

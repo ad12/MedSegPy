@@ -17,6 +17,7 @@ MULTI_CLASS_DICE_LOSS = ("multi_class_dice", "sigmoid")
 AVG_DICE_LOSS = ("avg_dice", "sigmoid")
 AVG_DICE_LOSS_SOFTMAX = ("avg_dice", "softmax")
 AVG_DICE_NO_REDUCE = ("avg_dice_no_reduce", "sigmoid")
+AVG_DICE_NO_REDUCE_SOFTMAX = ("avg_dice_no_reduce", "softmax")
 WEIGHTED_CROSS_ENTROPY_LOSS = ("weighted_cross_entropy", "softmax")
 WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS = ("weighted_cross_entropy_sigmoid", "sigmoid")
 
@@ -36,6 +37,7 @@ CMD_LINE_SUPPORTED_LOSSES = [
     "AVG_DICE_LOSS",
     "AVG_DICE_LOSS_SOFTMAX",
     "AVG_DICE_NO_REDUCE",
+    "AVG_DICE_NO_REDUCE_SOFTMAX",
     "WEIGHTED_CROSS_ENTROPY_LOSS",
     "WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS",
     "BINARY_CROSS_ENTROPY_LOSS",
@@ -46,11 +48,30 @@ CMD_LINE_SUPPORTED_LOSSES = [
 ]
 
 
-def build_loss(cfg):
-    loss = cfg.LOSS
+def build_loss(cfg, build_additional_metric=False, additional_metric: list = None):
+    if build_additional_metric is False:
+        loss = cfg.LOSS
+        robust_loss_cls = cfg.ROBUST_LOSS_NAME
+        robust_step_size = cfg.ROBUST_LOSS_STEP_SIZE
+        class_weights = cfg.CLASS_WEIGHTS
+    elif build_additional_metric is True:
+        loss = additional_metric[0]
+        # yaml giving trouble importing list of tuples - need to conver manually?
+        if type(loss) == list:
+            loss = tuple(loss)
+        class_weights = additional_metric[1]
+        # not supporting robust loss for additional metrics (for now). 
+        robust_loss_cls = False
+        robust_step_size = None
+
     num_classes = len(cfg.CATEGORIES)
-    robust_loss_cls = cfg.ROBUST_LOSS_NAME
-    robust_step_size = cfg.ROBUST_LOSS_STEP_SIZE
+
+    # allow config to specify weights as integer indicating we only want
+    # to test one of the classes.
+    if type(class_weights) in (list, tuple):
+        pass
+    elif type(class_weights) is int:
+        class_weights = get_class_weights_from_int(class_weights, num_classes)
 
     if robust_loss_cls:
         reduction = "class"
@@ -64,7 +85,7 @@ def build_loss(cfg):
             pass
     loss = get_training_loss(
         loss,
-        weights=cfg.CLASS_WEIGHTS,
+        weights=class_weights,
         # Remove computation on the background class.
         remove_background=cfg.INCLUDE_BACKGROUND,
         reduce=reduction,
@@ -79,6 +100,12 @@ def build_loss(cfg):
     else:
         raise ValueError(f"{robust_loss_cls} not supported")
 
+def get_class_weights_from_int(label, num_classes):
+    """Returns class_weights for an integer label."""
+    class_weights = [0] * num_classes
+    class_weights[label] = 1
+    return class_weights
+
 
 # TODO (arjundd): Add ability to exclude specific indices from loss function.
 def get_training_loss_from_str(loss_str: str):
@@ -91,6 +118,8 @@ def get_training_loss_from_str(loss_str: str):
         return AVG_DICE_LOSS
     elif loss_str == "AVG_DICE_NO_REDUCE":
         return AVG_DICE_NO_REDUCE
+    elif loss_str == "AVG_DICE_NO_REDUCE_SOFTMAX":
+        return AVG_DICE_NO_REDUCE_SOFTMAX
     elif loss_str == "WEIGHTED_CROSS_ENTROPY_LOSS":
         return WEIGHTED_CROSS_ENTROPY_LOSS
     elif loss_str == "WEIGHTED_CROSS_ENTROPY_SIGMOID_LOSS":
@@ -133,6 +162,15 @@ def get_training_loss(loss, **kwargs):
     elif loss == AVG_DICE_NO_REDUCE:
         kwargs.pop("reduce", None)
         kwargs["reduction"] = "none"
+        return DiceLoss(**kwargs)
+    elif loss == AVG_DICE_NO_REDUCE_SOFTMAX:
+        # Below is actually the same as the above, we could/should amalgamate?
+        kwargs.pop("reduce", None)
+        kwargs["reduction"] = "none"
+        # we don't need to add the softmax activation here - 
+        # it should already be added here:
+        # (https://github.com/ad12/MedSegPy/blob/0c316baaf040c22d562940a198a0e48eef2d36a8/medsegpy/modeling/meta_arch/unet.py#L152)
+        # kwargs["activation"] = "softmax" 
         return DiceLoss(**kwargs)
     else:
         raise ValueError("Loss type not supported")
