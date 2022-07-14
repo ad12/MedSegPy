@@ -70,6 +70,10 @@ class Config(object):
     # Class name for robust loss computation
     ROBUST_LOSS_NAME = ""
     ROBUST_LOSS_STEP_SIZE = 1e-1
+    # Additonal loss functions to run during training
+    # [[(id_1, output_mode_1), class_weights_1], 
+    #  [(id_2, output_mode_2), class_weights_2] ... ]
+    LOSS_METRICS = []
 
     # PIDS to include, None = all pids
     PIDS = None

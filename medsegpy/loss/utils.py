@@ -65,6 +65,10 @@ def reduce_tensor(x, reduction="mean", axis=None, weights=None):
     use_weights = weights is not None
     if use_weights:
         x *= weights
+        if (reduction in ("none", None)) and (len(tf.where(weights==0)) == (len(weights) - 1)):
+            # if one of the weights = 1 and rest = 0, then only want loss of that single value
+            # need to scale by factor len(weights) because final reduction is a mean
+            return x * len(weights)
 
     if reduction == "mean" and use_weights:
         ndim = K.ndim(x)
