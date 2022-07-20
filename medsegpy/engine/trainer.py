@@ -228,7 +228,7 @@ class DefaultTrainer(object):
 
         test_dataset = cfg.TEST_DATASET
         test_gen = cls.build_test_data_loader(cfg)
-        evaluator = build_evaluator(test_dataset, cfg, save_raw_data=True)
+        evaluator = build_evaluator(test_dataset, cfg, save_raw_data=False)
         return inference_on_dataset(model, test_gen, evaluator)
 
     @classmethod
