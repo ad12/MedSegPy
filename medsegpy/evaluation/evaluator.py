@@ -139,7 +139,10 @@ def inference_on_dataset(
 
     eval_start = time.perf_counter()
     logger.info("Begin evaluation...")
-    results = {e.__class__.__name__: e.evaluate() for e in evaluator}
+    if any([e._config.INFERENCE_ONLY for e in evaluator]):
+        results = None
+    else:
+        results = {e.__class__.__name__: e.evaluate() for e in evaluator}
     total_eval_time = time.perf_counter() - eval_start
     logger.info("Time Elapsed: {:.4f} seconds".format(total_compute_time + total_eval_time))
     # An evaluator may return None when not in main process.

@@ -43,6 +43,7 @@ class Model(_Model):
         workers=1,
         use_multiprocessing=False,
         verbose=0,
+        batch_size=None
     ):
         return self.inference_generator_static(
             self, generator, steps, max_queue_size, workers, use_multiprocessing, verbose
@@ -58,6 +59,7 @@ class Model(_Model):
         workers=1,
         use_multiprocessing=False,
         verbose=0,
+        batch_size=None
     ):
         """Generates predictions for the input samples from a data generator
         and returns inputs, ground truth, and predictions.
@@ -116,6 +118,7 @@ class Model(_Model):
                 workers=workers,
                 use_multiprocessing=use_multiprocessing,
                 verbose=verbose,
+                batch_size=batch_size
             )
         else:
             return model._inference_generator_tf1(
@@ -295,6 +298,7 @@ class Model(_Model):
                         batch_x, batch_y, batch_x_raw = _extract_inference_inputs(next(iterator))
                         # tmp_batch_outputs = predict_function(iterator)
                         tmp_batch_outputs = model.predict(batch_x)
+
                         if data_handler.should_sync:
                             context.async_wait()  # noqa: F821
                         batch_outputs = tmp_batch_outputs  # No error, now safe to assign.

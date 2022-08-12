@@ -163,15 +163,16 @@ class SemSegEvaluator(DatasetEvaluator):
 
         metrics_kwargs = {"spacing": spacing} if spacing is not None else {}
 
-        summary = metrics_manager(
-            scan_id, y_true=y_true, y_pred=labels, x=x, runtime=time_elapsed, **metrics_kwargs
-        )
+        if not self._config.INFERENCE_ONLY:
+            summary = metrics_manager(
+                scan_id, y_true=y_true, y_pred=labels, x=x, runtime=time_elapsed, **metrics_kwargs
+            )
 
-        logger_info_str = "Scan #{:03d} (name = {}, {:0.2f}s) = {}".format(
-            scan_cnt, scan_id, time_elapsed, summary
-        )
-        self._results_str = self._results_str + logger_info_str + "\n"
-        logger.info(logger_info_str)
+            logger_info_str = "Scan #{:03d} (name = {}, {:0.2f}s) = {}".format(
+                scan_cnt, scan_id, time_elapsed, summary
+            )
+            self._results_str = self._results_str + logger_info_str + "\n"
+            logger.info(logger_info_str)
 
         if output_dir and save_raw_data:
             save_name = "{}/{}.pred".format(output_dir, scan_id)
