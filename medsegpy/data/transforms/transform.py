@@ -12,14 +12,14 @@ from typing import Any, Callable, Dict, Sequence, Tuple, TypeVar
 
 import numpy as np
 
-from medsegpy.config import Config
 
 __all__ = [
-    "build_preprocessing",
     "MedTransform",
     "TransformList",
     "CropTransform",
     "ZeroMeanNormalization",
+    "FillRegionsWithValue",
+    "Swap2DPatches"
 ]
 
 
@@ -385,6 +385,129 @@ class Windowing(MedTransform):
         return segmentation
 
 
+class FillRegionsWithValue(MedTransform):
+    """Fills rectangular regions of an image with a constant value.
+
+    This transform was included to help with the implementation of Coarse
+    Dropout, located in "medsegpy/data/transforms/transform_gen.py".
+
+    If a stack of images is provided as input to this transform, the
+    transform will be applied independently for each image. As a result,
+    the regions chosen for one image may be different from the regions
+    chosen for another image.
+
+    The implementation is adapted from a similar function in:
+    https://github.com/albumentations-team/albumentations/blob/master/albumentations/augmentations/functional.py.
+    """
+    def __init__(self,
+                 hole_mask: np.ndarray,
+                 fill_value: float = 0.0):
+        """
+        Args:
+            hole_mask: A mask, the same size as the image, indicating which
+                pixels should be filled with `fill_value`.
+            fill_value: The value used to fill in each hole.
+        """
+        self._set_attributes(locals())
+        super().__init__()
+
+    def apply_image(self, img: np.ndarray):
+        """Applies the transform to an image array, which may consist of a
+        stack of images.
+
+        If the images have > 1 channel (the last dimension of the input
+        image array is > 1), the same holes will be filled in for
+        all channels.
+
+        Args:
+            img: A N x H x W x C array, containing N images of height H,
+                    width W, and consisting of C channels.
+        Returns:
+            img_filled: A N x H x W x C array, containing the transformed
+                image.
+        """
+        assert img.shape == self.hole_mask.shape, \
+            f"Shape of 'hole_mask' ({self.hole_mask.shape}) must match shape " \
+            f"of 'image' ({img.shape})"
+        img_filled = img.copy()
+        img_filled[np.array(self.hole_mask, dtype=bool)] = self.fill_value
+        return img_filled
+
+    def apply_segmentation(self, segmentation: np.ndarray) -> np.ndarray:
+        """Segmentation should not be modified."""
+        return segmentation
+
+
+class Swap2DPatches(MedTransform):
+    """Swaps pairs of patches in an image.
+    """
+    def __init__(self,
+                 patch_pairs):
+        """
+        Args:
+            patch_pairs: A list of dictionaries, where each dictionary has
+                            the following structure:
+
+                            {"patch_1": (x1, y1, x2, y2),
+                             "patch_2": (x1, y1, x2, y2)}
+
+                            (x1, y1) is the coordinate of the top-left
+                            corner of the patch, and (x2, y2) is the
+                            coordinate of the bottom-right corner of the
+                            patch.
+        """
+        super().__init__()
+        self._set_attributes(locals())
+
+    def apply_image(self, img:np.ndarray):
+        """Applies the transform to an image array, which may consist of a
+        stack of images.
+
+        If the input image array consists of a stack of images (i.e. the
+        first dimension is > 1), the appropriate pair of patches will be
+        swapped based on the index of the image in the input image array.
+        For example, the patches to be swapped for the first image
+        (index 0 in the first dimension of the input image array) are
+        located index 0 of "patch_pairs".
+
+        If the images have > 1 channel (the last dimension of the input
+        image array is > 1), the same pairs of patches will be swapped
+        for all channels.
+
+        Args:
+            img: A N x H x W x C array, containing N images of height H,
+                    width W, and consisting of C channels.
+        Returns:
+            img_modified: A N x H x W x C array containing the modified
+                            image.
+        """
+        assert img.shape[0] == len(self.patch_pairs), \
+            "Number of images does not equal the number of patch pairs!"
+        img_modified = img.copy()
+        for i, patch_pair in enumerate(self.patch_pairs):
+            tl = patch_pair[0]
+            br = patch_pair[1]
+            for num_pair in range(tl.shape[-1]):
+                # Get coordinates of both patches
+                x1_p1, y1_p1 = tl[:, 0, num_pair]
+                x2_p1, y2_p1 = br[:, 0, num_pair]
+                x1_p2, y1_p2 = tl[:, 1, num_pair]
+                x2_p2, y2_p2 = br[:, 1, num_pair]
+
+                # Swap patches
+                tmp_img_patch = np.copy(
+                    img_modified[i, y1_p1:y2_p1, x1_p1:x2_p1, :])
+                img_modified[i, y1_p1:y2_p1, x1_p1:x2_p1, :] = np.copy(
+                    img_modified[i, y1_p2:y2_p2, x1_p2:x2_p2, :])
+                img_modified[i, y1_p2:y2_p2, x1_p2:x2_p2, :] = tmp_img_patch
+
+        return img_modified
+
+    def apply_segmentation(self, segmentation: np.ndarray) -> np.ndarray:
+        """Segmentation should not be modified."""
+        return segmentation
+
+
 class NoOpTransform(MedTransform):
     """
     A transform that does nothing.
@@ -403,12 +526,3 @@ class NoOpTransform(MedTransform):
         if name.startswith("apply_"):
             return lambda x: x
         raise AttributeError("NoOpTransform object has no attribute {}".format(name))
-
-
-def build_preprocessing(cfg: Config):
-    transforms = []
-    for pp in cfg.PREPROCESSING:
-        if pp == "Windowing":
-            transforms.append(Windowing(cfg.PREPROCESSING_WINDOWS))
-
-    return transforms
