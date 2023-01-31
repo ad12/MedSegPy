@@ -30,6 +30,8 @@ FOCAL_LOSS_GAMMA = 3.0
 DICE_FOCAL_LOSS = ("dice_focal_loss", "sigmoid")
 DICE_MEDIAN_LOSS = ("dice_median_loss", "sigmoid")
 
+L2_LOSS = ("l2_loss", None)
+
 CMD_LINE_SUPPORTED_LOSSES = [
     "DICE_LOSS",
     "MULTI_CLASS_DICE_LOSS",
@@ -43,6 +45,7 @@ CMD_LINE_SUPPORTED_LOSSES = [
     "FOCAL_LOSS",
     "DICE_FOCAL_LOSS",
     "DICE_MEDIAN_LOSS",
+    "L2_LOSS"
 ]
 
 
@@ -105,6 +108,8 @@ def get_training_loss_from_str(loss_str: str):
         return DICE_FOCAL_LOSS
     elif loss_str == "DICE_MEDIAN_LOSS":
         return DICE_MEDIAN_LOSS
+    elif loss_str == "L2_LOSS":
+        return L2_LOSS
     else:
         raise ValueError("%s not supported" % loss_str)
 
@@ -134,6 +139,8 @@ def get_training_loss(loss, **kwargs):
         kwargs.pop("reduce", None)
         kwargs["reduction"] = "none"
         return DiceLoss(**kwargs)
+    elif loss == L2_LOSS:
+        return l2_loss
     else:
         raise ValueError("Loss type not supported")
 
@@ -470,6 +477,26 @@ def generalised_wasserstein_dice_loss(y_true, y_predicted):
     WGDL = 1.0 - (2.0 * true_pos) / (2.0 * true_pos + all_error)
 
     return tf.cast(WGDL, dtype=tf.float32)
+
+
+def l2_loss(y_true, y_pred):
+    """
+    A basic L2 loss, which just compares the pixel values of two images or
+    feature maps. The average L2 loss is returned, where the average is
+    taken along the batch dimension.
+
+    Args:
+        y_true: The ground truth image or feature map.
+        y_pred: The predicted image or feature map from the network.
+
+    Returns:
+       avg_l2_loss: A tensor, whose value is the average L2 loss.
+    """
+    square_diff = K.square(y_true - y_pred)
+    ch_l2_loss = K.sum(square_diff, axis=(1, 2))
+    avg_ch_l2 = K.mean(ch_l2_loss, axis=0)
+    avg_l2_loss = K.mean(avg_ch_l2)
+    return avg_l2_loss
 
 
 class NaiveAdaRobLossComputer(Callback):
