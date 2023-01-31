@@ -22,7 +22,7 @@ from medsegpy.config import (
 )
 from medsegpy.modeling.layers.normalization import GroupNormalization as GroupNorm
 from medsegpy.modeling.layers.convolutional import ConvStandardized2D
-from medsegpy.modeling.load_weights_utils import (
+from medsegpy.modeling.ssl_utils import (
     SelfSupervisedInfo
 )
 from medsegpy.modeling.model_utils import (

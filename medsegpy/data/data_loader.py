@@ -7,6 +7,7 @@ import warnings
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from typing import Dict, List, Sequence
+from copy import deepcopy
 
 import h5py
 import keras.backend as K
@@ -233,30 +234,65 @@ class DefaultDataLoader(DataLoader):
         self._include_background = cfg.INCLUDE_BACKGROUND
         self._num_classes = cfg.get_num_classes()
         self._transform_gen = build_preprocessing(cfg)
+        self._preload_data = cfg.PRELOAD_DATA
         self._cached_data = None
 
-    def _load_input(self, dataset_dict):
+        if self._preload_data:
+            if threading.current_thread() is not threading.main_thread():
+                raise ValueError(
+                    "Data pre-loading can only be done on the main thread."
+                )
+            logger.info("Pre-loading data...")
+            self._cached_data = self._load_all_data(dataset_dicts)
+
+    def _load_all_data(self, dataset_dicts) -> Dict:
+        """
+        We assume that that the tuple `("file_name", "sem_seg_file")`
+        is sufficient for determining the uniqueness of each base dataset
+        dictionary.
+        """
+
+        def _load(dataset_dict):
+            image, mask = self._load_datum(dataset_dict)
+            return {"image": image, "mask": mask}
+
+        cache = [_load(dd) for dd in tqdm(dataset_dicts)]
+        cache = {
+            (dd["file_name"], dd.get("sem_seg_file", None)): x
+            for dd, x in zip(dataset_dicts, cache)
+        }
+        return cache
+
+    def _load_datum(self, dataset_dict):
         image_file = dataset_dict["file_name"]
         sem_seg_file = dataset_dict.get("sem_seg_file", None)
 
-        if self._cached_data is not None:
-            image, mask = self._cached_data[(image_file, sem_seg_file)]
+        with h5py.File(image_file, "r") as f:
+            image = f["data"][:]
+        if image.shape[-1] != 1:
+            image = image[..., np.newaxis]
+
+        if sem_seg_file:
+            with h5py.File(sem_seg_file, "r") as f:
+                mask = f["data"][:]
+            cat_idxs = self._category_idxs
+            mask = collect_mask(mask, index=cat_idxs)
+            if self._include_background:
+                mask = add_background_labels(mask)
         else:
-            with h5py.File(image_file, "r") as f:
-                image = f["data"][:]
-            if image.shape[-1] != 1:
-                image = image[..., np.newaxis]
+            mask = None
 
-            if sem_seg_file:
-                with h5py.File(sem_seg_file, "r") as f:
-                    mask = f["data"][:]
+        return image, mask
 
-                cat_idxs = self._category_idxs
-                mask = collect_mask(mask, index=cat_idxs)
-                if self._include_background:
-                    mask = add_background_labels(mask)
-            else:
-                mask = None
+    def _load_input(self, dataset_dict):
+        if self._cached_data is not None:
+            image_file = dataset_dict["file_name"]
+            sem_seg_file = dataset_dict.get("sem_seg_file", None)
+            cache_dict = self._cached_data[(image_file, sem_seg_file)]
+            image = cache_dict["image"]
+            mask = cache_dict["mask"]
+        else:
+            image, mask = self._load_datum(dataset_dict)
 
         return image, mask
 
@@ -324,8 +360,12 @@ class DefaultDataLoader(DataLoader):
             if v.ndim > 3:
                 axes = axes + tuple(i for i in range(3, v.ndim))
             new_vols.append(v.transpose(axes))
-        vols = (np.squeeze(v) for v in new_vols)
         return tuple(vols)
+
+    def clear_cached_data(self):
+        if self._cached_data is not None:
+            self._cached_data.clear()
+            self._cached_data = None
 
     def inference(self, model: Model, **kwargs):
         scan_to_dict_mapping = defaultdict(list)
@@ -431,18 +471,10 @@ class PatchDataLoader(DefaultDataLoader):
 
         super().__init__(cfg, dd_patched, is_test, shuffle, drop_last, batch_size)
 
-        self._preload_data = cfg.PRELOAD_DATA
-        self._cached_data = None
         self._f = None
 
         if self._use_singlefile:
             self._singlefile_fp = dataset_dicts[0]["singlefile_path"]
-
-        if self._preload_data:
-            if threading.current_thread() is not threading.main_thread():
-                raise ValueError("Data pre-loading can only be done on the main thread.")
-            logger.info("Pre-loading data...")
-            self._cached_data = self._load_all_data(dataset_dicts, cfg.NUM_WORKERS)
 
     def __del__(self):
         if hasattr(self, "_f") and self._f is not None:
@@ -582,6 +614,306 @@ class PatchDataLoader(DefaultDataLoader):
                 new_vols[vol_id][c] = x
 
         return tuple(new_vols)
+
+
+@DATA_LOADER_REGISTRY.register()
+class qDESSDataLoader(PatchDataLoader):
+    def __init__(
+            self,
+            cfg,
+            dataset_dicts,
+            is_test: bool = False,
+            shuffle: bool = True,
+            drop_last: bool = False,
+            batch_size: int = 1,
+            has_seg: bool = True
+    ):
+        # TODO: Add support for other stuff
+        img_keys = ("rms",)
+        assert len(img_keys) == 1, img_keys  # Currently only supports 1 image key.
+        self.img_keys = img_keys
+        if has_seg:
+            self.seg_key = "seg"
+            self.keys_to_load = set(tuple(self.img_keys) + (self.seg_key,))
+        else:
+            self.seg_key = None
+            self.keys_to_load = set(tuple(self.img_keys))
+
+        # Preprocessing
+        self.suppress_fluid = False
+        self.suppress_fat = False
+        if self.suppress_fluid:
+            self.keys_to_load |= {"echo1", "echo2"}
+        if self.suppress_fat:
+            self.keys_to_load |= {"echo1"}
+
+        # Load the stats into a dictionary.
+        stats = {}
+        files = set(dd["file_name"] for dd in dataset_dicts)
+        for fp in files:
+            stats[fp] = {}
+            with h5py.File(fp, "r") as f:
+                for k in ["echo1", "echo2", "rms"]:
+                    stats[fp][k] = {x: f["stats"][k][x][()] for x in f["stats"][k].keys()}
+        self.stats = stats
+
+        # Axial
+        self.axial = False
+        if cfg.IMG_SIZE == (512, 160, 1):
+            # Axial subsampling, toss out anything that is not (512, 160)
+            num_before = len(dataset_dicts)
+            dataset_dicts = [dd for dd in dataset_dicts if tuple(dd["image_size"]) == (512, 512, 160)]
+            num_after = len(dataset_dicts)
+            logger.info(
+                "Dropped {} scans not of shape (512, 512, 160). "
+                "{} Scans remaining".format(num_before - num_after, num_after)
+            )
+            cfg = deepcopy(cfg)
+            cfg.IMG_SIZE = (1, 512, 160)
+            self.axial = True
+
+        super().__init__(cfg, dataset_dicts, is_test, shuffle, drop_last, batch_size, use_singlefile=False)
+
+    def _get_image(self, vals):
+        # Value exists
+        if len(self.img_keys) == 1 and self.img_keys[0] in vals:
+            return vals[self.img_keys[0]]
+
+        raise NotImplementedError("Remainder has not yet been implemented")
+
+    def _load_patch(self, dataset_dict, skip_patch: bool = False, img_key=None, seg_key=None):
+        image_file = dataset_dict["file_name"]
+        patch = Ellipsis if skip_patch else dataset_dict["_patch"]
+
+        with h5py.File(image_file, "r") as f:
+            vals = {k: f[k][patch] for k in self.keys_to_load}
+        image = self._get_image(vals)
+
+        mask = vals[self.seg_key] if self.seg_key else None
+        if mask is not None:
+            cat_idxs = self._category_idxs
+            mask = collect_mask(mask, index=cat_idxs)
+            if self._include_background:
+                mask = add_background_labels(mask)
+
+        # Pre-processing
+        fp = dataset_dict["file_name"]
+        stats = self.stats[fp]
+        # 1. Zero mean, unit standard deviation wrt volume.
+        img_key = self.img_keys[0]
+        image = (image - stats[img_key]["mean"]) / stats[img_key]["std"]
+        # 2. Suppress fat/fluid regions
+        if self.suppress_fat:
+            echo1 = vals["echo1"]
+            image = image * (echo1 > 0.15 * np.max(echo1))
+        if self.suppress_fluid:
+            beta = 1.2
+            echo1, echo2 = vals["echo1"], vals["echo2"]
+            vol_null_fluid = echo1 - beta * echo2
+            image = image * (vol_null_fluid > 0.1 * np.max(vol_null_fluid))
+
+        if mask is not None:
+            return image.astype(np.float32), mask.astype(np.float32)
+        else:
+            return image.astype(np.float32), None
+
+
+@DATA_LOADER_REGISTRY.register()
+class qDESSImageDataLoader(qDESSDataLoader):
+    def __init__(
+            self,
+            cfg,
+            dataset_dicts,
+            is_test: bool = False,
+            shuffle: bool = True,
+            drop_last: bool = False,
+            batch_size: int = 1,
+    ):
+        super(qDESSImageDataLoader, self).__init__(
+            cfg,
+            dataset_dicts,
+            is_test,
+            shuffle,
+            drop_last,
+            batch_size,
+            has_seg=False
+        )
+
+    def __getitem__(self, idx):
+        """
+        Args:
+            idx: Batch index.
+
+        Returns:
+            ndarray, ndarray: images NxHxWx(...)x1, masks NxHxWx(...)x1
+        """
+        if self._use_singlefile and self._f is None:
+            self._f = h5py.File(self._singlefile_fp, "r")
+        batch_size = self._batch_size
+        start = idx * batch_size
+        stop = min((idx + 1) * batch_size, self._num_elements())
+
+        inputs, outputs = self._load_batch(self._idxs[start:stop])
+        inputs_preprocessed, outputs = self._preprocess(inputs, outputs)
+
+        if self._is_test:
+            return inputs_preprocessed, inputs, inputs
+        else:
+            return inputs_preprocessed, inputs
+
+
+@DATA_LOADER_REGISTRY.register()
+class AB_CT_DataLoader(DefaultDataLoader):
+    def __init__(
+            self,
+            cfg,
+            dataset_dicts,
+            is_test: bool = False,
+            shuffle: bool = True,
+            drop_last: bool = False,
+            batch_size: int = 1,
+    ):
+        super().__init__(cfg,
+                         dataset_dicts,
+                         is_test,
+                         shuffle,
+                         drop_last,
+                         batch_size)
+        assert self._preload_data, \
+            "cfg.PRELOAD_DATA must be True"
+
+        # Get different versions of cfg.PREPROCESSING and
+        # cfg.PREPROCESSING_ARGS
+        preprocessing_copy = cfg.PREPROCESSING.copy()
+        preprocessing_args_copy = cfg.PREPROCESSING_ARGS.copy()
+        windowing_idx = cfg.PREPROCESSING.index("Windowing")
+        only_window_preprocess = [cfg.PREPROCESSING[windowing_idx]]
+        only_window_preprocess_args = [cfg.PREPROCESSING_ARGS[windowing_idx]]
+        no_window_preprocess = cfg.PREPROCESSING.copy()
+        no_window_preprocess_args = cfg.PREPROCESSING_ARGS.copy()
+        del no_window_preprocess[windowing_idx]
+        del no_window_preprocess_args[windowing_idx]
+
+        # Do windowing and zero-normalization
+        cfg.PREPROCESSING = only_window_preprocess
+        cfg.PREPROCESSING_ARGS = only_window_preprocess_args
+        window_transform = build_preprocessing(cfg)
+
+        for cache_key, img_dict in self._cached_data.items():
+            img_in = img_dict["image"]
+
+            img_out, _ = apply_transform_gens(window_transform, img_in)
+
+            # Zero-normalize each channel separately
+            img_mean = np.mean(img_out, axis=(0, 1), keepdims=True)
+            img_std = np.std(img_out, axis=(0, 1), keepdims=True)
+            img_out = (img_out - img_mean) / img_std
+
+            self._cached_data[cache_key]["image"] = img_out
+            self._cached_data[cache_key]["orig_image"] = img_in
+
+        # Reset self._transform_gen and self._cfg such that it does not
+        # include Windowing
+        cfg.PREPROCESSING = no_window_preprocess
+        cfg.PREPROCESSING_ARGS = no_window_preprocess_args
+        self._transform_gen = build_preprocessing(cfg)
+        self._cfg = cfg
+
+        # Reset config argument
+        cfg.PREPROCESSING = preprocessing_copy
+        cfg.PREPROCESSING_ARGS = preprocessing_args_copy
+
+    def __getitem__(self, idx):
+        """
+        Args:
+            idx: Batch index.
+
+        Returns:
+            ndarray, ndarray: images NxHxWx(...)x1, masks NxHxWx(...)x1
+        """
+        batch_size = self._batch_size
+        start = idx * batch_size
+        stop = min((idx + 1) * batch_size, self._num_elements())
+
+        orig_inputs, inputs, outputs = self._load_batch(self._idxs[start:stop])
+        inputs_preprocessed, outputs = self._preprocess(inputs, outputs)
+
+        if self._is_test:
+            return inputs_preprocessed, outputs, orig_inputs
+        else:
+            return inputs_preprocessed, outputs
+
+    def _load_batch(self, idxs: Sequence[int]):
+        """
+        TODO: run test to determine if casting inputs/outputs is required.
+        """
+        dataset_dicts = self._dataset_dicts
+
+        orig_images = []
+        images = []
+        masks = []
+        for file_idx in idxs:
+            dataset_dict = dataset_dicts[file_idx]
+            image, mask = self._load_input(dataset_dict)
+
+            # Get original images
+            image_file = dataset_dict["file_name"]
+            sem_seg_file = dataset_dict.get("sem_seg_file", None)
+            cache_dict = self._cached_data[(image_file, sem_seg_file)]
+            orig_image = cache_dict["orig_image"]
+
+            orig_images.append(orig_image)
+            images.append(image)
+            masks.append(mask)
+
+        return np.stack(orig_images, axis=0), \
+               np.stack(images, axis=0), \
+               np.stack(masks, axis=0)
+
+
+@DATA_LOADER_REGISTRY.register()
+class AB_CT_ImageDataLoader(AB_CT_DataLoader):
+    def __init__(
+            self,
+            cfg,
+            dataset_dicts,
+            is_test: bool = False,
+            shuffle: bool = True,
+            drop_last: bool = False,
+            batch_size: int = 1,
+    ):
+        super().__init__(
+            cfg,
+            dataset_dicts,
+            is_test,
+            shuffle,
+            drop_last,
+            batch_size
+        )
+
+        # Remove all masks from cached data
+        for cache_key in self._cached_data.keys():
+            self._cached_data[cache_key]["mask"] = None
+
+    def __getitem__(self, idx):
+        """
+        Args:
+            idx: Batch index.
+
+        Returns:
+            ndarray, ndarray: images NxHxWx(...)x1, masks NxHxWx(...)x1
+        """
+        batch_size = self._batch_size
+        start = idx * batch_size
+        stop = min((idx + 1) * batch_size, self._num_elements())
+
+        _, inputs, outputs = self._load_batch(self._idxs[start:stop])
+        inputs_preprocessed, outputs = self._preprocess(inputs, outputs)
+
+        if self._is_test:
+            return inputs_preprocessed, inputs, inputs
+        else:
+            return inputs_preprocessed, inputs
 
 
 @DATA_LOADER_REGISTRY.register()
