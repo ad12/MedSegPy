@@ -71,12 +71,6 @@ class Config(object):
     # Learning type. Possible Values:
     # 1) "self-supervised" -- self-supervised learning
     # 2) "supervised" -- supervised learning
-    LEARNING_TYPE = ""
-
-    # Learning tag. Same possible values as LEARNING_TYPE.
-    # This will not be used to determine the type of training,
-    # but is available for use by the user in other pieces
-    # of code.
     LEARNING_TAG = ""
 
     # Primary Task

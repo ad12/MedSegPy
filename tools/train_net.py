@@ -20,11 +20,47 @@ from medsegpy.engine.defaults import default_argument_parser, default_setup
 from medsegpy.engine.trainer import DefaultTrainer
 from medsegpy.modeling import Model, model_from_json
 from medsegpy.utils import env
+from typing import Sequence
 
 try:
     import wandb
 except:
     pass
+
+
+def parse_windows(windows):
+    """Parse windows provided by the user.
+    These windows can either be strings corresponding to popular windowing
+    thresholds for CT or tuples of (upper, lower) bounds.
+    """
+    windowing = {
+        "soft": (400, 50),
+        "bone": (1800, 400),
+        "liver": (150, 30),
+        "spine": (250, 50),
+        "custom": (500, 50),
+    }
+    vals = []
+    for w in windows:
+        if isinstance(w, Sequence) and len(w) == 2:
+            assert_msg = "Expected tuple of (lower, upper) bound"
+            assert len(w) == 2, assert_msg
+            assert isinstance(w[0], (float, int)), assert_msg
+            assert isinstance(w[1], (float, int)), assert_msg
+            assert w[0] < w[1], assert_msg
+            vals.append(w)
+            continue
+
+        if w not in windowing:
+            raise KeyError("Window {} not found".format(w))
+        window_width = windowing[w][0]
+        window_level = windowing[w][1]
+        upper = window_level + window_width / 2
+        lower = window_level - window_width / 2
+
+        vals.append((lower, upper))
+
+    return tuple(vals)
 
 
 def setup(args):
@@ -37,6 +73,20 @@ def setup(args):
 
     cfg.merge_from_file(args.config_file)
     cfg.merge_from_list(args.opts)
+
+    # Convert preprocessing windows from string representation to integer
+    # values.
+    if "Windowing" in cfg.PREPROCESSING:
+        windowing_idx = cfg.PREPROCESSING.index("Windowing")
+        windows = cfg.PREPROCESSING_ARGS[windowing_idx]
+        if type(windows) != dict or "bounds" not in windows.keys():
+            assert type(windows) in [list, tuple], \
+                "PREPROCESSING_ARGS for 'Windowing' must be a list or tuple"
+            assert cfg.IMG_SIZE[-1] == len(windows), \
+                f"Expected cfg.IMG_SIZE to have {len(windows)} channels"
+            cfg.PREPROCESSING_ARGS[windowing_idx] = {
+                "bounds": parse_windows(windows)
+            }
 
     default_setup(cfg, args)
 
