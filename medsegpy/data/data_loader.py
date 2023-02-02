@@ -360,7 +360,7 @@ class DefaultDataLoader(DataLoader):
             if v.ndim > 3:
                 axes = axes + tuple(i for i in range(3, v.ndim))
             new_vols.append(v.transpose(axes))
-        return tuple(vols)
+        return tuple(new_vols)
 
     def clear_cached_data(self):
         if self._cached_data is not None:

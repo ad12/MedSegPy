@@ -163,12 +163,12 @@ def compute_patches(
 
 
 def generate_poisson_disc_mask(
-        img_shape: Sequence[int],
-        min_distance: float,
-        num_samples: int,
-        patch_size: float = 0.0,
-        k: float = 30,
-        seed: int = None
+    img_shape: Sequence[int],
+    min_distance: float,
+    num_samples: int,
+    patch_size: float = 0.0,
+    k: float = 30,
+    seed: int = None
 ):
     """Generate Poisson-disc sampling mask
 
