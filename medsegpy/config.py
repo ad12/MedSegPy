@@ -136,6 +136,23 @@ class Config(object):
     FILE_TYPES = ["im"]
 
     # A dictionary specifying which pretrained weights to load
+    #
+    # Example:
+    #   {
+    #       "path": "",
+    #       "weights":
+    #           [
+    #               {
+    #                   "include_words": ["decoder"],
+    #                   "exclude_words": [],
+    #                   "slice_indices": [0, "until"]
+    #               }
+    #           ]
+    #   }
+    #
+    # The above example will load the weights for all layers from the
+    # first layer until the layer right before the first layer
+    # with the word "decoder" in its name
     PRETRAINED_WEIGHTS_PATH = {}
 
     # The path to the config file of the pretrained model
