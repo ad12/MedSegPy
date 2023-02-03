@@ -250,9 +250,9 @@ class CoarseDropout(TransformGen):
 
             hole_size = min_width
             # Check max_perc_area_to_remove
-            # -- Assuming a hexagonal packing of circles will output the
+            #   - Assuming a hexagonal packing of circles will output the
             #       most number of samples when using Poisson disc sampling.
-            # -- From https://mathworld.wolfram.com/CirclePacking.html:
+            #   - From https://mathworld.wolfram.com/CirclePacking.html:
             #       Max packing density when using hexagonal packing is
             #       pi / (2 * sqrt(3))
             max_pos_area = (img_shape[0] * img_shape[1]) * (
