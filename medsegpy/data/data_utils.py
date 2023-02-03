@@ -187,7 +187,7 @@ def generate_poisson_disc_mask(
         array: Poisson-disc sampling mask.
 
     References:
-        Bridson, Robert. "Fast Poisson disk sampling in arbitrary dimensions."
+        Bridson, Robert. "Fast Poisson disk sampling in arbitrary dimensions".
         SIGGRAPH sketches. 2007.
     """
     y, x = np.mgrid[:img_shape[-2], :img_shape[-1]]
