@@ -73,7 +73,7 @@ class Config(object):
     # 2) "supervised" -- supervised learning
     LEARNING_TAG = ""
 
-    # Primary Task
+    # The current task for which the model is trained
     # -- Possible Values: "inpainting", "segmentation"
     PRIMARY_TASK = ""
 
@@ -135,13 +135,19 @@ class Config(object):
     # File Types
     FILE_TYPES = ["im"]
 
-    # Transfer Learning
+    # A dictionary specifying which pretrained weights to load
     PRETRAINED_WEIGHTS_PATH = {}
+
+    # The path to the config file of the pretrained model
     PRETRAINED_CONFIG_PATH = ""
+
+    # Boolean determining whether or not the pretrained weights
+    # specified in PRETRAINED_WEIGHTS_PATH will be frozen
+    # during training
     FREEZE_PRETRAINED = False
+
     INIT_WEIGHTS = ""
     FREEZE_LAYERS = ()
-    FINETUNE_LEARNING_RATE = 1e-4
 
     # Dataset names
     TRAIN_DATASET = ""
@@ -168,9 +174,11 @@ class Config(object):
 
     # Type of normalization layer
     NORMALIZATION = "BatchNorm"
+    # Arguments for the normalization layer
     NORMALIZATION_ARGS = {"axis": -1,
                           "momentum": 0.95,
                           "epsilon": 0.001}
+    # Boolean specifying if weight standardization should be used
     WEIGHT_STANDARDIZATION = False
 
     # Weights kernel initializer.
@@ -184,8 +192,6 @@ class Config(object):
     TEST_WEIGHT_PATH = ""
     TEST_METRICS = ["DSC", "VOE", "ASSD", "CV"]
 
-    # Extra parameters related to different parameters.
-    #
     # PREPROCESSING: a list of MedTransform or TransformGen class names
     #                   (look at medsegpy/data/transforms/transform_gen.py")
     # PREPROCESSING_ARGS: a list of dictionaries, where each dictionary
@@ -724,7 +730,8 @@ class ContextEncoderConfig(Config):
     """
     Configuration for the context encoder.
 
-    Paper: "Context Encoders: Feature Learning by Inpainting" (Pathak et al.)
+    Reference:
+        Pathak et al. Context Encoders: Feature Learning by Inpainting. CVPR. 2016.
     """
     MODEL_NAME = "ContextEncoder"
     NUM_FILTERS = [[32, 32], [64, 64], [128, 128], [256, 256]]
@@ -745,10 +752,10 @@ class ContextUNetConfig(Config):
 
     This model will incorporate the ContextEncoder model as well.
 
-    Paper: "Context Encoders: Feature Learning by Inpainting" (Pathak et al.)
+    Reference:
+        Pathak et al. Context Encoders: Feature Learning by Inpainting. CVPR. 2016.
     """
     MODEL_NAME = "ContextUNet"
-    CONTEXT_ENCODER_CONFIG_FILE_PATH = ""
     NUM_FILTERS = [[32, 32], [64, 64], [128, 128], [256, 256]]
 
     def __init__(self, state="training", create_dirs=True):

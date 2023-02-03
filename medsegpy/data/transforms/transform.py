@@ -422,6 +422,7 @@ class FillRegionsWithValue(MedTransform):
         Args:
             img: A N x H x W x C array, containing N images of height H,
                     width W, and consisting of C channels.
+
         Returns:
             img_filled: A N x H x W x C array, containing the transformed
                 image.
@@ -477,6 +478,7 @@ class Swap2DPatches(MedTransform):
         Args:
             img: A N x H x W x C array, containing N images of height H,
                     width W, and consisting of C channels.
+
         Returns:
             img_modified: A N x H x W x C array containing the modified
                             image.

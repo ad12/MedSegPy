@@ -618,6 +618,15 @@ class PatchDataLoader(DefaultDataLoader):
 
 @DATA_LOADER_REGISTRY.register()
 class qDESSDataLoader(PatchDataLoader):
+    """
+    This data loader is used for the SKM-TEA dataset, containing qMRI data of the knee
+    with corresponding segmentations.
+
+    Reference:
+        Desai et al. SKM-TEA: A Dataset for Accelerated MRI Reconstruction with
+        Dense Image Labels for Quantitative Clinical Evaluation. NeurIPS. 2021.
+    """
+
     def __init__(
             self,
             cfg,
@@ -720,6 +729,12 @@ class qDESSDataLoader(PatchDataLoader):
 
 @DATA_LOADER_REGISTRY.register()
 class qDESSImageDataLoader(qDESSDataLoader):
+    """
+    This data loader only loads the image data from the SKM-TEA dataset. This is
+    used when training models to solve pretext tasks for SSL that do not require
+    labels.
+    """
+
     def __init__(
             self,
             cfg,
@@ -763,7 +778,13 @@ class qDESSImageDataLoader(qDESSDataLoader):
 
 
 @DATA_LOADER_REGISTRY.register()
-class AB_CT_DataLoader(DefaultDataLoader):
+class Abdominal_CT_DataLoader(DefaultDataLoader):
+    """
+    This data loader is used for abdominal CT data. Windowing and
+    per-channel normalization are done for each image before batches
+    are loaded.
+    """
+
     def __init__(
             self,
             cfg,
@@ -872,7 +893,13 @@ class AB_CT_DataLoader(DefaultDataLoader):
 
 
 @DATA_LOADER_REGISTRY.register()
-class AB_CT_ImageDataLoader(AB_CT_DataLoader):
+class Abdominal_CT_ImageDataLoader(Abdominal_CT_DataLoader):
+    """
+    This data loader only loads the images for abdominal CT data. This is
+    used when training models to solve pretext tasks for SSL that do not require
+    labels.
+    """
+
     def __init__(
             self,
             cfg,

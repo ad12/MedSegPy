@@ -85,6 +85,8 @@ def build_loader(
     kwargs["drop_last"] = drop_last
 
     remove_files_without_seg = True
+    # If the task is inpainting, we want to keep all unlabeled data
+    # because inpainting does not require labels
     if cfg.PRIMARY_TASK == "inpainting":
         remove_files_without_seg = False
 
