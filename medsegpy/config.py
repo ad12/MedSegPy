@@ -731,7 +731,7 @@ class ContextEncoderConfig(Config):
     Configuration for the context encoder.
 
     Reference:
-        Pathak et al. Context Encoders: Feature Learning by Inpainting. CVPR. 2016.
+        Pathak et al. "Context Encoders: Feature Learning by Inpainting". CVPR. 2016.
     """
     MODEL_NAME = "ContextEncoder"
     NUM_FILTERS = [[32, 32], [64, 64], [128, 128], [256, 256]]
@@ -753,7 +753,7 @@ class ContextUNetConfig(Config):
     This model will incorporate the ContextEncoder model as well.
 
     Reference:
-        Pathak et al. Context Encoders: Feature Learning by Inpainting. CVPR. 2016.
+        Pathak et al. "Context Encoders: Feature Learning by Inpainting". CVPR. 2016.
     """
     MODEL_NAME = "ContextUNet"
     NUM_FILTERS = [[32, 32], [64, 64], [128, 128], [256, 256]]

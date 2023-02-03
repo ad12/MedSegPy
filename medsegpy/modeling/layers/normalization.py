@@ -17,20 +17,8 @@ from keras import backend as K
 
 class GroupNormalization(Layer):
     """Group normalization layer.
-    Group Normalization divides the channels into groups and computes
-    within each group
-    the mean and variance for normalization.
-    Group Normalization's computation is independent
-     of batch sizes, and its accuracy is stable in a wide range of batch sizes.
-    Relation to Layer Normalization:
-    If the number of groups is set to 1, then this operation becomes identical to
-    Layer Normalization.
-    Relation to Instance Normalization:
-    If the number of groups is set to the
-    input dimension (number of groups is equal
-    to number of channels), then this operation becomes
-    identical to Instance Normalization.
-    # Arguments
+
+    Arguments
         groups: Integer, the number of groups for Group Normalization.
             Can be in the range [1, N] where N is the input dimension.
             The input dimension must be divisible by the number of groups.
@@ -53,14 +41,9 @@ class GroupNormalization(Layer):
         gamma_regularizer: Optional regularizer for the gamma weight.
         beta_constraint: Optional constraint for the beta weight.
         gamma_constraint: Optional constraint for the gamma weight.
-    # Input shape
-        Arbitrary. Use the keyword argument `input_shape`
-        (tuple of integers, does not include the samples axis)
-        when using this layer as the first layer in a model.
-    # Output shape
-        Same shape as input.
-    # References
-        - [Group Normalization](https://arxiv.org/abs/1803.08494)
+
+    Reference:
+        Wu, Yuxin and He, Kaiming. "Group normalization". ECCV. 2018.
     """
 
     def __init__(self,

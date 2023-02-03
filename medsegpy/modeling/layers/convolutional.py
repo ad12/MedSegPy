@@ -10,6 +10,14 @@ from keras.layers.convolutional import Conv2D
 
 
 class ConvStandardized2D(Conv2D):
+    """
+    Implements a 2D convolutional layer with weight standardization.
+
+    Reference:
+        Qiao et al. "Micro-batch training with batch-channel normalization
+        and weight standardization". arXiv preprint arXiv:1903.10520. 2019.
+    """
+
     def __init__(self,
                  filters,
                  kernel_size,

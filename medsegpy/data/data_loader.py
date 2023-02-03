@@ -623,8 +623,8 @@ class qDESSDataLoader(PatchDataLoader):
     with corresponding segmentations.
 
     Reference:
-        Desai et al. SKM-TEA: A Dataset for Accelerated MRI Reconstruction with
-        Dense Image Labels for Quantitative Clinical Evaluation. NeurIPS. 2021.
+        Desai et al. "SKM-TEA: A Dataset for Accelerated MRI Reconstruction with
+        Dense Image Labels for Quantitative Clinical Evaluation". NeurIPS. 2021.
     """
 
     def __init__(

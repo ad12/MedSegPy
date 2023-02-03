@@ -7,6 +7,10 @@ from medsegpy.evaluation.metrics import Metric, Reductions, flatten_non_category
 
 
 class HU(Metric):
+    """
+    Calculates the mean Hounsfield Unit value.
+    """
+
     def __init__(self, method, units=""):
         super().__init__(units)
         assert method in ["pred", "base"]
@@ -40,6 +44,10 @@ class HU(Metric):
 
 
 class CSA(Metric):
+    """
+    Calculates the cross-sectional area.
+    """
+
     def __init__(self, method, units=""):
         super().__init__(units)
         assert method in ["pred", "base"]
@@ -65,6 +73,11 @@ class CSA(Metric):
 
 
 class HUDiff(Metric):
+    """
+    Calculates the absolute difference or the percent error in Hounsfield units
+    when compared to the ground truth.
+    """
+
     FULL_NAME = "Hounsfield Unit - Difference"
 
     def __init__(self, units="", method="absolute"):
@@ -100,6 +113,11 @@ class HUDiff(Metric):
 
 
 class AreaDiff(Metric):
+    """
+    Calculates the absolute difference or the percent error in cross-sectional area
+    when compared to the ground truth.
+    """
+
     def __init__(self, units="", method="absolute"):
         super().__init__(units)
         assert method in ["absolute", "percent"]
@@ -131,7 +149,7 @@ class AreaDiff(Metric):
 class CTEvaluator(SemSegEvaluator):
     """Evaluate semantic segmentation on CT datasets.
 
-    Includes Housfield unit difference and pixel area difference between datasets.
+    Includes Hounsfield unit difference and pixel area difference between datasets.
     """
 
     def _get_metrics(self):
