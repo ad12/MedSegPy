@@ -168,7 +168,7 @@ def generate_poisson_disc_mask(
     num_samples: int,
     patch_size: float = 0.0,
     k: float = 30,
-    seed: int = None
+    seed: int = None,
 ):
     """Generate Poisson-disc sampling mask
 
@@ -190,7 +190,7 @@ def generate_poisson_disc_mask(
         Bridson, Robert. "Fast Poisson disk sampling in arbitrary dimensions".
         SIGGRAPH sketches. 2007.
     """
-    y, x = np.mgrid[:img_shape[-2], :img_shape[-1]]
+    y, x = np.mgrid[: img_shape[-2], : img_shape[-1]]
     x = np.maximum(abs(x - img_shape[-1] / 2), 0)
     x /= x.max()
     y = np.maximum(abs(y - img_shape[-2] / 2), 0)
@@ -198,9 +198,9 @@ def generate_poisson_disc_mask(
     r = np.sqrt(x ** 2 + y ** 2)
 
     # Quick checks
-    assert int(num_samples) == num_samples, \
-        f"Number of required samples must be an integer. " \
-        f"(Got num_samples = {num_samples})."
+    assert int(num_samples) == num_samples, (
+        f"Number of required samples must be an integer. " f"(Got num_samples = {num_samples})."
+    )
     num_samples = int(num_samples)
 
     rounded_min_dist = np.round(min_distance, decimals=3)
@@ -210,19 +210,23 @@ def generate_poisson_disc_mask(
     mask = np.zeros(1)
     num_iterations = 0
     while np.sum(mask[:]) != num_samples:
-        mask, patch_mask = _poisson(img_shape[-1],
-                                    img_shape[-2],
-                                    k,
-                                    R,
-                                    num_samples=num_samples,
-                                    patch_size=patch_size,
-                                    seed=seed)
+        mask, patch_mask = _poisson(
+            img_shape[-1],
+            img_shape[-2],
+            k,
+            R,
+            num_samples=num_samples,
+            patch_size=patch_size,
+            seed=seed,
+        )
         num_iterations += 1
         if num_iterations > 10:
-            raise ValueError("Cannot find enough samples. Please make sure "
-                             "the number of samples is not too large and the "
-                             "minimum distance between samples is not too "
-                             "large as well.")
+            raise ValueError(
+                "Cannot find enough samples. Please make sure "
+                "the number of samples is not too large and the "
+                "minimum distance between samples is not too "
+                "large as well."
+            )
 
     mask = mask.reshape(img_shape).astype(int)
     patch_mask = patch_mask.reshape(img_shape).astype(int)
@@ -270,12 +274,14 @@ def _poisson(nx, ny, K, R, num_samples=None, patch_size=0.0, seed=None):
 
             # Reject if outside grid, patch will not fit,
             # or close to other points
-            if (0 <= qx < nx and
-                    0 <= qy < ny and
-                    (qx - half_patch) >= 0 and
-                    (qx + half_patch) < nx and
-                    (qy - half_patch) >= 0 and
-                    (qy + half_patch) < ny):
+            if (
+                0 <= qx < nx
+                and 0 <= qy < ny
+                and (qx - half_patch) >= 0
+                and (qx + half_patch) < nx
+                and (qy - half_patch) >= 0
+                and (qy + half_patch) < ny
+            ):
                 startx = max(int(qx - rad), 0)
                 endx = min(int(qx + rad + 1), nx)
                 starty = max(int(qy - rad * f), 0)
@@ -284,9 +290,9 @@ def _poisson(nx, ny, K, R, num_samples=None, patch_size=0.0, seed=None):
                 done = True
                 for x in range(startx, endx):
                     for y in range(starty, endy):
-                        if (mask[y, x] == 1
-                                and (((qx - x) / R[y, x]) ** 2 +
-                                     ((qy - y) / (R[y, x] * f)) ** 2 < 1)):
+                        if mask[y, x] == 1 and (
+                            ((qx - x) / R[y, x]) ** 2 + ((qy - y) / (R[y, x] * f)) ** 2 < 1
+                        ):
                             done = False
                             break
                     if not done:
@@ -301,7 +307,7 @@ def _poisson(nx, ny, K, R, num_samples=None, patch_size=0.0, seed=None):
             if patch_size > 0:
                 tl = (int(int(qx) - half_patch), int(int(qy) - half_patch))
                 br = (int(int(qx) + half_patch), int(int(qy) + half_patch))
-                patch_mask[tl[1]:br[1], tl[0]:br[0]] = 1
+                patch_mask[tl[1] : br[1], tl[0] : br[0]] = 1
             m += 1
         else:
             pxs[i] = pxs[m - 1]

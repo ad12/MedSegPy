@@ -90,8 +90,5 @@ def build_loader(
     if cfg.PRIMARY_TASK == "inpainting":
         remove_files_without_seg = False
 
-    dataset_dicts = get_sem_seg_dataset_dicts(
-        dataset_names,
-        filter_empty=remove_files_without_seg
-    )
+    dataset_dicts = get_sem_seg_dataset_dicts(dataset_names, filter_empty=remove_files_without_seg)
     return build_data_loader(cfg, dataset_dicts, **kwargs)

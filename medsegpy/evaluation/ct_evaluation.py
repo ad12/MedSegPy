@@ -23,9 +23,7 @@ class HU(Metric):
 
         num_classes = y.shape[-1]
         assert category_dim == -1
-        hu = np.array([
-            np.mean(x[y[..., c]]) for c in range(num_classes)
-        ])
+        hu = np.array([np.mean(x[y[..., c]]) for c in range(num_classes)])
 
         return hu
 
@@ -94,12 +92,8 @@ class HUDiff(Metric):
         assert category_dim == -1
         num_classes = y_pred.shape[-1]
 
-        hu_pred = np.array([
-            np.mean(x[y_pred[..., c]]) for c in range(num_classes)
-        ])
-        hu_true = np.array([
-            np.mean(x[y_true[..., c]]) for c in range(num_classes)
-        ])
+        hu_pred = np.array([np.mean(x[y_pred[..., c]]) for c in range(num_classes)])
+        hu_true = np.array([np.mean(x[y_true[..., c]]) for c in range(num_classes)])
 
         vals = hu_pred - hu_true
         if self._method == "percent":
@@ -127,9 +121,7 @@ class AreaDiff(Metric):
         pixel_area = np.prod(spacing) if spacing else 1
         y_pred = y_pred.astype(np.bool)
         y_true = y_true.astype(np.bool)
-        y_pred, y_true = flatten_non_category_dims(
-            (y_pred, y_true), category_dim
-        )
+        y_pred, y_true = flatten_non_category_dims((y_pred, y_true), category_dim)
 
         size_pred = pixel_area * np.count_nonzero(y_pred, -1)
         size_true = pixel_area * np.count_nonzero(y_true, -1)
@@ -160,17 +152,18 @@ class CTEvaluator(SemSegEvaluator):
             CSA(method="pred", units="(mm^2)"),
             CSA(method="base", units="(mm^2)"),
         ]
-        metrics.extend([
-            HUDiff(method="absolute"),
-            HUDiff(method="percent"),
-            AreaDiff(method="absolute", units="(mm^2)"),
-            AreaDiff(method="percent"),
-        ])
+        metrics.extend(
+            [
+                HUDiff(method="absolute"),
+                HUDiff(method="percent"),
+                AreaDiff(method="absolute", units="(mm^2)"),
+                AreaDiff(method="percent"),
+            ]
+        )
         metrics.extend(paired_metrics)
 
         self._metric_pairs = [
-            (p.name(), b.name())
-            for p, b in zip(paired_metrics[::2], paired_metrics[1::2])
+            (p.name(), b.name()) for p, b in zip(paired_metrics[::2], paired_metrics[1::2])
         ]
         return metrics
 
@@ -178,9 +171,7 @@ class CTEvaluator(SemSegEvaluator):
         super().reset()
         for pred_key, base_key in self._metric_pairs:
             self._metrics_manager.register_pairs(
-                pred_key,
-                base_key,
-                (Reductions.RMS_CV, Reductions.RMSE_CV,)
+                pred_key, base_key, (Reductions.RMS_CV, Reductions.RMSE_CV)
             )
 
     def process(self, inputs, outputs):
@@ -195,12 +186,12 @@ class CTEvaluatorTTPP(CTEvaluator):
     """
 
     def __init__(
-            self,
-            dataset_name: str,
-            cfg,
-            output_folder: str = None,
-            save_raw_data: bool = False,
-            stream_evaluation: bool = True,
+        self,
+        dataset_name: str,
+        cfg,
+        output_folder: str = None,
+        save_raw_data: bool = False,
+        stream_evaluation: bool = True,
     ):
         super().__init__(
             dataset_name,
@@ -246,11 +237,7 @@ class CTEvaluatorTTPP(CTEvaluator):
                     labels[l_argmax == c, c] = 1
                 labels = labels.astype(np.uint)
             else:
-                raise ValueError(
-                    "output activation {} not supported".format(
-                        output_activation
-                    )
-                )
+                raise ValueError("output activation {} not supported".format(output_activation))
 
             # background is always excluded from analysis
             if includes_bg:

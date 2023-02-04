@@ -80,13 +80,14 @@ def setup(args):
         windowing_idx = cfg.PREPROCESSING.index("Windowing")
         windows = cfg.PREPROCESSING_ARGS[windowing_idx]
         if type(windows) != dict or "bounds" not in windows.keys():
-            assert type(windows) in [list, tuple], \
-                "PREPROCESSING_ARGS for 'Windowing' must be a list or tuple"
-            assert cfg.IMG_SIZE[-1] == len(windows), \
-                f"Expected cfg.IMG_SIZE to have {len(windows)} channels"
-            cfg.PREPROCESSING_ARGS[windowing_idx] = {
-                "bounds": parse_windows(windows)
-            }
+            assert type(windows) in [
+                list,
+                tuple,
+            ], "PREPROCESSING_ARGS for 'Windowing' must be a list or tuple"
+            assert cfg.IMG_SIZE[-1] == len(
+                windows
+            ), f"Expected cfg.IMG_SIZE to have {len(windows)} channels"
+            cfg.PREPROCESSING_ARGS[windowing_idx] = {"bounds": parse_windows(windows)}
 
     default_setup(cfg, args)
 

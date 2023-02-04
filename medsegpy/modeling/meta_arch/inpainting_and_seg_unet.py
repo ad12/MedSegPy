@@ -6,29 +6,18 @@ from .build import META_ARCH_REGISTRY, ModelBuilder
 from keras import Input
 from keras.engine import get_source_inputs
 from keras.layers import BatchNormalization as BatchNorm
-from keras.layers import (
-    Concatenate,
-    Conv2D,
-    Conv2DTranspose,
-    Dropout,
-    MaxPooling2D
-)
+from keras.layers import Concatenate, Conv2D, Conv2DTranspose, Dropout, MaxPooling2D
 from medsegpy import config
 from medsegpy.config import (
     ContextEncoderConfig,
     ContextUNetConfig,
     ContextInpaintingConfig,
-    ContextSegmentationConfig
+    ContextSegmentationConfig,
 )
 from medsegpy.modeling.layers.normalization import GroupNormalization as GroupNorm
 from medsegpy.modeling.layers.convolutional import ConvStandardized2D
-from medsegpy.modeling.ssl_utils import (
-    SelfSupervisedInfo
-)
-from medsegpy.modeling.model_utils import (
-    zero_pad_like,
-    add_sem_seg_activation
-)
+from medsegpy.modeling.ssl_utils import SelfSupervisedInfo
+from medsegpy.modeling.model_utils import zero_pad_like, add_sem_seg_activation
 from ..model import Model
 from typing import Dict, Sequence, Tuple, Union
 
@@ -71,8 +60,10 @@ class ContextEncoder(ModelBuilder):
         elif layer_norm_type == "GroupNorm":
             self._layer_norm = GroupNorm
         else:
-            warnings.warn(f"The normalization type \"{layer_norm_type}\" "
-                          f"is not supported. Batch Norm will be used.")
+            warnings.warn(
+                f'The normalization type "{layer_norm_type}" '
+                f"is not supported. Batch Norm will be used."
+            )
             self._layer_norm = BatchNorm
         self._layer_norm_args = self._cfg.NORMALIZATION_ARGS
 
@@ -99,10 +90,7 @@ class ContextEncoder(ModelBuilder):
         cfg = self._cfg
         seed = cfg.SEED
         kernel_size = self._kernel_size
-        kernel_initializer = {
-            "class_name": cfg.KERNEL_INITIALIZER,
-            "config": {"seed": seed},
-        }
+        kernel_initializer = {"class_name": cfg.KERNEL_INITIALIZER, "config": {"seed": seed}}
         num_filters = cfg.NUM_FILTERS
         depth = len(num_filters)
 
@@ -131,9 +119,9 @@ class ContextEncoder(ModelBuilder):
                 pool_size = self._get_pool_size(x)
                 self.pool_sizes.append(pool_size)
                 self._num_pool += 1
-                x = self._pooler_type(pool_size=pool_size,
-                                      name="encoder_pool_%d" % self._num_pool
-                                      )(x)
+                x = self._pooler_type(pool_size=pool_size, name="encoder_pool_%d" % self._num_pool)(
+                    x
+                )
 
         if input_tensor is not None:
             inputs = get_source_inputs(input_tensor)
@@ -143,13 +131,13 @@ class ContextEncoder(ModelBuilder):
         return model
 
     def build_encoder_block(
-            self,
-            x: tf.Tensor,
-            num_filters: Sequence[int],
-            kernel_size: Union[int, Sequence[int]] = 3,
-            activation: str = "relu",
-            kernel_initializer: Union[str, Dict] = "he_normal",
-            dropout: float = 0.0,
+        self,
+        x: tf.Tensor,
+        num_filters: Sequence[int],
+        kernel_size: Union[int, Sequence[int]] = 3,
+        activation: str = "relu",
+        kernel_initializer: Union[str, Dict] = "he_normal",
+        dropout: float = 0.0,
     ) -> tf.Tensor:
         """
         Builds one block of the ContextEncoder.
@@ -176,7 +164,7 @@ class ContextEncoder(ModelBuilder):
                     padding="same",
                     activation=activation,
                     kernel_initializer=kernel_initializer,
-                    name="encoder_conv_%d" % self._num_conv
+                    name="encoder_conv_%d" % self._num_conv,
                 )(x)
             else:
                 x = self._conv_type(
@@ -185,23 +173,19 @@ class ContextEncoder(ModelBuilder):
                     padding="same",
                     activation=activation,
                     kernel_initializer=kernel_initializer,
-                    name="encoder_conv_%d" % self._num_conv
+                    name="encoder_conv_%d" % self._num_conv,
                 )(x)
 
         if self._layer_norm is not None:
             self._num_bn += 1
             norm_name = "encoder_bn_%d" % self._num_bn
-            x = self._layer_norm(
-                **self._layer_norm_args,
-                name=norm_name
-            )(x, **SelfSupervisedInfo.set_to_inference(layer_name=norm_name))
+            x = self._layer_norm(**self._layer_norm_args, name=norm_name)(
+                x, **SelfSupervisedInfo.set_to_inference(layer_name=norm_name)
+            )
 
         self._num_dropout += 1
         dropout_name = "encoder_dropout_%d" % self._num_dropout
-        x = Dropout(
-            rate=dropout,
-            name=dropout_name
-        )(x)
+        x = Dropout(rate=dropout, name=dropout_name)(x)
 
         return x
 
@@ -231,10 +215,7 @@ class ContextEncoder(ModelBuilder):
             A list with the same number of elements as dimensions of `x`,
             where each element is either 2 or 3.
         """
-        return [
-            2 if d % 2 == 0 or d % 3 != 0 else 3
-            for d in x.shape.as_list()[1:-1]
-        ]
+        return [2 if d % 2 == 0 or d % 3 != 0 else 3 for d in x.shape.as_list()[1:-1]]
 
 
 @META_ARCH_REGISTRY.register()
@@ -273,8 +254,10 @@ class ContextUNet(ModelBuilder):
         elif layer_norm_type == "GroupNorm":
             self._layer_norm = GroupNorm
         else:
-            warnings.warn(f"The normalization type \"{layer_norm_type}\" "
-                          f"is not supported. Batch Norm will be used.")
+            warnings.warn(
+                f'The normalization type "{layer_norm_type}" '
+                f"is not supported. Batch Norm will be used."
+            )
             self._layer_norm = BatchNorm
         self._layer_norm_args = self._cfg.NORMALIZATION_ARGS
 
@@ -314,8 +297,7 @@ class ContextUNet(ModelBuilder):
             inputs = input_tensor
 
         # Read ContextEncoder config
-        context_encoder_config = config.get_config("ContextEncoder",
-                                                   create_dirs=False)
+        context_encoder_config = config.get_config("ContextEncoder", create_dirs=False)
         # Overwrite certain config settings
         context_encoder_config.NUM_FILTERS = num_filters
         context_encoder_config.NORMALIZATION = cfg.NORMALIZATION
@@ -334,7 +316,7 @@ class ContextUNet(ModelBuilder):
         context_encoder = context_encoder_builder.build_model(inputs)
         context_encoder.name = encoder_name_in_model
         pool_sizes = context_encoder_builder.pool_sizes
-        
+
         # Pass input through ContextEncoder
         x = inputs
 
@@ -343,9 +325,7 @@ class ContextUNet(ModelBuilder):
         x_skips = encoder_outputs[1:]
 
         # Decoder
-        for i, (x_skip, unpool_size) in enumerate(
-                zip(x_skips[::-1], pool_sizes[::-1])
-        ):
+        for i, (x_skip, unpool_size) in enumerate(zip(x_skips[::-1], pool_sizes[::-1])):
             depth_cnt = depth - i - 2
             x = self.build_decoder_block(
                 x,
@@ -382,15 +362,15 @@ class ContextUNet(ModelBuilder):
         return x
 
     def build_decoder_block(
-            self,
-            x: tf.Tensor,
-            x_skip: tf.Tensor,
-            num_filters: Sequence[int],
-            unpool_size: Sequence[int],
-            kernel_size: Union[int, Sequence[int]] = 3,
-            activation: str = "relu",
-            kernel_initializer: Union[str, Dict] = "he_normal",
-            dropout: float = 0.0
+        self,
+        x: tf.Tensor,
+        x_skip: tf.Tensor,
+        num_filters: Sequence[int],
+        unpool_size: Sequence[int],
+        kernel_size: Union[int, Sequence[int]] = 3,
+        activation: str = "relu",
+        kernel_initializer: Union[str, Dict] = "he_normal",
+        dropout: float = 0.0,
     ):
         """
         Builds one block of the decoder.
@@ -425,7 +405,7 @@ class ContextUNet(ModelBuilder):
             padding="same",
             strides=unpool_size,
             kernel_initializer=kernel_initializer,
-            name=f"conv2d_transpose_{self._num_conv_t}_{self._decoder_suffix}"
+            name=f"conv2d_transpose_{self._num_conv_t}_{self._decoder_suffix}",
         )(x)
         self._num_conv_t += 1
         x_shape = [x * y for x, y in zip(x_shape, unpool_size)]
@@ -441,8 +421,7 @@ class ContextUNet(ModelBuilder):
                         padding="same",
                         activation=activation,
                         kernel_initializer=kernel_initializer,
-                        name=f"conv_standardized2d_{self._num_conv}_"
-                             f"{self._decoder_suffix}"
+                        name=f"conv_standardized2d_{self._num_conv}_" f"{self._decoder_suffix}",
                     )(x)
                 else:
                     x = self._conv_type(
@@ -451,23 +430,17 @@ class ContextUNet(ModelBuilder):
                         padding="same",
                         activation=activation,
                         kernel_initializer=kernel_initializer,
-                        name=f"conv2d_{self._num_conv}_{self._decoder_suffix}"
+                        name=f"conv2d_{self._num_conv}_{self._decoder_suffix}",
                     )(x)
                 self._num_conv += 1
             if self._layer_norm is not None:
-                norm_name = f"normalization_{self._num_norm}_" \
-                            f"{self._decoder_suffix}"
-                x = self._layer_norm(
-                    **self._layer_norm_args,
-                    name=norm_name
-                )(x,
-                  **SelfSupervisedInfo.set_to_inference(layer_name=norm_name))
+                norm_name = f"normalization_{self._num_norm}_" f"{self._decoder_suffix}"
+                x = self._layer_norm(**self._layer_norm_args, name=norm_name)(
+                    x, **SelfSupervisedInfo.set_to_inference(layer_name=norm_name)
+                )
                 self._num_norm += 1
             dropout_name = f"dropout_{self._num_dropout}_{self._decoder_suffix}"
-            x = Dropout(
-                rate=dropout,
-                name=dropout_name
-            )(x)
+            x = Dropout(rate=dropout, name=dropout_name)(x)
             self._num_dropout += 1
         return x
 
@@ -517,7 +490,7 @@ class ContextInpainting(ContextUNet):
             kernel_size=self._kernel_size,
             padding="same",
             kernel_initializer=self._kernel_initializer,
-            name="post_process"
+            name="post_process",
         )(x)
         return x
 
@@ -540,6 +513,7 @@ class ContextSegmentation(ContextUNet):
     keeping the ContextEncoder in inference mode, and will fine-tune the
     trainable weights of the ContextEncoder model.
     """
+
     def __init__(self, cfg: ContextSegmentationConfig):
         super().__init__(cfg)
         self._cfg = cfg
@@ -554,6 +528,6 @@ class ContextSegmentation(ContextUNet):
             num_classes=num_classes,
             conv_type=self._conv_type,
             kernel_initializer=self._kernel_initializer,
-            layer_name="post_process"
+            layer_name="post_process",
         )
         return x

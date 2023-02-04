@@ -16,6 +16,7 @@ from medsegpy.evaluation.metrics import Metric, Reductions, flatten_non_category
 class T2Relaxation(Metric):
     """Compute T2 relaxation time for each tissue.
     """
+
     _METADATA_PATH = "/dataNAS/people/arjun/data/skm-tea/v1-release/all_metadata.csv"
     _BASE_SCAN_DIR = "/dataNAS/people/arjun/data/skm-tea/v1-release/image_files"
     _TEST_ANNOTATION_PATH = "/bmrNAS/people/arjun/data/qdess_knee_2020/annotations/v0.0.1/test.json"
@@ -26,11 +27,10 @@ class T2Relaxation(Metric):
         self._method = method
 
         # Get specific image metadata for all scans in the test set
-        with open(self._TEST_ANNOTATION_PATH, 'r') as fp:
+        with open(self._TEST_ANNOTATION_PATH, "r") as fp:
             test_metadata = json.load(fp)
         self.scan_to_metadata = {
-            img_dict["scan_id"]: img_dict
-            for img_dict in test_metadata["images"]
+            img_dict["scan_id"]: img_dict for img_dict in test_metadata["images"]
         }
 
         # Get additional metadata for all scans
@@ -44,12 +44,11 @@ class T2Relaxation(Metric):
         scan_metadata = self.scan_to_metadata[scan_id]
 
         # Build affine matrix
-        affine = dm.to_affine(scan_metadata["orientation"],
-                              scan_metadata["voxel_spacing"])
+        affine = dm.to_affine(scan_metadata["orientation"], scan_metadata["voxel_spacing"])
 
         # Make qDESS object
         scan_path = os.path.join(self._BASE_SCAN_DIR, f"{scan_id}.h5")
-        with h5py.File(scan_path, 'r') as fp:
+        with h5py.File(scan_path, "r") as fp:
             e1 = dm.MedicalVolume(fp["echo1"][()], affine)
             e2 = dm.MedicalVolume(fp["echo2"][()], affine)
         qdess = QDess([e1, e2])
@@ -67,18 +66,19 @@ class T2Relaxation(Metric):
         men = Meniscus(medial_to_lateral=is_left_medial)
 
         # Set mask for each tissue
-        category_indices = {
-            x["abbrev"]: idx
-            for idx, x in enumerate(QDESS_SEGMENTATION_CATEGORIES)
-        }
-        fc.set_mask(dm.MedicalVolume(y_bin[..., category_indices["fc"]], affine),
-                    use_largest_cc=True)
-        tc.set_mask(dm.MedicalVolume(y_bin[..., category_indices["tc"]], affine),
-                    use_largest_ccs=True)
-        pc.set_mask(dm.MedicalVolume(y_bin[..., category_indices["pc"]], affine),
-                    use_largest_cc=True)
-        men.set_mask(dm.MedicalVolume(y_bin[..., category_indices["men"]], affine),
-                     use_largest_ccs=True)
+        category_indices = {x["abbrev"]: idx for idx, x in enumerate(QDESS_SEGMENTATION_CATEGORIES)}
+        fc.set_mask(
+            dm.MedicalVolume(y_bin[..., category_indices["fc"]], affine), use_largest_cc=True
+        )
+        tc.set_mask(
+            dm.MedicalVolume(y_bin[..., category_indices["tc"]], affine), use_largest_ccs=True
+        )
+        pc.set_mask(
+            dm.MedicalVolume(y_bin[..., category_indices["pc"]], affine), use_largest_cc=True
+        )
+        men.set_mask(
+            dm.MedicalVolume(y_bin[..., category_indices["men"]], affine), use_largest_ccs=True
+        )
 
         # Calculate T2 relaxation time for femoral cartilage
         fc_t2_map = qdess.generate_t2_map(
@@ -91,7 +91,7 @@ class T2Relaxation(Metric):
             te=float(scan_additional_metadata["EchoTime1"]),
             alpha=float(scan_additional_metadata["FlipAngle"]),
             t1=1200,
-            nan_bounds=(0, 100)
+            nan_bounds=(0, 100),
         )
 
         # Calculate T2 relaxation time for tibial cartilage
@@ -105,7 +105,7 @@ class T2Relaxation(Metric):
             te=float(scan_additional_metadata["EchoTime1"]),
             alpha=float(scan_additional_metadata["FlipAngle"]),
             t1=1200,
-            nan_bounds=(0, 100)
+            nan_bounds=(0, 100),
         )
 
         # Calculate T2 relaxation time for patellar cartilage
@@ -119,7 +119,7 @@ class T2Relaxation(Metric):
             te=float(scan_additional_metadata["EchoTime1"]),
             alpha=float(scan_additional_metadata["FlipAngle"]),
             t1=1200,
-            nan_bounds=(0, 100)
+            nan_bounds=(0, 100),
         )
 
         # Calculate T2 relaxation time for meniscus
@@ -133,7 +133,7 @@ class T2Relaxation(Metric):
             te=float(scan_additional_metadata["EchoTime1"]),
             alpha=float(scan_additional_metadata["FlipAngle"]),
             t1=1200,
-            nan_bounds=(0, 100)
+            nan_bounds=(0, 100),
         )
 
         # Return mean T2 relaxation time for each tissue
@@ -264,25 +264,27 @@ class TissueVolumeDiff(Metric):
 class QDESSEvaluator(SemSegEvaluator):
     """Evaluate semantic segmentation on the qDESS dataset.
     """
+
     def _get_metrics(self):
         metrics = list(super()._get_metrics())
         paired_metrics = [
             T2Relaxation(method="pred"),
             T2Relaxation(method="base"),
             TissueVolume(method="pred", units="(mm^3)"),
-            TissueVolume(method="base", units="(mm^3)")
+            TissueVolume(method="base", units="(mm^3)"),
         ]
-        metrics.extend([
-            T2RelaxationDiff(method="absolute"),
-            T2RelaxationDiff(method="percent"),
-            TissueVolumeDiff(method="absolute", units="(mm^3)"),
-            TissueVolumeDiff(method="percent")
-        ])
+        metrics.extend(
+            [
+                T2RelaxationDiff(method="absolute"),
+                T2RelaxationDiff(method="percent"),
+                TissueVolumeDiff(method="absolute", units="(mm^3)"),
+                TissueVolumeDiff(method="percent"),
+            ]
+        )
         metrics.extend(paired_metrics)
 
         self._metric_pairs = [
-            (p.name(), b.name())
-            for p, b in zip(paired_metrics[::2], paired_metrics[1::2])
+            (p.name(), b.name()) for p, b in zip(paired_metrics[::2], paired_metrics[1::2])
         ]
         return metrics
 
@@ -290,9 +292,7 @@ class QDESSEvaluator(SemSegEvaluator):
         super().reset()
         for pred_key, base_key in self._metric_pairs:
             self._metrics_manager.register_pairs(
-                pred_key,
-                base_key,
-                (Reductions.RMS_CV, Reductions.RMSE_CV,)
+                pred_key, base_key, (Reductions.RMS_CV, Reductions.RMSE_CV)
             )
 
     def process(self, inputs, outputs):

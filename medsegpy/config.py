@@ -11,11 +11,7 @@ from typing import Any, Dict, Tuple
 from fvcore.common.file_io import PathManager
 
 from medsegpy.cross_validation import cv_util
-from medsegpy.losses import (
-    DICE_LOSS,
-    L2_LOSS,
-    get_training_loss_from_str
-)
+from medsegpy.losses import DICE_LOSS, L2_LOSS, get_training_loss_from_str
 from medsegpy.utils import utils as utils
 
 logger = logging.getLogger(__name__)
@@ -192,9 +188,7 @@ class Config(object):
     # Type of normalization layer
     NORMALIZATION = "BatchNorm"
     # Arguments for the normalization layer
-    NORMALIZATION_ARGS = {"axis": -1,
-                          "momentum": 0.95,
-                          "epsilon": 0.001}
+    NORMALIZATION_ARGS = {"axis": -1, "momentum": 0.95, "epsilon": 0.001}
     # Boolean specifying if weight standardization should be used
     WEIGHT_STANDARDIZATION = False
 
@@ -750,6 +744,7 @@ class ContextEncoderConfig(Config):
     Reference:
         Pathak et al. "Context Encoders: Feature Learning by Inpainting". CVPR. 2016.
     """
+
     MODEL_NAME = "ContextEncoder"
     NUM_FILTERS = [[32, 32], [64, 64], [128, 128], [256, 256]]
 
@@ -772,6 +767,7 @@ class ContextUNetConfig(Config):
     Reference:
         Pathak et al. "Context Encoders: Feature Learning by Inpainting". CVPR. 2016.
     """
+
     MODEL_NAME = "ContextUNet"
     NUM_FILTERS = [[32, 32], [64, 64], [128, 128], [256, 256]]
 
@@ -789,26 +785,30 @@ class ContextInpaintingConfig(ContextUNetConfig):
     """
     Configuration for the ContextInpainting model.
     """
+
     MODEL_NAME = "ContextInpainting"
     LOSS = L2_LOSS
 
     # Define preprocessing transforms
     PREPROCESSING = ["CoarseDropout"]
-    PREPROCESSING_ARGS = [{"max_holes": 25,
-                           "max_height": 50,
-                           "max_width": 50,
-                           "min_holes": 0,
-                           "min_height": 25,
-                           "min_width": 25,
-                           "fill_value": 0.257
-                           }
-                          ]
+    PREPROCESSING_ARGS = [
+        {
+            "max_holes": 25,
+            "max_height": 50,
+            "max_width": 50,
+            "min_holes": 0,
+            "min_height": 25,
+            "min_width": 25,
+            "fill_value": 0.257,
+        }
+    ]
 
 
 class ContextSegmentationConfig(ContextUNetConfig):
     """
     Configuration for the ContextSegmentation model.
     """
+
     MODEL_NAME = "ContextSegmentation"
 
 
@@ -1058,7 +1058,7 @@ SUPPORTED_CONFIGS = [
     ContextEncoderConfig,
     ContextUNetConfig,
     ContextInpaintingConfig,
-    ContextSegmentationConfig
+    ContextSegmentationConfig,
 ]
 
 

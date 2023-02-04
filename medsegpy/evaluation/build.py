@@ -25,9 +25,10 @@ def build_evaluator(
         name = [name]
     elif isinstance(name, dict):
         primary_task = cfg.PRIMARY_TASK
-        assert primary_task in name, \
-            f"Primary Task (= {primary_task}) is not a key in " \
+        assert primary_task in name, (
+            f"Primary Task (= {primary_task}) is not a key in "
             f"evaluator dictionary for dataset '{dataset_name}'"
+        )
         name = [name[primary_task]]
     assert isinstance(name, Sequence)
 

@@ -22,63 +22,23 @@ _DATA_CATALOG = {
     "abCT_925_perc_train": "abct_data/json_files/percentage_jsons/925_perc.json",
     "abCT_1200_perc_train": "abct_data/json_files/percentage_jsons/1200_perc.json",
     "abCT_seg_val": "abct_data/valid",
-    "abCT_seg_test": "abct_data/test"
+    "abCT_seg_test": "abct_data/test",
 }
 
 
 ABCT_INPAINTING_CATEGORIES = [
-    {
-        "color": [0, 0, 0],
-        "id": 0,
-        "name": "soft",
-        "abbrev": "soft"
-    },
-    {
-        "color": [0, 0, 0],
-        "id": 1,
-        "name": "bone",
-        "abbrev": "bone"
-    },
-    {
-        "color": [0, 0, 0],
-        "id": 2,
-        "name": "custom",
-        "abbrev": "custom"
-    }
+    {"color": [0, 0, 0], "id": 0, "name": "soft", "abbrev": "soft"},
+    {"color": [0, 0, 0], "id": 1, "name": "bone", "abbrev": "bone"},
+    {"color": [0, 0, 0], "id": 2, "name": "custom", "abbrev": "custom"},
 ]
 
 
 ABCT_CATEGORIES = [
-    {
-        "color": [0, 214, 4],
-        "id": 0,
-        "name": "background",
-        "abbrev": "bg"
-     },
-    {
-        "color": [255, 102, 0],
-        "id": 1,
-        "name": "muscle",
-        "abbrev": "muscle"
-    },
-    {
-        "color": [0, 102, 255],
-        "id": 2,
-        "name": "intramuscular fat",
-        "abbrev": "imat"
-    },
-    {
-        "color": [204, 0, 255],
-        "id": 3,
-        "name": "visceral fat",
-        "abbrev": "vat"
-    },
-    {
-        "color": [250, 170, 30],
-        "id": 4,
-        "name": "subcutaneous fat",
-        "abbrev": "sat"
-    }
+    {"color": [0, 214, 4], "id": 0, "name": "background", "abbrev": "bg"},
+    {"color": [255, 102, 0], "id": 1, "name": "muscle", "abbrev": "muscle"},
+    {"color": [0, 102, 255], "id": 2, "name": "intramuscular fat", "abbrev": "imat"},
+    {"color": [204, 0, 255], "id": 3, "name": "visceral fat", "abbrev": "vat"},
+    {"color": [250, 170, 30], "id": 4, "name": "subcutaneous fat", "abbrev": "sat"},
 ]
 
 
@@ -86,42 +46,31 @@ def load_abct_from_dir(scan_root, dataset_name=None):
     files = sorted(os.listdir(scan_root))
     filepaths = [os.path.join(scan_root, f) for f in files if f.endswith(".im")]
 
-    return load_abct(filepaths=filepaths,
-                     txt_file_or_scan_root=scan_root,
-                     dataset_name=dataset_name)
+    return load_abct(
+        filepaths=filepaths, txt_file_or_scan_root=scan_root, dataset_name=dataset_name
+    )
 
 
 def load_abct_from_json(json_file, dataset_name=None):
     FNAME_REGEX = "([\d]+)_V([\d]+)-Aug([\d]+)_([\d]+)"
-    with open(json_file, 'r') as fp:
+    with open(json_file, "r") as fp:
         json_dict = json.load(fp)
     filepaths = []
-    split_type = dataset_name.split('_')[-1]
+    split_type = dataset_name.split("_")[-1]
     for img_dict in json_dict["images"]:
         _, pid, _, _, _, _ = tuple(re.split(FNAME_REGEX, img_dict["file_name"]))
         if int(pid) < 700:
-            data_dir = os.path.join(
-                Cluster.working_cluster().data_dir,
-                "abct",
-                split_type
-            )
+            data_dir = os.path.join(Cluster.working_cluster().data_dir, "abct", split_type)
         else:
-            data_dir = os.path.join(
-                Cluster.working_cluster().data_dir,
-                "abct/unlabeled"
-            )
-        filepaths.append(
-            os.path.join(data_dir, img_dict["file_name"])
-        )
+            data_dir = os.path.join(Cluster.working_cluster().data_dir, "abct/unlabeled")
+        filepaths.append(os.path.join(data_dir, img_dict["file_name"]))
 
-    return load_abct(filepaths=filepaths,
-                     txt_file_or_scan_root=json_file,
-                     dataset_name=dataset_name)
-    
+    return load_abct(
+        filepaths=filepaths, txt_file_or_scan_root=json_file, dataset_name=dataset_name
+    )
 
-def load_abct(filepaths,
-              txt_file_or_scan_root,
-              dataset_name=None):
+
+def load_abct(filepaths, txt_file_or_scan_root, dataset_name=None):
     # sample scan name: "9311328_V01-Aug04_072.im"
     FNAME_REGEX = "([\d]+)_V([\d]+)-Aug([\d]+)_([\d]+)"
 
@@ -147,7 +96,7 @@ def load_abct(filepaths,
             "scan_id": "{:07d}_V{:02d}".format(pid, study_id),
             "subject_id": pid,
             "study_id": study_id,
-            "scan_spacing": scan_spacing
+            "scan_spacing": scan_spacing,
         }
 
         # Determine if mask file exists
@@ -160,64 +109,41 @@ def load_abct(filepaths,
     num_scans = len(dataset_dicts)
     num_subjects = len({d["subject_id"] for d in dataset_dicts})
     if dataset_name:
-        logger.info("Loaded {} from {}".format(
-            dataset_name, txt_file_or_scan_root
-        ))
-    logger.info(
-        "Loaded {} scans from {} subjects".format(num_scans, num_subjects)
-    )
+        logger.info("Loaded {} from {}".format(dataset_name, txt_file_or_scan_root))
+    logger.info("Loaded {} scans from {} subjects".format(num_scans, num_subjects))
 
     return dataset_dicts
 
 
 def register_abct(name, txt_file_or_scan_root):
-    if txt_file_or_scan_root.endswith('.json'):
-        DatasetCatalog.register(
-            name,
-            lambda: load_abct_from_json(
-                txt_file_or_scan_root, name
-            )
-        )
+    if txt_file_or_scan_root.endswith(".json"):
+        DatasetCatalog.register(name, lambda: load_abct_from_json(txt_file_or_scan_root, name))
     else:
-        DatasetCatalog.register(
-            name,
-            lambda: load_abct_from_dir(
-                txt_file_or_scan_root, name
-            )
-        )
+        DatasetCatalog.register(name, lambda: load_abct_from_dir(txt_file_or_scan_root, name))
 
     MetadataCatalog.get(name).set(
         scan_root="dummy_root",
         category_ids={
             "segmentation": [x["id"] for x in ABCT_CATEGORIES],
-            "inpainting": [x["id"] for x in ABCT_INPAINTING_CATEGORIES]
+            "inpainting": [x["id"] for x in ABCT_INPAINTING_CATEGORIES],
         },
         category_abbreviations={
             "segmentation": [x["abbrev"] for x in ABCT_CATEGORIES],
-            "inpainting": [x["abbrev"] for x in ABCT_INPAINTING_CATEGORIES]
+            "inpainting": [x["abbrev"] for x in ABCT_INPAINTING_CATEGORIES],
         },
         categories={
             "segmentation": [x["name"] for x in ABCT_CATEGORIES],
-            "inpainting": [x["name"] for x in ABCT_INPAINTING_CATEGORIES]
+            "inpainting": [x["name"] for x in ABCT_INPAINTING_CATEGORIES],
         },
         category_colors={
             "segmentation": [x["color"] for x in ABCT_CATEGORIES],
-            "inpainting": [x["color"] for x in ABCT_INPAINTING_CATEGORIES]
+            "inpainting": [x["color"] for x in ABCT_INPAINTING_CATEGORIES],
         },
         category_id_to_contiguous_id={
-            "segmentation": {
-                x["id"]: idx for idx, x in enumerate(ABCT_CATEGORIES)
-            },
-            "inpainting": {
-                x["id"]: idx for idx, x in enumerate(
-                    ABCT_INPAINTING_CATEGORIES
-                )
-            }
+            "segmentation": {x["id"]: idx for idx, x in enumerate(ABCT_CATEGORIES)},
+            "inpainting": {x["id"]: idx for idx, x in enumerate(ABCT_INPAINTING_CATEGORIES)},
         },
-        evaluator_type={
-            "segmentation": "CTEvaluator",
-            "inpainting": "SemSegEvaluator"
-        }
+        evaluator_type={"segmentation": "CTEvaluator", "inpainting": "SemSegEvaluator"},
     )
 
 
@@ -225,7 +151,6 @@ def register_all_abct():
     for dataset_name, txt_file_or_scan_root in _DATA_CATALOG.items():
         if not os.path.isabs(txt_file_or_scan_root):
             txt_file_or_scan_root = os.path.join(
-                Cluster.working_cluster().data_dir,
-                txt_file_or_scan_root
+                Cluster.working_cluster().data_dir, txt_file_or_scan_root
             )
         register_abct(dataset_name, txt_file_or_scan_root)

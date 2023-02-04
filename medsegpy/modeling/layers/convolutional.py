@@ -18,23 +18,25 @@ class ConvStandardized2D(Conv2D):
         and weight standardization". arXiv preprint arXiv:1903.10520. 2019.
     """
 
-    def __init__(self,
-                 filters,
-                 kernel_size,
-                 strides=(1, 1),
-                 padding='valid',
-                 data_format=None,
-                 dilation_rate=(1, 1),
-                 activation=None,
-                 use_bias=True,
-                 kernel_initializer='glorot_uniform',
-                 bias_initializer='zeros',
-                 kernel_regularizer=None,
-                 bias_regularizer=None,
-                 activity_regularizer=None,
-                 kernel_constraint=None,
-                 bias_constraint=None,
-                 **kwargs):
+    def __init__(
+        self,
+        filters,
+        kernel_size,
+        strides=(1, 1),
+        padding="valid",
+        data_format=None,
+        dilation_rate=(1, 1),
+        activation=None,
+        use_bias=True,
+        kernel_initializer="glorot_uniform",
+        bias_initializer="zeros",
+        kernel_regularizer=None,
+        bias_regularizer=None,
+        activity_regularizer=None,
+        kernel_constraint=None,
+        bias_constraint=None,
+        **kwargs
+    ):
         super(ConvStandardized2D, self).__init__(
             filters,
             kernel_size,
@@ -64,7 +66,7 @@ class ConvStandardized2D(Conv2D):
         # Weight standardization
         # -- copied from "https://github.com/joe-siyuan-qiao/WeightStandardization"
         kernel = self.kernel
-        kernel_mean = tf.math.reduce_mean(kernel, axis=[0, 1, 2], keepdims=True, name='kernel_mean')
+        kernel_mean = tf.math.reduce_mean(kernel, axis=[0, 1, 2], keepdims=True, name="kernel_mean")
         kernel = kernel - kernel_mean
         kernel_std = K.std(kernel, axis=[0, 1, 2], keepdims=True)
         kernel = kernel / (kernel_std + 1e-5)
@@ -76,13 +78,11 @@ class ConvStandardized2D(Conv2D):
             strides=self.strides,
             padding=self.padding,
             data_format=self.data_format,
-            dilation_rate=self.dilation_rate)
+            dilation_rate=self.dilation_rate,
+        )
 
         if self.use_bias:
-            outputs = K.bias_add(
-                outputs,
-                self.bias,
-                data_format=self.data_format)
+            outputs = K.bias_add(outputs, self.bias, data_format=self.data_format)
 
         if self.activation is not None:
             return self.activation(outputs)
