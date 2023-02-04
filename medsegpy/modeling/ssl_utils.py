@@ -1,18 +1,18 @@
 import logging
-import numpy as np
 import os
-
-from keras import Input
 from collections import defaultdict
-from medsegpy import config
-from medsegpy.modeling.meta_arch.build import META_ARCH_REGISTRY
-from medsegpy.modeling import Model, get_model, model_from_json
-from medsegpy.modeling.meta_arch import build_model
-from medsegpy.modeling.layers.convolutional import ConvStandardized2D
-from medsegpy.modeling.layers.normalization import GroupNormalization
-from medsegpy.utils import dl_utils
 from typing import Sequence, Tuple
 
+import numpy as np
+from keras import Input
+
+from medsegpy import config
+from medsegpy.modeling import Model, get_model, model_from_json
+from medsegpy.modeling.layers.convolutional import ConvStandardized2D
+from medsegpy.modeling.layers.normalization import GroupNormalization
+from medsegpy.modeling.meta_arch import build_model
+from medsegpy.modeling.meta_arch.build import META_ARCH_REGISTRY
+from medsegpy.utils import dl_utils
 
 logger = logging.getLogger(__name__)
 

@@ -3,9 +3,8 @@
 The following layers are possible replacements for common convolutional
 layers.
 """
-import tensorflow as tf
 import keras.backend as K
-
+import tensorflow as tf
 from keras.layers.convolutional import Conv2D
 
 

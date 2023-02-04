@@ -2,9 +2,9 @@ import os
 import re
 import socket
 import warnings
-import yaml
 from typing import Sequence, Union
 
+import yaml
 from fvcore.common.file_io import PathManager
 
 from medsegpy.utils.env import settings_dir

@@ -1,13 +1,14 @@
 """Stanford qDESS dataset"""
+import json
+import os
+
 import dosma as dm
 import h5py
-import json
 import numpy as np
-import os
 import pandas as pd
-
 from dosma.scan_sequences.mri import QDess
-from dosma.tissues import FemoralCartilage, TibialCartilage, PatellarCartilage, Meniscus
+from dosma.tissues import FemoralCartilage, Meniscus, PatellarCartilage, TibialCartilage
+
 from medsegpy.data.datasets.qdess_mri import QDESS_SEGMENTATION_CATEGORIES
 from medsegpy.evaluation import EVALUATOR_REGISTRY, SemSegEvaluator
 from medsegpy.evaluation.metrics import Metric, Reductions, flatten_non_category_dims

@@ -1,6 +1,6 @@
 """Stanford abdominal CT Dataset."""
-import logging
 import json
+import logging
 import os
 import re
 

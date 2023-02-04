@@ -10,13 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.io as sio
 
-from medsegpy.utils import (
-    dice_score_coefficient,
-    im_utils,
-    io_utils,
-    volumetric_overlap_error,
-)
-
+from medsegpy.utils import dice_score_coefficient, im_utils, io_utils, volumetric_overlap_error
 from projects.TechConsiderations import oai_test
 from projects.TechConsiderations.scan_metadata import ScanMetadata
 

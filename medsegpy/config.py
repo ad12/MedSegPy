@@ -4,10 +4,10 @@ import copy
 import logging
 import os
 import warnings
-import yaml
 from itertools import groupby
 from typing import Any, Dict, Tuple
 
+import yaml
 from fvcore.common.file_io import PathManager
 
 from medsegpy.cross_validation import cv_util

@@ -4,11 +4,11 @@ Usage::
 
     python tests/train_net --config-file tests/configs/...
 """
+import utils  # noqa
+
 from medsegpy import config
 from medsegpy.engine.defaults import default_argument_parser, default_setup
 from medsegpy.engine.trainer import DefaultTrainer
-
-import utils  # noqa
 
 
 def setup(args):

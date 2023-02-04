@@ -1,5 +1,6 @@
 """Stanford abdominal CT Dataset."""
 import os
+
 import numpy as np
 
 from medsegpy.evaluation import EVALUATOR_REGISTRY, SemSegEvaluator

@@ -1,25 +1,27 @@
 import logging
-import tensorflow as tf
 import warnings
+from typing import Dict, Sequence, Tuple, Union
 
-from .build import META_ARCH_REGISTRY, ModelBuilder
+import tensorflow as tf
 from keras import Input
 from keras.engine import get_source_inputs
 from keras.layers import BatchNormalization as BatchNorm
 from keras.layers import Concatenate, Conv2D, Conv2DTranspose, Dropout, MaxPooling2D
+
 from medsegpy import config
 from medsegpy.config import (
     ContextEncoderConfig,
-    ContextUNetConfig,
     ContextInpaintingConfig,
     ContextSegmentationConfig,
+    ContextUNetConfig,
 )
-from medsegpy.modeling.layers.normalization import GroupNormalization as GroupNorm
 from medsegpy.modeling.layers.convolutional import ConvStandardized2D
+from medsegpy.modeling.layers.normalization import GroupNormalization as GroupNorm
+from medsegpy.modeling.model_utils import add_sem_seg_activation, zero_pad_like
 from medsegpy.modeling.ssl_utils import SelfSupervisedInfo
-from medsegpy.modeling.model_utils import zero_pad_like, add_sem_seg_activation
+
 from ..model import Model
-from typing import Dict, Sequence, Tuple, Union
+from .build import META_ARCH_REGISTRY, ModelBuilder
 
 logger = logging.getLogger(__name__)
 

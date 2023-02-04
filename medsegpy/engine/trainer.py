@@ -15,8 +15,8 @@ from medsegpy.engine.callbacks import LossHistory, WandBLogger, lr_callback
 from medsegpy.evaluation import build_evaluator, inference_on_dataset
 from medsegpy.losses import build_loss, dice_loss
 from medsegpy.modeling.meta_arch import build_model
-from medsegpy.utils import dl_utils, env, io_utils
 from medsegpy.modeling.ssl_utils import SelfSupervisedInfo, load_specific_weights
+from medsegpy.utils import dl_utils, env, io_utils
 
 try:
     _SUPPORTS_DISTRIBUTED = True

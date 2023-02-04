@@ -15,25 +15,13 @@ import scipy.io as sio
 from keras import backend as K
 
 from medsegpy import config as MCONFIG
-from medsegpy.config import (
-    DeeplabV3Config,
-    ResidualUNet,
-    SegnetConfig,
-    UNet2_5DConfig,
-    UNetConfig,
-)
+from medsegpy.config import DeeplabV3Config, ResidualUNet, SegnetConfig, UNet2_5DConfig, UNetConfig
 from medsegpy.data.im_gens import get_generator
 from medsegpy.modeling import get_model
-from medsegpy.utils import (
-    MetricsManager,
-    dice_score_coefficient,
-    dl_utils,
-    io_utils,
-)
+from medsegpy.utils import MetricsManager, dice_score_coefficient, dl_utils, io_utils
 from medsegpy.utils import utils as utils
 from medsegpy.utils.im_utils import MultiClassOverlay
 from medsegpy.utils.logger import setup_logger
-
 from projects.TechConsiderations.scan_metadata import ScanMetadata
 
 # from medsegpy.utils.metric_utils import SegMetric

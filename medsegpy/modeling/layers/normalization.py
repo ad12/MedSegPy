@@ -9,10 +9,9 @@ layers.
     - Modified 'get_config()' to match structure of 'get_config()' in ./attention.py
 """
 import tensorflow as tf
-
-from keras.layers import Layer, InputSpec
-from keras import initializers, regularizers, constraints
 from keras import backend as K
+from keras import constraints, initializers, regularizers
+from keras.layers import InputSpec, Layer
 
 
 class GroupNormalization(Layer):

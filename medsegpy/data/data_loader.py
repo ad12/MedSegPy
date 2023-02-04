@@ -6,8 +6,8 @@ import time
 import warnings
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from typing import Dict, List, Sequence
 from copy import deepcopy
+from typing import Dict, List, Sequence
 
 import h5py
 import keras.backend as K

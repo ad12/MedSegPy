@@ -1,22 +1,23 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 # File: transformer.py
-import logging
 import importlib
 import inspect
+import logging
 import pprint
-import tqdm
 from abc import ABCMeta, abstractmethod
-from medsegpy.config import Config
-from medsegpy.data.data_utils import generate_poisson_disc_mask
 from typing import Sequence, Tuple, Union
 
 import numpy as np
+import tqdm
+
+from medsegpy.config import Config
+from medsegpy.data.data_utils import generate_poisson_disc_mask
 
 from .transform import (
     CropTransform,
-    MedTransform,
     FillRegionsWithValue,
+    MedTransform,
     Swap2DPatches,
     TransformList,
 )

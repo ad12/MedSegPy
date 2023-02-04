@@ -12,7 +12,6 @@ from typing import Any, Callable, Dict, Sequence, Tuple, TypeVar
 
 import numpy as np
 
-
 __all__ = [
     "MedTransform",
     "TransformList",

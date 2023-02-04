@@ -14,13 +14,13 @@ an example of how to extend to different use cases.
 """
 import os
 import warnings
+from typing import Sequence
 
 from medsegpy import config
 from medsegpy.engine.defaults import default_argument_parser, default_setup
 from medsegpy.engine.trainer import DefaultTrainer
 from medsegpy.modeling import Model, model_from_json
 from medsegpy.utils import env
-from typing import Sequence
 
 try:
     import wandb

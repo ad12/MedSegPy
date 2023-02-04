@@ -10,11 +10,11 @@ from keras.utils.generic_utils import Progbar
 from medsegpy.utils import env
 
 if env.is_tf2():
-    from tensorflow.python.keras.engine.training import concat
     from tensorflow.python.keras import callbacks as callbacks_module
     from tensorflow.python.keras.engine import data_adapter
-    from tensorflow.python.util import nest
+    from tensorflow.python.keras.engine.training import concat
     from tensorflow.python.keras.utils import tf_utils
+    from tensorflow.python.util import nest
 else:
     concat = None
     callbacks_module = None
