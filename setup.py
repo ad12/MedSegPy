@@ -102,7 +102,7 @@ setup(
     author="Arjun Desai",
     url="https://github.com/ad12/MedSegPy",
     description="MedSegPy is a framework for research on medical image segmentation.",
-    packages=find_packages(exclude=("configs", "tests")),
+    packages=find_packages(exclude=("configs", "tests", "*.tests", "*.tests.*", "tests.*")),
     python_requires=">=3.6",
     install_requires=get_required_packages(),
     extras_require={
