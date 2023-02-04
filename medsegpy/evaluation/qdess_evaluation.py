@@ -15,8 +15,7 @@ from medsegpy.evaluation.metrics import Metric, Reductions, flatten_non_category
 
 
 class T2Relaxation(Metric):
-    """Compute T2 relaxation time for each tissue.
-    """
+    """Compute T2 relaxation time for each tissue."""
 
     _METADATA_PATH = "/dataNAS/people/arjun/data/skm-tea/v1-release/all_metadata.csv"
     _BASE_SCAN_DIR = "/dataNAS/people/arjun/data/skm-tea/v1-release/image_files"
@@ -263,8 +262,7 @@ class TissueVolumeDiff(Metric):
 
 @EVALUATOR_REGISTRY.register()
 class QDESSEvaluator(SemSegEvaluator):
-    """Evaluate semantic segmentation on the qDESS dataset.
-    """
+    """Evaluate semantic segmentation on the qDESS dataset."""
 
     def _get_metrics(self):
         metrics = list(super()._get_metrics())

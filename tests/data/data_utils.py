@@ -6,7 +6,7 @@ from medsegpy.data.data_utils import compute_patches
 
 class TestComputePatches(unittest.TestCase):
     def verify_expected_patches(self, patches, expected):
-        """Verify patches are in expected patches based on """
+        """Verify patches are in expected patches based on"""
         pass
 
     def test_simple(self):

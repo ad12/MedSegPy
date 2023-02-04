@@ -68,7 +68,7 @@ setup(
         "dev": [
             "flake8",
             "isort",
-            "black==22.3.0",
+            "black==22.8.0",
             "flake8-bugbear",
             "flake8-comprehensions",
             "sphinx-rtd-theme",

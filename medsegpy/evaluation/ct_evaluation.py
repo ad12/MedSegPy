@@ -183,8 +183,7 @@ class CTEvaluator(SemSegEvaluator):
 
 @EVALUATOR_REGISTRY.register()
 class CTEvaluatorTTPP(CTEvaluator):
-    """CT Evaluator with test-time post-processing.
-    """
+    """CT Evaluator with test-time post-processing."""
 
     def __init__(
         self,

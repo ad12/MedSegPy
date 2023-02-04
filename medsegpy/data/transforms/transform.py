@@ -439,8 +439,7 @@ class FillRegionsWithValue(MedTransform):
 
 
 class Swap2DPatches(MedTransform):
-    """Swaps pairs of patches in an image.
-    """
+    """Swaps pairs of patches in an image."""
 
     def __init__(self, patch_pairs):
         """

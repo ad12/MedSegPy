@@ -117,7 +117,7 @@ def _find_latest_version_dir(dir_path):
     return version_dir, version_num
 
 
-class GeneralPathHandler(PathHandler, ABC):
+class GeneralPathHandler(PathHandler, ABC):  # noqa: B024
     PREFIX = ""
 
     def _get_supported_prefixes(self):

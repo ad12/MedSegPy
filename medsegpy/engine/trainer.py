@@ -168,8 +168,7 @@ class DefaultTrainer(object):
         return callbacks
 
     def build_loss(self):
-        """Builds loss function used with ``model.compile(loss=...)``.
-        """
+        """Builds loss function used with ``model.compile(loss=...)``."""
         return build_loss(self._cfg)
 
     def _train_model(self):

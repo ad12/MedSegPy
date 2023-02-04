@@ -52,9 +52,10 @@ def check_dtype(img: np.ndarray):
     assert isinstance(img, np.ndarray), "[TransformGen] Needs an numpy array, but got a {}!".format(
         type(img)
     )
-    assert not isinstance(img.dtype, np.integer) or img.dtype == np.uint8, (
-        "[TransformGen] Got image of type {}, "
-        "use uint8 or floating points instead!".format(img.dtype)
+    assert (
+        not isinstance(img.dtype, np.integer) or img.dtype == np.uint8
+    ), "[TransformGen] Got image of type {}, " "use uint8 or floating points instead!".format(
+        img.dtype
     )
     assert img.ndim > 2, img.ndim
 
@@ -261,9 +262,9 @@ class CoarseDropout(TransformGen):
             #       Max packing density when using hexagonal packing is
             #       pi / (2 * sqrt(3))
             max_pos_area = (img_shape[0] * img_shape[1]) * (np.pi / (2 * np.sqrt(3)))
-            max_num_patches = max_pos_area // ((np.pi / 2) * (hole_size ** 2))
+            max_num_patches = max_pos_area // ((np.pi / 2) * (hole_size**2))
             max_pos_perc_area = np.round(
-                (max_num_patches * (hole_size ** 2)) / (img_shape[0] * img_shape[1]), decimals=3
+                (max_num_patches * (hole_size**2)) / (img_shape[0] * img_shape[1]), decimals=3
             )
             if max_perc_area_to_remove >= max_pos_perc_area:
                 raise ValueError(
@@ -278,7 +279,7 @@ class CoarseDropout(TransformGen):
             # If `sampling_pattern` is "poisson", precompute
             # `num_precompute` masks
             num_samples = ((img_shape[0] * img_shape[1]) * max_perc_area_to_remove) // (
-                hole_size ** 2
+                hole_size**2
             )
             logger.info("Precomputing masks...")
             for _ in tqdm.tqdm(range(num_precompute)):
@@ -447,9 +448,9 @@ class SwapPatches(TransformGen):
             #       Max packing density when using hexagonal packing is
             #       pi / (2 * sqrt(3))
             max_pos_area = (img_shape[0] * img_shape[1]) * (np.pi / (2 * np.sqrt(3)))
-            max_num_patches = max_pos_area // ((np.pi / 2) * (patch_size ** 2))
+            max_num_patches = max_pos_area // ((np.pi / 2) * (patch_size**2))
             max_pos_perc_area = np.round(
-                (max_num_patches * (patch_size ** 2)) / (img_shape[0] * img_shape[1]), decimals=3
+                (max_num_patches * (patch_size**2)) / (img_shape[0] * img_shape[1]), decimals=3
             )
             if max_perc_area_to_modify >= max_pos_perc_area:
                 raise ValueError(
@@ -464,7 +465,7 @@ class SwapPatches(TransformGen):
             # If `sampling_pattern` is "poisson", precompute
             # `num_precompute` masks
             num_samples = ((img_shape[0] * img_shape[1]) * max_perc_area_to_modify) // (
-                patch_size ** 2
+                patch_size**2
             )
             assert num_samples >= 2, f"Number of samples (= {num_samples}) must be >= 2"
             # Ensure number of samples is even
@@ -663,9 +664,10 @@ def apply_transform_gens(
     tfms = []
     for g in transform_gens:
         tfm = g.get_transform(img) if isinstance(g, TransformGen) else g
-        assert isinstance(tfm, MedTransform), (
-            "TransformGen {} must return an instance of MedTransform! "
-            "Got {} instead".format(g, tfm)
+        assert isinstance(
+            tfm, MedTransform
+        ), "TransformGen {} must return an instance of MedTransform! " "Got {} instead".format(
+            g, tfm
         )
         img = tfm.apply_image(img)
         tfms.append(tfm)
