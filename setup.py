@@ -118,4 +118,12 @@ setup(
             "recommonmark",
         ],
     },
+    classifiers=[
+        # Trove classifiers
+        # Full list: https://pypi.python.org/pypi?%3Aaction=list_classifiers
+        "Programming Language :: Python :: 3",
+        "Operating System :: OS Independent",
+    ],
+    # $ setup.py publish support.
+    cmdclass={"upload": UploadCommand},
 )
