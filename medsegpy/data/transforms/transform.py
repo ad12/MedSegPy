@@ -12,14 +12,13 @@ from typing import Any, Callable, Dict, Sequence, Tuple, TypeVar
 
 import numpy as np
 
-
 __all__ = [
     "MedTransform",
     "TransformList",
     "CropTransform",
     "ZeroMeanNormalization",
     "FillRegionsWithValue",
-    "Swap2DPatches"
+    "Swap2DPatches",
 ]
 
 
@@ -399,9 +398,8 @@ class FillRegionsWithValue(MedTransform):
     The implementation is adapted from a similar function in:
     https://github.com/albumentations-team/albumentations/blob/master/albumentations/augmentations/functional.py.
     """
-    def __init__(self,
-                 hole_mask: np.ndarray,
-                 fill_value: float = 0.0):
+
+    def __init__(self, hole_mask: np.ndarray, fill_value: float = 0.0):
         """
         Args:
             hole_mask: A mask, the same size as the image, indicating which
@@ -427,9 +425,10 @@ class FillRegionsWithValue(MedTransform):
             img_filled: A N x H x W x C array, containing the transformed
                 image.
         """
-        assert img.shape == self.hole_mask.shape, \
-            f"Shape of 'hole_mask' ({self.hole_mask.shape}) must match shape " \
+        assert img.shape == self.hole_mask.shape, (
+            f"Shape of 'hole_mask' ({self.hole_mask.shape}) must match shape "
             f"of 'image' ({img.shape})"
+        )
         img_filled = img.copy()
         img_filled[np.array(self.hole_mask, dtype=bool)] = self.fill_value
         return img_filled
@@ -440,10 +439,9 @@ class FillRegionsWithValue(MedTransform):
 
 
 class Swap2DPatches(MedTransform):
-    """Swaps pairs of patches in an image.
-    """
-    def __init__(self,
-                 patch_pairs):
+    """Swaps pairs of patches in an image."""
+
+    def __init__(self, patch_pairs):
         """
         Args:
             patch_pairs: A list of dictionaries, where each dictionary has
@@ -460,7 +458,7 @@ class Swap2DPatches(MedTransform):
         super().__init__()
         self._set_attributes(locals())
 
-    def apply_image(self, img:np.ndarray):
+    def apply_image(self, img: np.ndarray):
         """Applies the transform to an image array, which may consist of a
         stack of images.
 
@@ -483,8 +481,9 @@ class Swap2DPatches(MedTransform):
             img_modified: A N x H x W x C array containing the modified
                             image.
         """
-        assert img.shape[0] == len(self.patch_pairs), \
-            "Number of images does not equal the number of patch pairs!"
+        assert img.shape[0] == len(
+            self.patch_pairs
+        ), "Number of images does not equal the number of patch pairs!"
         img_modified = img.copy()
         for i, patch_pair in enumerate(self.patch_pairs):
             tl = patch_pair[0]
@@ -497,10 +496,10 @@ class Swap2DPatches(MedTransform):
                 x2_p2, y2_p2 = br[:, 1, num_pair]
 
                 # Swap patches
-                tmp_img_patch = np.copy(
-                    img_modified[i, y1_p1:y2_p1, x1_p1:x2_p1, :])
+                tmp_img_patch = np.copy(img_modified[i, y1_p1:y2_p1, x1_p1:x2_p1, :])
                 img_modified[i, y1_p1:y2_p1, x1_p1:x2_p1, :] = np.copy(
-                    img_modified[i, y1_p2:y2_p2, x1_p2:x2_p2, :])
+                    img_modified[i, y1_p2:y2_p2, x1_p2:x2_p2, :]
+                )
                 img_modified[i, y1_p2:y2_p2, x1_p2:x2_p2, :] = tmp_img_patch
 
         return img_modified

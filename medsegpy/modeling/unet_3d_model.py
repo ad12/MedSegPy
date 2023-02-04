@@ -32,7 +32,7 @@ def unet_3d_model(
         raise ValueError("input_size must be a tuple of size (height, width, slices, 1)")
 
     if num_filters is None:
-        nfeatures = [2 ** feat * 32 for feat in np.arange(depth)]
+        nfeatures = [2**feat * 32 for feat in np.arange(depth)]
     else:
         nfeatures = num_filters
         assert len(nfeatures) == depth

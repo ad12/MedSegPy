@@ -6,7 +6,6 @@ import unittest
 
 from medsegpy.config import DeeplabV3Config, SegnetConfig, UNetConfig
 from medsegpy.utils import io_utils
-
 from projects.TechConsiderations import parse_pids
 
 

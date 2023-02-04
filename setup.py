@@ -3,6 +3,7 @@
 
 import os
 from os import path
+
 from setuptools import find_packages, setup
 
 
@@ -65,9 +66,9 @@ setup(
     extras_require={
         "all": ["shapely", "psutil"],
         "dev": [
-            "flake8",
-            "isort==4.3.21",
-            "black==19.3b0",
+            "flake8==4.0.1",
+            "isort",
+            "black==22.8.0",
             "flake8-bugbear",
             "flake8-comprehensions",
             "sphinx-rtd-theme",

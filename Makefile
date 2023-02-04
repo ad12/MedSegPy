@@ -1,8 +1,14 @@
 autoformat:
-	dev/linter.sh format
+	set -e
+	isort .
+	black --config pyproject.toml .
+	flake8
 
 lint:
-	dev/linter.sh
+	set -e
+	isort -c .
+	black --check --config pyproject.toml .
+	flake8
 
 test:
 	pytest tests/
@@ -14,6 +20,6 @@ docs-build:
 	cd docs; make html
 
 build-dev:
-	pip install --upgrade black==19.3b0 isort==4.3.21 flake8 flake8-bugbear flake8-comprehensions sphinx-rtd-theme nbsphinx recommonmark
+	pip install --upgrade black==22.8.0 isort flake8==4.0.1 flake8-bugbear flake8-comprehensions sphinx-rtd-theme nbsphinx recommonmark pooch coverage
 
 all: autoformat lint test

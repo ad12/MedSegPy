@@ -147,9 +147,12 @@ class CrossValidationProcessor:
 
         for i in range(len(temp)):
             for j in range(i + 1, len(temp)):
-                assert len(set(temp[i]) & set(temp[j])) == 0, (
-                    "Test bins %d and %d not mutually exclusive - %d overlap"
-                    % (i, j, len(set(temp[i]) & set(temp[j])))
+                assert (
+                    len(set(temp[i]) & set(temp[j])) == 0
+                ), "Test bins %d and %d not mutually exclusive - %d overlap" % (
+                    i,
+                    j,
+                    len(set(temp[i]) & set(temp[j])),
                 )
 
         self.num_valid_bins = num_valid_bins

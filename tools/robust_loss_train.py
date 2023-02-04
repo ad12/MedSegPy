@@ -4,6 +4,7 @@ import time
 import warnings
 
 import tensorflow as tf
+import wandb
 from keras import backend as K
 from tensorflow.core.protobuf import rewriter_config_pb2
 
@@ -22,8 +23,6 @@ from medsegpy.losses import (
 )
 from medsegpy.modeling.meta_arch import build_model
 from medsegpy.utils.logger import setup_logger
-
-import wandb
 
 # setup_logger()
 

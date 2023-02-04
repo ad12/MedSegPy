@@ -45,7 +45,7 @@ CMD_LINE_SUPPORTED_LOSSES = [
     "FOCAL_LOSS",
     "DICE_FOCAL_LOSS",
     "DICE_MEDIAN_LOSS",
-    "L2_LOSS"
+    "L2_LOSS",
 ]
 
 

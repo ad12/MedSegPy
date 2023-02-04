@@ -9,10 +9,9 @@ layers.
     - Modified 'get_config()' to match structure of 'get_config()' in ./attention.py
 """
 import tensorflow as tf
-
-from keras.layers import Layer, InputSpec
-from keras import initializers, regularizers, constraints
 from keras import backend as K
+from keras import constraints, initializers, regularizers
+from keras.layers import InputSpec, Layer
 
 
 class GroupNormalization(Layer):
@@ -46,22 +45,24 @@ class GroupNormalization(Layer):
         Wu, Yuxin and He, Kaiming. "Group normalization". ECCV. 2018.
     """
 
-    def __init__(self,
-                 groups=32,
-                 axis=-1,
-                 momentum=0.99,
-                 epsilon=1e-5,
-                 center=True,
-                 scale=True,
-                 beta_initializer='zeros',
-                 gamma_initializer='ones',
-                 moving_mean_initializer='zeros',
-                 moving_variance_initializer='ones',
-                 beta_regularizer=None,
-                 gamma_regularizer=None,
-                 beta_constraint=None,
-                 gamma_constraint=None,
-                 **kwargs):
+    def __init__(
+        self,
+        groups=32,
+        axis=-1,
+        momentum=0.99,
+        epsilon=1e-5,
+        center=True,
+        scale=True,
+        beta_initializer="zeros",
+        gamma_initializer="ones",
+        moving_mean_initializer="zeros",
+        moving_variance_initializer="ones",
+        beta_regularizer=None,
+        gamma_regularizer=None,
+        beta_constraint=None,
+        gamma_constraint=None,
+        **kwargs
+    ):
         super(GroupNormalization, self).__init__(**kwargs)
         self.supports_masking = True
         self.groups = groups
@@ -83,39 +84,45 @@ class GroupNormalization(Layer):
         dim = input_shape[self.axis]
 
         if dim is None:
-            raise ValueError('Axis ' + str(self.axis) + ' of '
-                             'input tensor should have a defined dimension '
-                             'but the layer received an input with shape ' +
-                             str(input_shape) + '.')
+            raise ValueError(
+                "Axis " + str(self.axis) + " of "
+                "input tensor should have a defined dimension "
+                "but the layer received an input with shape " + str(input_shape) + "."
+            )
 
         if dim < self.groups:
-            raise ValueError('Number of groups (' + str(self.groups) + ') cannot be '
-                             'more than the number of channels (' +
-                             str(dim) + ').')
+            raise ValueError(
+                "Number of groups (" + str(self.groups) + ") cannot be "
+                "more than the number of channels (" + str(dim) + ")."
+            )
 
         if dim % self.groups != 0:
-            raise ValueError('Number of groups (' + str(self.groups) + ') must be a '
-                             'multiple of the number of channels (' +
-                             str(dim) + ').')
+            raise ValueError(
+                "Number of groups (" + str(self.groups) + ") must be a "
+                "multiple of the number of channels (" + str(dim) + ")."
+            )
 
-        self.input_spec = InputSpec(ndim=len(input_shape),
-                                    axes={self.axis: dim})
+        self.input_spec = InputSpec(ndim=len(input_shape), axes={self.axis: dim})
         shape = (dim,)
 
         if self.scale:
-            self.gamma = self.add_weight(shape=shape,
-                                         name='gamma',
-                                         initializer=self.gamma_initializer,
-                                         regularizer=self.gamma_regularizer,
-                                         constraint=self.gamma_constraint)
+            self.gamma = self.add_weight(
+                shape=shape,
+                name="gamma",
+                initializer=self.gamma_initializer,
+                regularizer=self.gamma_regularizer,
+                constraint=self.gamma_constraint,
+            )
         else:
             self.gamma = None
         if self.center:
-            self.beta = self.add_weight(shape=shape,
-                                        name='beta',
-                                        initializer=self.beta_initializer,
-                                        regularizer=self.beta_regularizer,
-                                        constraint=self.beta_constraint)
+            self.beta = self.add_weight(
+                shape=shape,
+                name="beta",
+                initializer=self.beta_initializer,
+                regularizer=self.beta_regularizer,
+                constraint=self.beta_constraint,
+            )
         else:
             self.beta = None
 
@@ -123,15 +130,17 @@ class GroupNormalization(Layer):
 
         self.moving_mean = self.add_weight(
             shape=mean_var_shape,
-            name='moving_mean',
+            name="moving_mean",
             initializer=self.moving_mean_initializer,
-            trainable=False)
+            trainable=False,
+        )
 
         self.moving_variance = self.add_weight(
             shape=mean_var_shape,
-            name='moving_variance',
+            name="moving_variance",
             initializer=self.moving_variance_initializer,
-            trainable=False)
+            trainable=False,
+        )
 
         self.built = True
 
@@ -161,13 +170,12 @@ class GroupNormalization(Layer):
             moving_broadcast_shape.insert(1, self.groups)
 
             # Broadcast moving mean and moving variance
-            broadcast_moving_mean = K.reshape(self.moving_mean,
-                                              moving_broadcast_shape)
-            broadcast_moving_variance = K.reshape(self.moving_variance,
-                                                  moving_broadcast_shape)
+            broadcast_moving_mean = K.reshape(self.moving_mean, moving_broadcast_shape)
+            broadcast_moving_variance = K.reshape(self.moving_variance, moving_broadcast_shape)
             # Perform group normalization
             inputs = (inputs - broadcast_moving_mean) / (
-                K.sqrt(broadcast_moving_variance + self.epsilon))
+                K.sqrt(broadcast_moving_variance + self.epsilon)
+            )
 
             # prepare broadcast shape
             inputs = K.reshape(inputs, group_shape)
@@ -192,9 +200,7 @@ class GroupNormalization(Layer):
             return normalize_inference(inputs)
 
         group_reduction_axes = list(range(len(group_axes)))
-        mean, variance = tf.nn.moments(inputs,
-                                       axes=group_reduction_axes[2:],
-                                       keep_dims=True)
+        mean, variance = tf.nn.moments(inputs, axes=group_reduction_axes[2:], keep_dims=True)
         normed_inputs = (inputs - mean) / (K.sqrt(variance + self.epsilon))
 
         batch_mean = K.mean(mean, axis=0, keepdims=True)
@@ -204,21 +210,20 @@ class GroupNormalization(Layer):
         batch_mean = K.reshape(batch_mean, moving_shape)
         batch_variance = K.reshape(batch_variance, moving_shape)
 
-        if K.backend() != 'cntk':
-            sample_size = K.prod([K.shape(normed_inputs)[axis]
-                                  for axis in group_reduction_axes[2:]])
+        if K.backend() != "cntk":
+            sample_size = K.prod(
+                [K.shape(normed_inputs)[axis] for axis in group_reduction_axes[2:]]
+            )
             sample_size = K.cast(sample_size, dtype=K.dtype(normed_inputs))
 
             # sample variance - unbiased estimator of population variance
             batch_variance *= sample_size / (sample_size - (1.0 + self.epsilon))
 
         # Update moving mean and moving variance
-        self.moving_mean = K.moving_average_update(self.moving_mean,
-                                                   batch_mean,
-                                                   self.momentum)
-        self.moving_variance = K.moving_average_update(self.moving_variance,
-                                                       batch_variance,
-                                                       self.momentum)
+        self.moving_mean = K.moving_average_update(self.moving_mean, batch_mean, self.momentum)
+        self.moving_variance = K.moving_average_update(
+            self.moving_variance, batch_variance, self.momentum
+        )
         # prepare broadcast shape
         normed_inputs = K.reshape(normed_inputs, group_shape)
         outputs = normed_inputs
@@ -236,25 +241,23 @@ class GroupNormalization(Layer):
         outputs = K.reshape(outputs, tensor_input_shape)
 
         # Pick the normalized form corresponding to the training phase.
-        return K.in_train_phase(outputs,
-                                lambda: normalize_inference(inputs),
-                                training=training)
+        return K.in_train_phase(outputs, lambda: normalize_inference(inputs), training=training)
 
     def get_config(self):
         base_config = super(GroupNormalization, self).get_config()
         base_config.update(
             {
-                'groups': self.groups,
-                'axis': self.axis,
-                'epsilon': self.epsilon,
-                'center': self.center,
-                'scale': self.scale,
-                'beta_initializer': initializers.serialize(self.beta_initializer),
-                'gamma_initializer': initializers.serialize(self.gamma_initializer),
-                'beta_regularizer': regularizers.serialize(self.beta_regularizer),
-                'gamma_regularizer': regularizers.serialize(self.gamma_regularizer),
-                'beta_constraint': constraints.serialize(self.beta_constraint),
-                'gamma_constraint': constraints.serialize(self.gamma_constraint)
+                "groups": self.groups,
+                "axis": self.axis,
+                "epsilon": self.epsilon,
+                "center": self.center,
+                "scale": self.scale,
+                "beta_initializer": initializers.serialize(self.beta_initializer),
+                "gamma_initializer": initializers.serialize(self.gamma_initializer),
+                "beta_regularizer": regularizers.serialize(self.beta_regularizer),
+                "gamma_regularizer": regularizers.serialize(self.gamma_regularizer),
+                "beta_constraint": constraints.serialize(self.beta_constraint),
+                "gamma_constraint": constraints.serialize(self.gamma_constraint),
             }
         )
         return base_config

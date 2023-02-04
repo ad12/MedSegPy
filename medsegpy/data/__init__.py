@@ -1,24 +1,25 @@
-from .catalog import DatasetCatalog, MetadataCatalog
 from .build import build_loader
+from .catalog import DatasetCatalog, MetadataCatalog
 from .data_loader import (
+    DATA_LOADER_REGISTRY,
     DataLoader,
     DefaultDataLoader,
-    PatchDataLoader,
     N5dDataLoader,
-    DATA_LOADER_REGISTRY,
+    PatchDataLoader,
 )
 
 # ensure the builtin datasets are registered
 from .im_gens import (
-    get_generator,
-    GeneratorState,
-    Generator,
-    OAIGenerator,
-    OAI3DGenerator,
-    OAI3DBlockGenerator,
-    OAI3DGeneratorFullVolume,
     CTGenerator,
+    Generator,
+    GeneratorState,
+    OAI3DBlockGenerator,
+    OAI3DGenerator,
+    OAI3DGeneratorFullVolume,
+    OAIGenerator,
+    get_generator,
 )
+
 from . import datasets  # isort:skip
 
 __all__ = [k for k in globals().keys() if not k.startswith("_")]

@@ -14,13 +14,13 @@ an example of how to extend to different use cases.
 """
 import os
 import warnings
+from typing import Sequence
 
 from medsegpy import config
 from medsegpy.engine.defaults import default_argument_parser, default_setup
 from medsegpy.engine.trainer import DefaultTrainer
 from medsegpy.modeling import Model, model_from_json
 from medsegpy.utils import env
-from typing import Sequence
 
 try:
     import wandb
@@ -80,13 +80,14 @@ def setup(args):
         windowing_idx = cfg.PREPROCESSING.index("Windowing")
         windows = cfg.PREPROCESSING_ARGS[windowing_idx]
         if type(windows) != dict or "bounds" not in windows.keys():
-            assert type(windows) in [list, tuple], \
-                "PREPROCESSING_ARGS for 'Windowing' must be a list or tuple"
-            assert cfg.IMG_SIZE[-1] == len(windows), \
-                f"Expected cfg.IMG_SIZE to have {len(windows)} channels"
-            cfg.PREPROCESSING_ARGS[windowing_idx] = {
-                "bounds": parse_windows(windows)
-            }
+            assert type(windows) in [
+                list,
+                tuple,
+            ], "PREPROCESSING_ARGS for 'Windowing' must be a list or tuple"
+            assert cfg.IMG_SIZE[-1] == len(
+                windows
+            ), f"Expected cfg.IMG_SIZE to have {len(windows)} channels"
+            cfg.PREPROCESSING_ARGS[windowing_idx] = {"bounds": parse_windows(windows)}
 
     default_setup(cfg, args)
 

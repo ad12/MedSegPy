@@ -154,7 +154,7 @@ class UNet2D(ModelBuilder):
         num_classes = cfg.get_num_classes()
         num_filters = cfg.NUM_FILTERS
         if not num_filters:
-            num_filters = [2 ** feat * 32 for feat in range(depth)]
+            num_filters = [2**feat * 32 for feat in range(depth)]
         else:
             depth = len(num_filters)
 

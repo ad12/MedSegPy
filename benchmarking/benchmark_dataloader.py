@@ -13,21 +13,18 @@ Usage:
 
 @author: Swathi Iyer, swathii@stanford.edu
 """
+import logging
 import os
 import time
-import logging
-import wandb as wb
+
 import tensorflow as tf
-from medsegpy.utils.logger import setup_logger
-from medsegpy.config import UNetConfig, UNet3DConfig
-from medsegpy.data import build_loader, DatasetCatalog, DefaultDataLoader, PatchDataLoader
+import wandb as wb
+
+from medsegpy.config import UNet3DConfig, UNetConfig
+from medsegpy.data import DatasetCatalog, DefaultDataLoader, PatchDataLoader, build_loader
+from medsegpy.losses import DICE_LOSS, dice_loss, focal_loss, get_training_loss
 from medsegpy.modeling import get_model
-from medsegpy.losses import (
-    DICE_LOSS,
-    dice_loss,
-    focal_loss,
-    get_training_loss,
-)
+from medsegpy.utils.logger import setup_logger
 
 setup_logger(name='medsegpy')
 logger = setup_logger(name=__name__)

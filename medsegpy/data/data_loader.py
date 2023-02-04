@@ -6,8 +6,8 @@ import time
 import warnings
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from typing import Dict, List, Sequence
 from copy import deepcopy
+from typing import Dict, List, Sequence
 
 import h5py
 import keras.backend as K
@@ -239,9 +239,7 @@ class DefaultDataLoader(DataLoader):
 
         if self._preload_data:
             if threading.current_thread() is not threading.main_thread():
-                raise ValueError(
-                    "Data pre-loading can only be done on the main thread."
-                )
+                raise ValueError("Data pre-loading can only be done on the main thread.")
             logger.info("Pre-loading data...")
             self._cached_data = self._load_all_data(dataset_dicts)
 
@@ -628,14 +626,14 @@ class qDESSDataLoader(PatchDataLoader):
     """
 
     def __init__(
-            self,
-            cfg,
-            dataset_dicts,
-            is_test: bool = False,
-            shuffle: bool = True,
-            drop_last: bool = False,
-            batch_size: int = 1,
-            has_seg: bool = True
+        self,
+        cfg,
+        dataset_dicts,
+        is_test: bool = False,
+        shuffle: bool = True,
+        drop_last: bool = False,
+        batch_size: int = 1,
+        has_seg: bool = True,
     ):
         # TODO: Add support for other stuff
         img_keys = ("rms",)
@@ -646,7 +644,7 @@ class qDESSDataLoader(PatchDataLoader):
             self.keys_to_load = set(tuple(self.img_keys) + (self.seg_key,))
         else:
             self.seg_key = None
-            self.keys_to_load = set(tuple(self.img_keys))
+            self.keys_to_load = set(self.img_keys)
 
         # Preprocessing
         self.suppress_fluid = False
@@ -658,7 +656,7 @@ class qDESSDataLoader(PatchDataLoader):
 
         # Load the stats into a dictionary.
         stats = {}
-        files = set(dd["file_name"] for dd in dataset_dicts)
+        files = {dd["file_name"] for dd in dataset_dicts}
         for fp in files:
             stats[fp] = {}
             with h5py.File(fp, "r") as f:
@@ -671,7 +669,9 @@ class qDESSDataLoader(PatchDataLoader):
         if cfg.IMG_SIZE == (512, 160, 1):
             # Axial subsampling, toss out anything that is not (512, 160)
             num_before = len(dataset_dicts)
-            dataset_dicts = [dd for dd in dataset_dicts if tuple(dd["image_size"]) == (512, 512, 160)]
+            dataset_dicts = [
+                dd for dd in dataset_dicts if tuple(dd["image_size"]) == (512, 512, 160)
+            ]
             num_after = len(dataset_dicts)
             logger.info(
                 "Dropped {} scans not of shape (512, 512, 160). "
@@ -681,7 +681,9 @@ class qDESSDataLoader(PatchDataLoader):
             cfg.IMG_SIZE = (1, 512, 160)
             self.axial = True
 
-        super().__init__(cfg, dataset_dicts, is_test, shuffle, drop_last, batch_size, use_singlefile=False)
+        super().__init__(
+            cfg, dataset_dicts, is_test, shuffle, drop_last, batch_size, use_singlefile=False
+        )
 
     def _get_image(self, vals):
         # Value exists
@@ -736,22 +738,16 @@ class qDESSImageDataLoader(qDESSDataLoader):
     """
 
     def __init__(
-            self,
-            cfg,
-            dataset_dicts,
-            is_test: bool = False,
-            shuffle: bool = True,
-            drop_last: bool = False,
-            batch_size: int = 1,
+        self,
+        cfg,
+        dataset_dicts,
+        is_test: bool = False,
+        shuffle: bool = True,
+        drop_last: bool = False,
+        batch_size: int = 1,
     ):
         super(qDESSImageDataLoader, self).__init__(
-            cfg,
-            dataset_dicts,
-            is_test,
-            shuffle,
-            drop_last,
-            batch_size,
-            has_seg=False
+            cfg, dataset_dicts, is_test, shuffle, drop_last, batch_size, has_seg=False
         )
 
     def __getitem__(self, idx):
@@ -786,22 +782,16 @@ class Abdominal_CT_DataLoader(DefaultDataLoader):
     """
 
     def __init__(
-            self,
-            cfg,
-            dataset_dicts,
-            is_test: bool = False,
-            shuffle: bool = True,
-            drop_last: bool = False,
-            batch_size: int = 1,
+        self,
+        cfg,
+        dataset_dicts,
+        is_test: bool = False,
+        shuffle: bool = True,
+        drop_last: bool = False,
+        batch_size: int = 1,
     ):
-        super().__init__(cfg,
-                         dataset_dicts,
-                         is_test,
-                         shuffle,
-                         drop_last,
-                         batch_size)
-        assert self._preload_data, \
-            "cfg.PRELOAD_DATA must be True"
+        super().__init__(cfg, dataset_dicts, is_test, shuffle, drop_last, batch_size)
+        assert self._preload_data, "cfg.PRELOAD_DATA must be True"
 
         # Get different versions of cfg.PREPROCESSING and
         # cfg.PREPROCESSING_ARGS
@@ -887,9 +877,7 @@ class Abdominal_CT_DataLoader(DefaultDataLoader):
             images.append(image)
             masks.append(mask)
 
-        return np.stack(orig_images, axis=0), \
-               np.stack(images, axis=0), \
-               np.stack(masks, axis=0)
+        return np.stack(orig_images, axis=0), np.stack(images, axis=0), np.stack(masks, axis=0)
 
 
 @DATA_LOADER_REGISTRY.register()
@@ -901,22 +889,15 @@ class Abdominal_CT_ImageDataLoader(Abdominal_CT_DataLoader):
     """
 
     def __init__(
-            self,
-            cfg,
-            dataset_dicts,
-            is_test: bool = False,
-            shuffle: bool = True,
-            drop_last: bool = False,
-            batch_size: int = 1,
+        self,
+        cfg,
+        dataset_dicts,
+        is_test: bool = False,
+        shuffle: bool = True,
+        drop_last: bool = False,
+        batch_size: int = 1,
     ):
-        super().__init__(
-            cfg,
-            dataset_dicts,
-            is_test,
-            shuffle,
-            drop_last,
-            batch_size
-        )
+        super().__init__(cfg, dataset_dicts, is_test, shuffle, drop_last, batch_size)
 
         # Remove all masks from cached data
         for cache_key in self._cached_data.keys():

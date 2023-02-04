@@ -69,7 +69,7 @@ def rms_cv(y_pred: np.ndarray, y_true: np.ndarray, dim=None):
     stds = np.std([y_pred, y_true], axis=0)
     means = np.mean([y_pred, y_true], axis=0)
     cv = stds / means
-    return np.sqrt(np.mean(cv ** 2, axis=dim))
+    return np.sqrt(np.mean(cv**2, axis=dim))
 
 
 def rmse_cv(y_pred: np.ndarray, y_true: np.ndarray, dim=None):
@@ -235,8 +235,7 @@ class Recall(Metric):
 
 class L2NORM(Metric):
     def __call__(self, y_pred, y_true):
-        assert len(y_pred.shape) == 4 or len(y_pred.shape) == 3, \
-            "y_pred must be 3D or 4D"
+        assert len(y_pred.shape) == 4 or len(y_pred.shape) == 3, "y_pred must be 3D or 4D"
         if len(y_pred.shape) == 3:
             y_pred = np.expand_dims(y_pred, axis=-1)
             y_true = np.expand_dims(y_true, axis=-1)
@@ -247,9 +246,7 @@ class L2NORM(Metric):
 
         # Calculate L2 Norm per slice
         # -- Shape: (N x C)
-        l2_norm_per_slice = np.sqrt(
-            np.sum(np.square(y_pred - y_true), axis=(1, 2), keepdims=True)
-        )
+        l2_norm_per_slice = np.sqrt(np.sum(np.square(y_pred - y_true), axis=(1, 2), keepdims=True))
         val_per_slice = np.squeeze(l2_norm_per_slice, axis=(1, 2))
 
         # Calculate L2 Norm per category

@@ -1234,9 +1234,11 @@ class OAI3DBlockGenerator(OAI3DGenerator):
         # this means shape of total volume must be perfectly divisible into
         # cubes of size IMG_SIZE
         for dim in range(3):
-            assert total_volume_shape[dim] % self.config.IMG_SIZE[dim] == 0, (
-                "Cannot divide volume of size %s to blocks of size %s"
-                % (total_volume_shape, self.config.IMG_SIZE)
+            assert (
+                total_volume_shape[dim] % self.config.IMG_SIZE[dim] == 0
+            ), "Cannot divide volume of size %s to blocks of size %s" % (
+                total_volume_shape,
+                self.config.IMG_SIZE,
             )
 
     def img_generator_test(self, model=None):

@@ -15,11 +15,8 @@ from medsegpy.engine.callbacks import LossHistory, WandBLogger, lr_callback
 from medsegpy.evaluation import build_evaluator, inference_on_dataset
 from medsegpy.losses import build_loss, dice_loss
 from medsegpy.modeling.meta_arch import build_model
+from medsegpy.modeling.ssl_utils import SelfSupervisedInfo, load_specific_weights
 from medsegpy.utils import dl_utils, env, io_utils
-from medsegpy.modeling.ssl_utils import (
-    SelfSupervisedInfo,
-    load_specific_weights
-)
 
 try:
     _SUPPORTS_DISTRIBUTED = True
@@ -119,9 +116,7 @@ class DefaultTrainer(object):
         """Initialize model with weights and apply any freezing necessary."""
         cfg = self._cfg
         if cfg.PRETRAINED_WEIGHTS_PATH:
-            load_specific_weights(model,
-                                  cfg,
-                                  debug=True)
+            load_specific_weights(model, cfg, debug=True)
         else:
             if os.path.isdir(cfg.INIT_WEIGHTS):
                 weight_file = dl_utils.get_weights(cfg.INIT_WEIGHTS)
@@ -173,8 +168,7 @@ class DefaultTrainer(object):
         return callbacks
 
     def build_loss(self):
-        """Builds loss function used with ``model.compile(loss=...)``.
-        """
+        """Builds loss function used with ``model.compile(loss=...)``."""
         return build_loss(self._cfg)
 
     def _train_model(self):
