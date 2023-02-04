@@ -66,7 +66,7 @@ setup(
     extras_require={
         "all": ["shapely", "psutil"],
         "dev": [
-            "flake8",
+            "flake8==4.0.1",
             "isort",
             "black==22.8.0",
             "flake8-bugbear",

@@ -20,6 +20,6 @@ docs-build:
 	cd docs; make html
 
 build-dev:
-	pip install --upgrade black==22.3.0 isort flake8 flake8-bugbear flake8-comprehensions sphinx-rtd-theme nbsphinx recommonmark pooch coverage
+	pip install --upgrade black==22.8.0 isort flake8==4.0.1 flake8-bugbear flake8-comprehensions sphinx-rtd-theme nbsphinx recommonmark pooch coverage
 
 all: autoformat lint test
