@@ -1,9 +1,9 @@
-EXP_NAME: "MRI Seg - 32x32, PD sampling, CR task"
-DESCRIPTION: "MRI SSL segmentation after pretraining on context restoration using 32x32 patches and Poisson-disc sampling"
+EXP_NAME: "CT Seg - 32x32, PD sampling, CR task"
+DESCRIPTION: "CT SSL segmentation after pretraining on context restoration using 32x32 patches and Poisson-disc sampling"
 LEARNING_TAG: "supervised"
 PRIMARY_TASK: "segmentation"
 MODEL_NAME: "ContextSegmentation"
-PRETRAINED_CONFIG_PATH: "/bmrNAS/people/jdomini/results/context-self-supervision/mri/swap_patches/pretrain_inpainting/config.ini"
+PRETRAINED_CONFIG_PATH: "/bmrNAS/people/jdomini/results/context-self-supervision/abct/swap_patches/pretrain_inpainting/config.ini"
 PRETRAINED_WEIGHTS_PATH: {
   "path": "",
   "weights": [
@@ -24,7 +24,7 @@ USE_EARLY_STOPPING: True
 EARLY_STOPPING_CRITERION: "val_loss"
 EARLY_STOPPING_MIN_DELTA: 1e-03
 EARLY_STOPPING_PATIENCE: 10
-IMG_SIZE: (512, 512, 1)
+IMG_SIZE: (512, 512, 3)
 NORMALIZATION: "GroupNorm"
 NORMALIZATION_ARGS: {"groups": 16}
 WEIGHT_STANDARDIZATION: True
@@ -32,15 +32,18 @@ KERNEL_INITIALIZER: "he_normal"
 LOSS: "MULTI_CLASS_DICE_LOSS"
 NUM_GRAD_STEPS: 1
 N_EPOCHS: 500
-NUM_WORKERS: 5
+NUM_WORKERS: 1
 NUM_FILTERS: [[32, 32], [64, 64], [128, 128], [256, 256], [512, 512]]
-TAG: "qDESSDataLoader"
-CATEGORIES: [0, 1, [2, 3], [4, 5]]
+TAG: "Abdominal_CT_DataLoader"
+PRELOAD_DATA: True
+CATEGORIES: [1, 2, 3, 4]
 TRAIN_BATCH_SIZE: 9
 VALID_BATCH_SIZE: 9
 TEST_BATCH_SIZE: 9
-TRAIN_DATASET: "qdess_seg_10_train"
-VAL_DATASET: "qdess_seg_val"
-TEST_DATASET: "qdess_seg_test"
+TRAIN_DATASET: "abCT_seg_10_train"
+VAL_DATASET: "abCT_seg_val"
+TEST_DATASET: "abCT_seg_test"
+PREPROCESSING: ["Windowing"]
+PREPROCESSING_ARGS: [["soft", "bone", "custom"]]
 SEED: 11725701
-OUTPUT_DIR: "css://mri/swap_patches/segmentation/10_perc"
+OUTPUT_DIR: "css://abct/swap_patches/segmentation/10_perc"
