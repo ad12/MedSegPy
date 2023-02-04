@@ -16,6 +16,10 @@ from medsegpy.evaluation import build_evaluator, inference_on_dataset
 from medsegpy.losses import build_loss, dice_loss
 from medsegpy.modeling.meta_arch import build_model
 from medsegpy.utils import dl_utils, env, io_utils
+from medsegpy.modeling.ssl_utils import (
+    SelfSupervisedInfo,
+    load_specific_weights
+)
 
 try:
     _SUPPORTS_DISTRIBUTED = True
@@ -59,8 +63,12 @@ class DefaultTrainer(object):
         self.strategy = strategy
 
         with self.strategy.scope():
+            # Prepare for self-supervised learning, if needed
+            SelfSupervisedInfo.clear()
+            SelfSupervisedInfo.init_self_supervised(cfg)
+
             model = self.build_model(cfg)
-            if cfg.INIT_WEIGHTS:
+            if cfg.PRETRAINED_WEIGHTS_PATH or cfg.INIT_WEIGHTS:
                 self._init_model(model)
 
         plot_model(model, to_file=os.path.join(cfg.OUTPUT_DIR, "model.png"), show_shapes=True)
@@ -88,6 +96,9 @@ class DefaultTrainer(object):
 
         with self.strategy.scope():
             self._train_model()
+            # After training, remove preloaded data
+            self._train_loader.clear_cached_data()
+            self._val_loader.clear_cached_data()
 
         if cfg.TEST_DATASET:
             # Specialized strategies are not currently supported for testing.
@@ -107,8 +118,17 @@ class DefaultTrainer(object):
     def _init_model(self, model):
         """Initialize model with weights and apply any freezing necessary."""
         cfg = self._cfg
-        logger.info("Loading weights from {}".format(cfg.INIT_WEIGHTS))
-        model.load_weights(cfg.INIT_WEIGHTS)
+        if cfg.PRETRAINED_WEIGHTS_PATH:
+            load_specific_weights(model,
+                                  cfg,
+                                  debug=True)
+        else:
+            if os.path.isdir(cfg.INIT_WEIGHTS):
+                weight_file = dl_utils.get_weights(cfg.INIT_WEIGHTS)
+            else:
+                weight_file = cfg.INIT_WEIGHTS
+            logger.info("Loading weights from {}".format(weight_file))
+            model.load_weights(weight_file)
         frozen_layers = cfg.FREEZE_LAYERS
         if frozen_layers:
             fl = range(frozen_layers[0], frozen_layers[1])
@@ -229,7 +249,10 @@ class DefaultTrainer(object):
         test_dataset = cfg.TEST_DATASET
         test_gen = cls.build_test_data_loader(cfg)
         evaluator = build_evaluator(test_dataset, cfg, save_raw_data=False)
-        return inference_on_dataset(model, test_gen, evaluator)
+        test_results = inference_on_dataset(model, test_gen, evaluator)
+        # After testing, remove pre-loaded data
+        test_gen.clear_cached_data()
+        return test_results
 
     @classmethod
     def build_model(cls, cfg):

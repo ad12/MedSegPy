@@ -151,5 +151,13 @@ class TechConsiderationsHandler(GeneralPathHandler):
         return "tech-considerations"
 
 
+class Context_Self_Supervision_Handler(GeneralPathHandler):
+    PREFIX = "css://"
+
+    def _project_name(self):
+        return "context-self-supervision"
+
+
 PathManager.register_handler(GeneralResultsPathHandler())
 PathManager.register_handler(TechConsiderationsHandler())
+PathManager.register_handler(Context_Self_Supervision_Handler())

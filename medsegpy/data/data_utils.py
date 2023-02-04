@@ -160,3 +160,152 @@ def compute_patches(
         padding.append(pad if valid_pad else None)
 
     return tuple(zip(patches, padding))
+
+
+def generate_poisson_disc_mask(
+    img_shape: Sequence[int],
+    min_distance: float,
+    num_samples: int,
+    patch_size: float = 0.0,
+    k: float = 30,
+    seed: int = None
+):
+    """Generate Poisson-disc sampling mask
+
+    Adapted from Arjun's adaption of the function in sigpy:
+    "sigpy.mri.poisson".
+
+    Args:
+        img_shape (Sequence[int]): length-2 image shape.
+        min_distance (float): the minimum distance between samples.
+        num_samples (int): The number of samples to select.
+        patch_size (float): The patch size.
+        k (float): maximum number of samples to reject.
+        seed (int): Random seed.
+
+    Returns:
+        array: Poisson-disc sampling mask.
+
+    References:
+        Bridson, Robert. "Fast Poisson disk sampling in arbitrary dimensions".
+        SIGGRAPH sketches. 2007.
+    """
+    y, x = np.mgrid[:img_shape[-2], :img_shape[-1]]
+    x = np.maximum(abs(x - img_shape[-1] / 2), 0)
+    x /= x.max()
+    y = np.maximum(abs(y - img_shape[-2] / 2), 0)
+    y /= y.max()
+    r = np.sqrt(x ** 2 + y ** 2)
+
+    # Quick checks
+    assert int(num_samples) == num_samples, \
+        f"Number of required samples must be an integer. " \
+        f"(Got num_samples = {num_samples})."
+    num_samples = int(num_samples)
+
+    rounded_min_dist = np.round(min_distance, decimals=3)
+
+    R = np.zeros_like(r)
+    R[:] = np.round(rounded_min_dist, decimals=3)
+    mask = np.zeros(1)
+    num_iterations = 0
+    while np.sum(mask[:]) != num_samples:
+        mask, patch_mask = _poisson(img_shape[-1],
+                                    img_shape[-2],
+                                    k,
+                                    R,
+                                    num_samples=num_samples,
+                                    patch_size=patch_size,
+                                    seed=seed)
+        num_iterations += 1
+        if num_iterations > 10:
+            raise ValueError("Cannot find enough samples. Please make sure "
+                             "the number of samples is not too large and the "
+                             "minimum distance between samples is not too "
+                             "large as well.")
+
+    mask = mask.reshape(img_shape).astype(int)
+    patch_mask = patch_mask.reshape(img_shape).astype(int)
+    return mask, patch_mask
+
+
+def _poisson(nx, ny, K, R, num_samples=None, patch_size=0.0, seed=None):
+    mask = np.zeros((ny, nx))
+    patch_mask = np.zeros((ny, nx))
+    f = ny / nx
+
+    half_patch = patch_size / 2
+
+    if seed is not None:
+        rand_state = np.random.RandomState(int(seed))
+    else:
+        rand_state = np.random
+
+    pxs = np.empty(nx * ny, np.int32)
+    pys = np.empty(nx * ny, np.int32)
+    pxs[0] = rand_state.randint(0, nx)
+    pys[0] = rand_state.randint(0, ny)
+    m = 1
+
+    if num_samples:
+        max_limit = num_samples
+    else:
+        max_limit = nx * ny
+
+    while 0 < m < nx * ny and np.sum(mask[:]) < max_limit:
+        i = rand_state.randint(0, m)
+        px = pxs[i]
+        py = pys[i]
+        rad = R[py, px]
+
+        # Attempt to generate point
+        done = False
+        k = 0
+        while not done and k < K:
+            # Generate point randomly from R to 2R
+            rd = rad * (rand_state.random() * 3 + 1) ** 0.5
+            t = 2 * np.pi * rand_state.random()
+            qx = int(px + rd * np.cos(t))
+            qy = int(py + rd * f * np.sin(t))
+
+            # Reject if outside grid, patch will not fit,
+            # or close to other points
+            if (0 <= qx < nx and
+                    0 <= qy < ny and
+                    (qx - half_patch) >= 0 and
+                    (qx + half_patch) < nx and
+                    (qy - half_patch) >= 0 and
+                    (qy + half_patch) < ny):
+                startx = max(int(qx - rad), 0)
+                endx = min(int(qx + rad + 1), nx)
+                starty = max(int(qy - rad * f), 0)
+                endy = min(int(qy + rad * f + 1), ny)
+
+                done = True
+                for x in range(startx, endx):
+                    for y in range(starty, endy):
+                        if (mask[y, x] == 1
+                                and (((qx - x) / R[y, x]) ** 2 +
+                                     ((qy - y) / (R[y, x] * f)) ** 2 < 1)):
+                            done = False
+                            break
+                    if not done:
+                        break
+            k += 1
+
+        # Add point if done else remove active
+        if done:
+            pxs[m] = qx
+            pys[m] = qy
+            mask[int(qy), int(qx)] = 1
+            if patch_size > 0:
+                tl = (int(int(qx) - half_patch), int(int(qy) - half_patch))
+                br = (int(int(qx) + half_patch), int(int(qy) + half_patch))
+                patch_mask[tl[1]:br[1], tl[0]:br[0]] = 1
+            m += 1
+        else:
+            pxs[i] = pxs[m - 1]
+            pys[i] = pys[m - 1]
+            m -= 1
+
+    return mask, patch_mask

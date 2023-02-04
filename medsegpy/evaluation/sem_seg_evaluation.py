@@ -72,10 +72,14 @@ class SemSegEvaluator(DatasetEvaluator):
         self._meta = meta
         cat_ids = cfg.CATEGORIES
         contiguous_id_map = meta.get("category_id_to_contiguous_id")
+        if type(contiguous_id_map) is dict:
+            contiguous_id_map = contiguous_id_map[cfg.PRIMARY_TASK]
         contiguous_ids = [
             contiguous_id_map[tuple(x) if isinstance(x, list) else x] for x in cat_ids
         ]
         categories = meta.get("categories")
+        if type(categories) is dict:
+            categories = categories[cfg.PRIMARY_TASK]
         categories = [categories[c_id] for c_id in contiguous_ids]
         self.spacing = meta.get("spacing", None)
 

@@ -163,8 +163,9 @@ class DSC(Metric):
         size_i1 = np.count_nonzero(y_pred, -1)
         size_i2 = np.count_nonzero(y_true, -1)
         intersection = np.count_nonzero(y_pred & y_true, -1)
+        smooth = np.finfo(float).eps
 
-        return 2.0 * intersection / (size_i1 + size_i2)
+        return (2.0 * intersection + smooth) / (size_i1 + size_i2 + smooth)
 
 
 class VOE(Metric):
@@ -230,6 +231,33 @@ class Recall(Metric):
         fn = np.count_nonzero(~y_pred & y_true, -1)
 
         return tp / (tp + fn)
+
+
+class L2NORM(Metric):
+    def __call__(self, y_pred, y_true):
+        assert len(y_pred.shape) == 4 or len(y_pred.shape) == 3, \
+            "y_pred must be 3D or 4D"
+        if len(y_pred.shape) == 3:
+            y_pred = np.expand_dims(y_pred, axis=-1)
+            y_true = np.expand_dims(y_true, axis=-1)
+
+        # Reshape to N x H x W x C
+        y_pred = np.transpose(y_pred, (2, 0, 1, 3))
+        y_true = np.transpose(y_true, (2, 0, 1, 3))
+
+        # Calculate L2 Norm per slice
+        # -- Shape: (N x C)
+        l2_norm_per_slice = np.sqrt(
+            np.sum(np.square(y_pred - y_true), axis=(1, 2), keepdims=True)
+        )
+        val_per_slice = np.squeeze(l2_norm_per_slice, axis=(1, 2))
+
+        # Calculate L2 Norm per category
+        # -- Shape: (C,)
+        avg_l2_norm = np.mean(val_per_slice, axis=0)
+        val_per_category = np.transpose(avg_l2_norm)
+
+        return val_per_category
 
 
 _BUILT_IN_METRICS = {x.__name__: x for x in Metric.__subclasses__()}
