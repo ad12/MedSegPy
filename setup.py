@@ -66,8 +66,8 @@ setup(
         "all": ["shapely", "psutil"],
         "dev": [
             "flake8",
-            "isort==4.3.21",
-            "black==19.3b0",
+            "isort",
+            "black==22.3.0",
             "flake8-bugbear",
             "flake8-comprehensions",
             "sphinx-rtd-theme",
