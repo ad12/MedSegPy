@@ -1,7 +1,17 @@
 [run]
+branch = True
+source = medsegpy
 omit =
     *test*
 
 [report]
 include =
     medsegpy/*
+exclude_lines =
+    pragma: no cover
+    raise NotImplemented
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    def __repr__
+    def __str__
+ignore_errors = True
