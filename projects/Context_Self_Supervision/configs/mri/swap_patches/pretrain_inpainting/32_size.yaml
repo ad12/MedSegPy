@@ -1,0 +1,36 @@
+EXP_NAME: "32x32, PD sampling, CR task"
+DESCRIPTION: "Pretrain with 32 x 32 patches, Poission-disc sampling, and context restoration"
+LEARNING_TAG: "supervised"
+PRIMARY_TASK: "inpainting"
+MODEL_NAME: "ContextInpainting"
+TEST_METRICS: ["L2NORM"]
+INITIAL_LEARNING_RATE: 0.001
+LR_SCHEDULER_NAME: "StepDecay"
+DROP_FACTOR: 0.9
+DROP_RATE: 2.0
+MIN_LEARNING_RATE: 1e-08
+USE_EARLY_STOPPING: True
+EARLY_STOPPING_CRITERION: "val_loss"
+EARLY_STOPPING_MIN_DELTA: 50
+EARLY_STOPPING_PATIENCE: 4
+IMG_SIZE: (512, 512, 1)
+NORMALIZATION: "GroupNorm"
+NORMALIZATION_ARGS: {"groups": 16}
+WEIGHT_STANDARDIZATION: True
+KERNEL_INITIALIZER: "he_normal"
+NUM_GRAD_STEPS: 1
+N_EPOCHS: 500
+NUM_WORKERS: 1
+NUM_FILTERS: [[32, 32], [64, 64], [128, 128], [256, 256], [512, 512]]
+TAG: "qDESSImageDataLoader"
+CATEGORIES: [0]
+TRAIN_BATCH_SIZE: 9
+VALID_BATCH_SIZE: 9
+TEST_BATCH_SIZE: 9
+TRAIN_DATASET: "qdess_seg_train"
+VAL_DATASET: "qdess_seg_val"
+TEST_DATASET: "qdess_seg_test"
+PREPROCESSING: ["SwapPatches"]
+PREPROCESSING_ARGS: [{"max_height": 16, "max_iterations": -1, "sampling_pattern": "poisson"}]
+SEED: 11725701
+OUTPUT_DIR: "css://mri/swap_patches/pretrain_inpainting"
