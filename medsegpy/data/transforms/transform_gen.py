@@ -220,20 +220,20 @@ class CoarseDropout(TransformGen):
             max_height: The maximum height of each hole.
             max_width: The maximum width of each hole.
             min_holes: The minimum number of holes to drop out.
-                            If None, the maximum number of holes will
-                        be dropped out.
+                If None, the maximum number of holes will
+                be dropped out.
             min_height: The minimum height of each hole.
-                            If None, each hole will have maximum height.
+                If None, each hole will have maximum height.
             min_width: The minimum width of each hole.
-                            If None, each hole will have maximum width.
+                If None, each hole will have maximum width.
             img_shape: The height and width of each image.
             max_perc_area_to_remove: The maximum fraction of the image that
-                                    will be removed and filled with a constant
-                                    value. This is useful to prevent too
-                                    much of the image from being modified.
+                will be removed and filled with a constant
+                value. This is useful to prevent too
+                much of the image from being modified.
             fill_value: The value used to fill in each hole.
             sampling_pattern: The type of sampling pattern to use when
-                                selecting random patches.
+                selecting random patches.
                 Possible values: "uniform", "poisson"
             num_precompute: The number of masks to precompute.
         """
@@ -249,9 +249,8 @@ class CoarseDropout(TransformGen):
         # Precompute masks
         self.precomputed_masks = []
         if sampling_pattern == "poisson":
-            assert min_height == max_height == min_width == max_width, (
-                "Only square patches are allowed if sampling pattern is " "'poisson'"
-            )
+            if not (min_height == max_height == min_width == max_width):
+                raise ValueError("Only square patches are allowed if sampling pattern is 'poisson'")
 
             hole_size = min_width
             # Check max_perc_area_to_remove
@@ -336,7 +335,8 @@ class CoarseDropout(TransformGen):
 
         Args:
             img: A N x H x W x C image, containing N images with height H,
-                    width W, and consisting of C channels.
+                width W, and consisting of C channels.
+
         Returns:
             An instance of the MedTransform "FillRegionsWithValue",
                 initialized with the appropriate parameters based on the
@@ -425,7 +425,7 @@ class SwapPatches(TransformGen):
             min_height = max_height
         if not is_square:
             if max_width is None:
-                raise ValueError("Value of 'max_width' must not be None if patch is " "not square")
+                raise ValueError("Value of 'max_width' must not be None if patch is 'not square'")
             if min_width is None:
                 min_width = max_width
         self._init(locals())
@@ -437,7 +437,7 @@ class SwapPatches(TransformGen):
                 f"If sampling_pattern is 'poisson', min_height (= {min_height}) "
                 f"must equal max_height (= {max_height})"
             )
-            assert is_square, "Only square patches are allowed if sampling pattern is " "'poisson'"
+            assert is_square, "Only square patches are allowed if sampling pattern is 'poisson'"
 
             patch_size = max_height
             # Check max_perc_area_to_modify
@@ -545,6 +545,7 @@ class SwapPatches(TransformGen):
         Args:
             img: A N x H x W x C image, containing N images with height H,
                     width W, and consisting of C channels.
+
         Returns:
             An instance of the MedTransform "Swap2DPatches",
                 initialized with the appropriate parameters based on the

@@ -733,6 +733,7 @@ class DeeplabModel:
         """Preprocesses a numpy array encoding a batch of images.
         # Arguments
             x: a 4D numpy array consists of RGB values within [0, 255].
+
         # Returns
             Input array scaled to [-1.,1.]
         """

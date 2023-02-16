@@ -83,8 +83,10 @@ class ContextEncoder(ModelBuilder):
         Builds the encoder network and returns the resulting model.
         This implementation will overload the abstract method defined in the
         superclass "ModelBuilder".
+
         Args:
             input_tensor: The input to the network.
+
         Returns:
             model: A Model that defines the encoder network.
         """
@@ -145,6 +147,7 @@ class ContextEncoder(ModelBuilder):
         Builds one block of the ContextEncoder.
         Each block consists of the following structure:
         [Conv -> Activation] -> BN -> Dropout.
+
         Args:
             x: Input tensor.
             num_filters: Number of filters to use for each conv layer.
@@ -153,6 +156,7 @@ class ContextEncoder(ModelBuilder):
             kernel_initializer: Kernel initializer accepted by
                                 `keras.layers.Conv(...)`.
             dropout: Dropout rate.
+
         Returns:
             Output of encoder block.
         """
@@ -195,8 +199,10 @@ class ContextEncoder(ModelBuilder):
     def _build_input(input_size: Tuple):
         """
         Creates an input tensor of size "input_size".
+
         Args:
             input_size: The size of the input tensor for the model.
+
         Returns:
             A symbolic input (i.e. a placeholder) with size "input_size".
         """
@@ -211,8 +217,10 @@ class ContextEncoder(ModelBuilder):
         """
         Determines the right size of the pooling filter based on the
         dimensions of the input tensor `x`.
+
         Args:
             x: The input tensor.
+
         Returns:
             A list with the same number of elements as dimensions of `x`,
             where each element is either 2 or 3.
@@ -281,8 +289,10 @@ class ContextUNet(ModelBuilder):
         resulting model.
         This implementation will overload the abstract method defined in the
         superclass "ModelBuilder".
+
         Args:
             input_tensor: The input to the network.
+
         Returns:
             model: A Model that defines the full encoder/decoder architecture.
         """
@@ -379,6 +389,7 @@ class ContextUNet(ModelBuilder):
         Each block of the decoder will have the following structure:
         Input -> Transposed Convolution -> Concatenate Skip Connection
         -> Convolution -> BN -> Dropout (optional)
+
         Args:
             x: Input tensor.
             x_skip: The output of the next highest layer of the
@@ -397,6 +408,7 @@ class ContextUNet(ModelBuilder):
                                     convolutional and regular convolutional
                                     layers.
             dropout: Dropout rate.
+
         Returns:
            Output of the decoder block.
         """
@@ -450,8 +462,10 @@ class ContextUNet(ModelBuilder):
     def _build_input(input_size: Tuple):
         """
         Creates an input tensor of size "input_size".
+
         Args:
             input_size: The size of the input tensor for the model.
+
         Returns:
             A symbolic input (i.e. a placeholder) with size "input_size".
         """

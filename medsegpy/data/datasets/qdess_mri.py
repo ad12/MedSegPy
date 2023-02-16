@@ -162,6 +162,7 @@ def load_2d_from_filepaths(filepaths: list, source_path: str, dataset_name: str 
                     corresponding ground truth segmentations.
         total_num_slices: The total number of slices for this dataset.
         dataset_name: The name of the dataset.
+
     Returns:
         dataset_dicts: A list of dictionaries, described above in the
                         docstring.
