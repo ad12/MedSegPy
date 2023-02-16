@@ -86,3 +86,8 @@ class ConvStandardized2D(Conv2D):
         if self.activation is not None:
             return self.activation(outputs)
         return outputs
+
+
+# Add aliases for class
+ConvWeightStandardization2D = ConvStandardized2D
+ConvWS2D = ConvStandardized2D

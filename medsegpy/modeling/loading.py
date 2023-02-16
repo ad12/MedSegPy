@@ -18,8 +18,10 @@ def model_from_config(config, custom_objects=None):
       custom_objects: Optional dictionary mapping names
           (strings) to custom classes or functions to be
           considered during deserialization.
+
     Returns:
       A Keras model instance (uncompiled).
+
     Raises:
       TypeError: if `config` is not a dictionary.
     """
@@ -41,8 +43,10 @@ def model_from_yaml(yaml_string, custom_objects=None):
       custom_objects: Optional dictionary mapping names
           (strings) to custom classes or functions to be
           considered during deserialization.
+
     Returns:
       A Keras model instance (uncompiled).
+
     Raises:
       ImportError: if yaml module is not found.
     """
@@ -61,6 +65,7 @@ def model_from_json(json_string, custom_objects=None):
       custom_objects: Optional dictionary mapping names
           (strings) to custom classes or functions to be
           considered during deserialization.
+
     Returns:
       A Keras model instance (uncompiled).
     """

@@ -53,7 +53,7 @@ def unet_2d_model(input_size=DEFAULT_INPUT_SIZE, input_tensor=None, output_mode=
     if input_tensor is None and (type(input_size) is not tuple or len(input_size) != 3):
         raise ValueError("input_size must be a tuple of size (height, width, 1)")
 
-    nfeatures = [2**feat * 32 for feat in np.arange(6)]
+    nfeatures = [2 ** feat * 32 for feat in np.arange(6)]
     depth = len(nfeatures)
 
     conv_ptr = []
@@ -182,7 +182,7 @@ def unet_2d_model_v2(
         raise ValueError("input_size must be a tuple of size (height, width, 1)")
 
     if num_filters is None:
-        nfeatures = [2**feat * 32 for feat in np.arange(depth)]
+        nfeatures = [2 ** feat * 32 for feat in np.arange(depth)]
     else:
         nfeatures = num_filters
         assert len(nfeatures) == depth

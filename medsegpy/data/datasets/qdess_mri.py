@@ -4,6 +4,7 @@ import os
 import re
 
 from medsegpy.data.catalog import DatasetCatalog, MetadataCatalog
+from medsegpy.utils.cluster import Cluster
 
 logger = logging.getLogger(__name__)
 
@@ -161,6 +162,7 @@ def load_2d_from_filepaths(filepaths: list, source_path: str, dataset_name: str 
                     corresponding ground truth segmentations.
         total_num_slices: The total number of slices for this dataset.
         dataset_name: The name of the dataset.
+
     Returns:
         dataset_dicts: A list of dictionaries, described above in the
                         docstring.
@@ -336,4 +338,8 @@ def register_all_qdess_datasets():
     Registers all qDESS MRI datasets listed in _DATA_CATALOG.
     """
     for dataset_name, scan_root in _DATA_CATALOG.items():
+        if not os.path.isabs(scan_root):
+            scan_root = os.path.join(Cluster.working_cluster().data_dir, scan_root)
+        if not os.path.exists(scan_root):
+            continue
         register_qdess_dataset(scan_root=scan_root, dataset_name=dataset_name)

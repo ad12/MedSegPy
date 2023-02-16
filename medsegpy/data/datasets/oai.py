@@ -176,4 +176,6 @@ def register_all_oai():
     for dataset_name, scan_root in _DATA_CATALOG.items():
         if not os.path.isabs(scan_root):
             scan_root = os.path.join(Cluster.working_cluster().data_dir, scan_root)
+        if not os.path.exists(scan_root):
+            continue
         register_oai(dataset_name, scan_root)

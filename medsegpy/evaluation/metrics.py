@@ -69,7 +69,7 @@ def rms_cv(y_pred: np.ndarray, y_true: np.ndarray, dim=None):
     stds = np.std([y_pred, y_true], axis=0)
     means = np.mean([y_pred, y_true], axis=0)
     cv = stds / means
-    return np.sqrt(np.mean(cv**2, axis=dim))
+    return np.sqrt(np.mean(cv ** 2, axis=dim))
 
 
 def rmse_cv(y_pred: np.ndarray, y_true: np.ndarray, dim=None):

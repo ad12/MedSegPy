@@ -84,6 +84,7 @@ def get_required_packages():
         "pandas",
         "medpy",
         "numpy",
+        "numba",
         "h5py",
         "natsort",
         "scipy",

@@ -67,6 +67,7 @@ class MedTransform(ABC):
             img (ndarray): of shape NxHxWxC, or HxWxC or HxW. The array can be
                 of type uint8 in range [0, 255], or floating point in range
                 [0, 1] or [0, 255].
+
         Returns:
             ndarray: image after apply the transformation.
         """
@@ -147,6 +148,7 @@ class TransformList:
         Args:
             x: input to apply the transform operations.
             meth (str): meth.
+
         Returns:
             x: after apply the transformation.
         """
@@ -167,6 +169,7 @@ class TransformList:
         """
         Args:
             other (TransformList): transformation to add.
+
         Returns:
             TransformList: list of transforms.
         """
@@ -177,6 +180,7 @@ class TransformList:
         """
         Args:
             other (TransformList): transformation to add.
+
         Returns:
             TransformList: list of transforms.
         """
@@ -188,6 +192,7 @@ class TransformList:
         """
         Args:
             other (TransformList): transformation to add.
+
         Returns:
             TransformList: list of transforms.
         """

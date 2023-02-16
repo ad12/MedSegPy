@@ -38,7 +38,7 @@ def anisotropic_unet_2d(
         raise ValueError("input_size must be a tuple of size (height, width, 1)")
 
     if num_filters is None:
-        nfeatures = [2**feat * 32 for feat in np.arange(depth)]
+        nfeatures = [2 ** feat * 32 for feat in np.arange(depth)]
     else:
         nfeatures = num_filters
         assert len(nfeatures) == depth

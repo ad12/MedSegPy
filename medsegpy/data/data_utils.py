@@ -3,6 +3,7 @@ import warnings
 from typing import Sequence, Union
 
 import numpy as np
+from numba import njit
 
 
 def collect_mask(mask: np.ndarray, index: Sequence[Union[int, Sequence[int], int]]):
@@ -195,7 +196,7 @@ def generate_poisson_disc_mask(
     x /= x.max()
     y = np.maximum(abs(y - img_shape[-2] / 2), 0)
     y /= y.max()
-    r = np.sqrt(x**2 + y**2)
+    r = np.sqrt(x ** 2 + y ** 2)
 
     # Quick checks
     assert int(num_samples) == num_samples, (
@@ -233,6 +234,7 @@ def generate_poisson_disc_mask(
     return mask, patch_mask
 
 
+@njit
 def _poisson(nx, ny, K, R, num_samples=None, patch_size=0.0, seed=None):
     mask = np.zeros((ny, nx))
     patch_mask = np.zeros((ny, nx))

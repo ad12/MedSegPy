@@ -153,4 +153,6 @@ def register_all_abct():
             txt_file_or_scan_root = os.path.join(
                 Cluster.working_cluster().data_dir, txt_file_or_scan_root
             )
+        if not os.path.exists(txt_file_or_scan_root):
+            continue
         register_abct(dataset_name, txt_file_or_scan_root)
