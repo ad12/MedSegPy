@@ -758,7 +758,7 @@ class ContextEncoderConfig(Config):
         super().summary(summary_vars)
 
 
-class ContextUNetConfig(Config):
+class ContextUNetConfig(ContextEncoderConfig):
     """
     Configuration for the ContextUNet model.
 
@@ -769,16 +769,6 @@ class ContextUNetConfig(Config):
     """
 
     MODEL_NAME = "ContextUNet"
-    NUM_FILTERS = [[32, 32], [64, 64], [128, 128], [256, 256]]
-
-    def __init__(self, state="training", create_dirs=True):
-        super().__init__(self.MODEL_NAME, state, create_dirs=create_dirs)
-
-    def summary(self, additional_vars=None):
-        summary_vars = ["NUM_FILTERS"]
-        if additional_vars:
-            summary_vars.extend(additional_vars)
-        super().summary(summary_vars)
 
 
 class ContextInpaintingConfig(ContextUNetConfig):
