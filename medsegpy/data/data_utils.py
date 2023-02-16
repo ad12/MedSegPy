@@ -195,7 +195,7 @@ def generate_poisson_disc_mask(
     x /= x.max()
     y = np.maximum(abs(y - img_shape[-2] / 2), 0)
     y /= y.max()
-    r = np.sqrt(x**2 + y**2)
+    r = np.sqrt(x ** 2 + y ** 2)
 
     # Quick checks
     assert int(num_samples) == num_samples, (
