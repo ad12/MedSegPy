@@ -145,6 +145,7 @@ class UNet2D(ModelBuilder):
         seed = cfg.SEED
         depth = cfg.DEPTH
         kernel_size = self.kernel_size
+        dropout_rate = cfg.DROPOUT_RATE
         self.use_attention = cfg.USE_ATTENTION
         self.use_deep_supervision = cfg.USE_DEEP_SUPERVISION
 
@@ -178,7 +179,7 @@ class UNet2D(ModelBuilder):
                 num_conv=2,
                 activation="relu",
                 kernel_initializer=kernel_initializer,
-                dropout=0.0,
+                dropout=dropout_rate,
             )
 
             # Maxpool until penultimate depth.
@@ -220,7 +221,7 @@ class UNet2D(ModelBuilder):
                 num_conv=2,
                 activation="relu",
                 kernel_initializer=kernel_initializer,
-                dropout=0.0,
+                dropout=dropout_rate,
             )
 
             if self.use_deep_supervision:
